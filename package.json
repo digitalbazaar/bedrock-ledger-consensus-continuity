@@ -1,0 +1,30 @@
+{
+  "name": "bedrock-ledger-continuity",
+  "version": "0.0.1-0",
+  "description": "Implementation of Web Ledger Continuity Consensus Protocol.",
+  "main": "./lib",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digitalbazaar/bedrock-ledger-continuity.git"
+  },
+  "author": {
+    "name": "Digital Bazaar, Inc.",
+    "email": "support@digitalbazaar.com",
+    "url": "http://digitalbazaar.com"
+  },
+  "bugs": {
+    "url": "https://github.com/digitalbazaar/bedrock-ledger-continuity/issues"
+  },
+  "homepage": "https://github.com/digitalbazaar/bedrock-ledger-continuity",
+  "dependencies": {
+    "async": "^2.4.0"
+  },
+  "peerDependencies": {
+    "bedrock": "^1.2.4",
+    "bedrock-mongodb": "^3.0.0",
+    "bedrock-permission": "^2.3.2"
+  },
+  "engines": {
+    "node": ">=6"
+  }
+}
