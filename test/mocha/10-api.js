@@ -4,6 +4,8 @@
 'use strict';
 
 const bedrock = require('bedrock');
+const brIdentity = require('bedrock-identity');
+const brLedger = require('bedrock-ledger');
 const async = require('async');
 const expect = global.chai.expect;
 const events = bedrock.events;
@@ -22,16 +24,15 @@ describe('Continuity2017', () => {
     let ledgerNode;
     beforeEach(done => {
       const mockIdentity = mockData.identities.regularUser;
+      const configBlock = mockData.configBlocks.alpha;
       async.auto({
         clean: callback =>
           helpers.removeCollections(['ledger', 'ledgerNode'], callback),
         actor: ['clean', (results, callback) => brIdentity.get(
-          null, mockIdentity.identity.id, (err, result) => {
-          actor = result;
-          const configBlock = mockData.configBlocks.alpha;
-          callback(err);
+          null, mockIdentity.identity.id, (err, identity) => {
+          callback(err, identity);
         })],
-        ledgerNode: ['getActor', (results, callback) => brLedger.add(
+        ledgerNode: ['actor', (results, callback) => brLedger.add(
           results.actor, configBlock, (err, ledgerNode) => {
             should.not.exist(err);
             expect(ledgerNode).to.be.ok;
