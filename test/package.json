@@ -1,0 +1,31 @@
+{
+  "name": "bedrock-ledger-continuity-test",
+  "version": "0.0.1-0",
+  "private": true,
+  "description": "bedrock-ledger-continuity",
+  "main": "./lib",
+  "scripts": {
+    "test": "node --preserve-symlinks test test",
+    "watch": "grunt watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digitalbazaar/bedrock-ledger-continuity.git"
+  },
+  "bugs": {
+    "url": "https://github.com/digitalbazaar/bedrock-ledger-continuity/issues"
+  },
+  "homepage": "https://github.com/digitalbazaar/bedrock-ledger-continuity#readme",
+  "dependencies": {
+    "async": "^2.4.1",
+    "bedrock": "^1.4.1",
+    "bedrock-did-client": "^1.0.0",
+    "bedrock-ledger": "digitalbazaar/bedrock-ledger#ledger-worker",
+    "bedrock-mongodb": "^3.2.3",
+    "bedrock-permission": "^2.4.3",
+    "bedrock-test": "^1.2.0",
+    "did-io": "digitalbazaar/did-io#master",
+    "grunt": "^1.0.1",
+    "jsonld-signatures": "^1.2.1"
+  }
+}
