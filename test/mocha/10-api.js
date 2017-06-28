@@ -48,6 +48,7 @@ describe('Continuity2017', () => {
     });
 
     it.only('should add an event and achieve consensus', done => {
+      // FIXME: remove `done`
       done();
       events.onceAsync('bedrock-ledger-continuity.consensus', (e, callback) => {
         // TODO: assert things about ledger event
