@@ -20,7 +20,8 @@ describe('Continuity2017', () => {
   });
 
   describe('Event Consensus', () => {
-    // create ledger node for use in each test
+    // get consensus plugin and create ledger node for use in each test
+    let consensusApi;
     let ledgerNode;
     beforeEach(done => {
       const mockIdentity = mockData.identities.regularUser;
@@ -32,6 +33,7 @@ describe('Continuity2017', () => {
           null, mockIdentity.identity.id, (err, identity) => {
           callback(err, identity);
         })],
+        consensusPlugin: callback => brLedger.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => brLedger.add(
           results.actor, configBlock, (err, ledgerNode) => {
             should.not.exist(err);
@@ -43,6 +45,7 @@ describe('Continuity2017', () => {
           return done(err);
         }
         ledgerNode = results.ledgerNode;
+        consensusApi = results.consensusPlugin.api;
         done();
       });
     });

@@ -22,7 +22,7 @@
     "bedrock-did-client": "^1.0.0",
     "bedrock-identity": "^4.6.0",
     "bedrock-ledger": "digitalbazaar/bedrock-ledger#ledger-worker",
-    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#master",
+    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#ledger-worker",
     "bedrock-mongodb": "^3.2.3",
     "bedrock-permission": "^2.4.3",
     "bedrock-test": "^1.2.0",
