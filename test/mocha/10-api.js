@@ -9,6 +9,7 @@ const brLedger = require('bedrock-ledger');
 const async = require('async');
 const expect = global.chai.expect;
 const events = bedrock.events;
+const should = global.should;
 require('bedrock-ledger-continuity');
 
 const helpers = require('./helpers');
@@ -51,14 +52,15 @@ describe('Continuity2017', () => {
     });
 
     it.only('should add an event and achieve consensus', done => {
-      // FIXME: remove `done`
-      done();
-      events.onceAsync('bedrock-ledger-continuity.consensus', (e, callback) => {
-        // TODO: assert things about ledger event
-        done();
-      });
+      // // FIXME: remove `done`
+      // done();
+      // events.onceAsync('bedrock-ledger-continuity.consensus', (e, callback) => {
+      //   // TODO: assert things about ledger event
+      //   done();
+      // });
 
       // TODO: add event
+      consensusApi._gossip._test(done);
     });
   });
 });
