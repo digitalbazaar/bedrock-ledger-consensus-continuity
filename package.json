@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/digitalbazaar/bedrock-ledger-continuity",
   "dependencies": {
-    "async": "^2.4.0"
+    "async": "^2.4.0",
+    "ursa": "^0.9.4"
   },
   "peerDependencies": {
     "bedrock": "^1.2.4",
