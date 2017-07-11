@@ -60,7 +60,7 @@ describe('Continuity2017', () => {
       // });
 
       // TODO: add event
-      consensusApi._gossip._test(err => {
+      consensusApi._consensus._test(err => {
         done();
       });
     });
