@@ -26,7 +26,7 @@ describe('Continuity2017', () => {
     let ledgerNode;
     beforeEach(done => {
       const mockIdentity = mockData.identities.regularUser;
-      const configBlock = mockData.configBlocks.alpha;
+      const configEvent = mockData.events.config;
       async.auto({
         clean: callback =>
           helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -36,7 +36,7 @@ describe('Continuity2017', () => {
         })],
         consensusPlugin: callback => brLedger.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => brLedger.add(
-          results.actor, configBlock, (err, ledgerNode) => {
+          results.actor, configEvent, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
@@ -63,7 +63,7 @@ describe('Continuity2017', () => {
 
       // TODO: add event
       consensusApi._worker._run(null, err => {
-        done();
+        done(err);
       });
     });
   });
