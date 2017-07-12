@@ -37,7 +37,9 @@ describe('Continuity2017', () => {
         consensusPlugin: callback => brLedger.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => brLedger.add(
           results.actor, configBlock, (err, ledgerNode) => {
-            should.not.exist(err);
+            if(err) {
+              return callback(err);
+            }
             expect(ledgerNode).to.be.ok;
             callback(null, ledgerNode);
           })]
@@ -60,7 +62,7 @@ describe('Continuity2017', () => {
       // });
 
       // TODO: add event
-      consensusApi._consensus._test(err => {
+      consensusApi._worker._run(null, err => {
         done();
       });
     });
