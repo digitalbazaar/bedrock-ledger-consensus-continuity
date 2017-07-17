@@ -32,8 +32,8 @@ describe('Continuity2017', () => {
           helpers.removeCollections(['ledger', 'ledgerNode'], callback),
         actor: ['clean', (results, callback) => brIdentity.get(
           null, mockIdentity.identity.id, (err, identity) => {
-          callback(err, identity);
-        })],
+            callback(err, identity);
+          })],
         consensusPlugin: callback => brLedger.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => brLedger.add(
           results.actor, configEvent, (err, ledgerNode) => {
