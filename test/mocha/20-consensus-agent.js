@@ -14,7 +14,7 @@ const mockData = require('./mock.data');
 let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
 
-describe.only('Consensus Agent API', () => {
+describe('Consensus Agent API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
