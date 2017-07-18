@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
+/* globals should */
 'use strict';
 
 const async = require('async');
@@ -75,9 +76,15 @@ describe.only('Consensus Agent API', () => {
     const newBlockHeight = latestBlockHeight + 1;
     testUrl.pathname = '/consensus/continuity2017/' + voterId +
       '/blocks/' + newBlockHeight + '/status';
-    console.log('UUUUUU', url.format(testUrl));
     request.get(url.format(testUrl), (err, res) => {
-      console.log('2222222222', err, res.body);
+      should.not.exist(err);
+      should.exist(res.body);
+      res.body.should.be.an('object');
+      const result = res.body;
+      result.blockHeight.should.equal(newBlockHeight);
+      result.phase.should.equal('gossip');
+      result.gossip.should.be.an('array');
+      result.gossip.should.have.length(0);
       done();
     });
   });
