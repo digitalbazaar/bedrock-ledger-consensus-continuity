@@ -15,7 +15,7 @@ let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
 const uuid = require('uuid/v4');
 
-describe('Consensus Agent - Add Event API', () => {
+describe('Consensus Agent - Get Event API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -23,8 +23,13 @@ describe('Consensus Agent - Add Event API', () => {
   let consensusApi;
   let ledgerNode;
   let voterId;
+  let eventHash;
+  let testEventId;
   beforeEach(done => {
     const configEvent = mockData.events.config;
+    const testEvent = bedrock.util.clone(mockData.events.alpha);
+    testEventId = 'https://example.com/events/' + uuid();
+    testEvent.input[0].id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -49,27 +54,27 @@ describe('Consensus Agent - Add Event API', () => {
           voterId = result;
           callback();
         });
-      }]
+      }],
+      addEvent: ['ledgerNode', (results, callback) => ledgerNode.events.add(
+        testEvent, (err, result) => {
+          eventHash = result.meta.eventHash;
+          callback();
+        })]
     }, done);
   });
-  it('should add an event', done => {
-    const testUrl = voterId + '/events';
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEvent.input[0].id = 'https://example.com/events/' + uuid();
+  it('should get an event', done => {
+    const testUrl = voterId + '/events?id=' + eventHash;
     async.auto({
-      addEvent: callback => ledgerNode.events.add(
-        mockData.events.alpha, callback),
-      blockStatus: ['addEvent', (results, callback) =>
-        request.post({
-          url: testUrl,
-          json: testEvent
-        }, (err, res) => {
-          should.not.exist(err);
-          res.statusCode.should.equal(201);
-          should.exist(res.headers.location);
-          callback();
-        })
-      ]
+      some: callback => request.get(testUrl, (err, res) => {
+        should.not.exist(err);
+        res.statusCode.should.equal(200);
+        const result = res.body;
+        should.exist(result.input);
+        result.input.should.be.an('array');
+        result.input.should.have.length(1);
+        result.input[0].id.should.equal(testEventId);
+        callback();
+      })
     }, done);
   });
 });

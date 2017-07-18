@@ -49,7 +49,8 @@ api.prepareDatabase = function(mockData, callback) {
   async.series([
     callback => {
       api.removeCollections([
-        'identity', 'eventLog', 'ledger', 'ledgerNode'
+        'identity', 'eventLog', 'ledger', 'ledgerNode',
+        'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
       ], callback);
     },
     callback => {
