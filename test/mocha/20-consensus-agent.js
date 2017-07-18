@@ -11,7 +11,6 @@ const config = bedrock.config;
 const expect = global.chai.expect;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-const multihash = require('multihashes');
 let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
 const url = require('url');
@@ -63,8 +62,7 @@ describe.only('Consensus Agent API', () => {
       }],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
-          voterId = multihash.toB58String(
-            multihash.encode(new Buffer(result), 'sha2-256'));
+          voterId = result;
           callback();
         });
       }]
@@ -72,11 +70,9 @@ describe.only('Consensus Agent API', () => {
   });
 
   it('get block status', done => {
-    const testUrl = bedrock.util.clone(urlObj);
     const newBlockHeight = latestBlockHeight + 1;
-    testUrl.pathname = '/consensus/continuity2017/' + voterId +
-      '/blocks/' + newBlockHeight + '/status';
-    request.get(url.format(testUrl), (err, res) => {
+    const testUrl = voterId + '/blocks/' + newBlockHeight + '/status';
+    request.get(testUrl, (err, res) => {
       should.not.exist(err);
       should.exist(res.body);
       res.body.should.be.an('object');
