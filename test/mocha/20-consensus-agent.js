@@ -10,9 +10,10 @@ const config = bedrock.config;
 const expect = global.chai.expect;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-const multihash = require('multihashes')
+const multihash = require('multihashes');
 let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
+const url = require('url');
 
 const urlObj = {
   protocol: 'https',
@@ -28,7 +29,7 @@ describe.only('Consensus Agent API', () => {
   let consensusApi;
   let ledgerNode;
   let voterId;
-  let blockHeight;
+  let latestBlockHeight;
   beforeEach(done => {
     const configEvent = mockData.events.config;
     async.auto({
@@ -47,10 +48,18 @@ describe.only('Consensus Agent API', () => {
           if(err) {
             return callback(err);
           }
-          expect(result).to.be.ok;
           ledgerNode = result;
           callback();
         })],
+      getLatest: ['ledgerNode', (results, callback) => {
+        ledgerNode.blocks.getLatest((err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          latestBlockHeight = result.eventBlock.block.blockHeight;
+          callback();
+        });
+      }],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
           voterId = multihash.toB58String(
@@ -62,8 +71,14 @@ describe.only('Consensus Agent API', () => {
   });
 
   it('get block status', done => {
-    urlObj.pathName = '/consensus/continuity2017/' + voterId +
-      '/blocks/' + blockHeight + '/status';
-    done();
+    const testUrl = bedrock.util.clone(urlObj);
+    const newBlockHeight = latestBlockHeight + 1;
+    testUrl.pathname = '/consensus/continuity2017/' + voterId +
+      '/blocks/' + newBlockHeight + '/status';
+    console.log('UUUUUU', url.format(testUrl));
+    request.get(url.format(testUrl), (err, res) => {
+      console.log('2222222222', err, res.body);
+      done();
+    });
   });
 });
