@@ -3,13 +3,10 @@
  */
 'use strict';
 
-const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedger = require('bedrock-ledger');
 const async = require('async');
 const expect = global.chai.expect;
-const events = bedrock.events;
-const should = global.should;
 require('bedrock-ledger-continuity');
 
 const helpers = require('./helpers');

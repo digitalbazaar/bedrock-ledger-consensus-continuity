@@ -5,10 +5,7 @@
 'use strict';
 
 const async = require('async');
-const bedrock = require('bedrock');
 const brLedger = require('bedrock-ledger');
-const config = bedrock.config;
-const expect = global.chai.expect;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 let request = require('request');
