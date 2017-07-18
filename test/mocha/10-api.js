@@ -53,7 +53,7 @@ describe('Continuity2017', () => {
       });
     });
 
-    it.only('should add an event and achieve consensus', done => {
+    it.skip('should add an event and achieve consensus', done => {
       // // FIXME: remove `done`
       // done();
       // events.onceAsync('bedrock-ledger-continuity.consensus', (e, callback) => {
