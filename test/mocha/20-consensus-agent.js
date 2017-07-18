@@ -13,13 +13,6 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
-const url = require('url');
-
-const urlObj = {
-  protocol: 'https',
-  host: config.server.host,
-  pathname: ''
-};
 
 describe.only('Consensus Agent API', () => {
   before(done => {
@@ -83,5 +76,26 @@ describe.only('Consensus Agent API', () => {
       result.gossip.should.have.length(0);
       done();
     });
+  });
+  it('should have one event to gossip', done => {
+    const newBlockHeight = latestBlockHeight + 1;
+    const testUrl = voterId + '/blocks/' + newBlockHeight + '/status';
+    async.auto({
+      addEvent: callback => ledgerNode.events.add(
+        mockData.events.alpha, callback),
+      blockStatus: ['addEvent', (results, callback) =>
+        request.get(testUrl, (err, res) => {
+          should.not.exist(err);
+          should.exist(res.body);
+          res.body.should.be.an('object');
+          const result = res.body;
+          result.blockHeight.should.equal(newBlockHeight);
+          result.phase.should.equal('gossip');
+          result.gossip.should.be.an('array');
+          result.gossip.should.have.length(1);
+          callback();
+        })
+      ]
+    }, done);
   });
 });

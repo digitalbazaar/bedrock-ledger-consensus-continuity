@@ -27,14 +27,23 @@ identities[userName].identity.sysResourceRole.push({
 
 const events = mock.events = {};
 events.alpha = {
-  id: 'https://example.com/events/123456',
-  description: 'Example event',
-  signature: {
-    type: 'RsaSignature2017',
-    created: '2017-05-10T19:47:13Z',
-    creator: 'http://example.com/keys/123',
-    signatureValue: 'gXI7wqa...FMMJoS2Bw=='
-  }
+  '@context': 'https://w3id.org/webledger/v1',
+  type: 'WebLedgerEvent',
+  operation: 'Create',
+  input: [{
+    '@context': 'https://w3id.org/test/v1',
+    id: 'https://example.com/events/123456',
+    type: 'Concert',
+    name: 'Big Band Concert in New York City',
+    startDate: '2017-07-14T21:30',
+    location: 'https://example.org/the-venue',
+    offers: {
+      type: 'Offer',
+      price: '13.00',
+      priceCurrency: 'USD',
+      url: 'https://www.ticketfly.com/purchase/309433'
+    }
+  }]
 };
 
 events.config = {
@@ -50,11 +59,7 @@ events.config = {
   }]
 };
 
-const ledgers = mock.ledgers = {};
-
 // constants
-const GENESIS_HASH =
-  'urn:sha256:0000000000000000000000000000000000000000000000000000000000000000';
 mock.authorizedSignerUrl = 'https://example.com' + '/keys/authorized-key-1';
 
 // all mock keys for all groups
