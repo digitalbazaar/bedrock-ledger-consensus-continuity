@@ -3,11 +3,12 @@
  */
 'use strict';
 
+const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedger = require('bedrock-ledger');
 const async = require('async');
 const expect = global.chai.expect;
-require('bedrock-ledger-continuity');
+const uuid = require('uuid/v4');
 
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -50,18 +51,18 @@ describe('Continuity2017', () => {
       });
     });
 
-    it.skip('should add an event and achieve consensus', done => {
-      // // FIXME: remove `done`
-      // done();
-      // events.onceAsync('bedrock-ledger-continuity.consensus', (e, callback) => {
-      //   // TODO: assert things about ledger event
-      //   done();
-      // });
-
-      // TODO: add event
-      consensusApi._worker._run(null, err => {
-        done(err);
-      });
+    it('should add an event and achieve consensus', done => {
+      const testEvent = bedrock.util.clone(mockData.events.alpha);
+      testEvent.input[0].id = 'https://example.com/events/' + uuid();
+      async.auto({
+        addEvent: callback => ledgerNode.events.add(
+          testEvent, callback),
+        runWorker: ['addEvent', (results, callback) =>
+          consensusApi._worker._run(null, err => {
+            callback(err);
+          })
+        ]
+      }, done);
     });
   });
 });

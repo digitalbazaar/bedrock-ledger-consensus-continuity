@@ -55,9 +55,7 @@ describe('Consensus Agent - Add Event API', () => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEvent.input[0].id = 'https://example.com/events/' + uuid();
     async.auto({
-      addEvent: callback => ledgerNode.events.add(
-        mockData.events.alpha, callback),
-      blockStatus: ['addEvent', (results, callback) =>
+      addEvent: callback =>
         request.post({
           url: testUrl,
           json: testEvent
@@ -67,7 +65,6 @@ describe('Consensus Agent - Add Event API', () => {
           should.exist(res.headers.location);
           callback();
         })
-      ]
     }, done);
   });
 });
