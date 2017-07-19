@@ -51,7 +51,7 @@ describe('Continuity2017', () => {
       });
     });
 
-    it('should add an event and achieve consensus', done => {
+    it.only('should add an event and achieve consensus', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.input[0].id = 'https://example.com/events/' + uuid();
       async.auto({
@@ -60,8 +60,12 @@ describe('Continuity2017', () => {
         runWorker: ['addEvent', (results, callback) =>
           consensusApi._worker._run(null, err => {
             callback(err);
-          })
-        ]
+          })],
+        getLatest: ['runWorker', (results, callback) =>
+          ledgerNode.events.getLatest((err, result) => {
+            console.log('EEEEEEE', err, result);
+            callback();
+          })]
       }, done);
     });
   });
