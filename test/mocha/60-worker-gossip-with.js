@@ -13,7 +13,7 @@ let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
 const uuid = require('uuid/v4');
 
-describe('Consensus Agent - Get Event API', () => {
+describe.only('Worker - _gossipWith', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -60,27 +60,13 @@ describe('Consensus Agent - Get Event API', () => {
         })]
     }, done);
   });
-  it('should get a manifest', done => {
+  it('should work', done => {
     async.auto({
-      createManifest: callback => consensusApi._worker._election
-        ._createEventManifest(ledgerNode, 1, callback),
-      get: ['createManifest', (results, callback) => {
-        const testUrl = voterId + '/manifests?id=' + results.createManifest.id;
-        request.get(testUrl, (err, res) => {
-          should.not.exist(err);
-          res.statusCode.should.equal(200);
-          const result = res.body;
-          result.should.be.an('object');
-          should.exist(result.id);
-          should.exist(result.blockHeight);
-          result.blockHeight.should.equal(1);
-          should.exist(result.item);
-          result.item.should.be.an('array');
-          result.item.should.have.length(1);
-          result.item.should.have.members([eventHash]);
+      gossipWith: callback => consensusApi._worker._gossipWith(
+        ledgerNode, {id: voterId}, 1, {id: voterId}, (err, result) => {
+          console.log('VVVVVV', err, result);
           callback();
-        });
-      }]
+        })
     }, done);
   });
 });
