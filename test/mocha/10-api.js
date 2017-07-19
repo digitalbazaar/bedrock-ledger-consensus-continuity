@@ -62,8 +62,8 @@ describe('Continuity2017', () => {
             callback(err);
           })],
         getLatest: ['runWorker', (results, callback) =>
-          ledgerNode.events.getLatest((err, result) => {
-            console.log('EEEEEEE', err, result);
+          ledgerNode.storage.blocks.getLatest((err, result) => {
+            console.log('LATEST_BLOCK', err, result);
             callback();
           })]
       }, done);
