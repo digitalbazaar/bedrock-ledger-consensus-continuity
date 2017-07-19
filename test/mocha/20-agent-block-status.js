@@ -52,7 +52,7 @@ describe('Consensus Agent API', () => {
       }],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
-          voterId = result;
+          voterId = result.id;
           callback();
         });
       }]

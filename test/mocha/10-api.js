@@ -51,7 +51,7 @@ describe('Continuity2017', () => {
       });
     });
 
-    it.only('should add an event and achieve consensus', done => {
+    it('should add an event and achieve consensus', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.input[0].id = 'https://example.com/events/' + uuid();
       async.auto({

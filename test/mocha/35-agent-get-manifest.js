@@ -60,19 +60,27 @@ describe('Consensus Agent - Get Event API', () => {
         })]
     }, done);
   });
-  it('should get an event', done => {
-    const testUrl = voterId + '/events?id=' + eventHash;
+  it('should work', done => {
     async.auto({
-      get: callback => request.get(testUrl, (err, res) => {
-        should.not.exist(err);
-        res.statusCode.should.equal(200);
-        const result = res.body;
-        should.exist(result.input);
-        result.input.should.be.an('array');
-        result.input.should.have.length(1);
-        result.input[0].id.should.equal(testEventId);
-        callback();
-      })
+      createManifest: callback => consensusApi._worker._election
+        ._createEventManifest(ledgerNode, 1, callback),
+      get: ['createManifest', (results, callback) => {
+        const testUrl = voterId + '/manifests?id=' + results.createManifest.id;
+        request.get(testUrl, (err, res) => {
+          should.not.exist(err);
+          res.statusCode.should.equal(200);
+          const result = res.body;
+          result.should.be.an('object');
+          should.exist(result.id);
+          should.exist(result.blockHeight);
+          result.blockHeight.should.equal(1);
+          should.exist(result.item);
+          result.item.should.be.an('array');
+          result.item.should.have.length(1);
+          result.item.should.have.members([eventHash]);
+          callback();
+        });
+      }]
     }, done);
   });
 });
