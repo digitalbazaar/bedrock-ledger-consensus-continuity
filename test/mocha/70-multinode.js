@@ -75,7 +75,10 @@ describe.skip('Multinode', () => {
       let count = 0;
       async.whilst(() => count++ < (nodes - 1), loop => {
         brLedger.add(
-          commonActor, {genesisBlock: genesisRecord.block}, (err, ledgerNode) => {
+          commonActor, {
+            genesisBlock: genesisRecord.block,
+            owner: mockIdentity.identity.id,
+          }, (err, ledgerNode) => {
             if(err) {
               return loop(err);
             }
