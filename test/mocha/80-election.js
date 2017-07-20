@@ -8,8 +8,11 @@
 const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedger = require('bedrock-ledger');
+const brTest = require('bedrock-test');
 const async = require('async');
 const expect = global.chai.expect;
+const request = brTest.require('request');
+const sinon = require('sinon');
 const uuid = require('uuid/v4');
 
 const helpers = require('./helpers');
@@ -63,6 +66,16 @@ describe('Election API', () => {
     }, done);
   });
   describe('_getManifest', () => {
+    before(() => {
+      sinon.stub(request, 'get').callsFake(() => {
+        console.log('AAAAAA', arguments);
+        console.log('HHHHHHHHHH');
+      });
+
+    });
+    after(() => {
+      request.get.restore();
+    });
     it('gets a manifest out of local storage', done => {
       async.auto({
         createManifest: callback => consensusApi._worker._election
@@ -76,6 +89,20 @@ describe('Election API', () => {
               callback();
             });
         }]
+      }, done);
+    });
+    it('returns NotFound on unknown manifestHash', done => {
+      async.auto({
+        getManifest: callback => {
+          const manifestHash =
+            'ni:///sha-256;-D0-PH-X_NVlNPeTwY9jjtlaH-4HOhQHVmzH-CT6rYI';
+          consensusApi._election._getManifest(
+            voterId, manifestHash, (err, result) => {
+              should.exist(err);
+              err.name.should.equal('NotFound');
+              callback();
+            });
+        }
       }, done);
     });
   });
