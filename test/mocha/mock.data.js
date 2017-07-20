@@ -188,13 +188,16 @@ jsonld.documentLoader = function(url, callback) {
 };
 
 const sinon = mock.sinon = {};
-sinon.manifests = {};
 
-sinon.manifests['ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs'] = {
-  "id": "ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs",
-  "type": "Events",
-  "blockHeight": 1,
-  "item": [
-    "ni:///sha-256;U5WrPoQrZ5txr8nuVcnwujYOKUxKDZe0SCIl0Q2itQo"
-  ]
-};
+sinon['/manifests?id=ni%3A%2F%2F%2Fsha-256%3B5go-RFJFhjCknW-' +
+  'Bc4WXrBPiPSeKAmYuBQMX0hCTfxs'] = {
+    "id": "ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs",
+    "type": "Events",
+    "blockHeight": 1,
+    "item": [
+      "ni:///sha-256;U5WrPoQrZ5txr8nuVcnwujYOKUxKDZe0SCIl0Q2itQo"
+    ]
+  };
+// NOTE: the hash doesn't match the event
+sinon['/events?id=ni%3A%2F%2F%2Fsha-256%3BU5WrPoQrZ5txr8nuVcnwujYOKUxK' +
+  'DZe0SCIl0Q2itQo'] = events.alpha;

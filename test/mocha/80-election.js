@@ -6,7 +6,6 @@
 'use strict';
 
 const bedrock = require('bedrock');
-const brIdentity = require('bedrock-identity');
 const brLedger = require('bedrock-ledger');
 const brTest = require('bedrock-test');
 const async = require('async');
@@ -18,7 +17,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe('Election API', () => {
+describe.skip('Election API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -68,16 +67,16 @@ describe('Election API', () => {
   describe('_getManifest', () => {
     before(() => {
       sinon.stub(request, 'get').callsFake((options, callback) => {
-        // console.log('AAAAAA', arguments);
-        if(!mockData.sinon.manifests[options.url]) {
-          callback(null, {
+        const mockUrl = options.url.substring(voterId.length);
+        if(!mockData.sinon[mockUrl]) {
+          return callback(null, {
             statusCode: 404,
             body: {error: 'Manifest not found.'}
           });
         }
         callback(null, {
           statusCode: 200,
-          body: {yo: 'ho'}
+          body: mockData.sinon[mockUrl]
         });
       });
 
@@ -109,6 +108,20 @@ describe('Election API', () => {
             voterId, manifestHash, (err, result) => {
               should.exist(err);
               err.name.should.equal('NotFound');
+              should.not.exist(result);
+              callback();
+            });
+        }
+      }, done);
+    });
+    it.skip('gets a remote manifest', done => {
+      async.auto({
+        getManifest: callback => {
+          const manifestHash =
+            'ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs';
+          consensusApi._election._getManifest(
+            voterId, manifestHash, (err, result) => {
+              console.log('VVVVVVv', err);
               callback();
             });
         }
