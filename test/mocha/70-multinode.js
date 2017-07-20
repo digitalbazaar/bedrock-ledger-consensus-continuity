@@ -69,8 +69,9 @@ describe('Multinode', () => {
     });
 
     // add N - 1 more private nodes
-    const peers = [genesisLedgerNode];
+    const peers = [];
     before(done => {
+      peers.push(genesisLedgerNode);
       let count = 0;
       async.whilst(() => count++ < (nodes - 1), loop => {
         brLedger.add(null, {
