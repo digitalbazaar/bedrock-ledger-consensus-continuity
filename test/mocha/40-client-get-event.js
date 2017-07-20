@@ -61,7 +61,7 @@ describe('Consensus Client - getEvent API', () => {
   it('should get an event', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getEvent(
-        eventHash, {id: voterId}, (err, result) => {
+        eventHash, voterId, (err, result) => {
           should.not.exist(err);
           should.exist(result);
           result.should.be.an('object');
@@ -76,7 +76,7 @@ describe('Consensus Client - getEvent API', () => {
   it('returns an error on an unknown event', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getEvent(
-        uuid(), {id: voterId}, (err, result) => {
+        uuid(), voterId, (err, result) => {
           should.exist(err);
           should.not.exist(result);
           err.details.httpStatusCode.should.equal(404);

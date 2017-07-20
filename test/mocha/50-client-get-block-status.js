@@ -61,7 +61,7 @@ describe('Consensus Client - getBlockStatus API', () => {
   it('blockHeight 1 status == consensus after consensus', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getBlockStatus(
-        0, {id: voterId}, (err, result) => {
+        0, voterId, (err, result) => {
           should.not.exist(err);
           should.exist(result);
           result.should.be.an('object');
@@ -76,7 +76,7 @@ describe('Consensus Client - getBlockStatus API', () => {
   it('should get a status for blockHeight = 1 during gossip', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getBlockStatus(
-        1, {id: voterId}, (err, result) => {
+        1, voterId, (err, result) => {
           should.not.exist(err);
           should.exist(result);
           result.should.be.an('object');
@@ -95,7 +95,7 @@ describe('Consensus Client - getBlockStatus API', () => {
         consensusApi._worker._run(null, err => callback(err)),
       get: ['runWorker', (results, callback) =>
         consensusApi._worker._client.getBlockStatus(
-          1, {id: voterId}, (err, result) => {
+          1, voterId, (err, result) => {
             should.not.exist(err);
             should.exist(result);
             result.should.be.an('object');
@@ -110,7 +110,7 @@ describe('Consensus Client - getBlockStatus API', () => {
   it('returns status == gossip for blockHeight = 100', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getBlockStatus(
-        100, {id: voterId}, (err, result) => {
+        100, voterId, (err, result) => {
           should.not.exist(err);
           should.exist(result);
           result.should.be.an('object');

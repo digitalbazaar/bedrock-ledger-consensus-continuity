@@ -54,7 +54,7 @@ describe('Consensus Client - sendEvent API', () => {
     testEvent.input[0].id = testEventId;
     async.auto({
       send: callback => consensusApi._worker._client.sendEvent(
-        testEvent, {id: voterId}, (err, result) => {
+        testEvent, voterId, (err, result) => {
           should.not.exist(err);
           should.exist(result);
           result.should.be.a('string');
