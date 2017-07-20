@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
+/* globals should */
+
 'use strict';
 
 const bedrock = require('bedrock');
@@ -63,7 +65,16 @@ describe('Continuity2017', () => {
           })],
         getLatest: ['runWorker', (results, callback) =>
           ledgerNode.storage.blocks.getLatest((err, result) => {
-            console.log('LATEST_BLOCK', err, result);
+            should.not.exist(err);
+            const eventBlock = result.eventBlock;
+            should.exist(eventBlock.block);
+            eventBlock.block.event.should.be.an('array');
+            eventBlock.block.event.should.have.length(1);
+            const event = eventBlock.block.event[0];
+            event.input.should.be.an('array');
+            event.input.should.have.length(1);
+            event.should.deep.equal(testEvent);
+            should.exist(eventBlock.meta);
             callback();
           })]
       }, done);

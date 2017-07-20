@@ -9,11 +9,9 @@ const bedrock = require('bedrock');
 const brLedger = require('bedrock-ledger');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-let request = require('request');
-request = request.defaults({json: true, strictSSL: false});
 const uuid = require('uuid/v4');
 
-describe.only('Worker - _gossipWith', () => {
+describe('Worker - _gossipWith', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
