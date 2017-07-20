@@ -15,7 +15,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe.skip('Multinode', () => {
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -66,6 +66,7 @@ describe.skip('Multinode', () => {
           return done(err);
         }
         genesisRecord = result.genesisBlock;
+        done();
       });
     });
 
