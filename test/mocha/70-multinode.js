@@ -101,10 +101,12 @@ describe('Multinode', () => {
         wait: ['runWorkers', (results, callback) => {
           setTimeout(callback, maxConsensusTime);
         }],
-        getLatest: ['runWorkers', (results, callback) =>
+        getLatest: ['wait', (results, callback) =>
           async.each(peers, (ledgerNode, callback) =>
             ledgerNode.storage.blocks.getLatest((err, result) => {
-              should.not.exist(err);
+              if(err) {
+                return callback(err);
+              }
               const eventBlock = result.eventBlock;
               should.exist(eventBlock.block);
               eventBlock.block.event.should.be.an('array');
@@ -115,7 +117,7 @@ describe('Multinode', () => {
               event.should.deep.equal(testEvent);
               should.exist(eventBlock.meta);
               callback();
-          }, callback))]
+            }), callback)]
       }, done);
     });
   });
