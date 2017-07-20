@@ -94,7 +94,8 @@ describe('Multinode', () => {
           testEvent, callback),
         runWorkers: ['addEvent', (results, callback) => async.each(
           peers,
-          (ledgerNode, callback) => consensusApi._worker._run(null, callback),
+          (ledgerNode, callback) =>
+            consensusApi._worker._run(ledgerNode, callback),
           callback)],
         wait: ['runWorkers', (results, callback) => {
           setTimeout(callback, maxConsensusTime);

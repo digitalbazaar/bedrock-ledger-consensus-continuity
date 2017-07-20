@@ -60,7 +60,7 @@ describe('Continuity2017', () => {
         addEvent: callback => ledgerNode.events.add(
           testEvent, callback),
         runWorker: ['addEvent', (results, callback) =>
-          consensusApi._worker._run(null, err => {
+          consensusApi._worker._run(ledgerNode, err => {
             callback(err);
           })],
         getLatest: ['runWorker', (results, callback) =>

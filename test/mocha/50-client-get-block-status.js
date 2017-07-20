@@ -92,7 +92,7 @@ describe('Consensus Client - getBlockStatus API', () => {
   it('blockHeight 1 status == consensus after consensus', done => {
     async.auto({
       runWorker: callback =>
-        consensusApi._worker._run(null, err => callback(err)),
+        consensusApi._worker._run(ledgerNode, err => callback(err)),
       get: ['runWorker', (results, callback) =>
         consensusApi._worker._client.getBlockStatus(
           1, voterId, (err, result) => {
