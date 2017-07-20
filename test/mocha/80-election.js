@@ -18,7 +18,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe.only('Election API', () => {
+describe('Election API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
