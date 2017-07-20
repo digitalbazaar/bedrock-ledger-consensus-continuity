@@ -66,7 +66,7 @@ describe('Consensus Client - getBlockStatus API', () => {
           should.exist(result);
           result.should.be.an('object');
           result.blockHeight.should.equal(0);
-          result.phase.should.equal('consensus');
+          result.consensusPhase.should.equal('consensus');
           result.election.should.be.an('array');
           result.election.should.have.length(2);
           callback();
@@ -81,10 +81,10 @@ describe('Consensus Client - getBlockStatus API', () => {
           should.exist(result);
           result.should.be.an('object');
           result.blockHeight.should.equal(1);
-          result.phase.should.equal('gossip');
-          result.gossip.should.be.an('array');
-          result.gossip.should.have.length(1);
-          result.gossip.should.have.members([eventHash]);
+          result.consensusPhase.should.equal('gossip');
+          result.eventHash.should.be.an('array');
+          result.eventHash.should.have.length(1);
+          result.eventHash.should.have.members([eventHash]);
           callback();
         })
     }, done);
@@ -100,7 +100,7 @@ describe('Consensus Client - getBlockStatus API', () => {
             should.exist(result);
             result.should.be.an('object');
             result.blockHeight.should.equal(1);
-            result.phase.should.equal('consensus');
+            result.consensusPhase.should.equal('consensus');
             result.election.should.be.an('array');
             result.election.should.have.length(2);
             callback();
@@ -115,10 +115,10 @@ describe('Consensus Client - getBlockStatus API', () => {
           should.exist(result);
           result.should.be.an('object');
           result.blockHeight.should.equal(100);
-          result.phase.should.equal('gossip');
-          result.gossip.should.be.an('array');
-          result.gossip.should.have.length(1);
-          result.gossip.should.have.members([eventHash]);
+          result.consensusPhase.should.equal('gossip');
+          result.eventHash.should.be.an('array');
+          result.eventHash.should.have.length(1);
+          result.eventHash.should.have.members([eventHash]);
           callback();
         })
     }, done);

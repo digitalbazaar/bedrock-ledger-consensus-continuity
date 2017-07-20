@@ -68,9 +68,9 @@ describe('Consensus Agent API', () => {
       res.body.should.be.an('object');
       const result = res.body;
       result.blockHeight.should.equal(newBlockHeight);
-      result.phase.should.equal('gossip');
-      result.gossip.should.be.an('array');
-      result.gossip.should.have.length(0);
+      result.consensusPhase.should.equal('gossip');
+      result.eventHash.should.be.an('array');
+      result.eventHash.should.have.length(0);
       done();
     });
   });
@@ -87,9 +87,9 @@ describe('Consensus Agent API', () => {
           res.body.should.be.an('object');
           const result = res.body;
           result.blockHeight.should.equal(newBlockHeight);
-          result.phase.should.equal('gossip');
-          result.gossip.should.be.an('array');
-          result.gossip.should.have.length(1);
+          result.consensusPhase.should.equal('gossip');
+          result.eventHash.should.be.an('array');
+          result.eventHash.should.have.length(1);
           callback();
         })
       ]
