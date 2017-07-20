@@ -186,3 +186,15 @@ jsonld.documentLoader = function(url, callback) {
   // }
   oldLoader(url, callback);
 };
+
+const sinon = mock.sinon = {};
+sinon.manifests = {};
+
+sinon.manifests['ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs'] = {
+  "id": "ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs",
+  "type": "Events",
+  "blockHeight": 1,
+  "item": [
+    "ni:///sha-256;U5WrPoQrZ5txr8nuVcnwujYOKUxKDZe0SCIl0Q2itQo"
+  ]
+};

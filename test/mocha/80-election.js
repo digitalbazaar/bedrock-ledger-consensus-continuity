@@ -18,7 +18,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe('Election API', () => {
+describe.only('Election API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -67,9 +67,18 @@ describe('Election API', () => {
   });
   describe('_getManifest', () => {
     before(() => {
-      sinon.stub(request, 'get').callsFake(() => {
-        console.log('AAAAAA', arguments);
-        console.log('HHHHHHHHHH');
+      sinon.stub(request, 'get').callsFake((options, callback) => {
+        // console.log('AAAAAA', arguments);
+        if(!mockData.sinon.manifests[options.url]) {
+          callback(null, {
+            statusCode: 404,
+            body: {error: 'Manifest not found.'}
+          });
+        }
+        callback(null, {
+          statusCode: 200,
+          body: {yo: 'ho'}
+        });
       });
 
     });
