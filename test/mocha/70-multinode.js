@@ -29,7 +29,6 @@ describe('Multinode', () => {
     let genesisLedgerNode;
     const mockIdentity = mockData.identities.regularUser;
     const configEvent = mockData.events.config;
-    let commonActor;
     before(done => {
       async.auto({
         clean: callback =>
@@ -40,7 +39,7 @@ describe('Multinode', () => {
           })],
         consensusPlugin: callback => brLedger.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => brLedger.add(
-          results.actor, {configEvent}, (err, ledgerNode) => {
+          null, {configEvent}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
@@ -51,7 +50,6 @@ describe('Multinode', () => {
         if(err) {
           return done(err);
         }
-        commonActor = results.actor;
         genesisLedgerNode = results.ledgerNode;
         consensusApi = results.consensusPlugin.api;
         done();
@@ -75,17 +73,16 @@ describe('Multinode', () => {
     before(done => {
       let count = 0;
       async.whilst(() => count++ < (nodes - 1), loop => {
-        brLedger.add(
-          commonActor, {
-            genesisBlock: genesisRecord.block,
-            owner: mockIdentity.identity.id,
-          }, (err, ledgerNode) => {
-            if(err) {
-              return loop(err);
-            }
-            peers.push(ledgerNode);
-            loop();
-          });
+        brLedger.add(null, {
+          genesisBlock: genesisRecord.block,
+          owner: mockIdentity.identity.id,
+        }, (err, ledgerNode) => {
+          if(err) {
+            return loop(err);
+          }
+          peers.push(ledgerNode);
+          loop();
+        });
       }, done);
     });
 
