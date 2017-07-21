@@ -71,20 +71,19 @@ describe.only('Multinode', () => {
     // add N - 1 more private nodes
     const peers = [];
     before(done => {
+      console.log('ADDING GENESIS NODE', genesisLedgerNode.id);
       peers.push(genesisLedgerNode);
-      let count = 0;
-      async.whilst(() => count++ < (nodes - 1), loop => {
-        brLedger.add(null, {
-          genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
-        }, (err, ledgerNode) => {
-          if(err) {
-            return loop(err);
-          }
-          peers.push(ledgerNode);
-          loop();
-        });
-      }, done);
+      async.times(nodes - 1, (i, callback) => brLedger.add(null, {
+        genesisBlock: genesisRecord.block,
+        owner: mockIdentity.identity.id
+      }, (err, ledgerNode) => {
+        if(err) {
+          return callback(err);
+        }
+        console.log('ADDING NODE', ledgerNode.id);
+        peers.push(ledgerNode);
+        callback();
+      }), done);
     });
 
     it('should add an event and achieve consensus', done => {
