@@ -199,5 +199,99 @@ describe.only('Multinode', () => {
         }, done);
       });
     });
+    describe('Block 3', () => {
+      it('should add another event and achieve consensus with only 7 nodes', function(done) {
+        this.timeout(120000);
+        const testEvent = bedrock.util.clone(mockData.events.alpha);
+        testEvent.input[0].id = 'https://example.com/events/' + uuid();
+        console.log('EVENT ID', testEvent.input[0].id);
+        // TODO: use (count / 3)
+        const twoThirdsMajority = peers.slice(
+          0, _twoThirdsMajority(peers.length) + 1);
+        async.auto({
+          addEvent: callback => genesisLedgerNode.events.add(
+            testEvent, callback),
+          runWorkers: ['addEvent', (results, callback) => async.each(
+            twoThirdsMajority, (ledgerNode, callback) =>
+              consensusApi._worker._run(ledgerNode, callback), callback)],
+          getLatest: ['runWorkers', (results, callback) =>
+            async.each(twoThirdsMajority, (ledgerNode, callback) =>
+              ledgerNode.storage.blocks.getLatest((err, result) => {
+                if(err) {
+                  return callback(err);
+                }
+                const eventBlock = result.eventBlock;
+                console.log('EVENT BLOCK', JSON.stringify(eventBlock, null, 2));
+                should.exist(eventBlock.block);
+                eventBlock.block.event.should.be.an('array');
+                eventBlock.block.event.should.have.length(1);
+                const event = eventBlock.block.event[0];
+                event.input.should.be.an('array');
+                event.input.should.have.length(1);
+                // TODO: signature is dynamic... needs a better check
+                delete event.signature;
+                event.should.deep.equal(testEvent);
+                should.exist(eventBlock.meta);
+                should.exist(eventBlock.block.electionResults);
+                eventBlock.block.electionResults.should.be.an('array');
+                eventBlock.block.electionResults.should.have.length(1);
+                const electionResults = eventBlock.block.electionResults[0];
+                should.exist(electionResults.recommendedElector);
+                // electionResults.recommendedElector.map(e => e.id)
+                //   .should.have.same.members(recommendedElectorsBlock1.map(
+                //     e => e.id));
+                callback();
+              }), callback)]
+        }, done);
+      });
+    });
+    describe('Block 4', () => {
+      it('should add another event and achieve consensus with 10 nodes again', function(done) {
+        this.timeout(120000);
+        const testEvent = bedrock.util.clone(mockData.events.alpha);
+        testEvent.input[0].id = 'https://example.com/events/' + uuid();
+        console.log('EVENT ID', testEvent.input[0].id);
+        async.auto({
+          addEvent: callback => genesisLedgerNode.events.add(
+            testEvent, callback),
+          runWorkers: ['addEvent', (results, callback) => async.each(
+            peers, (ledgerNode, callback) =>
+              consensusApi._worker._run(ledgerNode, callback), callback)],
+          getLatest: ['runWorkers', (results, callback) =>
+            async.each(peers, (ledgerNode, callback) =>
+              ledgerNode.storage.blocks.getLatest((err, result) => {
+                if(err) {
+                  return callback(err);
+                }
+                const eventBlock = result.eventBlock;
+                console.log('EVENT BLOCK', JSON.stringify(eventBlock, null, 2));
+                should.exist(eventBlock.block);
+                eventBlock.block.event.should.be.an('array');
+                eventBlock.block.event.should.have.length(1);
+                const event = eventBlock.block.event[0];
+                event.input.should.be.an('array');
+                event.input.should.have.length(1);
+                // TODO: signature is dynamic... needs a better check
+                delete event.signature;
+                event.should.deep.equal(testEvent);
+                should.exist(eventBlock.meta);
+                should.exist(eventBlock.block.electionResults);
+                eventBlock.block.electionResults.should.be.an('array');
+                eventBlock.block.electionResults.should.have.length(1);
+                const electionResults = eventBlock.block.electionResults[0];
+                should.exist(electionResults.recommendedElector);
+                // electionResults.recommendedElector.map(e => e.id)
+                //   .should.have.same.members(recommendedElectorsBlock1.map(
+                //     e => e.id));
+                callback();
+              }), callback)]
+        }, done);
+      });
+    });
   });
 });
+
+function _twoThirdsMajority(count) {
+  // special case when electors < 3 -- every elector must agree.
+  return (count < 3) ? count : Math.floor(count / 3) * 2;
+}
