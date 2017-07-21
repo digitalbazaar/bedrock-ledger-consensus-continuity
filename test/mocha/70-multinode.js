@@ -21,7 +21,7 @@ describe.only('Multinode', () => {
   });
 
   describe('Consensus with 4 Nodes', () => {
-    const nodes = 4;
+    const nodes = 64;
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
