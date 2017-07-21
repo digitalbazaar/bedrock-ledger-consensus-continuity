@@ -91,7 +91,7 @@ describe('Election API', () => {
         getManifest: ['createManifest', (results, callback) => {
           const manifestHash = results.createManifest.id;
           consensusApi._election._getManifest(
-            ledgerNode, voterId, manifestHash, (err, result) => {
+            ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
               should.not.exist(err);
               result.should.deep.equal(results.createManifest);
               callback();
@@ -105,7 +105,7 @@ describe('Election API', () => {
           const manifestHash =
             'ni:///sha-256;-D0-PH-X_NVlNPeTwY9jjtlaH-4HOhQHVmzH-CT6rYI';
           consensusApi._election._getManifest(
-            ledgerNode, voterId, manifestHash, (err, result) => {
+            ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
               should.exist(err);
               err.name.should.equal('NotFound');
               should.not.exist(result);
@@ -120,7 +120,7 @@ describe('Election API', () => {
           const manifestHash =
             'ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs';
           consensusApi._election._getManifest(
-            ledgerNode, voterId, manifestHash, (err, result) => {
+            ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
               should.not.exist(err);
               result.should.be.an('object');
               result.should.deep.equal(mockData.manifests.sinonAlpha);
