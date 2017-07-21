@@ -15,7 +15,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe.skip('Multinode', () => {
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -83,6 +83,10 @@ describe.skip('Multinode', () => {
         peers.push(ledgerNode);
         callback();
       }), done);
+    });
+
+    it.only('starts up', done => {
+      done();
     });
 
     it('should add an event and achieve consensus', done => {
