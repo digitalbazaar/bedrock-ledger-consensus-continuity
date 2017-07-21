@@ -15,7 +15,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe('Multinode', () => {
+describe.only('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -37,14 +37,17 @@ describe('Multinode', () => {
             callback(err, identity);
           })],
         consensusPlugin: callback => brLedger.use('Continuity2017', callback),
-        ledgerNode: ['actor', (results, callback) => brLedger.add(
-          null, {configEvent}, (err, ledgerNode) => {
+        ledgerNode: ['actor', (results, callback) => {
+          console.log('START ADD GENESIS NODE');
+          brLedger.add(null, {configEvent}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
-            expect(ledgerNode).to.be.ok;
+            console.log('ADDED NODE', ledgerNode.id);
+            console.log('----- FINISH ADD GENESIS NODE');
             callback(null, ledgerNode);
-          })]
+          })
+        }]
       }, (err, results) => {
         if(err) {
           return done(err);
@@ -72,20 +75,24 @@ describe('Multinode', () => {
     before(done => {
       console.log('ADDING GENESIS NODE', genesisLedgerNode.id);
       peers.push(genesisLedgerNode);
-      async.times(nodes - 1, (i, callback) => brLedger.add(null, {
-        genesisBlock: genesisRecord.block,
-        owner: mockIdentity.identity.id
-      }, (err, ledgerNode) => {
-        if(err) {
-          return callback(err);
-        }
-        console.log('ADDING NODE', ledgerNode.id);
-        peers.push(ledgerNode);
-        callback();
-      }), done);
+      async.timesSeries(nodes - 1, (i, callback) => {
+        console.log('START ADD NODE', i);
+        brLedger.add(null, {
+          genesisBlock: genesisRecord.block,
+          owner: mockIdentity.identity.id
+        }, (err, ledgerNode) => {
+          if(err) {
+            return callback(err);
+          }
+          peers.push(ledgerNode);
+          console.log('ADDED NODE', ledgerNode.id);
+          console.log('----- FINISH ADD NODE', i);
+          callback();
+        });
+      }, done);
     });
 
-    it.only('starts up', done => {
+    it.skip('starts up', done => {
       done();
     });
 
