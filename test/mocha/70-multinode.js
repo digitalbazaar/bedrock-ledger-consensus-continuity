@@ -9,19 +9,18 @@ const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedger = require('bedrock-ledger');
 const async = require('async');
-const expect = global.chai.expect;
 const uuid = require('uuid/v4');
 
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe.only('Multinode', () => {
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
 
   describe('Consensus with 4 Nodes', () => {
-    const nodes = 64;
+    const nodes = 4;
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
@@ -46,7 +45,7 @@ describe.only('Multinode', () => {
             console.log('ADDED NODE', ledgerNode.id);
             console.log('----- FINISH ADD GENESIS NODE');
             callback(null, ledgerNode);
-          })
+          });
         }]
       }, (err, results) => {
         if(err) {
