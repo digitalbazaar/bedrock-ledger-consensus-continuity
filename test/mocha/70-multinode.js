@@ -79,7 +79,7 @@ describe.only('Multinode', () => {
       console.log('ADDING GENESIS NODE', genesisLedgerNode.id);
       peers.push(genesisLedgerNode);
       async.times(nodes - 1, (i, callback) => {
-        console.log('START ADD NODE', i);
+        console.log('START ADD NODE', (i + 2));
         brLedger.add(null, {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
@@ -89,7 +89,7 @@ describe.only('Multinode', () => {
           }
           peers.push(ledgerNode);
           console.log('ADDED NODE', ledgerNode.id);
-          console.log('----- FINISH ADD NODE', i);
+          console.log('----- FINISH ADD NODE', (i + 2));
           callback();
         });
       }, done);
@@ -193,7 +193,8 @@ describe.only('Multinode', () => {
                 should.exist(eventBlock.meta);
                 should.exist(eventBlock.block.electionResults);
                 eventBlock.block.electionResults.should.be.an('array');
-                eventBlock.block.electionResults.should.have.length.above(7);
+                eventBlock.block.electionResults.should.have.length.at.least(
+                  _twoThirdsMajority(nodes));
                 callback();
               }), callback)]
         }, done);
@@ -205,9 +206,9 @@ describe.only('Multinode', () => {
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
         console.log('EVENT ID', testEvent.input[0].id);
-        // TODO: use (count / 3)
         const twoThirdsMajority = peers.slice(
-          0, _twoThirdsMajority(peers.length) + 1);
+          0, _twoThirdsMajority(peers.length));
+        twoThirdsMajority.length.should.equal(_twoThirdsMajority(peers.length));
         async.auto({
           addEvent: callback => genesisLedgerNode.events.add(
             testEvent, callback),
@@ -234,7 +235,8 @@ describe.only('Multinode', () => {
                 should.exist(eventBlock.meta);
                 should.exist(eventBlock.block.electionResults);
                 eventBlock.block.electionResults.should.be.an('array');
-                eventBlock.block.electionResults.should.have.length(1);
+                eventBlock.block.electionResults.should.have.length.at.least(
+                  _twoThirdsMajority(nodes));
                 const electionResults = eventBlock.block.electionResults[0];
                 should.exist(electionResults.recommendedElector);
                 // electionResults.recommendedElector.map(e => e.id)
@@ -251,11 +253,18 @@ describe.only('Multinode', () => {
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
         console.log('EVENT ID', testEvent.input[0].id);
+        const trailingPeers = peers.slice(
+          _twoThirdsMajority(peers.length));
+        trailingPeers.length.should.equal(
+          peers.length - _twoThirdsMajority(peers.length));
         async.auto({
           addEvent: callback => genesisLedgerNode.events.add(
             testEvent, callback),
-          runWorkers: ['addEvent', (results, callback) => async.each(
-            peers, (ledgerNode, callback) =>
+          syncTrailingPeers: callback => async.each(
+            trailingPeers, (ledgerNode, callback) =>
+              consensusApi._worker._run(ledgerNode, callback), callback),
+          runWorkers: ['addEvent', 'syncTrailingPeers', (results, callback) =>
+            async.each(peers, (ledgerNode, callback) =>
               consensusApi._worker._run(ledgerNode, callback), callback)],
           getLatest: ['runWorkers', (results, callback) =>
             async.each(peers, (ledgerNode, callback) =>
@@ -277,7 +286,8 @@ describe.only('Multinode', () => {
                 should.exist(eventBlock.meta);
                 should.exist(eventBlock.block.electionResults);
                 eventBlock.block.electionResults.should.be.an('array');
-                eventBlock.block.electionResults.should.have.length(1);
+                eventBlock.block.electionResults.should.have.length.at.least(
+                  _twoThirdsMajority(nodes));
                 const electionResults = eventBlock.block.electionResults[0];
                 should.exist(electionResults.recommendedElector);
                 // electionResults.recommendedElector.map(e => e.id)
@@ -293,5 +303,5 @@ describe.only('Multinode', () => {
 
 function _twoThirdsMajority(count) {
   // special case when electors < 3 -- every elector must agree.
-  return (count < 3) ? count : Math.floor(count / 3) * 2;
+  return (count < 3) ? count : Math.floor(count / 3) * 2 + 1;
 }
