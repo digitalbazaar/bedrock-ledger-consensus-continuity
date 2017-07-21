@@ -15,7 +15,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe.only('Multinode', () => {
+describe.skip('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
