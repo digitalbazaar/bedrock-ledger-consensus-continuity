@@ -19,6 +19,7 @@
   "dependencies": {
     "async": "^2.4.0",
     "jsonld-signatures": "digitalbazaar/jsonld-signatures#multiSignature",
+    "lodash": "^4.17.4",
     "ni-uri": "^1.1.3",
     "request": "^2.81.0",
     "ursa": "^0.9.4",

@@ -14,13 +14,16 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe('Multinode', () => {
+// NOTE: the tests in this file are designed to run in series
+// DO NOT use `it.only`
+
+describe.only('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
 
-  describe('Consensus with 4 Nodes', () => {
-    const nodes = 4;
+  describe('Consensus with 10 Nodes', () => {
+    const nodes = 10;
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
@@ -92,38 +95,114 @@ describe('Multinode', () => {
       }, done);
     });
 
-    it('should add an event and achieve consensus', function(done) {
-      this.timeout(120000);
-      const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = 'https://example.com/events/' + uuid();
-      async.auto({
-        addEvent: callback => genesisLedgerNode.events.add(
-          testEvent, callback),
-        runWorkers: ['addEvent', (results, callback) => async.each(
-          peers,
-          (ledgerNode, callback) =>
-            consensusApi._worker._run(ledgerNode, callback),
-          callback)],
-        getLatest: ['runWorkers', (results, callback) =>
-          async.each(peers, (ledgerNode, callback) =>
-            ledgerNode.storage.blocks.getLatest((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              const eventBlock = result.eventBlock;
-              should.exist(eventBlock.block);
-              eventBlock.block.event.should.be.an('array');
-              eventBlock.block.event.should.have.length(1);
-              const event = eventBlock.block.event[0];
-              event.input.should.be.an('array');
-              event.input.should.have.length(1);
-              // TODO: signature is dynamic... needs a better check
-              delete event.signature;
-              event.should.deep.equal(testEvent);
-              should.exist(eventBlock.meta);
-              callback();
-            }), callback)]
-      }, done);
+    describe('Block 1', () => {
+      let recommendedElectorsBlock1;
+      before(done => {
+        async.map(peers, (ledgerNode, callback) => {
+          consensusApi._voters.get(ledgerNode.id, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            callback(null, {id: result.id});
+          });
+        }, (err, result) => {
+          if(err) {
+            return done(err);
+          }
+          recommendedElectorsBlock1 = result;
+          done();
+        });
+      });
+
+      it('should add an event and achieve consensus', function(done) {
+        this.timeout(120000);
+        const testEvent = bedrock.util.clone(mockData.events.alpha);
+        testEvent.input[0].id = 'https://example.com/events/' + uuid();
+
+        // instruct consenses on which electors to use for Block 2
+        // these recommended electors will be included in Block 1
+        consensusApi._election._recommendElectors =
+          (ledgerNode, voter, electors, manifest, callback) => {
+            callback(null, recommendedElectorsBlock1);
+          };
+
+        async.auto({
+          addEvent: callback => genesisLedgerNode.events.add(
+            testEvent, callback),
+          runWorkers: ['addEvent', (results, callback) => async.each(
+            peers, (ledgerNode, callback) =>
+              consensusApi._worker._run(ledgerNode, callback), callback)],
+          getLatest: ['runWorkers', (results, callback) =>
+            async.each(peers, (ledgerNode, callback) =>
+              ledgerNode.storage.blocks.getLatest((err, result) => {
+                if(err) {
+                  return callback(err);
+                }
+                const eventBlock = result.eventBlock;
+                should.exist(eventBlock.block);
+                eventBlock.block.event.should.be.an('array');
+                eventBlock.block.event.should.have.length(1);
+                const event = eventBlock.block.event[0];
+                event.input.should.be.an('array');
+                event.input.should.have.length(1);
+                // TODO: signature is dynamic... needs a better check
+                delete event.signature;
+                event.should.deep.equal(testEvent);
+                should.exist(eventBlock.meta);
+                should.exist(eventBlock.block.electionResults);
+                eventBlock.block.electionResults.should.be.an('array');
+                eventBlock.block.electionResults.should.have.length(1);
+                const electionResults = eventBlock.block.electionResults[0];
+                should.exist(electionResults.recommendedElector);
+                electionResults.recommendedElector.map(e => e.id)
+                  .should.have.same.members(recommendedElectorsBlock1.map(
+                    e => e.id));
+                callback();
+              }), callback)]
+        }, done);
+      });
+    }); // end block 1
+    describe('Block 2', () => {
+      it('should add an event and achieve consensus', function(done) {
+        this.timeout(120000);
+        const testEvent = bedrock.util.clone(mockData.events.alpha);
+        testEvent.input[0].id = 'https://example.com/events/' + uuid();
+
+        async.auto({
+          addEvent: callback => genesisLedgerNode.events.add(
+            testEvent, callback),
+          runWorkers: ['addEvent', (results, callback) => async.each(
+            peers, (ledgerNode, callback) =>
+              consensusApi._worker._run(ledgerNode, callback), callback)],
+          getLatest: ['runWorkers', (results, callback) =>
+            async.each(peers, (ledgerNode, callback) =>
+              ledgerNode.storage.blocks.getLatest((err, result) => {
+                if(err) {
+                  return callback(err);
+                }
+                const eventBlock = result.eventBlock;
+                should.exist(eventBlock.block);
+                eventBlock.block.event.should.be.an('array');
+                eventBlock.block.event.should.have.length(1);
+                const event = eventBlock.block.event[0];
+                event.input.should.be.an('array');
+                event.input.should.have.length(1);
+                // TODO: signature is dynamic... needs a better check
+                delete event.signature;
+                event.should.deep.equal(testEvent);
+                should.exist(eventBlock.meta);
+                should.exist(eventBlock.block.electionResults);
+                eventBlock.block.electionResults.should.be.an('array');
+                eventBlock.block.electionResults.should.have.length(1);
+                const electionResults = eventBlock.block.electionResults[0];
+                should.exist(electionResults.recommendedElector);
+                electionResults.recommendedElector.map(e => e.id)
+                  .should.have.same.members(recommendedElectorsBlock1.map(
+                    e => e.id));
+                callback();
+              }), callback)]
+        }, done);
+      });
     });
   });
 });
