@@ -195,9 +195,11 @@ sinon['/manifests?id=ni%3A%2F%2F%2Fsha-256%3B5go-RFJFhjCknW-' +
     "type": "Events",
     "blockHeight": 1,
     "item": [
-      "ni:///sha-256;U5WrPoQrZ5txr8nuVcnwujYOKUxKDZe0SCIl0Q2itQo"
+      "ni:///sha-256;J3ky6Uo4EIjWov_FdpvPsxlTbyNX9laserdNgn5C5Qk"
     ]
   };
 // NOTE: the hash doesn't match the event
-sinon['/events?id=ni%3A%2F%2F%2Fsha-256%3BU5WrPoQrZ5txr8nuVcnwujYOKUxK' +
-  'DZe0SCIl0Q2itQo'] = events.alpha;
+const sinonEvent = bedrock.util.clone(events.alpha);
+sinonEvent.input[0].id =
+  'https://example.com/events/2b9dadb8-d786-44ed-b735-1c5a6752d290';
+sinon['/events?id=ni%3A%2F%2F%2Fsha-256%3BJ3ky6Uo4EIjWov_FdpvPsxlTbyNX9laserdNgn5C5Qk'] = sinonEvent;
