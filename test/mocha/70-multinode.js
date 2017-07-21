@@ -22,7 +22,6 @@ describe.only('Multinode', () => {
 
   describe('Consensus with 4 Nodes', () => {
     const nodes = 4;
-    const maxConsensusTime = 1000;
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
@@ -97,10 +96,7 @@ describe.only('Multinode', () => {
           (ledgerNode, callback) =>
             consensusApi._worker._run(ledgerNode, callback),
           callback)],
-        wait: ['runWorkers', (results, callback) => {
-          setTimeout(callback, maxConsensusTime);
-        }],
-        getLatest: ['wait', (results, callback) =>
+        getLatest: ['runWorkers', (results, callback) =>
           async.each(peers, (ledgerNode, callback) =>
             ledgerNode.storage.blocks.getLatest((err, result) => {
               if(err) {
