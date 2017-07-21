@@ -59,6 +59,9 @@ describe('Election API', () => {
       }],
       addEvent: ['ledgerNode', (results, callback) => ledgerNode.events.add(
         testEvent, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
           eventHash = result.meta.eventHash;
           callback();
         })]
@@ -92,7 +95,9 @@ describe('Election API', () => {
           const manifestHash = results.createManifest.id;
           consensusApi._election._getManifest(
             ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
-              should.not.exist(err);
+              if(err) {
+                return done(err);
+              }
               result.should.deep.equal(results.createManifest);
               callback();
             });
@@ -121,7 +126,9 @@ describe('Election API', () => {
             'ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs';
           consensusApi._election._getManifest(
             ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
-              should.not.exist(err);
+              if(err) {
+                return done(err);
+              }
               result.should.be.an('object');
               result.should.deep.equal(mockData.manifests.sinonAlpha);
               callback();

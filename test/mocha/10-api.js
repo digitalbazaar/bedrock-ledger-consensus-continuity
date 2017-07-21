@@ -73,6 +73,8 @@ describe('Continuity2017', () => {
             const event = eventBlock.block.event[0];
             event.input.should.be.an('array');
             event.input.should.have.length(1);
+            // TODO: signature is dynamic... needs a better check
+            delete event.signature;
             event.should.deep.equal(testEvent);
             should.exist(eventBlock.meta);
             callback();
