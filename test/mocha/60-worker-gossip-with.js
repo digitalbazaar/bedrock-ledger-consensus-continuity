@@ -58,11 +58,11 @@ describe('Worker - _gossipWith', () => {
         })]
     }, done);
   });
-  it('should work', done => {
+  it('should complete without an error', done => {
     async.auto({
       gossipWith: callback => consensusApi._worker._gossipWith(
-        ledgerNode, {id: voterId}, 1, {id: voterId}, (err, result) => {
-          // FIXME: ADD ASSERTIONS
+        ledgerNode, {id: voterId}, 1, {id: voterId}, err => {
+          should.not.exist(err);
           callback();
         })
     }, done);
