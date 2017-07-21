@@ -17,7 +17,7 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe.only('Multinode', () => {
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -40,13 +40,10 @@ describe.only('Multinode', () => {
           })],
         consensusPlugin: callback => brLedger.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => {
-          console.log('START ADD GENESIS NODE');
           brLedger.add(null, {configEvent}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
-            console.log('ADDED NODE', ledgerNode.id);
-            console.log('----- FINISH ADD GENESIS NODE');
             callback(null, ledgerNode);
           });
         }]
@@ -76,10 +73,8 @@ describe.only('Multinode', () => {
     const peers = [];
     before(function(done) {
       this.timeout(120000);
-      console.log('ADDING GENESIS NODE', genesisLedgerNode.id);
       peers.push(genesisLedgerNode);
       async.times(nodes - 1, (i, callback) => {
-        console.log('START ADD NODE', (i + 2));
         brLedger.add(null, {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
@@ -88,8 +83,6 @@ describe.only('Multinode', () => {
             return callback(err);
           }
           peers.push(ledgerNode);
-          console.log('ADDED NODE', ledgerNode.id);
-          console.log('----- FINISH ADD NODE', (i + 2));
           callback();
         });
       }, done);
@@ -118,7 +111,6 @@ describe.only('Multinode', () => {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
-        console.log('EVENT ID', testEvent.input[0].id);
         // instruct consenses on which electors to use for Block 2
         // these recommended electors will be included in Block 1
         consensusApi._election._recommendElectors =
@@ -167,7 +159,6 @@ describe.only('Multinode', () => {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
-        console.log('EVENT ID', testEvent.input[0].id);
         async.auto({
           addEvent: callback => genesisLedgerNode.events.add(
             testEvent, callback),
@@ -201,11 +192,10 @@ describe.only('Multinode', () => {
       });
     });
     describe('Block 3', () => {
-      it('should add another event and achieve consensus with only 7 nodes', function(done) {
+      it('should achieve consensus with only 7 nodes', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
-        console.log('EVENT ID', testEvent.input[0].id);
         const twoThirdsMajority = peers.slice(
           0, _twoThirdsMajority(peers.length));
         twoThirdsMajority.length.should.equal(_twoThirdsMajority(peers.length));
@@ -222,7 +212,6 @@ describe.only('Multinode', () => {
                   return callback(err);
                 }
                 const eventBlock = result.eventBlock;
-                console.log('EVENT BLOCK', JSON.stringify(eventBlock, null, 2));
                 should.exist(eventBlock.block);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
@@ -248,11 +237,10 @@ describe.only('Multinode', () => {
       });
     });
     describe('Block 4', () => {
-      it('should add another event and achieve consensus with 10 nodes again', function(done) {
+      it('should achieve consensus with 10 nodes again', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
-        console.log('EVENT ID', testEvent.input[0].id);
         const trailingPeers = peers.slice(
           _twoThirdsMajority(peers.length));
         trailingPeers.length.should.equal(
@@ -273,7 +261,6 @@ describe.only('Multinode', () => {
                   return callback(err);
                 }
                 const eventBlock = result.eventBlock;
-                console.log('EVENT BLOCK', JSON.stringify(eventBlock, null, 2));
                 should.exist(eventBlock.block);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
