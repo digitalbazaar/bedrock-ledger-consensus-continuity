@@ -76,7 +76,7 @@ describe.only('Multinode', () => {
       this.timeout(120000);
       console.log('ADDING GENESIS NODE', genesisLedgerNode.id);
       peers.push(genesisLedgerNode);
-      async.timesSeries(nodes - 1, (i, callback) => {
+      async.times(nodes - 1, (i, callback) => {
         console.log('START ADD NODE', i);
         brLedger.add(null, {
           genesisBlock: genesisRecord.block,
