@@ -92,11 +92,8 @@ describe.only('Multinode', () => {
       }, done);
     });
 
-    it.skip('starts up', done => {
-      done();
-    });
-
-    it('should add an event and achieve consensus', done => {
+    it('should add an event and achieve consensus', function(done) {
+      this.timeout(120000);
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.input[0].id = 'https://example.com/events/' + uuid();
       async.auto({
