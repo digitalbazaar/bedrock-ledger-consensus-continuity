@@ -72,7 +72,8 @@ describe.only('Multinode', () => {
 
     // add N - 1 more private nodes
     const peers = [];
-    before(done => {
+    before(function(done) {
+      this.timeout(120000);
       console.log('ADDING GENESIS NODE', genesisLedgerNode.id);
       peers.push(genesisLedgerNode);
       async.timesSeries(nodes - 1, (i, callback) => {
