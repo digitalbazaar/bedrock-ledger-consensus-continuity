@@ -62,7 +62,7 @@ describe('Worker - _gossipWith', () => {
     async.auto({
       gossipWith: callback => consensusApi._worker._gossipWith(
         ledgerNode, {id: voterId}, 1, {id: voterId}, (err, result) => {
-          console.log('VVVVVV', err, result);
+          // FIXME: ADD ASSERTIONS
           callback();
         })
     }, done);

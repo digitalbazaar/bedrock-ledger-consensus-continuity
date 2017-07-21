@@ -121,7 +121,9 @@ describe('Election API', () => {
             'ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs';
           consensusApi._election._getManifest(
             voterId, manifestHash, (err, result) => {
-              console.log('VVVVVVv', err);
+              should.not.exist(err);
+              result.should.be.an('object');
+              result.should.deep.equal(mockData.manifests.sinonAlpha);
               callback();
             });
         }

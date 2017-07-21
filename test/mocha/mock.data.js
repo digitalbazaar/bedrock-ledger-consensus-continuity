@@ -187,19 +187,24 @@ jsonld.documentLoader = function(url, callback) {
   oldLoader(url, callback);
 };
 
+const manifests = mock.manifests = {};
+
+manifests.sinonAlpha = {
+  "id": "ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs",
+  "type": "Events",
+  "blockHeight": 1,
+  "item": [
+    "ni:///sha-256;J3ky6Uo4EIjWov_FdpvPsxlTbyNX9laserdNgn5C5Qk"
+  ]
+};
+
 const sinon = mock.sinon = {};
 
 sinon['/manifests?id=ni%3A%2F%2F%2Fsha-256%3B5go-RFJFhjCknW-' +
-  'Bc4WXrBPiPSeKAmYuBQMX0hCTfxs'] = {
-    "id": "ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs",
-    "type": "Events",
-    "blockHeight": 1,
-    "item": [
-      "ni:///sha-256;J3ky6Uo4EIjWov_FdpvPsxlTbyNX9laserdNgn5C5Qk"
-    ]
-  };
-// NOTE: the hash doesn't match the event
-const sinonEvent = bedrock.util.clone(events.alpha);
-sinonEvent.input[0].id =
+  'Bc4WXrBPiPSeKAmYuBQMX0hCTfxs'] = manifests.sinonAlpha;
+
+events.sinonAlpha = bedrock.util.clone(events.alpha);
+events.sinonAlpha.input[0].id =
   'https://example.com/events/2b9dadb8-d786-44ed-b735-1c5a6752d290';
-sinon['/events?id=ni%3A%2F%2F%2Fsha-256%3BJ3ky6Uo4EIjWov_FdpvPsxlTbyNX9laserdNgn5C5Qk'] = sinonEvent;
+sinon['/events?id=ni%3A%2F%2F%2Fsha-256%3BJ3ky6Uo4EIjWov_' +
+  'FdpvPsxlTbyNX9laserdNgn5C5Qk'] = events.sinonAlpha;
