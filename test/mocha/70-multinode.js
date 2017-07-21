@@ -15,7 +15,7 @@ const uuid = require('uuid/v4');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
-describe('Multinode', () => {
+describe.only('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -76,7 +76,7 @@ describe('Multinode', () => {
       async.whilst(() => count++ < (nodes - 1), loop => {
         brLedger.add(null, {
           genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id,
+          owner: mockIdentity.identity.id
         }, (err, ledgerNode) => {
           if(err) {
             return loop(err);
