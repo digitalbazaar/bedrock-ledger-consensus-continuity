@@ -196,6 +196,7 @@ describe.only('Multinode', () => {
                 eventBlock.block.electionResults.should.have.length(1);
                 const electionResults = eventBlock.block.electionResults[0];
                 should.exist(electionResults.recommendedElector);
+                console.log('ELECTION RESULTS', electionResults);
                 // electionResults.recommendedElector.map(e => e.id)
                 //   .should.have.same.members(recommendedElectorsBlock1.map(
                 //     e => e.id));
