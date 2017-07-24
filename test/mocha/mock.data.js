@@ -53,9 +53,7 @@ events.config = {
   input: [{
     type: 'WebLedgerConfiguration',
     ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
-    consensusMethod: {
-      type: 'Continuity2017'
-    }
+    consensusMethod: 'Continuity2017'
   }]
 };
 
