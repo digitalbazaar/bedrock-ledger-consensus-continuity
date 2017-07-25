@@ -1,4 +1,4 @@
-# bedrock-ledger-continuity ChangeLog
+# bedrock-ledger-consensus-continuity ChangeLog
 
 ## 1.0.0 - 2017-xx-xx
 

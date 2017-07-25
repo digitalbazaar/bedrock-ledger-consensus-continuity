@@ -1,21 +1,11 @@
 {
-  "name": "bedrock-ledger-continuity-test",
+  "name": "bedrock-ledger-consensus-continuity-test",
   "version": "0.0.1-0",
   "private": true,
-  "description": "bedrock-ledger-continuity",
-  "main": "test.js",
   "scripts": {
     "test": "node --preserve-symlinks test test",
     "watch": "grunt watch"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/digitalbazaar/bedrock-ledger-continuity.git"
-  },
-  "bugs": {
-    "url": "https://github.com/digitalbazaar/bedrock-ledger-continuity/issues"
-  },
-  "homepage": "https://github.com/digitalbazaar/bedrock-ledger-continuity#readme",
   "dependencies": {
     "async": "^2.4.1",
     "bedrock": "digitalbazaar/bedrock#updateTestDeps",
@@ -25,8 +15,8 @@
     "bedrock-identity": "^4.6.0",
     "bedrock-jobs": "^2.0.3",
     "bedrock-key": "^4.0.0",
-    "bedrock-ledger": "digitalbazaar/bedrock-ledger#cm3",
-    "bedrock-ledger-agent": "digitalbazaar/bedrock-ledger-agent#master",
+    "bedrock-ledger": "digitalbazaar/bedrock-ledger#cm4",
+    "bedrock-ledger-agent": "digitalbazaar/bedrock-ledger-agent#cm4",
     "bedrock-ledger-context": "digitalbazaar/bedrock-ledger-context#master",
     "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#master",
     "bedrock-mongodb": "^3.2.3",
