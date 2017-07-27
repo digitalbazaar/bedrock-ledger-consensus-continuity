@@ -89,13 +89,14 @@ describe('Consensus Client - getBlockStatus API', () => {
         })
     }, done);
   });
-  it('returns NotFound for blockHeight = 2 while block 1 is gossip', done => {
+  it('NotFoundError for blockHeight = 2 while block 1 is gossip', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getBlockStatus(
         2, voterId, (err, result) => {
           should.exist(err);
           should.not.exist(result);
-          err.name.should.equal('NotFound');
+          err.name.should.equal('NotFoundError');
+          err.details.httpStatusCode.should.equal(404);
           callback();
         })
     }, done);
@@ -118,13 +119,14 @@ describe('Consensus Client - getBlockStatus API', () => {
           })]
     }, done);
   });
-  it('Return NotFound for blockHeight = 100', done => {
+  it('NotFoundError for blockHeight = 100', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getBlockStatus(
         100, voterId, (err, result) => {
           should.exist(err);
           should.not.exist(result);
-          err.name.should.equal('NotFound');
+          err.name.should.equal('NotFoundError');
+          err.details.httpStatusCode.should.equal(404);
           callback();
         })
     }, done);

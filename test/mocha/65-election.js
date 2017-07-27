@@ -104,7 +104,7 @@ describe('Election API', () => {
         }]
       }, done);
     });
-    it('returns NotFound on unknown manifestHash', done => {
+    it('returns NotFoundError on unknown manifestHash', done => {
       async.auto({
         getManifest: callback => {
           const manifestHash =
@@ -112,7 +112,8 @@ describe('Election API', () => {
           consensusApi._election._getManifest(
             ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
               should.exist(err);
-              err.name.should.equal('NotFound');
+              err.name.should.equal('NotFoundError');
+              err.details.httpStatusCode.should.equal(404);
               should.not.exist(result);
               callback();
             });
