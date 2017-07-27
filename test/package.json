@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "async": "^2.4.1",
-    "bedrock": "digitalbazaar/bedrock#updateTestDeps",
+    "bedrock": "^1.6.0",
     "bedrock-did-client": "^1.1.0",
     "bedrock-docs": "^2.1.0",
     "bedrock-express": "^2.0.6",
