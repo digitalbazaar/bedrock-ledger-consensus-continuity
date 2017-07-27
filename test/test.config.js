@@ -6,6 +6,8 @@ const path = require('path');
 
 config.mocha.tests.push(path.join(__dirname, 'mocha'));
 
+config.jsonld.strictSSL = false;
+
 // MongoDB
 config.mongodb.name = 'bedrock_ledger_continuity_test';
 config.mongodb.dropCollections.onInit = true;
