@@ -5,7 +5,7 @@
 'use strict';
 
 const async = require('async');
-const brLedger = require('bedrock-ledger');
+const brLedger = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 let request = require('request');

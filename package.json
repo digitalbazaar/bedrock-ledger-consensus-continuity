@@ -28,7 +28,7 @@
   "peerDependencies": {
     "bedrock": "^1.2.4",
     "bedrock-did-client": "^1.1.0",
-    "bedrock-ledger": "^0.3.5",
+    "bedrock-ledger-node": "^0.3.5",
     "bedrock-mongodb": "^3.0.0",
     "bedrock-permission": "^2.3.2"
   },
