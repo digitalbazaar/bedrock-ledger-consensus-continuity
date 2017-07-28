@@ -33,7 +33,7 @@ describe('Consensus Client - sendEvent API', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedger.add(
-        null, configEvent, (err, result) => {
+        null, {configEvent}, (err, result) => {
           if(err) {
             return callback(err);
           }

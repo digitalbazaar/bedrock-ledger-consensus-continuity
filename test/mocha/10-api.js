@@ -36,7 +36,7 @@ describe('Continuity2017', () => {
           })],
         consensusPlugin: callback => brLedger.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => brLedger.add(
-          results.actor, configEvent, (err, ledgerNode) => {
+          results.actor, {configEvent}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
