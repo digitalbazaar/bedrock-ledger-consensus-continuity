@@ -3,6 +3,8 @@
  */
 'use strict';
 
+const bedrock = require('bedrock');
+const config = bedrock.config;
 const helpers = require('./helpers');
 
 const mock = {};
@@ -27,11 +29,11 @@ identities[userName].identity.sysResourceRole.push({
 
 const events = mock.events = {};
 events.alpha = {
-  '@context': 'https://w3id.org/webledger/v1',
+  '@context': config.constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerEvent',
   operation: 'Create',
   input: [{
-    '@context': 'https://w3id.org/test/v1',
+    '@context': config.constants.TEST_CONTEXT_V1_URL,
     id: 'https://example.com/events/123456',
     type: 'Concert',
     name: 'Big Band Concert in New York City',
@@ -47,7 +49,7 @@ events.alpha = {
 };
 
 events.config = {
-  '@context': 'https://w3id.org/webledger/v1',
+  '@context': config.constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerConfigurationEvent',
   operation: 'Config',
   input: [{
@@ -142,7 +144,7 @@ mock.groups = {
 
 mock.ldDocuments = {
   "https://example.com/i/alpha": {
-    "@context": "https://w3id.org/identity/v1",
+    "@context": config.constants.WEB_LEDGER_CONTEXT_V1_URL,
     "id": "https://example.com/i/alpha",
     "publicKey": [{
       "id": mock.authorizedSignerUrl,
@@ -153,7 +155,7 @@ mock.ldDocuments = {
   }
 };
 mock.ldDocuments[mock.authorizedSignerUrl] = {
-  "@context": "https://w3id.org/identity/v1",
+  "@context": config.constants.WEB_LEDGER_CONTEXT_V1_URL,
   "type": "CryptographicKey",
   "owner": "https://example.com/i/alpha",
   "label": "Signing Key 2",
@@ -161,7 +163,6 @@ mock.ldDocuments[mock.authorizedSignerUrl] = {
   "publicKeyPem": mock.groups.authorized.publicKey
 };
 
-const bedrock = require('bedrock');
 const jsonld = bedrock.jsonld;
 const oldLoader = jsonld.documentLoader;
 jsonld.documentLoader = function(url, callback) {

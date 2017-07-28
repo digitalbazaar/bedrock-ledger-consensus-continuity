@@ -5,7 +5,6 @@ const bedrock = require('bedrock');
 const brDidClient = require('bedrock-did-client');
 require('bedrock-ledger-consensus-continuity');
 require('bedrock-ledger-storage-mongodb');
-require('bedrock-ledger-context');
 
 bedrock.events.on('bedrock.init', () => {
   const jsonld = bedrock.jsonld;
