@@ -12,6 +12,3 @@ config.jsonld.strictSSL = false;
 config.mongodb.name = 'bedrock_ledger_continuity_test';
 config.mongodb.dropCollections.onInit = true;
 config.mongodb.dropCollections.collections = [];
-
-// reduce processing interval for testing
-config['ledger-consensus-continuity'].worker.election.votingRoundInterval = 0;
