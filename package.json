@@ -31,7 +31,8 @@
     "bedrock-ledger-context": "digitalbazaar/bedrock-ledger-context#master",
     "bedrock-ledger-node": "^0.3.5",
     "bedrock-mongodb": "^3.0.0",
-    "bedrock-permission": "^2.3.2"
+    "bedrock-permission": "^2.3.2",
+    "bedrock-validation": "^2.2.1"
   },
   "engines": {
     "node": ">=6"

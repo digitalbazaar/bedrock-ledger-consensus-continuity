@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-/* globals should */
+/* globals should, assertNoError */
 'use strict';
 
 const async = require('async');
@@ -62,7 +62,7 @@ describe('Consensus Client - getBlockStatus API', () => {
     async.auto({
       get: callback => consensusApi._worker._client.getBlockStatus(
         0, voterId, (err, result) => {
-          should.not.exist(err);
+          assertNoError(err);
           should.exist(result);
           result.should.be.an('object');
           result.blockHeight.should.equal(0);
@@ -77,7 +77,7 @@ describe('Consensus Client - getBlockStatus API', () => {
     async.auto({
       get: callback => consensusApi._worker._client.getBlockStatus(
         1, voterId, (err, result) => {
-          should.not.exist(err);
+          assertNoError(err);
           should.exist(result);
           result.should.be.an('object');
           result.blockHeight.should.equal(1);
@@ -108,7 +108,7 @@ describe('Consensus Client - getBlockStatus API', () => {
       get: ['runWorker', (results, callback) =>
         consensusApi._worker._client.getBlockStatus(
           1, voterId, (err, result) => {
-            should.not.exist(err);
+            assertNoError(err);
             should.exist(result);
             result.should.be.an('object');
             result.blockHeight.should.equal(1);
