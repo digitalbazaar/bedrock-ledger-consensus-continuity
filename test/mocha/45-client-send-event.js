@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-/* globals should */
+/* globals should, assertNoError */
 'use strict';
 
 const async = require('async');
@@ -48,6 +48,7 @@ describe('Consensus Client - sendEvent API', () => {
       }]
     }, done);
   });
+  // FIXME: are events supposed to be signed?
   it('should send an event', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     const testEventId = 'https://example.com/events/' + uuid();
@@ -55,7 +56,7 @@ describe('Consensus Client - sendEvent API', () => {
     async.auto({
       send: callback => consensusApi._worker._client.sendEvent(
         testEvent, voterId, (err, result) => {
-          should.not.exist(err);
+          assertNoError(err);
           should.exist(result);
           result.should.be.a('string');
           callback();
@@ -70,6 +71,22 @@ describe('Consensus Client - sendEvent API', () => {
       get: callback => consensusApi._worker._client.sendEvent(
         testEvent, {id: 'https://' + uuid() + '.com'}, (err, result) => {
           should.exist(err);
+          err.name.should.equal('NetworkError');
+          should.not.exist(result);
+          callback();
+        })
+    }, done);
+  });
+  it('returns an error', done => {
+    const testEvent = bedrock.util.clone(mockData.events.alpha);
+    // wipe out the event data to create failure
+    testEvent.input = [];
+    async.auto({
+      get: callback => consensusApi._worker._client.sendEvent(
+        testEvent, voterId, (err, result) => {
+          should.exist(err);
+          err.name.should.equal('NetworkError');
+          err.details.error.type.should.equal('ValidationError');
           should.not.exist(result);
           callback();
         })

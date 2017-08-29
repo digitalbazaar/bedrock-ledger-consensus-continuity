@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
+const config = require('bedrock').config;
+const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
 
 const signature = schemas.linkedDataSignature({
@@ -91,6 +93,34 @@ const blockStatus = {
   additionalProperties: false
 };
 
+const event = {
+  title: 'Continuity Event',
+  type: 'object',
+  properties: {
+    '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    type: {
+      type: 'string',
+      required: true
+    },
+    operation: {
+      type: 'string',
+      required: true
+    },
+    input: {
+      type: 'array',
+      minItems: 1,
+      required: true
+    },
+    signature: {
+      type: signature,
+      // FIXME: should signature be required?
+      required: false
+    }
+  },
+  additionalProperties: false
+};
+
 module.exports.blockStatus = () => (blockStatus);
 module.exports.election = () => (election);
+module.exports.event = () => (event);
 module.exports.vote = () => (vote);

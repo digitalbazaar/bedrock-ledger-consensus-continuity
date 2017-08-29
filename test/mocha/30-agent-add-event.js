@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-/* globals should */
+/* globals should, assertNoError */
 'use strict';
 
 const async = require('async');
@@ -54,13 +54,14 @@ describe('Consensus Agent - Add Event API', () => {
     const testUrl = voterId + '/events';
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEvent.input[0].id = 'https://example.com/events/' + uuid();
+    // FIXME: should the event be signed?
     async.auto({
       addEvent: callback =>
         request.post({
           url: testUrl,
           json: testEvent
         }, (err, res) => {
-          should.not.exist(err);
+          assertNoError(err);
           res.statusCode.should.equal(201);
           should.exist(res.headers.location);
           callback();

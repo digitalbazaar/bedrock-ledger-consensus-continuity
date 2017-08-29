@@ -203,6 +203,8 @@ sinon['/manifests?id=ni%3A%2F%2F%2Fsha-256%3B5go-RFJFhjCknW-' +
   'Bc4WXrBPiPSeKAmYuBQMX0hCTfxs'] = manifests.sinonAlpha;
 
 events.sinonAlpha = bedrock.util.clone(events.alpha);
+// FIXME: does this event need to be signed?
+// served by sinon in 65-election.js
 events.sinonAlpha.input[0].id =
   'https://example.com/events/2b9dadb8-d786-44ed-b735-1c5a6752d290';
 sinon['/events?id=ni%3A%2F%2F%2Fsha-256%3BJ3ky6Uo4EIjWov_' +

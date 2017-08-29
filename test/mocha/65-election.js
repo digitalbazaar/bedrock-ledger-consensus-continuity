@@ -1,15 +1,13 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-/* globals should */
-
+/* globals should, assertNoError */
 'use strict';
 
 const bedrock = require('bedrock');
 const brLedger = require('bedrock-ledger-node');
 const brTest = require('bedrock-test');
 const async = require('async');
-const expect = global.chai.expect;
 const request = brTest.require('request');
 const sinon = require('sinon');
 const uuid = require('uuid/v4');
@@ -95,9 +93,7 @@ describe('Election API', () => {
           const manifestHash = results.createManifest.id;
           consensusApi._election._getManifest(
             ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
-              if(err) {
-                return done(err);
-              }
+              assertNoError(err);
               result.should.deep.equal(results.createManifest);
               callback();
             });
@@ -120,6 +116,7 @@ describe('Election API', () => {
         }
       }, done);
     });
+    // FIXME: should the event associated with this test be signed?
     it('gets a remote manifest', done => {
       async.auto({
         getManifest: callback => {
@@ -127,9 +124,7 @@ describe('Election API', () => {
             'ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs';
           consensusApi._election._getManifest(
             ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
-              if(err) {
-                return done(err);
-              }
+              assertNoError(err);
               result.should.be.an('object');
               result.should.deep.equal(mockData.manifests.sinonAlpha);
               callback();
