@@ -5,14 +5,6 @@ const config = require('bedrock').config;
 const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
 
-const signature = schemas.linkedDataSignature({
-  properties: {
-    type: {
-      enum: ['LinkedDataSignature2015']
-    }
-  }
-});
-
 const vote = {
   title: 'Continuity Vote',
   type: 'object',
@@ -40,7 +32,7 @@ const vote = {
         }
       }
     },
-    signature
+    signature: schemas.linkedDataSignature()
   },
   additionalProperties: false
 };
@@ -112,7 +104,7 @@ const event = {
       required: true
     },
     signature: {
-      type: signature,
+      type: schemas.linkedDataSignature(),
       // FIXME: should signature be required?
       required: false
     }
