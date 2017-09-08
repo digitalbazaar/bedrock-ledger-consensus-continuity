@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-/* globals should */
-
 'use strict';
 
 const bedrock = require('bedrock');
@@ -284,6 +282,40 @@ describe.only('Multinode', () => {
               }), callback)]
         }, done);
       });
+    });
+    describe('Block 5', () => {
+      it('achieves consensus when an event is added at each node',
+        function(done) {
+          this.timeout(120000);
+          const testEvents = [];
+          for(let i = 0; i < peers.length; ++i) {
+            const testEvent = bedrock.util.clone(mockData.events.alpha);
+            testEvent.input[0].id = 'https://example.com/events/' + uuid();
+            testEvents.push(testEvent);
+          }
+          async.auto({
+            addEvents: callback =>
+              async.eachOf(peers, (ledgerNode, index, callback) =>
+                ledgerNode.events.add(testEvents[index], callback), callback),
+            runWorkers: ['addEvents', (results, callback) =>
+              async.each(peers, (ledgerNode, callback) =>
+                consensusApi._worker._run(ledgerNode, callback), callback)],
+            getLatest: ['runWorkers', (results, callback) =>
+              async.each(peers, (ledgerNode, callback) =>
+                ledgerNode.storage.blocks.getLatest((err, result) => {
+                  if(err) {
+                    return callback(err);
+                  }
+                  const eventBlock = result.eventBlock;
+                  should.exist(eventBlock.block);
+                  eventBlock.block.event.should.be.an('array');
+                  eventBlock.block.event.should.have.length(10);
+                  eventBlock.block.electionResults.should.have.length.at.least(
+                    _twoThirdsMajority(nodes));
+                  callback();
+                }), callback)]
+          }, done);
+        });
     });
   });
 });
