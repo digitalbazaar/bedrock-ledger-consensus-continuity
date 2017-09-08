@@ -51,12 +51,11 @@ events.alpha = {
 events.config = {
   '@context': config.constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerConfigurationEvent',
-  operation: 'Config',
-  input: [{
+  ledgerConfiguration: {
     type: 'WebLedgerConfiguration',
     ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
     consensusMethod: 'Continuity2017'
-  }]
+  }
 };
 
 // constants

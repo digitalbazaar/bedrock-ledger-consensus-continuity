@@ -6,7 +6,6 @@
 
 const async = require('async');
 const brIdentity = require('bedrock-identity');
-const crypto = require('crypto');
 const database = require('bedrock-mongodb');
 const uuid = require('uuid/v4');
 
