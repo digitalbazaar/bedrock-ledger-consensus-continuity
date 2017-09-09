@@ -293,13 +293,16 @@ describe.only('Multinode', () => {
             testEvent.input[0].id = 'https://example.com/events/' + uuid();
             testEvents.push(testEvent);
           }
+          let delay = 0;
           async.auto({
             addEvents: callback =>
               async.eachOf(peers, (ledgerNode, index, callback) =>
                 ledgerNode.events.add(testEvents[index], callback), callback),
             runWorkers: ['addEvents', (results, callback) =>
-              async.each(peers, (ledgerNode, callback) =>
-                consensusApi._worker._run(ledgerNode, callback), callback)],
+              async.each(peers, (ledgerNode, callback) => {
+                setTimeout(() => consensusApi._worker._run(
+                  ledgerNode, callback), delay += 500);
+              }, callback)],
             getLatest: ['runWorkers', (results, callback) =>
               async.each(peers, (ledgerNode, callback) =>
                 ledgerNode.storage.blocks.getLatest((err, result) => {
