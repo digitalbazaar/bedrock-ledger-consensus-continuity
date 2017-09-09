@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe.only('Multinode', () => {
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -283,7 +283,7 @@ describe.only('Multinode', () => {
         }, done);
       });
     });
-    describe('Block 5', () => {
+    describe('Block 5 - staggered worker kick-off', () => {
       it('achieves consensus when an event is added at each node',
         function(done) {
           this.timeout(120000);
