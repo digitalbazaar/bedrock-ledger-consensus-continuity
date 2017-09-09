@@ -14,4 +14,4 @@ config.mongodb.dropCollections.onInit = true;
 config.mongodb.dropCollections.collections = [];
 
 // reduce processing interval for testing
-config['ledger-consensus-continuity'].worker.election.gossipInterval = 500;
+config['ledger-consensus-continuity'].worker.election.gossipInterval = 0;

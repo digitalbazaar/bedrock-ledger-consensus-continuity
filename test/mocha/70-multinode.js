@@ -301,7 +301,7 @@ describe.only('Multinode', () => {
             runWorkers: ['addEvents', (results, callback) =>
               async.each(peers, (ledgerNode, callback) => {
                 setTimeout(() => consensusApi._worker._run(
-                  ledgerNode, callback), delay += 500);
+                  ledgerNode, callback), delay += 250);
               }, callback)],
             getLatest: ['runWorkers', (results, callback) =>
               async.each(peers, (ledgerNode, callback) =>
