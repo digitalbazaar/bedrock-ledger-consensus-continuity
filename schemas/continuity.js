@@ -85,12 +85,51 @@ const blockStatus = {
   additionalProperties: false
 };
 
-const event = {
-  title: 'Continuity Event',
+const webLedgerConfigEvent = {
+  title: 'WebLedgerConfigurationEvent',
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
     type: {
+      // TODO: enum `WebLedgerConfigurationEvent`
+      type: 'string',
+      required: true
+    },
+    ledgerConfiguration: {
+      type: 'object',
+      properties: {
+        type: {
+          // TODO: enum `WebLedgerConfiguration`
+          type: 'string',
+          required: true
+        },
+        ledger: {
+          type: 'string',
+          required: true
+        },
+        consensusMethod: {
+          type: 'string',
+          required: true
+        }
+      },
+      required: true
+    },
+    signature: {
+      type: schemas.linkedDataSignature(),
+      // FIXME: should signature be required?
+      required: false
+    }
+  },
+  additionalProperties: false
+};
+
+const webLedgerEvent = {
+  title: 'WebLedgerEvent',
+  type: 'object',
+  properties: {
+    '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    type: {
+      // TODO: enum `WebLedgerEvent`
       type: 'string',
       required: true
     },
@@ -110,6 +149,11 @@ const event = {
     }
   },
   additionalProperties: false
+};
+
+const event = {
+  title: 'Continuity Event',
+  type: [webLedgerConfigEvent, webLedgerEvent]
 };
 
 module.exports.blockStatus = () => (blockStatus);
