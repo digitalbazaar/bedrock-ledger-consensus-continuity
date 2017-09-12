@@ -130,6 +130,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(1);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
@@ -171,6 +172,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(2);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
@@ -211,6 +213,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(3);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
@@ -234,7 +237,7 @@ describe.only('Multinode', () => {
         }, done);
       });
     });
-    describe.skip('Block 4', () => {
+    describe('Block 4', () => {
       it('should achieve consensus with 10 nodes again', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
@@ -260,6 +263,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(4);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
@@ -283,7 +287,7 @@ describe.only('Multinode', () => {
         }, done);
       });
     });
-    describe.skip('Block 5 - staggered worker kick-off', () => {
+    describe('Block 5 - staggered worker kick-off', () => {
       it('achieves consensus when an event is added at each node',
         function(done) {
           this.timeout(120000);
@@ -311,6 +315,7 @@ describe.only('Multinode', () => {
                   }
                   const eventBlock = result.eventBlock;
                   should.exist(eventBlock.block);
+                  eventBlock.block.blockHeight.should.equal(5);
                   eventBlock.block.event.should.be.an('array');
                   eventBlock.block.event.should.have.length(10);
                   eventBlock.block.electionResults.should.have.length.at.least(
@@ -320,7 +325,7 @@ describe.only('Multinode', () => {
           }, done);
         });
     });
-    describe.skip('Catch-up', () => {
+    describe('Catch-up', () => {
       let catchUpNode;
       before(done => brLedger.add(null, {
         genesisBlock: genesisRecord.block,
@@ -333,34 +338,52 @@ describe.only('Multinode', () => {
         done();
       }));
 
-      it('a new node is able to catch up', done => {
+      it('a new node is able to catch up', function(done) {
+        this.timeout(10000);
         async.series([
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('1');
+            console.log('BLOCK 1');
             result.eventBlock.block.blockHeight.should.equal(1);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
             callback();
           }),
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('2');
+            console.log('BLOCK 2');
             result.eventBlock.block.blockHeight.should.equal(2);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
             callback();
           }),
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('3');
+            console.log('BLOCK 3');
             result.eventBlock.block.blockHeight.should.equal(3);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
             callback();
           }),
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('4');
+            console.log('BLOCK 4');
             result.eventBlock.block.blockHeight.should.equal(4);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
+            callback();
+          }),
+          callback => consensusApi._worker._run(catchUpNode, callback),
+          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
+            assertNoError(err);
+            console.log('BLOCK 5');
+            result.eventBlock.block.blockHeight.should.equal(5);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(10);
             callback();
           }),
         ], done);
