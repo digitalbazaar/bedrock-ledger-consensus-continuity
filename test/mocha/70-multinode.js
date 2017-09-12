@@ -155,7 +155,7 @@ describe.only('Multinode', () => {
     }); // end block 1
     describe('Block 2', () => {
       it('should add an event and achieve consensus', function(done) {
-        this.timeout(15000);
+        this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
         async.auto({
@@ -339,7 +339,7 @@ describe.only('Multinode', () => {
       }));
 
       it('a new node is able to catch up', function(done) {
-        this.timeout(10000);
+        this.timeout(120000);
         async.series([
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
