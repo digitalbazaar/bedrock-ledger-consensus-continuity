@@ -374,17 +374,18 @@ describe.only('Multinode', () => {
             result.eventBlock.block.event.should.have.length(1);
             callback();
           }),
-          // callback => consensusApi._worker._run(catchUpNode, callback),
-          // callback => catchUpNode.storage.blocks.getLatest((err, result) => {
-          //   assertNoError(err);
-          //   console.log('BLOCK 5');
-          //   result.eventBlock.block.blockHeight.should.equal(5);
-          //   result.eventBlock.block.event.should.be.an('array');
-          //   result.eventBlock.block.event.should.have.length(10);
-          //   callback();
-          // }),
+          callback => consensusApi._worker._run(catchUpNode, callback),
+          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
+            assertNoError(err);
+            console.log('BLOCK 5');
+            result.eventBlock.block.blockHeight.should.equal(5);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(10);
+            callback();
+          }),
         ], done);
       });
+    });
   });
 });
 
