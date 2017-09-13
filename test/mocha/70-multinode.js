@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-/* globals should */
 
 'use strict';
 
@@ -17,7 +16,7 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe('Multinode', () => {
+describe.only('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -285,6 +284,44 @@ describe('Multinode', () => {
         }, done);
       });
     });
+    describe('Block 5 - staggered worker kick-off', () => {
+      it('achieves consensus when an event is added at each node',
+        function(done) {
+          this.timeout(120000);
+          const testEvents = [];
+          for(let i = 0; i < peers.length; ++i) {
+            const testEvent = bedrock.util.clone(mockData.events.alpha);
+            testEvent.input[0].id = 'https://example.com/events/' + uuid();
+            testEvents.push(testEvent);
+          }
+          let delay = 0;
+          async.auto({
+            addEvents: callback =>
+              async.eachOf(peers, (ledgerNode, index, callback) =>
+                ledgerNode.events.add(testEvents[index], callback), callback),
+            runWorkers: ['addEvents', (results, callback) =>
+              async.each(peers, (ledgerNode, callback) => {
+                setTimeout(() => consensusApi._worker._run(
+                  ledgerNode, callback), delay += 250);
+              }, callback)],
+            getLatest: ['runWorkers', (results, callback) =>
+              async.each(peers, (ledgerNode, callback) =>
+                ledgerNode.storage.blocks.getLatest((err, result) => {
+                  if(err) {
+                    return callback(err);
+                  }
+                  const eventBlock = result.eventBlock;
+                  should.exist(eventBlock.block);
+                  eventBlock.block.blockHeight.should.equal(5);
+                  eventBlock.block.event.should.be.an('array');
+                  eventBlock.block.event.should.have.length(10);
+                  eventBlock.block.electionResults.should.have.length.at.least(
+                    _twoThirdsMajority(nodes));
+                  callback();
+                }), callback)]
+          }, done);
+        });
+    });
     describe('Catch-up', () => {
       let catchUpNode;
       before(done => brLedger.add(null, {
@@ -348,7 +385,6 @@ describe('Multinode', () => {
           // }),
         ], done);
       });
-    });
   });
 });
 
