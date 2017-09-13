@@ -285,6 +285,70 @@ describe('Multinode', () => {
         }, done);
       });
     });
+    describe('Catch-up', () => {
+      let catchUpNode;
+      before(done => brLedger.add(null, {
+        genesisBlock: genesisRecord.block,
+        owner: mockIdentity.identity.id
+      }, (err, ledgerNode) => {
+        if(err) {
+          return done(err);
+        }
+        catchUpNode = ledgerNode;
+        done();
+      }));
+
+      it('a new node is able to catch up', function(done) {
+        this.timeout(120000);
+        async.series([
+          callback => consensusApi._worker._run(catchUpNode, callback),
+          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
+            assertNoError(err);
+            console.log('BLOCK 1');
+            result.eventBlock.block.blockHeight.should.equal(1);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
+            callback();
+          }),
+          callback => consensusApi._worker._run(catchUpNode, callback),
+          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
+            assertNoError(err);
+            console.log('BLOCK 2');
+            result.eventBlock.block.blockHeight.should.equal(2);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
+            callback();
+          }),
+          callback => consensusApi._worker._run(catchUpNode, callback),
+          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
+            assertNoError(err);
+            console.log('BLOCK 3');
+            result.eventBlock.block.blockHeight.should.equal(3);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
+            callback();
+          }),
+          callback => consensusApi._worker._run(catchUpNode, callback),
+          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
+            assertNoError(err);
+            console.log('BLOCK 4');
+            result.eventBlock.block.blockHeight.should.equal(4);
+            result.eventBlock.block.event.should.be.an('array');
+            result.eventBlock.block.event.should.have.length(1);
+            callback();
+          }),
+          // callback => consensusApi._worker._run(catchUpNode, callback),
+          // callback => catchUpNode.storage.blocks.getLatest((err, result) => {
+          //   assertNoError(err);
+          //   console.log('BLOCK 5');
+          //   result.eventBlock.block.blockHeight.should.equal(5);
+          //   result.eventBlock.block.event.should.be.an('array');
+          //   result.eventBlock.block.event.should.have.length(10);
+          //   callback();
+          // }),
+        ], done);
+      });
+    });
   });
 });
 
