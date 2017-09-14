@@ -5,16 +5,18 @@ const config = require('bedrock').config;
 const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
 
+const blockHeight = {
+  type: 'integer',
+  minimum: 0,
+  required: true
+};
+
 const vote = {
   title: 'Continuity Vote',
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(),
-    blockHeight: {
-      type: 'integer',
-      minimum: 0,
-      required: true
-    },
+    blockHeight,
     manifestHash: schemas.url(),
     voteRound: {
       type: 'integer',
@@ -63,11 +65,7 @@ const blockStatus = {
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(),
-    blockHeight: {
-      type: 'integer',
-      minimum: 0,
-      required: true
-    },
+    blockHeight,
     consensusPhase: {
       type: 'string',
       required: true
@@ -156,7 +154,31 @@ const event = {
   type: [webLedgerConfigEvent, webLedgerEvent]
 };
 
+const manifest = {
+  title: 'Continuity Manifest',
+  type: 'object',
+  properties: {
+    // FIXME: @context?
+    type: {
+      type: 'string',
+      required: true,
+      enum: ['Events', 'RollCall']
+    },
+    id: schemas.identifier(),
+    blockHeight,
+    item: {
+      type: 'array',
+      minItems: 1,
+      required: true,
+      items: {
+        type: schemas.url()
+      }
+    }
+  }
+};
+
 module.exports.blockStatus = () => (blockStatus);
 module.exports.election = () => (election);
 module.exports.event = () => (event);
+module.exports.manifest = () => (manifest);
 module.exports.vote = () => (vote);

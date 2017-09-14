@@ -131,6 +131,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(1);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
@@ -172,6 +173,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(2);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
@@ -212,6 +214,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(3);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
@@ -261,6 +264,7 @@ describe.only('Multinode', () => {
                 }
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
+                eventBlock.block.blockHeight.should.equal(4);
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(1);
                 const event = eventBlock.block.event[0];
