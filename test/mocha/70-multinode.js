@@ -16,7 +16,7 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe.only('Multinode', () => {
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -345,7 +345,6 @@ describe.only('Multinode', () => {
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('BLOCK 1');
             result.eventBlock.block.blockHeight.should.equal(1);
             result.eventBlock.block.event.should.be.an('array');
             result.eventBlock.block.event.should.have.length(1);
@@ -354,7 +353,6 @@ describe.only('Multinode', () => {
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('BLOCK 2');
             result.eventBlock.block.blockHeight.should.equal(2);
             result.eventBlock.block.event.should.be.an('array');
             result.eventBlock.block.event.should.have.length(1);
@@ -363,7 +361,6 @@ describe.only('Multinode', () => {
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('BLOCK 3');
             result.eventBlock.block.blockHeight.should.equal(3);
             result.eventBlock.block.event.should.be.an('array');
             result.eventBlock.block.event.should.have.length(1);
@@ -372,7 +369,6 @@ describe.only('Multinode', () => {
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('BLOCK 4');
             result.eventBlock.block.blockHeight.should.equal(4);
             result.eventBlock.block.event.should.be.an('array');
             result.eventBlock.block.event.should.have.length(1);
@@ -381,7 +377,6 @@ describe.only('Multinode', () => {
           callback => consensusApi._worker._run(catchUpNode, callback),
           callback => catchUpNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
-            console.log('BLOCK 5');
             result.eventBlock.block.blockHeight.should.equal(5);
             result.eventBlock.block.event.should.be.an('array');
             result.eventBlock.block.event.should.have.length(10);
