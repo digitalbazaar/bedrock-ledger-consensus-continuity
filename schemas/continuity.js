@@ -66,6 +66,11 @@ const blockStatus = {
   properties: {
     '@context': schemas.jsonldContext(),
     blockHeight,
+    previousBlockHash: {
+      type: 'string',
+      // not required for blockHeight of 0
+      required: false
+    },
     consensusPhase: {
       type: 'string',
       required: true

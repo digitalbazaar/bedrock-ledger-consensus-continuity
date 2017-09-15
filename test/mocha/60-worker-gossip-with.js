@@ -60,11 +60,16 @@ describe('Worker - _gossipWith', () => {
   });
   it('should complete without an error', done => {
     async.auto({
-      gossipWith: callback => consensusApi._worker._gossipWith(
-        ledgerNode, {id: voterId}, 1, {id: voterId}, err => {
-          should.not.exist(err);
-          callback();
-        })
+      previousBlockHash: callback => ledgerNode.storage.blocks.getLatest(
+        (err, block) => callback(
+          err, err ? null : block.eventBlock.meta.blockHash)),
+      gossipWith: ['previousBlockHash', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          ledgerNode, {id: voterId}, results.previousBlockHash,
+          1, {id: voterId}, err => {
+            should.not.exist(err);
+            callback();
+          })]
     }, done);
   });
 });
