@@ -120,8 +120,7 @@ describe('Election API', () => {
     it('gets a remote manifest', done => {
       async.auto({
         getManifest: callback => {
-          const manifestHash =
-            'ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs';
+          const manifestHash = mockData.manifests.sinonAlpha.id;
           consensusApi._election._getManifest(
             ledgerNode, voterId, manifestHash, 'Events', (err, result) => {
               assertNoError(err);

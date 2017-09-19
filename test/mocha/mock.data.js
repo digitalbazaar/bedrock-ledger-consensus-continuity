@@ -188,23 +188,24 @@ jsonld.documentLoader = function(url, callback) {
 const manifests = mock.manifests = {};
 
 manifests.sinonAlpha = {
-  "id": "ni:///sha-256;5go-RFJFhjCknW-Bc4WXrBPiPSeKAmYuBQMX0hCTfxs",
+  "id": "ni:///sha-256;pby1SuJ7_xLQTg2uOG8D-MOmPYK_OgThL1ULhgN4y1Q",
   "type": "Events",
   "blockHeight": 1,
   "item": [
-    "ni:///sha-256;J3ky6Uo4EIjWov_FdpvPsxlTbyNX9laserdNgn5C5Qk"
+    "ni:///sha-256;d8Kbp42RxDPV9HwqKm_EbeiS4BKSFCkMzOZqzYrOcZc"
   ]
 };
 
 const sinon = mock.sinon = {};
 
-sinon['/manifests?id=ni%3A%2F%2F%2Fsha-256%3B5go-RFJFhjCknW-' +
-  'Bc4WXrBPiPSeKAmYuBQMX0hCTfxs'] = manifests.sinonAlpha;
+sinon['/manifests?id=' + encodeURIComponent(manifests.sinonAlpha.id)] =
+  manifests.sinonAlpha;
 
 events.sinonAlpha = bedrock.util.clone(events.alpha);
 // FIXME: does this event need to be signed?
 // served by sinon in 65-election.js
 events.sinonAlpha.input[0].id =
   'https://example.com/events/2b9dadb8-d786-44ed-b735-1c5a6752d290';
-sinon['/events?id=ni%3A%2F%2F%2Fsha-256%3BJ3ky6Uo4EIjWov_' +
-  'FdpvPsxlTbyNX9laserdNgn5C5Qk'] = events.sinonAlpha;
+encodeURIComponent(manifests.sinonAlpha.item[0]);
+sinon['/events?id=' + encodeURIComponent(manifests.sinonAlpha.item[0])] =
+  events.sinonAlpha;
