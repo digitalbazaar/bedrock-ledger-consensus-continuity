@@ -87,6 +87,36 @@ describe('Multinode', () => {
       }, done);
     });
 
+    describe('Check Genesis Block', () => {
+      it('should have the proper information', done => async.auto({
+        getLatest: callback => async.map(peers, (ledgerNode, callback) =>
+          ledgerNode.storage.blocks.getLatest((err, result) => {
+            assertNoError(err);
+            const eventBlock = result.eventBlock;
+            should.exist(eventBlock.block);
+            eventBlock.block.blockHeight.should.equal(0);
+            eventBlock.block.event.should.be.an('array');
+            eventBlock.block.event.should.have.length(1);
+            const event = eventBlock.block.event[0];
+            // TODO: signature is dynamic... needs a better check
+            delete event.signature;
+            event.should.deep.equal(configEvent);
+            should.exist(eventBlock.meta);
+            should.exist(eventBlock.block.electionResults);
+            eventBlock.block.electionResults.should.be.an('array');
+            eventBlock.block.electionResults.should.have.length(1);
+            const electionResults = eventBlock.block.electionResults[0];
+            should.exist(electionResults.recommendedElector);
+            callback(null, eventBlock.meta.blockHash);
+          }), callback),
+        testHash: ['getLatest', (results, callback) => {
+          const blockHashes = results.getLatest;
+          blockHashes.every(h => h === blockHashes[0]).should.be.true;
+          callback();
+        }]
+      }, done));
+    });
+
     describe('Block 1', () => {
       let recommendedElectorsBlock1;
       before(done => {
