@@ -124,11 +124,9 @@ describe('Multinode', () => {
             peers, (ledgerNode, callback) =>
               consensusApi._worker._run(ledgerNode, callback), callback)],
           getLatest: ['runWorkers', (results, callback) =>
-            async.each(peers, (ledgerNode, callback) =>
+            async.map(peers, (ledgerNode, callback) =>
               ledgerNode.storage.blocks.getLatest((err, result) => {
-                if(err) {
-                  return callback(err);
-                }
+                assertNoError(err);
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
                 eventBlock.block.blockHeight.should.equal(1);
@@ -149,8 +147,13 @@ describe('Multinode', () => {
                 electionResults.recommendedElector.map(e => e.id)
                   .should.have.same.members(recommendedElectorsBlock1.map(
                     e => e.id));
-                callback();
-              }), callback)]
+                callback(null, eventBlock.meta.blockHash);
+              }), callback)],
+          testHash: ['getLatest', (results, callback) => {
+            const blockHashes = results.getLatest;
+            blockHashes.every(h => h === blockHashes[0]).should.be.true;
+            callback();
+          }]
         }, done);
       });
     }); // end block 1
@@ -166,11 +169,9 @@ describe('Multinode', () => {
             peers, (ledgerNode, callback) =>
               consensusApi._worker._run(ledgerNode, callback), callback)],
           getLatest: ['runWorkers', (results, callback) =>
-            async.each(peers, (ledgerNode, callback) =>
+            async.map(peers, (ledgerNode, callback) =>
               ledgerNode.storage.blocks.getLatest((err, result) => {
-                if(err) {
-                  return callback(err);
-                }
+                assertNoError(err);
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
                 eventBlock.block.blockHeight.should.equal(2);
@@ -187,8 +188,13 @@ describe('Multinode', () => {
                 eventBlock.block.electionResults.should.be.an('array');
                 eventBlock.block.electionResults.should.have.length.at.least(
                   _twoThirdsMajority(nodes));
-                callback();
-              }), callback)]
+                callback(null, eventBlock.meta.blockHash);
+              }), callback)],
+          testHash: ['getLatest', (results, callback) => {
+            const blockHashes = results.getLatest;
+            blockHashes.every(h => h === blockHashes[0]).should.be.true;
+            callback();
+          }]
         }, done);
       });
     });
@@ -207,11 +213,9 @@ describe('Multinode', () => {
             twoThirdsMajority, (ledgerNode, callback) =>
               consensusApi._worker._run(ledgerNode, callback), callback)],
           getLatest: ['runWorkers', (results, callback) =>
-            async.each(twoThirdsMajority, (ledgerNode, callback) =>
+            async.map(twoThirdsMajority, (ledgerNode, callback) =>
               ledgerNode.storage.blocks.getLatest((err, result) => {
-                if(err) {
-                  return callback(err);
-                }
+                assertNoError(err);
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
                 eventBlock.block.blockHeight.should.equal(3);
@@ -233,8 +237,13 @@ describe('Multinode', () => {
                 // electionResults.recommendedElector.map(e => e.id)
                 //   .should.have.same.members(recommendedElectorsBlock1.map(
                 //     e => e.id));
-                callback();
-              }), callback)]
+                callback(null, eventBlock.meta.blockHash);
+              }), callback)],
+          testHash: ['getLatest', (results, callback) => {
+            const blockHashes = results.getLatest;
+            blockHashes.every(h => h === blockHashes[0]).should.be.true;
+            callback();
+          }]
         }, done);
       });
     });
@@ -257,11 +266,9 @@ describe('Multinode', () => {
             async.each(peers, (ledgerNode, callback) =>
               consensusApi._worker._run(ledgerNode, callback), callback)],
           getLatest: ['runWorkers', (results, callback) =>
-            async.each(peers, (ledgerNode, callback) =>
+            async.map(peers, (ledgerNode, callback) =>
               ledgerNode.storage.blocks.getLatest((err, result) => {
-                if(err) {
-                  return callback(err);
-                }
+                assertNoError(err);
                 const eventBlock = result.eventBlock;
                 should.exist(eventBlock.block);
                 eventBlock.block.blockHeight.should.equal(4);
@@ -283,8 +290,13 @@ describe('Multinode', () => {
                 // electionResults.recommendedElector.map(e => e.id)
                 //   .should.have.same.members(recommendedElectorsBlock1.map(
                 //     e => e.id));
-                callback();
-              }), callback)]
+                callback(null, eventBlock.meta.blockHash);
+              }), callback)],
+          testHash: ['getLatest', (results, callback) => {
+            const blockHashes = results.getLatest;
+            blockHashes.every(h => h === blockHashes[0]).should.be.true;
+            callback();
+          }]
         }, done);
       });
     });
@@ -309,11 +321,9 @@ describe('Multinode', () => {
                   ledgerNode, callback), delay += 250);
               }, callback)],
             getLatest: ['runWorkers', (results, callback) =>
-              async.each(peers, (ledgerNode, callback) =>
+              async.map(peers, (ledgerNode, callback) =>
                 ledgerNode.storage.blocks.getLatest((err, result) => {
-                  if(err) {
-                    return callback(err);
-                  }
+                  assertNoError(err);
                   const eventBlock = result.eventBlock;
                   should.exist(eventBlock.block);
                   eventBlock.block.blockHeight.should.equal(5);
@@ -321,8 +331,13 @@ describe('Multinode', () => {
                   eventBlock.block.event.should.have.length(10);
                   eventBlock.block.electionResults.should.have.length.at.least(
                     _twoThirdsMajority(nodes));
-                  callback();
-                }), callback)]
+                  callback(null, eventBlock.meta.blockHash);
+                }), callback)],
+            testHash: ['getLatest', (results, callback) => {
+              const blockHashes = results.getLatest;
+              blockHashes.every(h => h === blockHashes[0]).should.be.true;
+              callback();
+            }]
           }, done);
         });
     });
