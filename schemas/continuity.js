@@ -49,7 +49,7 @@ const election = {
         type: 'string',
         required: true
       },
-      electionResults: {
+      electionResult: {
         type: 'array',
         items: {
           type: vote

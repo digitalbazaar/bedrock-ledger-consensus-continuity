@@ -102,11 +102,11 @@ describe('Multinode', () => {
             delete event.signature;
             event.should.deep.equal(configEvent);
             should.exist(eventBlock.meta);
-            should.exist(eventBlock.block.electionResults);
-            eventBlock.block.electionResults.should.be.an('array');
-            eventBlock.block.electionResults.should.have.length(1);
-            const electionResults = eventBlock.block.electionResults[0];
-            should.exist(electionResults.recommendedElector);
+            should.exist(eventBlock.block.electionResult);
+            eventBlock.block.electionResult.should.be.an('array');
+            eventBlock.block.electionResult.should.have.length(1);
+            const electionResult = eventBlock.block.electionResult[0];
+            should.exist(electionResult.recommendedElector);
             callback(null, eventBlock.meta.blockHash);
           }), callback),
         testHash: ['getLatest', (results, callback) => {
@@ -169,12 +169,12 @@ describe('Multinode', () => {
                 delete event.signature;
                 event.should.deep.equal(testEvent);
                 should.exist(eventBlock.meta);
-                should.exist(eventBlock.block.electionResults);
-                eventBlock.block.electionResults.should.be.an('array');
-                eventBlock.block.electionResults.should.have.length(1);
-                const electionResults = eventBlock.block.electionResults[0];
-                should.exist(electionResults.recommendedElector);
-                electionResults.recommendedElector.map(e => e.id)
+                should.exist(eventBlock.block.electionResult);
+                eventBlock.block.electionResult.should.be.an('array');
+                eventBlock.block.electionResult.should.have.length(1);
+                const electionResult = eventBlock.block.electionResult[0];
+                should.exist(electionResult.recommendedElector);
+                electionResult.recommendedElector.map(e => e.id)
                   .should.have.same.members(recommendedElectorsBlock1.map(
                     e => e.id));
                 callback(null, eventBlock.meta.blockHash);
@@ -214,9 +214,9 @@ describe('Multinode', () => {
                 delete event.signature;
                 event.should.deep.equal(testEvent);
                 should.exist(eventBlock.meta);
-                should.exist(eventBlock.block.electionResults);
-                eventBlock.block.electionResults.should.be.an('array');
-                eventBlock.block.electionResults.should.have.length.at.least(
+                should.exist(eventBlock.block.electionResult);
+                eventBlock.block.electionResult.should.be.an('array');
+                eventBlock.block.electionResult.should.have.length.at.least(
                   _twoThirdsMajority(nodes));
                 callback(null, eventBlock.meta.blockHash);
               }), callback)],
@@ -258,13 +258,13 @@ describe('Multinode', () => {
                 delete event.signature;
                 event.should.deep.equal(testEvent);
                 should.exist(eventBlock.meta);
-                should.exist(eventBlock.block.electionResults);
-                eventBlock.block.electionResults.should.be.an('array');
-                eventBlock.block.electionResults.should.have.length.at.least(
+                should.exist(eventBlock.block.electionResult);
+                eventBlock.block.electionResult.should.be.an('array');
+                eventBlock.block.electionResult.should.have.length.at.least(
                   _twoThirdsMajority(nodes));
-                const electionResults = eventBlock.block.electionResults[0];
-                should.exist(electionResults.recommendedElector);
-                // electionResults.recommendedElector.map(e => e.id)
+                const electionResult = eventBlock.block.electionResult[0];
+                should.exist(electionResult.recommendedElector);
+                // electionResult.recommendedElector.map(e => e.id)
                 //   .should.have.same.members(recommendedElectorsBlock1.map(
                 //     e => e.id));
                 callback(null, eventBlock.meta.blockHash);
@@ -311,13 +311,13 @@ describe('Multinode', () => {
                 delete event.signature;
                 event.should.deep.equal(testEvent);
                 should.exist(eventBlock.meta);
-                should.exist(eventBlock.block.electionResults);
-                eventBlock.block.electionResults.should.be.an('array');
-                eventBlock.block.electionResults.should.have.length.at.least(
+                should.exist(eventBlock.block.electionResult);
+                eventBlock.block.electionResult.should.be.an('array');
+                eventBlock.block.electionResult.should.have.length.at.least(
                   _twoThirdsMajority(nodes));
-                const electionResults = eventBlock.block.electionResults[0];
-                should.exist(electionResults.recommendedElector);
-                // electionResults.recommendedElector.map(e => e.id)
+                const electionResult = eventBlock.block.electionResult[0];
+                should.exist(electionResult.recommendedElector);
+                // electionResult.recommendedElector.map(e => e.id)
                 //   .should.have.same.members(recommendedElectorsBlock1.map(
                 //     e => e.id));
                 callback(null, eventBlock.meta.blockHash);
@@ -359,7 +359,7 @@ describe('Multinode', () => {
                   eventBlock.block.blockHeight.should.equal(5);
                   eventBlock.block.event.should.be.an('array');
                   eventBlock.block.event.should.have.length(10);
-                  eventBlock.block.electionResults.should.have.length.at.least(
+                  eventBlock.block.electionResult.should.have.length.at.least(
                     _twoThirdsMajority(nodes));
                   callback(null, eventBlock.meta.blockHash);
                 }), callback)],

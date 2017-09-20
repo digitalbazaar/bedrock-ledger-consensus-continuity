@@ -81,5 +81,57 @@ describe('Continuity2017', () => {
           })]
       }, done);
     });
+
+    it('should ensure the blocks round-trip expand/compact properly', done => {
+      const testEvent = bedrock.util.clone(mockData.events.alpha);
+      testEvent.input[0].id = 'https://example.com/events/EXAMPLE';
+      async.auto({
+        getConfigBlock: callback =>
+          ledgerNode.storage.blocks.getLatest((err, result) => {
+            should.not.exist(err);
+            const eventBlock = result.eventBlock;
+            should.exist(eventBlock.block);
+            const block = eventBlock.block;
+            bedrock.jsonld.compact(
+              block, block['@context'], (err, compacted) => {
+              should.not.exist(err);
+              delete block.event[0]['@context'];
+              delete block.electionResult[0]['@context'];
+              block.should.deep.equal(compacted);
+              callback();
+            });
+          }),
+        addEvent: ['getConfigBlock', (results, callback) =>
+          ledgerNode.events.add(testEvent, callback)],
+        runWorker: ['addEvent', (results, callback) =>
+          consensusApi._worker._run(ledgerNode, err => {
+            callback(err);
+          })],
+        getEventBlock: ['runWorker', (results, callback) =>
+          ledgerNode.storage.blocks.getLatest((err, result) => {
+          should.not.exist(err);
+          const eventBlock = result.eventBlock;
+          should.exist(eventBlock.block);
+          const block = eventBlock.block;
+          async.auto({
+            compactInput: callback => bedrock.jsonld.compact(
+              block.event[0].input[0], block.event[0].input[0]['@context'],
+              (err, compacted) => callback(err, compacted)),
+            compactBlock: ['compactInput', (results, callback) =>
+              bedrock.jsonld.compact(
+                block, block['@context'], (err, compacted) => {
+                should.not.exist(err);
+                // use input compacted with its own context
+                compacted.event[0].input[0] = results.compactInput;
+                // remove extra @context entries
+                delete block.event[0]['@context'];
+                delete block.electionResult[0]['@context'];
+                block.should.deep.equal(compacted);
+                callback();
+              })]
+          }, callback);
+        })]
+      }, done);
+    });
   });
 });
