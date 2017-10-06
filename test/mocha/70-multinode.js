@@ -358,7 +358,7 @@ describe('Multinode', () => {
                   should.exist(eventBlock.block);
                   eventBlock.block.blockHeight.should.equal(5);
                   eventBlock.block.event.should.be.an('array');
-                  eventBlock.block.event.should.have.length.at.least(6);
+                  eventBlock.block.event.should.have.length.at.least(1);
                   eventBlock.block.electionResult.should.have.length.at.least(
                     _twoThirdsMajority(nodes));
                   callback(null, eventBlock.meta.blockHash);
@@ -424,7 +424,7 @@ describe('Multinode', () => {
             assertNoError(err);
             result.eventBlock.block.blockHeight.should.equal(5);
             result.eventBlock.block.event.should.be.an('array');
-            result.eventBlock.block.event.should.have.length.at.least(6);
+            result.eventBlock.block.event.should.have.length.at.least(1);
             callback();
           }),
         ], done);
