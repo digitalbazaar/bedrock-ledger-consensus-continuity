@@ -201,3 +201,4 @@ module.exports.election = () => (election);
 module.exports.event = () => (event);
 module.exports.manifest = () => (manifest);
 module.exports.vote = () => (vote);
+module.exports.webLedgerEvents = () => (webLedgerEvents);
