@@ -154,9 +154,23 @@ const webLedgerEvent = {
   additionalProperties: false
 };
 
+const webLedgerEvents = {
+  title: 'Web Ledger Events',
+  type: [webLedgerConfigEvent, webLedgerEvent],
+  required: true
+};
+
 const event = {
+  type: 'object',
   title: 'Continuity Event',
-  type: [webLedgerConfigEvent, webLedgerEvent]
+  properties: {
+    event: webLedgerEvents,
+    eventHash: {
+      type: 'string',
+      required: true
+    }
+  },
+  additionalProperties: false
 };
 
 const manifest = {
