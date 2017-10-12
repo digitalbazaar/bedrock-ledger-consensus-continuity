@@ -18,7 +18,7 @@
     "bedrock-ledger-agent": "digitalbazaar/bedrock-ledger-agent#cm4",
     "bedrock-ledger-context": "digitalbazaar/bedrock-ledger-context#master",
     "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#cm4",
-    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#cm4",
+    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#getLatestSummary",
     "bedrock-mongodb": "digitalbazaar/bedrock-mongodb#updateDriver",
     "bedrock-passport": "^3.3.0",
     "bedrock-permission": "^2.4.3",

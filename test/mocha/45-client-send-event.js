@@ -6,7 +6,7 @@
 
 const async = require('async');
 const bedrock = require('bedrock');
-const brLedger = require('bedrock-ledger-node');
+const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
@@ -18,21 +18,21 @@ describe('Consensus Client - sendEvent API', () => {
 
   let consensusApi;
   let ledgerNode;
-  let voterId;
+  let peerId;
   beforeEach(done => {
     const configEvent = mockData.events.config;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        brLedger.use('Continuity2017', (err, result) => {
+        brLedgerNode.use('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
           consensusApi = result.api;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedger.add(
+      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
         null, {configEvent}, (err, result) => {
           if(err) {
             return callback(err);
@@ -42,7 +42,7 @@ describe('Consensus Client - sendEvent API', () => {
         })],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
-          voterId = result.id;
+          peerId = result.id;
           callback();
         });
       }]
@@ -54,13 +54,16 @@ describe('Consensus Client - sendEvent API', () => {
     const testEventId = 'https://example.com/events/' + uuid();
     testEvent.input[0].id = testEventId;
     async.auto({
-      send: callback => consensusApi._worker._client.sendEvent(
-        testEvent, voterId, (err, result) => {
-          assertNoError(err);
-          should.exist(result);
-          result.should.be.a('string');
-          callback();
-        })
+      hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
+      send: ['hash', (results, callback) =>
+        consensusApi._worker._client.sendEvent(
+          {eventHash: results.hash, event: testEvent, peerId},
+          (err, result) => {
+            assertNoError(err);
+            should.exist(result);
+            result.should.be.a('string');
+            callback();
+          })]
     }, done);
   });
   it('returns an error when a peer is unreachable.', done => {
@@ -68,13 +71,18 @@ describe('Consensus Client - sendEvent API', () => {
     const testEventId = 'https://example.com/events/' + uuid();
     testEvent.input[0].id = testEventId;
     async.auto({
-      get: callback => consensusApi._worker._client.sendEvent(
-        testEvent, {id: 'https://' + uuid() + '.com'}, (err, result) => {
+      hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
+      send: ['hash', (results, callback) =>
+        consensusApi._worker._client.sendEvent({
+          eventHash: results.hash,
+          event: testEvent,
+          peerId: 'https://' + uuid() + '.com'
+        }, (err, result) => {
           should.exist(err);
           err.name.should.equal('NetworkError');
           should.not.exist(result);
           callback();
-        })
+        })]
     }, done);
   });
   it('returns an error', done => {
@@ -82,14 +90,19 @@ describe('Consensus Client - sendEvent API', () => {
     // wipe out the event data to create failure
     testEvent.input = [];
     async.auto({
-      get: callback => consensusApi._worker._client.sendEvent(
-        testEvent, voterId, (err, result) => {
+      hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
+      send: ['hash', (results, callback) =>
+        consensusApi._worker._client.sendEvent({
+          eventHash: results.hash,
+          event: testEvent,
+          peerId
+        }, (err, result) => {
           should.exist(err);
           err.name.should.equal('NetworkError');
           err.details.error.type.should.equal('ValidationError');
           should.not.exist(result);
           callback();
-        })
+        })]
     }, done);
   });
 });

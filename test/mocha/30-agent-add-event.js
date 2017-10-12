@@ -6,7 +6,7 @@
 
 const async = require('async');
 const bedrock = require('bedrock');
-const brLedger = require('bedrock-ledger-node');
+const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 let request = require('request');
@@ -27,14 +27,14 @@ describe('Consensus Agent - Add Event API', () => {
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        brLedger.use('Continuity2017', (err, result) => {
+        brLedgerNode.use('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
           consensusApi = result.api;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedger.add(
+      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
         null, {configEvent}, (err, result) => {
           if(err) {
             return callback(err);
@@ -56,16 +56,17 @@ describe('Consensus Agent - Add Event API', () => {
     testEvent.input[0].id = 'https://example.com/events/' + uuid();
     // FIXME: should the event be signed?
     async.auto({
-      addEvent: callback =>
+      hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
+      addEvent: ['hash', (results, callback) =>
         request.post({
           url: testUrl,
-          json: testEvent
+          json: {eventHash: results.hash, event: testEvent}
         }, (err, res) => {
           assertNoError(err);
           res.statusCode.should.equal(201);
           should.exist(res.headers.location);
           callback();
-        })
+        })]
     }, done);
   });
 });
