@@ -29,7 +29,7 @@
     "bedrock": "^1.2.4",
     "bedrock-did-client": "^1.1.0",
     "bedrock-ledger-context": "digitalbazaar/bedrock-ledger-context#master",
-    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#fix-data-model",
+    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#cm4",
     "bedrock-mongodb": "^3.0.0",
     "bedrock-permission": "^2.3.2",
     "bedrock-validation": "^2.3.0"
