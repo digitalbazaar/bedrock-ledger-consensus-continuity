@@ -5,12 +5,36 @@
 'use strict';
 
 const async = require('async');
+const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
+const brLedgerNode = require('bedrock-ledger-node');
 const database = require('bedrock-mongodb');
 const uuid = require('uuid/v4');
 
 const api = {};
 module.exports = api;
+
+api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
+
+// test hashing function
+api.testHasher = brLedgerNode.consensus._hasher;
+
+api.createEvent = ({eventTemplate, eventNum, consensus = true}, callback) => {
+  const events = [];
+  async.timesLimit(eventNum, 100, (i, callback) => {
+    const event = bedrock.util.clone(eventTemplate);
+    event.id = `https://example.com/events/${uuid()}`;
+    api.testHasher(event, (err, result) => {
+      const meta = {eventHash: result};
+      if(consensus) {
+        meta.consensus = true;
+        meta.consensusDate = Date.now();
+      }
+      events.push({event, meta});
+      callback();
+    });
+  }, err => callback(err, events));
+};
 
 api.createIdentity = function(userName) {
   const newIdentity = {
