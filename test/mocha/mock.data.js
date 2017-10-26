@@ -5,6 +5,7 @@
 
 const bedrock = require('bedrock');
 const config = bedrock.config;
+const constants = config.constants;
 const helpers = require('./helpers');
 
 const mock = {};
@@ -29,11 +30,11 @@ identities[userName].identity.sysResourceRole.push({
 
 const events = mock.events = {};
 events.alpha = {
-  '@context': config.constants.WEB_LEDGER_CONTEXT_V1_URL,
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerEvent',
   operation: 'Create',
   input: [{
-    '@context': config.constants.TEST_CONTEXT_V1_URL,
+    '@context': constants.TEST_CONTEXT_V1_URL,
     id: 'https://example.com/events/123456',
     type: 'Concert',
     name: 'Big Band Concert in New York City',
@@ -49,7 +50,7 @@ events.alpha = {
 };
 
 events.config = {
-  '@context': config.constants.WEB_LEDGER_CONTEXT_V1_URL,
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerConfigurationEvent',
   ledgerConfiguration: {
     type: 'WebLedgerConfiguration',
@@ -58,8 +59,20 @@ events.config = {
   }
 };
 
+const mergeEvents = mock.mergeEvents = {};
+mergeEvents.alpha = {
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+  'type': ['WebLedgerEvent', 'ContinuityMergeEvent'],
+  'treeHash': 'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-XXX',
+  'parentHash': [
+    'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-AAA',
+    'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-BBB',
+    'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-CCC'
+  ]
+};
+
 // constants
-mock.authorizedSignerUrl = 'https://example.com' + '/keys/authorized-key-1';
+mock.authorizedSignerUrl = 'https://example.com/keys/authorized-key-1';
 
 // all mock keys for all groups
 mock.groups = {
@@ -143,7 +156,7 @@ mock.groups = {
 
 mock.ldDocuments = {
   "https://example.com/i/alpha": {
-    "@context": config.constants.WEB_LEDGER_CONTEXT_V1_URL,
+    "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
     "id": "https://example.com/i/alpha",
     "publicKey": [{
       "id": mock.authorizedSignerUrl,
@@ -154,7 +167,7 @@ mock.ldDocuments = {
   }
 };
 mock.ldDocuments[mock.authorizedSignerUrl] = {
-  "@context": config.constants.WEB_LEDGER_CONTEXT_V1_URL,
+  "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
   "type": "CryptographicKey",
   "owner": "https://example.com/i/alpha",
   "label": "Signing Key 2",

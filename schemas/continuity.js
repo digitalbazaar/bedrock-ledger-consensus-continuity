@@ -5,87 +5,37 @@ const config = require('bedrock').config;
 const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
 
-const blockHeight = {
-  type: 'integer',
-  minimum: 0,
-  required: true
-};
-
-const vote = {
-  title: 'Continuity Vote',
+const continuityMergeEvent = {
+  title: 'ContinuityMergeEvent',
   type: 'object',
   properties: {
-    '@context': schemas.jsonldContext(),
-    blockHeight,
-    manifestHash: schemas.url(),
-    voteRound: {
-      type: 'integer',
-      minimum: 1,
-      required: true
-    },
-    voter: schemas.url(),
-    recommendedElector: {
+    '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    parentHash: {
       type: 'array',
-      minItems: 1,
       items: {
-        type: 'object',
-        properties: {
-          id: {type: schemas.url()}
-        }
-      }
-    },
-    signature: schemas.linkedDataSignature()
-  },
-  additionalProperties: false
-};
-
-const election = {
-  title: 'Continuity Election',
-  type: 'array',
-  items: {
-    type: 'object',
-    properties: {
-      topic: {
-        type: 'string',
-        required: true
+        type: 'string'
       },
-      electionResult: {
-        type: 'array',
-        items: {
-          type: vote
-        }
-      }
+      minItems: 1
     },
-    additionalProperties: false
-  }
-};
-
-const blockStatus = {
-  title: 'Continuity Block Status',
-  type: 'object',
-  properties: {
-    '@context': schemas.jsonldContext(),
-    blockHeight,
-    previousBlockHash: {
-      type: 'string',
-      // not required for blockHeight of 0
-      required: false
+    signature: {
+      anyOf: [schemas.linkedDataSignature()],
     },
-    consensusPhase: {
-      type: 'string',
-      required: true
+    treeHash: {
+      type: 'string'
     },
-    election: {
-      type: election,
-      required: false
-    },
-    eventHash: {
+    type: {
       type: 'array',
-      items: schemas.url(),
-      required: false
-    }
+      items: {
+        anyOf: [
+          {type: 'string', enum: ['WebLedgerEvent']},
+          {type: 'string', enum: ['ContinuityMergeEvent']},
+        ]
+      },
+      minItems: 2,
+      uniqueItems: true
+    },
   },
-  additionalProperties: false
+  required: ['@context', 'parentHash', 'signature', 'treeHash', 'type'],
 };
 
 const webLedgerConfigEvent = {
@@ -94,36 +44,28 @@ const webLedgerConfigEvent = {
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
     type: {
-      // TODO: enum `WebLedgerConfigurationEvent`
       type: 'string',
-      required: true
+      enum: ['WebLedgerConfigurationEvent']
     },
     ledgerConfiguration: {
       type: 'object',
       properties: {
         type: {
-          // TODO: enum `WebLedgerConfiguration`
           type: 'string',
-          required: true
+          enum: ['WebLedgerConfiguration']
         },
         ledger: {
           type: 'string',
-          required: true
         },
         consensusMethod: {
           type: 'string',
-          required: true
         }
       },
-      required: true
     },
     signature: {
-      type: schemas.linkedDataSignature(),
-      // FIXME: should signature be required?
-      required: false
+      anyOf: [schemas.linkedDataSignature()],
     }
-  },
-  additionalProperties: false
+  }
 };
 
 const webLedgerEvent = {
@@ -131,74 +73,42 @@ const webLedgerEvent = {
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
-    type: {
-      // TODO: enum `WebLedgerEvent`
-      type: 'string',
-      required: true
-    },
-    operation: {
-      type: 'string',
-      required: true
-    },
     input: {
       type: 'array',
       minItems: 1,
-      required: true
     },
-    signature: {
-      type: schemas.linkedDataSignature(),
-      // FIXME: should signature be required?
-      required: false
-    }
+    operation: {
+      type: 'string',
+    },
+    treeHash: {
+      type: 'string'
+    },
+    type: {
+      type: 'string',
+      enum: ['WebLedgerEvent']
+    },
   },
-  additionalProperties: false
+  require: ['@context', 'input', 'operation', 'treeHash', 'type']
 };
 
 const webLedgerEvents = {
   title: 'Web Ledger Events',
-  type: [webLedgerConfigEvent, webLedgerEvent],
-  required: true
+  oneOf: [webLedgerEvent, webLedgerConfigEvent, continuityMergeEvent]
 };
 
 const event = {
   type: 'object',
   title: 'Continuity Event',
   properties: {
-    event: webLedgerEvents,
+    event: {
+      oneOf: [webLedgerEvents]
+    },
     eventHash: {
-      type: 'string',
-      required: true
+      type: 'string'
     }
   },
-  additionalProperties: false
+  required: ['event', 'eventHash']
 };
 
-const manifest = {
-  title: 'Continuity Manifest',
-  type: 'object',
-  properties: {
-    // FIXME: @context?
-    type: {
-      type: 'string',
-      required: true,
-      enum: ['Events', 'RollCall']
-    },
-    id: schemas.identifier(),
-    blockHeight,
-    item: {
-      type: 'array',
-      minItems: 1,
-      required: true,
-      items: {
-        type: schemas.url()
-      }
-    }
-  }
-};
-
-module.exports.blockStatus = () => (blockStatus);
-module.exports.election = () => (election);
 module.exports.event = () => (event);
-module.exports.manifest = () => (manifest);
-module.exports.vote = () => (vote);
 module.exports.webLedgerEvents = () => (webLedgerEvents);
