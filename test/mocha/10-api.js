@@ -52,9 +52,53 @@ describe('Continuity2017', () => {
   describe('add event API', () => {
     it('should add a regular local event', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = uuid();
+      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      async.auto({
+        addEvent: callback => ledgerNode.events.add(
+          testEvent, (err, result) => {
+            assertNoError(err);
+            should.exist(result);
+            // FIXME: add more assertions
+            callback();
+          }),
+      }, done);
+    });
+  }); // end add event API
+
+  describe('mergeBranches API', () => {
+    it('collects the proper events', done => {
+      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const testEvent = bedrock.util.clone(mockData.events.alpha);
+      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
       async.auto({
         addEvent: callback => ledgerNode.events.add(testEvent, callback),
+        mergeBranches: ['addEvent', (results, callback) => {
+          mergeBranches(ledgerNode, (err, result) => {
+            assertNoError(err);
+            const eventHash = results.addEvent.meta.eventHash;
+            should.exist(result.event);
+            const event = result.event;
+            should.exist(event.treeHash);
+            should.exist(event.parentHash);
+            const parentHash = event.parentHash;
+            parentHash.should.be.an('array');
+            parentHash.should.have.length(1);
+            parentHash.should.have.same.members([eventHash]);
+            should.exist(result.meta);
+            const meta = result.meta;
+            should.exist(meta.continuity2017);
+            should.exist(meta.continuity2017.creator);
+            const creator = meta.continuity2017.creator;
+            creator.should.be.a('string');
+            should.exist(meta.eventHash);
+            meta.eventHash.should.be.a('string');
+            should.exist(meta.created);
+            meta.created.should.be.a('number');
+            should.exist(meta.updated);
+            meta.updated.should.be.a('number');
+            callback();
+          });
+        }]
       }, done);
     });
   }); // end add event API
@@ -62,7 +106,7 @@ describe('Continuity2017', () => {
   describe.skip('Event Consensus', () => {
     it('should add an event and achieve consensus', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = uuid();
+      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
       async.auto({
         addEvent: callback => ledgerNode.events.add(testEvent, callback),
         runWorker: ['addEvent', (results, callback) =>
