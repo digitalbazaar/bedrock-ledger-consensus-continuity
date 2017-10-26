@@ -12,7 +12,7 @@ let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
 const uuid = require('uuid/v4');
 
-describe('Consensus Agent - Get Event API', () => {
+describe.skip('Consensus Agent - Get Event API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });

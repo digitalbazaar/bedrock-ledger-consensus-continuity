@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe('Multinode', () => {
+describe.skip('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });

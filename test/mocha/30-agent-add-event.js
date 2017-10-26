@@ -54,7 +54,7 @@ describe('Consensus Agent - Add Event API', () => {
       }]
     }, done);
   });
-  it.only('should add a remote merge event', done => {
+  it('should add a remote merge event', done => {
     const testUrl = voterId + '/events';
     const testEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
     // use a valid keypair from mocks
@@ -79,7 +79,7 @@ describe('Consensus Agent - Add Event API', () => {
         })]
     }, done);
   });
-  it.only('should add a regular remote event', done => {
+  it('should add a regular remote event', done => {
     const testUrl = voterId + '/events';
     const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
     testRegularEvent.input[0].id = uuid();
@@ -119,25 +119,6 @@ describe('Consensus Agent - Add Event API', () => {
         should.exist(res.headers.location);
         callback();
       })]
-    }, done);
-  });
-  it('should add an event', done => {
-    const testUrl = voterId + '/events';
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEvent.input[0].id = 'https://example.com/events/' + uuid();
-    // FIXME: should the event be signed?
-    async.auto({
-      hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
-      addEvent: ['hash', (results, callback) =>
-        request.post({
-          url: testUrl,
-          json: {eventHash: results.hash, event: testEvent}
-        }, (err, res) => {
-          assertNoError(err);
-          res.statusCode.should.equal(201);
-          should.exist(res.headers.location);
-          callback();
-        })]
     }, done);
   });
 });

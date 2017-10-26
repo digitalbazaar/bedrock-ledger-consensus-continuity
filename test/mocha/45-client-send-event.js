@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe('Consensus Client - sendEvent API', () => {
+describe.skip('Consensus Client - sendEvent API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
