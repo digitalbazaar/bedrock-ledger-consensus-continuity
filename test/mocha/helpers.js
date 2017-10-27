@@ -19,17 +19,23 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 // test hashing function
 api.testHasher = brLedgerNode.consensus._hasher;
 
-api.createEvent = ({eventTemplate, eventNum, consensus = true}, callback) => {
+api.createEvent = (
+  {eventTemplate, eventNum, consensus = true, hash = true}, callback) => {
   const events = [];
   async.timesLimit(eventNum, 100, (i, callback) => {
     const event = bedrock.util.clone(eventTemplate);
     event.id = `https://example.com/events/${uuid()}`;
+    const meta = {};
+    if(consensus) {
+      meta.consensus = true;
+      meta.consensusDate = Date.now();
+    }
+    if(!hash) {
+      events.push({event, meta});
+      return callback();
+    }
     api.testHasher(event, (err, result) => {
-      const meta = {eventHash: result};
-      if(consensus) {
-        meta.consensus = true;
-        meta.consensusDate = Date.now();
-      }
+      meta.eventHash = result;
       events.push({event, meta});
       callback();
     });
