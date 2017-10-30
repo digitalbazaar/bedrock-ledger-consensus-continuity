@@ -353,10 +353,11 @@ describe('Continuity2017', () => {
           privateKeyPem: keyPair.privateKey,
           creator: mockData.authorizedSignerUrl
         }, callback)],
-      addMerge: ['sign', (results, callback) => ledgerNode.events.add(
-        results.sign, {continuity2017: {peer: true}}, callback)],
-      addRegular: ['addMerge', (results, callback) => ledgerNode.events.add(
+      addRegular: ['head', (results, callback) => ledgerNode.events.add(
         testRegularEvent, {continuity2017: {peer: true}}, callback)],
+      addMerge: ['sign', 'addRegular', (results, callback) =>
+        ledgerNode.events.add(
+          results.sign, {continuity2017: {peer: true}}, callback)],
     }, (err, results) => {
       if(err) {
         return callback(err);

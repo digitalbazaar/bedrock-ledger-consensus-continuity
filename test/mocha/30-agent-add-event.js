@@ -54,11 +54,10 @@ describe('Consensus Agent - Add Event API', () => {
       }]
     }, done);
   });
-  it('should add a remote merge event', done => {
+  it('should add a regular remote event', done => {
     const testUrl = voterId + '/events';
-    const testEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
-    // use a valid keypair from mocks
-    const keyPair = mockData.groups.authorized;
+    const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
+    testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
     const getHead = consensusApi._worker._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead(
@@ -66,30 +65,29 @@ describe('Consensus Agent - Add Event API', () => {
           if(err) {
             return callback(err);
           }
-          // in this example the treeHash is for the genesis merge event
-          testEvent.treeHash = result;
+          // the ancestor is the genesis merge event
+          testRegularEvent.treeHash = result;
           callback(null, result);
         }),
-      sign: ['head', (results, callback) => jsigs.sign(testEvent, {
-        algorithm: 'LinkedDataSignature2015',
-        privateKeyPem: keyPair.privateKey,
-        creator: mockData.authorizedSignerUrl
-      }, callback)],
-      eventHash: ['sign', (results, callback) =>
-        hasher(results.sign, callback)],
-      addEvent: ['eventHash', (results, callback) =>
-        request.post({
-          url: testUrl,
-          json: {eventHash: results.eventHash, event: results.sign}
-        }, (err, res) => {
-          assertNoError(err);
-          res.statusCode.should.equal(201);
-          should.exist(res.headers.location);
-          callback();
-        })]
+      regularEventHash: ['head', (results, callback) =>
+        hasher(testRegularEvent, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          callback(null, result);
+        })],
+      addRegular: ['regularEventHash', (results, callback) => request.post({
+        url: testUrl,
+        json: {eventHash: results.regularEventHash, event: testRegularEvent}
+      }, (err, res) => {
+        assertNoError(err);
+        res.statusCode.should.equal(201);
+        should.exist(res.headers.location);
+        callback();
+      })]
     }, done);
   });
-  it('should add a regular remote event', done => {
+  it('should add a remote merge event', done => {
     const testUrl = voterId + '/events';
     const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
     testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
@@ -117,32 +115,26 @@ describe('Consensus Agent - Add Event API', () => {
           testMergeEvent.parentHash = [result];
           callback(null, result);
         })],
-      sign: ['regularEventHash', (results, callback) => jsigs.sign(
-        testMergeEvent, {
+      sign: ['regularEventHash', (results, callback) =>
+        jsigs.sign(testMergeEvent, {
           algorithm: 'LinkedDataSignature2015',
           privateKeyPem: keyPair.privateKey,
           creator: mockData.authorizedSignerUrl
         }, callback)],
-      mergeEventHash: ['sign', (results, callback) =>
+      eventHash: ['sign', (results, callback) =>
         hasher(results.sign, callback)],
-      addMerge: ['mergeEventHash', (results, callback) => request.post({
-        url: testUrl,
-        json: {eventHash: results.mergeEventHash, event: results.sign}
-      }, (err, res) => {
-        assertNoError(err);
-        res.statusCode.should.equal(201);
-        should.exist(res.headers.location);
-        callback();
-      })],
-      addRegular: ['addMerge', (results, callback) => request.post({
-        url: testUrl,
-        json: {eventHash: results.regularEventHash, event: testRegularEvent}
-      }, (err, res) => {
-        assertNoError(err);
-        res.statusCode.should.equal(201);
-        should.exist(res.headers.location);
-        callback();
-      })]
+      addRegular: ['head', (results, callback) => ledgerNode.events.add(
+        testRegularEvent, {continuity2017: {peer: true}}, callback)],
+      addEvent: ['addRegular', 'eventHash', (results, callback) =>
+        request.post({
+          url: testUrl,
+          json: {eventHash: results.eventHash, event: results.sign}
+        }, (err, res) => {
+          assertNoError(err);
+          res.statusCode.should.equal(201);
+          should.exist(res.headers.location);
+          callback();
+        })]
     }, done);
   });
 });
