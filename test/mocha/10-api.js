@@ -8,14 +8,9 @@ const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const expect = global.chai.expect;
-const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
-const jsigs = require('jsonld-signatures')();
-const jsonld = bedrock.jsonld;
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
-
-jsigs.use('jsonld', jsonld);
 
 describe('Continuity2017', () => {
   before(done => {
@@ -23,6 +18,7 @@ describe('Continuity2017', () => {
   });
   // get consensus plugin and create ledger node for use in each test
   let consensusApi;
+  let genesisMergeHash;
   let creator;
   let ledgerNode;
   beforeEach(done => {
@@ -52,9 +48,21 @@ describe('Continuity2017', () => {
             return callback(err);
           }
           creator = result;
+          callback(null, result);
+        });
+      }],
+      genesisMerge: ['creator', (results, callback) => {
+        consensusApi._worker._events._getLocalBranchHead({
+          eventsCollection: ledgerNode.storage.events.collection,
+          creator: results.creator.id
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          genesisMergeHash = result;
           callback();
         });
-      }]
+      }],
     }, done);
   });
 
@@ -77,6 +85,7 @@ describe('Continuity2017', () => {
             event.input.length.should.equal(1);
             event.input.should.deep.equal(testEvent.input);
             should.exist(event.treeHash);
+            event.treeHash.should.equal(genesisMergeHash);
             should.exist(result.meta);
             const meta = result.meta;
             should.exist(meta.continuity2017);
@@ -115,11 +124,12 @@ describe('Continuity2017', () => {
             event.type.should.have.same.members(
               ['WebLedgerEvent', 'ContinuityMergeEvent']);
             should.exist(event.treeHash);
+            event.treeHash.should.equal(genesisMergeHash);
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
-            parentHash.should.have.length(1);
-            parentHash.should.have.same.members([eventHash]);
+            parentHash.should.have.length(2);
+            parentHash.should.have.same.members([eventHash, event.treeHash]);
             should.exist(result.meta);
             const meta = result.meta;
             should.exist(meta.continuity2017);
@@ -154,11 +164,13 @@ describe('Continuity2017', () => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
+            event.treeHash.should.equal(genesisMergeHash);
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
-            parentHash.should.have.length(5);
-            parentHash.should.have.same.members(results.addEvent);
+            parentHash.should.have.length(6);
+            parentHash.should.have.same.members(
+              results.addEvent.concat(event.treeHash));
             callback();
           });
         }]
@@ -167,17 +179,21 @@ describe('Continuity2017', () => {
     it('collects one remote merge event', done => {
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       async.auto({
-        remoteEvents: callback => _addRemoteEvents(ledgerNode, callback),
+        remoteEvents: callback => helpers.addRemoteEvents(
+          {consensusApi, ledgerNode, mockData}, callback),
         mergeBranches: ['remoteEvents', (results, callback) => {
           mergeBranches(ledgerNode, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
+            should.exist(event.treeHash);
+            event.treeHash.should.equal(genesisMergeHash);
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
-            parentHash.should.have.length(1);
-            parentHash.should.have.same.members([results.remoteEvents.merge]);
+            parentHash.should.have.length(2);
+            parentHash.should.have.same.members([
+              results.remoteEvents.merge, event.treeHash]);
             callback();
           });
         }]
@@ -187,18 +203,21 @@ describe('Continuity2017', () => {
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       async.auto({
         remoteEvents: callback => async.times(
-          5, (i, callback) => _addRemoteEvents(ledgerNode, callback), callback),
+          5, (i, callback) => helpers.addRemoteEvents(
+            {consensusApi, ledgerNode, mockData}, callback), callback),
         mergeBranches: ['remoteEvents', (results, callback) => {
           const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
           mergeBranches(ledgerNode, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
+            event.treeHash.should.equal(genesisMergeHash);
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
-            parentHash.should.have.length(5);
-            parentHash.should.have.same.members(remoteMergeHashes);
+            parentHash.should.have.length(6);
+            parentHash.should.have.same.members(
+              remoteMergeHashes.concat(event.treeHash));
             callback();
           });
         }]
@@ -216,22 +235,60 @@ describe('Continuity2017', () => {
             e.event, (err, result) => callback(err, result.meta.eventHash)),
           callback)],
         remoteEvents: callback => async.times(
-          5, (i, callback) => _addRemoteEvents(ledgerNode, callback), callback),
+          5, (i, callback) => helpers.addRemoteEvents(
+            {consensusApi, ledgerNode, mockData}, callback), callback),
         mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
           const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
           mergeBranches(ledgerNode, (err, result) => {
             assertNoError(err);
-            const allHashes = results.localEvents.concat(remoteMergeHashes);
             should.exist(result.event);
             const event = result.event;
+            event.treeHash.should.equal(genesisMergeHash);
+            const allHashes = results.localEvents.concat(
+              remoteMergeHashes, event.treeHash);
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
-            parentHash.should.have.length(13);
+            parentHash.should.have.length(14);
             parentHash.should.have.same.members(allHashes);
             callback();
           });
         }]
+      }, done);
+    });
+    // NOTE: no assertions can be made about the events refrenced in the merge
+    // events because there is no intervening consensus work occuring
+    it('Second merge event has the proper treeHash', done => {
+      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const testEvent = bedrock.util.clone(mockData.events.alpha);
+      const testEvent2 = bedrock.util.clone(mockData.events.alpha);
+      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      testEvent2.input[0].id = `https://example.com/event/${uuid()}`;
+      async.auto({
+        addEvent: callback => ledgerNode.events.add(testEvent, callback),
+        mergeBranches: ['addEvent', (results, callback) => {
+          mergeBranches(ledgerNode, (err, result) => {
+            assertNoError(err);
+            const event = result.event;
+            event.treeHash.should.equal(genesisMergeHash);
+            callback(null, event);
+          });
+        }],
+        addEvent2: ['mergeBranches', (results, callback) =>
+          ledgerNode.events.add(testEvent2, callback)],
+        // hashing the merge event here because the storage API does not return
+        // meta.eventHash
+        mergeEventHash: ['mergeBranches', (results, callback) =>
+          helpers.testHasher(results.mergeBranches, callback)],
+        mergeBranches2: ['mergeEventHash', 'addEvent2', (results, callback) => {
+          mergeBranches(ledgerNode, (err, result) => {
+            assertNoError(err);
+            const event = result.event;
+            event.treeHash.should.equal(results.mergeEventHash);
+
+            callback();
+          });
+        }],
       }, done);
     });
   }); // end mergeBranches event API
@@ -317,56 +374,4 @@ describe('Continuity2017', () => {
       }, done);
     });
   });
-
-  // add a merge event and regular event as if it came in through gossip
-  function _addRemoteEvents(ledgerNode, callback) {
-    const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
-    testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
-    const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
-    // use a valid keypair from mocks
-    const keyPair = mockData.groups.authorized;
-    // NOTE: using the loal branch head for treeHash of the remote merge event
-    const getHead = consensusApi._worker._events._getLocalBranchHead;
-    async.auto({
-      head: callback => getHead(
-        ledgerNode.storage.events.collection, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          // in this example the merge event and the regular event
-          // have a common ancestor which is the genesis merge event
-          testMergeEvent.treeHash = result;
-          testRegularEvent.treeHash = result;
-          callback(null, result);
-        }),
-      regularEventHash: ['head', (results, callback) =>
-        hasher(testRegularEvent, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          testMergeEvent.parentHash = [result];
-          callback(null, result);
-        })],
-      sign: ['regularEventHash', (results, callback) => jsigs.sign(
-        testMergeEvent, {
-          algorithm: 'LinkedDataSignature2015',
-          privateKeyPem: keyPair.privateKey,
-          creator: mockData.authorizedSignerUrl
-        }, callback)],
-      addRegular: ['head', (results, callback) => ledgerNode.events.add(
-        testRegularEvent, {continuity2017: {peer: true}}, callback)],
-      addMerge: ['sign', 'addRegular', (results, callback) =>
-        ledgerNode.events.add(
-          results.sign, {continuity2017: {peer: true}}, callback)],
-    }, (err, results) => {
-      if(err) {
-        return callback(err);
-      }
-      const hashes = {
-        merge: results.addMerge.meta.eventHash,
-        regular: results.addRegular.meta.eventHash
-      };
-      callback(null, hashes);
-    });
-  }
 });

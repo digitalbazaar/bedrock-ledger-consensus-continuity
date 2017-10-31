@@ -60,15 +60,18 @@ describe('Consensus Agent - Add Event API', () => {
     testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
     const getHead = consensusApi._worker._events._getLocalBranchHead;
     async.auto({
-      head: callback => getHead(
-        ledgerNode.storage.events.collection, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          // the ancestor is the genesis merge event
-          testRegularEvent.treeHash = result;
-          callback(null, result);
-        }),
+      head: callback => getHead({
+        eventsCollection: ledgerNode.storage.events.collection,
+        creator: voterId
+      }, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        // the ancestor is the genesis merge event
+        testRegularEvent.treeHash = result;
+        testRegularEvent.parentHash = [result];
+        callback(null, result);
+      }),
       regularEventHash: ['head', (results, callback) =>
         hasher(testRegularEvent, (err, result) => {
           if(err) {
@@ -96,23 +99,26 @@ describe('Consensus Agent - Add Event API', () => {
     const keyPair = mockData.groups.authorized;
     const getHead = consensusApi._worker._events._getLocalBranchHead;
     async.auto({
-      head: callback => getHead(
-        ledgerNode.storage.events.collection, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          // in this example the merge event and the regular event
-          // have a common ancestor which is the genesis merge event
-          testMergeEvent.treeHash = result;
-          testRegularEvent.treeHash = result;
-          callback(null, result);
-        }),
+      head: callback => getHead({
+        eventsCollection: ledgerNode.storage.events.collection,
+        creator: voterId
+      }, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        // in this example the merge event and the regular event
+        // have a common ancestor which is the genesis merge event
+        testMergeEvent.treeHash = result;
+        testRegularEvent.treeHash = result;
+        testRegularEvent.parentHash = [result];
+        callback(null, result);
+      }),
       regularEventHash: ['head', (results, callback) =>
         hasher(testRegularEvent, (err, result) => {
           if(err) {
             return callback(err);
           }
-          testMergeEvent.parentHash = [result];
+          testMergeEvent.parentHash = [result, results.head];
           callback(null, result);
         })],
       sign: ['regularEventHash', (results, callback) =>

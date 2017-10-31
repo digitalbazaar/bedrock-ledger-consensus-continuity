@@ -9,7 +9,11 @@ const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const database = require('bedrock-mongodb');
+const jsigs = require('jsonld-signatures')();
+const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
+
+jsigs.use('jsonld', jsonld);
 
 const api = {};
 module.exports = api;
@@ -18,6 +22,63 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 
 // test hashing function
 api.testHasher = brLedgerNode.consensus._hasher;
+
+// add a merge event and regular event as if it came in through gossip
+api.addRemoteEvents = (options, callback) => {
+  const {consensusApi, ledgerNode, mockData} = options;
+  const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
+  testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
+  const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
+  // use a valid keypair from mocks
+  const keyPair = mockData.groups.authorized;
+  // NOTE: using the loal branch head for treeHash of the remote merge event
+  const getHead = consensusApi._worker._events._getLocalBranchHead;
+  async.auto({
+    head: callback => getHead({
+      eventsCollection: ledgerNode.storage.events.collection,
+      // unknown creator will yield genesis merge event
+      creator: 'http://example.com/unknownCreator'
+    }, (err, result) => {
+      if(err) {
+        return callback(err);
+      }
+      // in this example the merge event and the regular event
+      // have a common ancestor which is the genesis merge event
+      testMergeEvent.treeHash = result;
+      testRegularEvent.treeHash = result;
+      testRegularEvent.parentHash = [result];
+      callback(null, result);
+    }),
+    regularEventHash: ['head', (results, callback) =>
+      api.testHasher(testRegularEvent, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        testMergeEvent.parentHash = [result, results.head];
+        callback(null, result);
+      })],
+    sign: ['regularEventHash', (results, callback) => jsigs.sign(
+      testMergeEvent, {
+        algorithm: 'LinkedDataSignature2015',
+        privateKeyPem: keyPair.privateKey,
+        creator: mockData.authorizedSignerUrl
+      }, callback)],
+    addRegular: ['head', (results, callback) => ledgerNode.events.add(
+      testRegularEvent, {continuity2017: {peer: true}}, callback)],
+    addMerge: ['sign', 'addRegular', (results, callback) =>
+      ledgerNode.events.add(
+        results.sign, {continuity2017: {peer: true}}, callback)],
+  }, (err, results) => {
+    if(err) {
+      return callback(err);
+    }
+    const hashes = {
+      merge: results.addMerge.meta.eventHash,
+      regular: results.addRegular.meta.eventHash
+    };
+    callback(null, hashes);
+  });
+};
 
 api.createEvent = (
   {eventTemplate, eventNum, consensus = true, hash = true}, callback) => {

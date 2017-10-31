@@ -80,6 +80,13 @@ const webLedgerEvent = {
     operation: {
       type: 'string',
     },
+    parentHash: {
+      type: 'array',
+      items: {
+        type: 'string'
+      },
+      minItems: 1
+    },
     treeHash: {
       type: 'string'
     },
@@ -88,7 +95,7 @@ const webLedgerEvent = {
       enum: ['WebLedgerEvent']
     },
   },
-  require: ['@context', 'input', 'operation', 'treeHash', 'type']
+  require: ['@context', 'input', 'operation', 'parentHash', 'treeHash', 'type']
 };
 
 const webLedgerEvents = {
