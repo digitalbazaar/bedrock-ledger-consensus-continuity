@@ -84,7 +84,7 @@ describe.only('Worker - _gossipWith', () => {
     merge event on ledgerNode to be gossiped.  There is nothing to be sent from
     ledgerNodeBeta.
   */
-  it('properly gossips one remote event and one merge event', done => {
+  it('properly gossips one regular event and one merge event', done => {
     const mergeBranches = consensusApi._worker._events.mergeBranches;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
