@@ -198,7 +198,7 @@ describe.only('Consensus Agent - Get History API', () => {
   //   one from ledgerNode
   //   one from ledgerNodeBeta
   //   one from fictitious node
-  it('returns merge events from thee different nodes', done => {
+  it('returns merge events from three different nodes', done => {
     const getHistory = consensusApi._worker._client.getHistory;
     const mergeBranches = consensusApi._worker._events.mergeBranches;
     // console.log('alphaeventscollection', ledgerNode.storage.events.collection.s.name);
