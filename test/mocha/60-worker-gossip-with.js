@@ -5,7 +5,7 @@
 
 const async = require('async');
 const bedrock = require('bedrock');
-const brLedger = require('bedrock-ledger-node');
+const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
@@ -17,26 +17,24 @@ describe.only('Worker - _gossipWith', () => {
 
   let consensusApi;
   let ledgerNode;
+  let ledgerNodeBeta;
   let voterId;
   let eventHash;
   let testEventId;
   beforeEach(done => {
     const configEvent = mockData.events.config;
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        brLedger.use('Continuity2017', (err, result) => {
+        brLedgerNode.use('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
           consensusApi = result.api;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedger.add(
+      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
         null, {configEvent}, (err, result) => {
           if(err) {
             return callback(err);
@@ -50,23 +48,68 @@ describe.only('Worker - _gossipWith', () => {
           callback();
         });
       }],
-      addEvent: ['ledgerNode', (results, callback) => ledgerNode.events.add(
-        testEvent, (err, result) => {
-          eventHash = result.meta.eventHash;
-          callback();
+      genesisBlock: ['ledgerNode', (results, callback) =>
+        ledgerNode.blocks.getGenesis((err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          callback(null, result.genesisBlock.block);
+        })],
+      nodeBeta: ['genesisBlock', (results, callback) => brLedgerNode.add(
+        null, {genesisBlock: results.genesisBlock}, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          ledgerNodeBeta = result;
+          callback(null, result);
         })]
     }, done);
   });
-  it('should complete without an error', done => {
+  /*
+    gossip wih ledgerNode from ledgerNodeBeta, there is no merge event on
+    ledgerNode beyond the genesis merge event, so the gossip should complete
+    without an error.  There is also nothing to be sent.
+  */
+  it('completes without an error when nothing to be received or sent', done => {
     async.auto({
-      previousBlockHash: callback => ledgerNode.storage.blocks.getLatest(
-        (err, block) => callback(
-          err, err ? null : block.eventBlock.meta.blockHash)),
-      gossipWith: ['previousBlockHash', (results, callback) =>
-        consensusApi._worker._gossipWith({id: voterId}, err => {
+      gossipWith: callback => consensusApi._worker._gossipWith(
+        {ledgerNode: ledgerNodeBeta, peerId: voterId}, err => {
           should.not.exist(err);
           callback();
-        })]
+        })
+    }, done);
+  });
+  /*
+    gossip wih ledgerNode from ledgerNodeBeta. The is a regular event and a
+    merge event on ledgerNode to be gossiped.  There is nothing to be sent from
+    ledgerNodeBeta.
+  */
+  it('properly gossips one remote event and one merge event', done => {
+    const mergeBranches = consensusApi._worker._events.mergeBranches;
+    const testEvent = bedrock.util.clone(mockData.events.alpha);
+    testEventId = 'https://example.com/events/' + uuid();
+    testEvent.input[0].id = testEventId;
+    async.auto({
+      addEvent: callback => ledgerNode.events.add(testEvent, callback),
+      mergeBranches: ['addEvent', (results, callback) =>
+        mergeBranches(ledgerNode, callback)],
+      gossipWith: ['mergeBranches', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: ledgerNodeBeta, peerId: voterId}, err => {
+            should.not.exist(err);
+            callback();
+          })],
+      test: ['gossipWith', (results, callback) => {
+        // the events from ledgerNode should now be present on ledgerNodeBeta
+        ledgerNodeBeta.storage.events.exists([
+          results.addEvent.meta.eventHash,
+          results.mergeBranches.meta.eventHash
+        ], (err, result) => {
+          assertNoError(err);
+          result.should.be.true;
+          callback();
+        });
+      }]
     }, done);
   });
 });
