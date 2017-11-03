@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe.skip('Worker - _gossipWith', () => {
+describe.only('Worker - _gossipWith', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -63,12 +63,10 @@ describe.skip('Worker - _gossipWith', () => {
         (err, block) => callback(
           err, err ? null : block.eventBlock.meta.blockHash)),
       gossipWith: ['previousBlockHash', (results, callback) =>
-        consensusApi._worker._gossipWith(
-          ledgerNode, {id: voterId}, results.previousBlockHash,
-          1, {id: voterId}, err => {
-            should.not.exist(err);
-            callback();
-          })]
+        consensusApi._worker._gossipWith({id: voterId}, err => {
+          should.not.exist(err);
+          callback();
+        })]
     }, done);
   });
 });
