@@ -12,7 +12,7 @@ const mockData = require('./mock.data');
 // request = request.defaults({json: true, strictSSL: false});
 const uuid = require('uuid/v4');
 
-describe('Consensus Agent - Get History API', () => {
+describe.only('Consensus Agent - Get History API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
