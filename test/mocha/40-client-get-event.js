@@ -17,7 +17,7 @@ describe('Consensus Client - getEvent API', () => {
 
   let consensusApi;
   let ledgerNode;
-  let voterId;
+  let peerId;
   let eventHash;
   let testEventId;
   beforeEach(done => {
@@ -46,7 +46,7 @@ describe('Consensus Client - getEvent API', () => {
         })],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
-          voterId = result.id;
+          peerId = result.id;
           callback();
         });
       }],
@@ -60,7 +60,7 @@ describe('Consensus Client - getEvent API', () => {
   it('should get an event', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getEvent(
-        eventHash, voterId, (err, result) => {
+        {eventHash, peerId}, (err, result) => {
           should.not.exist(err);
           should.exist(result);
           result.should.be.an('object');
@@ -75,7 +75,7 @@ describe('Consensus Client - getEvent API', () => {
   it('returns an error on an unknown event', done => {
     async.auto({
       get: callback => consensusApi._worker._client.getEvent(
-        uuid(), voterId, (err, result) => {
+        {eventHash: uuid(), peerId}, (err, result) => {
           should.exist(err);
           should.not.exist(result);
           err.details.httpStatusCode.should.equal(404);

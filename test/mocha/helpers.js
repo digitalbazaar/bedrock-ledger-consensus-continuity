@@ -24,8 +24,7 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 api.testHasher = brLedgerNode.consensus._hasher;
 
 // add a merge event and regular event as if it came in through gossip
-api.addRemoteEvents = (options, callback) => {
-  const {consensusApi, ledgerNode, mockData} = options;
+api.addRemoteEvents = ({consensusApi, ledgerNode, mockData}, callback) => {
   const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
   testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
   const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);

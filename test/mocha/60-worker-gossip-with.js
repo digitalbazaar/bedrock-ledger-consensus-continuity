@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe.only('Worker - _gossipWith', () => {
+describe('Worker - _gossipWith', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -80,7 +80,7 @@ describe.only('Worker - _gossipWith', () => {
     }, done);
   });
   /*
-    gossip wih ledgerNode from ledgerNodeBeta. The is a regular event and a
+    gossip wih ledgerNode from ledgerNodeBeta. There is a regular event and a
     merge event on ledgerNode to be gossiped.  There is nothing to be sent from
     ledgerNodeBeta.
   */
@@ -102,6 +102,44 @@ describe.only('Worker - _gossipWith', () => {
       test: ['gossipWith', (results, callback) => {
         // the events from ledgerNode should now be present on ledgerNodeBeta
         ledgerNodeBeta.storage.events.exists([
+          results.addEvent.meta.eventHash,
+          results.mergeBranches.meta.eventHash
+        ], (err, result) => {
+          assertNoError(err);
+          result.should.be.true;
+          callback();
+        });
+      }]
+    }, done);
+  });
+  /*
+    gossip wih ledgerNode from ledgerNodeBeta. There is a regular event and a
+    merge event on ledgerNode to be gossiped. There is a regular event and a
+    merge event from a fictitious node as well. There is nothing to be sent from
+    ledgerNodeBeta.
+  */
+  it('properly gossips two regular events and two merge events', done => {
+    const mergeBranches = consensusApi._worker._events.mergeBranches;
+    const testEvent = bedrock.util.clone(mockData.events.alpha);
+    testEventId = 'https://example.com/events/' + uuid();
+    testEvent.input[0].id = testEventId;
+    async.auto({
+      addEvent: callback => ledgerNode.events.add(testEvent, callback),
+      remoteEvents: callback => helpers.addRemoteEvents(
+        {consensusApi, ledgerNode, mockData}, callback),
+      mergeBranches: ['addEvent', 'remoteEvents', (results, callback) =>
+        mergeBranches(ledgerNode, callback)],
+      gossipWith: ['mergeBranches', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: ledgerNodeBeta, peerId: voterId}, err => {
+            should.not.exist(err);
+            callback();
+          })],
+      test: ['gossipWith', (results, callback) => {
+        // the events from ledgerNode should now be present on ledgerNodeBeta
+        ledgerNodeBeta.storage.events.exists([
+          results.remoteEvents.merge,
+          results.remoteEvents.regular,
           results.addEvent.meta.eventHash,
           results.mergeBranches.meta.eventHash
         ], (err, result) => {

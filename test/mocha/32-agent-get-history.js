@@ -21,7 +21,7 @@ describe('Consensus Agent - Get History API', () => {
   let genesisMerge;
   let ledgerNode;
   let ledgerNodeBeta;
-  let creatorId;
+  let peerId;
   let eventHash;
   let testEventId;
   beforeEach(done => {
@@ -53,14 +53,14 @@ describe('Consensus Agent - Get History API', () => {
           if(err) {
             return callback(err);
           }
-          creatorId = result.id;
+          peerId = result.id;
           callback(null, result);
         });
       }],
       genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
           eventsCollection: ledgerNode.storage.events.collection,
-          creator: creatorId
+          creator: peerId
         }, (err, result) => {
           if(err) {
             return callback(err);
@@ -95,7 +95,7 @@ describe('Consensus Agent - Get History API', () => {
     const getHistory = consensusApi._worker._client.getHistory;
     async.auto({
       history: callback => getHistory(
-        genesisMerge, creatorId, (err, result) => {
+        {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
           result.should.be.an('array');
@@ -111,7 +111,7 @@ describe('Consensus Agent - Get History API', () => {
       // merge the local event added in `before`
       mergeBranches: callback => mergeBranches(ledgerNode, callback),
       history: ['mergeBranches', (results, callback) => getHistory(
-        genesisMerge, creatorId, (err, result) => {
+        {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
           result.should.be.an('array');
@@ -138,7 +138,7 @@ describe('Consensus Agent - Get History API', () => {
       mergeBranches: ['remoteEvents', (results, callback) =>
         mergeBranches(ledgerNode, callback)],
       history: ['mergeBranches', (results, callback) => getHistory(
-        genesisMerge, creatorId, (err, result) => {
+        {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
           result.should.be.an('array');
@@ -168,7 +168,7 @@ describe('Consensus Agent - Get History API', () => {
       mergeBranches: ['remoteEvents', (results, callback) =>
         mergeBranches(ledgerNode, callback)],
       history: ['mergeBranches', (results, callback) => getHistory(
-        genesisMerge, creatorId, (err, result) => {
+        {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
           result.should.be.an('array');
@@ -219,7 +219,7 @@ describe('Consensus Agent - Get History API', () => {
       mergeBranches: ['fromBeta', (results, callback) =>
         mergeBranches(ledgerNode, callback)],
       history: ['mergeBranches', (results, callback) => getHistory(
-        genesisMerge, creatorId, (err, result) => {
+        {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
           result.should.be.an('array');
