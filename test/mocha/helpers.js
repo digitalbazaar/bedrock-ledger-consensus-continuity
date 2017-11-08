@@ -24,7 +24,9 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 api.testHasher = brLedgerNode.consensus._hasher;
 
 // add a merge event and regular event as if it came in through gossip
+// NOTE: the events are rooted with the genesis merge event
 api.addRemoteEvents = ({consensusApi, ledgerNode, mockData}, callback) => {
+  const nodes = [].concat(ledgerNode);
   const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
   testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
   const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
@@ -34,7 +36,7 @@ api.addRemoteEvents = ({consensusApi, ledgerNode, mockData}, callback) => {
   const getHead = consensusApi._worker._events._getLocalBranchHead;
   async.auto({
     head: callback => getHead({
-      eventsCollection: ledgerNode.storage.events.collection,
+      eventsCollection: nodes[0].storage.events.collection,
       // unknown creator will yield genesis merge event
       creator: 'http://example.com/unknownCreator'
     }, (err, result) => {
@@ -62,18 +64,19 @@ api.addRemoteEvents = ({consensusApi, ledgerNode, mockData}, callback) => {
         privateKeyPem: keyPair.privateKey,
         creator: mockData.authorizedSignerUrl
       }, callback)],
-    addRegular: ['head', (results, callback) => ledgerNode.events.add(
-      testRegularEvent, {continuity2017: {peer: true}}, callback)],
-    addMerge: ['sign', 'addRegular', (results, callback) =>
-      ledgerNode.events.add(
-        results.sign, {continuity2017: {peer: true}}, callback)],
+    addRegular: ['head', (results, callback) => async.map(
+      nodes, (node, callback) => node.events.add(
+        testRegularEvent, {continuity2017: {peer: true}}, callback), callback)],
+    addMerge: ['sign', 'addRegular', (results, callback) => async.map(
+      nodes, (node, callback) => node.events.add(
+        results.sign, {continuity2017: {peer: true}}, callback), callback)],
   }, (err, results) => {
     if(err) {
       return callback(err);
     }
     const hashes = {
-      merge: results.addMerge.meta.eventHash,
-      regular: results.addRegular.meta.eventHash
+      merge: results.addMerge[0].meta.eventHash,
+      regular: results.addRegular[0].meta.eventHash
     };
     callback(null, hashes);
   });
