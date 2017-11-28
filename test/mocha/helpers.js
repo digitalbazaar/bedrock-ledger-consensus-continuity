@@ -32,7 +32,7 @@ api.addRemoteEvents = ({consensusApi, ledgerNode, mockData}, callback) => {
   const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
   // use a valid keypair from mocks
   const keyPair = mockData.groups.authorized;
-  // NOTE: using the loal branch head for treeHash of the remote merge event
+  // NOTE: using the local branch head for treeHash of the remote merge event
   const getHead = consensusApi._worker._events._getLocalBranchHead;
   async.auto({
     head: callback => getHead({

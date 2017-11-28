@@ -293,6 +293,69 @@ describe('Continuity2017', () => {
     });
   }); // end mergeBranches event API
 
+  describe('getRecentHistory API', () => {
+    it('history includes one local event', done => {
+      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const getRecentHistory =
+        ledgerNode.consensus._worker._events.getRecentHistory;
+      const testEvent = bedrock.util.clone(mockData.events.alpha);
+      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      async.auto({
+        addEvent: callback => ledgerNode.events.add(testEvent, callback),
+        mergeBranches: ['addEvent', (results, callback) => {
+          mergeBranches(ledgerNode, (err, result) => {
+            assertNoError(err);
+            const eventHash = results.addEvent.meta.eventHash;
+            should.exist(result.event);
+            const event = result.event;
+            callback();
+          });
+        }],
+        history: ['mergeBranches', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            console.log('TTTTTTT', JSON.stringify(result, null, 2));
+            callback();
+          });
+        }]
+      }, done);
+    });
+    it('contains five remote merge events and eight local events', done => {
+      const eventTemplate = mockData.events.alpha;
+      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const getRecentHistory =
+        ledgerNode.consensus._worker._events.getRecentHistory;
+      async.auto({
+        events: callback => helpers.createEvent(
+          {eventTemplate, eventNum: 8, consensus: false, hash: false},
+          callback),
+        localEvents: ['events', (results, callback) => async.map(
+          results.events, (e, callback) => ledgerNode.events.add(
+            e.event, (err, result) => callback(err, result.meta.eventHash)),
+          callback)],
+        remoteEvents: callback => async.times(
+          5, (i, callback) => helpers.addRemoteEvents(
+            {consensusApi, ledgerNode, mockData}, callback), callback),
+        mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
+          const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
+          mergeBranches(ledgerNode, (err, result) => {
+            assertNoError(err);
+            should.exist(result.event);
+            const event = result.event;
+            callback();
+          });
+        }],
+        history: ['mergeBranches', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            console.log('YYYYYY', JSON.stringify(result, null, 2));
+            callback();
+          });
+        }]
+      }, done);
+    });
+  }); // end getRecentHistory API
+
   describe.skip('Event Consensus', () => {
     it('should add an event and achieve consensus', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);

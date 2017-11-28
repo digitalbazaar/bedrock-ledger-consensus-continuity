@@ -66,7 +66,7 @@ describe.skip('Election API', () => {
     }, done);
   });
 
-  it.only('_getElectorBranches', () => {
+  it('_getElectorBranches', () => {
     /*const history = {
       // merge event
       eventHash: '1',
