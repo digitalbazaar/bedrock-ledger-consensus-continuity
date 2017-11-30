@@ -105,7 +105,7 @@ describe('Continuity2017', () => {
     });
   }); // end add event API
 
-  describe('mergeBranches API', () => {
+  describe.only('mergeBranches API', () => {
     it('collects one local event', done => {
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
@@ -128,6 +128,7 @@ describe('Continuity2017', () => {
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
+            console.log('PPP', parentHash);
             parentHash.should.have.length(2);
             parentHash.should.have.same.members([eventHash, event.treeHash]);
             should.exist(result.meta);
