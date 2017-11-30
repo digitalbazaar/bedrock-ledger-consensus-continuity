@@ -199,12 +199,11 @@ describe('Continuity2017', () => {
         }]
       }, done);
     });
-    it('collects five remote merge events', done => {
+    it('collects one remote merge events', done => {
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       async.auto({
-        remoteEvents: callback => async.times(
-          5, (i, callback) => helpers.addRemoteEvents(
-            {consensusApi, ledgerNode, mockData}, callback), callback),
+        remoteEvents: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 5, ledgerNode, mockData}, callback),
         mergeBranches: ['remoteEvents', (results, callback) => {
           const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
           mergeBranches(ledgerNode, (err, result) => {
@@ -215,15 +214,15 @@ describe('Continuity2017', () => {
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
-            parentHash.should.have.length(6);
+            parentHash.should.have.length(2);
             parentHash.should.have.same.members(
-              remoteMergeHashes.concat(event.treeHash));
+              [event.treeHash, remoteMergeHashes.pop()]);
             callback();
           });
         }]
       }, done);
     });
-    it('collects five remote merge events and eight local events', done => {
+    it('collects one remote merge events and eight local events', done => {
       const eventTemplate = mockData.events.alpha;
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       async.auto({
@@ -234,9 +233,8 @@ describe('Continuity2017', () => {
           results.events, (e, callback) => ledgerNode.events.add(
             e.event, (err, result) => callback(err, result.meta.eventHash)),
           callback)],
-        remoteEvents: callback => async.times(
-          5, (i, callback) => helpers.addRemoteEvents(
-            {consensusApi, ledgerNode, mockData}, callback), callback),
+        remoteEvents: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 5, ledgerNode, mockData}, callback),
         mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
           const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
           mergeBranches(ledgerNode, (err, result) => {
@@ -245,11 +243,11 @@ describe('Continuity2017', () => {
             const event = result.event;
             event.treeHash.should.equal(genesisMergeHash);
             const allHashes = results.localEvents.concat(
-              remoteMergeHashes, event.treeHash);
+              remoteMergeHashes.pop(), event.treeHash);
             should.exist(event.parentHash);
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
-            parentHash.should.have.length(14);
+            parentHash.should.have.length(10);
             parentHash.should.have.same.members(allHashes);
             callback();
           });
@@ -320,7 +318,7 @@ describe('Continuity2017', () => {
         }]
       }, done);
     });
-    it('contains five remote merge events and eight local events', done => {
+    it('contains one remote merge events and eight local events', done => {
       const eventTemplate = mockData.events.alpha;
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       const getRecentHistory =
@@ -333,9 +331,9 @@ describe('Continuity2017', () => {
           results.events, (e, callback) => ledgerNode.events.add(
             e.event, (err, result) => callback(err, result.meta.eventHash)),
           callback)],
-        remoteEvents: callback => async.times(
-          5, (i, callback) => helpers.addRemoteEvents(
-            {consensusApi, ledgerNode, mockData}, callback), callback),
+        // 5 remote merge events from the same creator chained together
+        remoteEvents: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 5, ledgerNode, mockData}, callback),
         mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
           const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
           mergeBranches(ledgerNode, (err, result) => {

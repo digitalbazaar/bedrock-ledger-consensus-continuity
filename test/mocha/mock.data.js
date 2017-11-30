@@ -154,6 +154,7 @@ mock.groups = {
   }
 };
 
+mock.exampleIdentity = 'https://example.com/i/alpha';
 mock.ldDocuments = {
   "https://example.com/i/alpha": {
     "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
