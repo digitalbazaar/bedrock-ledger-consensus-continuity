@@ -275,7 +275,6 @@ describe('Election API', () => {
         const branches = consensusApi._worker._election._getElectorBranches(
           {
             event: results.history.eventMap[results.history.localBranchHead],
-            // events: results.history.eventMap,
             electors
           });
         // const branches = consensusApi._worker._election._getElectorBranches(
