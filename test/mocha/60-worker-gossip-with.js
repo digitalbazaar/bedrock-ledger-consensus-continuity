@@ -131,7 +131,7 @@ describe('Worker - _gossipWith', () => {
     async.auto({
       addEvent: callback => ledgerNode.events.add(testEvent, callback),
       mergeBranches: ['addEvent', (results, callback) =>
-        mergeBranches(ledgerNode, callback)],
+        mergeBranches({ledgerNode}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: ledgerNodeBeta, peerId}, err => {
@@ -167,7 +167,7 @@ describe('Worker - _gossipWith', () => {
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode, mockData}, callback),
       mergeBranches: ['addEvent', 'remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNode, callback)],
+        mergeBranches({ledgerNode}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: ledgerNodeBeta, peerId}, err => {
@@ -202,7 +202,7 @@ describe('Worker - _gossipWith', () => {
     async.auto({
       addEvent: callback => ledgerNodeBeta.events.add(testEvent, callback),
       mergeBranches: ['addEvent', (results, callback) =>
-        mergeBranches(ledgerNodeBeta, callback)],
+        mergeBranches({ledgerNode: ledgerNodeBeta}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: ledgerNodeBeta, peerId}, err => {
@@ -238,7 +238,7 @@ describe('Worker - _gossipWith', () => {
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: ledgerNodeBeta, mockData}, callback),
       mergeBranches: ['addEvent', 'remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNodeBeta, callback)],
+        mergeBranches({ledgerNode: ledgerNodeBeta}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: ledgerNodeBeta, peerId}, err => {
@@ -282,9 +282,9 @@ describe('Worker - _gossipWith', () => {
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: testNodes, mockData}, callback),
       mergeBranches: ['addEvent', 'remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNode, callback)],
+        mergeBranches({ledgerNode}, callback)],
       mergeBranchesBeta: ['addEventBeta', 'remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNodeBeta, callback)],
+        mergeBranches({ledgerNode: ledgerNodeBeta}, callback)],
       gossipWith: ['mergeBranches', 'mergeBranchesBeta', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: ledgerNodeBeta, peerId}, err => {
@@ -334,11 +334,12 @@ describe('Worker - _gossipWith', () => {
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: testNodes, mockData}, callback),
       mergeBranches: ['addEvent', 'remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNode, callback)],
+        mergeBranches({ledgerNode}, callback)],
       mergeBranchesBeta: ['addEventBeta', 'remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNodeBeta, callback)],
+        mergeBranches({ledgerNode: ledgerNodeBeta}, callback)],
       mergeBranchesGamma: ['addEventGamma', 'remoteEvents',
-        (results, callback) => mergeBranches(ledgerNodeGamma, callback)],
+        (results, callback) => mergeBranches(
+          {ledgerNode: ledgerNodeGamma}, callback)],
       gossipWith: ['mergeBranches', 'mergeBranchesBeta', 'mergeBranchesGamma',
         (results, callback) => async.series([
           // beta to alpha

@@ -113,7 +113,7 @@ describe('Continuity2017', () => {
       async.auto({
         addEvent: callback => ledgerNode.events.add(testEvent, callback),
         mergeBranches: ['addEvent', (results, callback) => {
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             const eventHash = results.addEvent.meta.eventHash;
             should.exist(result.event);
@@ -160,7 +160,7 @@ describe('Continuity2017', () => {
             e.event, (err, result) => callback(err, result.meta.eventHash)),
           callback)],
         mergeBranches: ['addEvent', (results, callback) => {
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
@@ -182,7 +182,7 @@ describe('Continuity2017', () => {
         remoteEvents: callback => helpers.addRemoteEvents(
           {consensusApi, ledgerNode, mockData}, callback),
         mergeBranches: ['remoteEvents', (results, callback) => {
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
@@ -206,7 +206,7 @@ describe('Continuity2017', () => {
           {consensusApi, count: 5, ledgerNode, mockData}, callback),
         mergeBranches: ['remoteEvents', (results, callback) => {
           const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
@@ -237,7 +237,7 @@ describe('Continuity2017', () => {
           {consensusApi, count: 5, ledgerNode, mockData}, callback),
         mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
           const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
@@ -265,7 +265,7 @@ describe('Continuity2017', () => {
       async.auto({
         addEvent: callback => ledgerNode.events.add(testEvent, callback),
         mergeBranches: ['addEvent', (results, callback) => {
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             const event = result.event;
             event.treeHash.should.equal(genesisMergeHash);
@@ -279,7 +279,7 @@ describe('Continuity2017', () => {
         mergeEventHash: ['mergeBranches', (results, callback) =>
           helpers.testHasher(results.mergeBranches, callback)],
         mergeBranches2: ['mergeEventHash', 'addEvent2', (results, callback) => {
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             const event = result.event;
             event.treeHash.should.equal(results.mergeEventHash);
@@ -301,7 +301,7 @@ describe('Continuity2017', () => {
       async.auto({
         addEvent: callback => ledgerNode.events.add(testEvent, callback),
         mergeBranches: ['addEvent', (results, callback) => {
-          mergeBranches(ledgerNode, (err, result) => {
+          mergeBranches({ledgerNode}, (err, result) => {
             assertNoError(err);
             const eventHash = results.addEvent.meta.eventHash;
             should.exist(result.event);
@@ -334,18 +334,25 @@ describe('Continuity2017', () => {
         // 5 remote merge events from the same creator chained together
         remoteEvents: callback => helpers.addRemoteEvents(
           {consensusApi, count: 5, ledgerNode, mockData}, callback),
-        mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
-          const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
-          mergeBranches(ledgerNode, (err, result) => {
-            assertNoError(err);
-            should.exist(result.event);
-            const event = result.event;
-            callback();
-          });
-        }],
-        history: ['mergeBranches', (results, callback) => {
+        // mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
+        //   const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
+        //   mergeBranches({ledgerNode}, (err, result) => {
+        //     assertNoError(err);
+        //     should.exist(result.event);
+        //     const event = result.event;
+        //     callback();
+        //   });
+        // }],
+        history: ['localEvents', 'remoteEvents', (results, callback) => {
           getRecentHistory({ledgerNode}, (err, result) => {
             assertNoError(err);
+            result.should.be.an('object');
+            should.exist(result.events);
+            result.events.should.be.an('array');
+            should.exist(result.eventMap);
+            result.eventMap.should.be.an('object');
+            should.exist(result.localBranchHead);
+            result.localBranchHead.should.be.a('string');
             console.log('YYYYYY', JSON.stringify(result, null, 2));
             callback();
           });

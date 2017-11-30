@@ -109,7 +109,7 @@ describe('Consensus Agent - Get History API', () => {
     const mergeBranches = consensusApi._worker._events.mergeBranches;
     async.auto({
       // merge the local event added in `before`
-      mergeBranches: callback => mergeBranches(ledgerNode, callback),
+      mergeBranches: callback => mergeBranches({ledgerNode}, callback),
       history: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
@@ -136,7 +136,7 @@ describe('Consensus Agent - Get History API', () => {
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode, mockData}, callback),
       mergeBranches: ['remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNode, callback)],
+        mergeBranches({ledgerNode}, callback)],
       history: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
@@ -166,7 +166,7 @@ describe('Consensus Agent - Get History API', () => {
         helpers.addRemoteEvents(
           {consensusApi, ledgerNode, mockData}, callback), callback),
       mergeBranches: ['remoteEvents', (results, callback) =>
-        mergeBranches(ledgerNode, callback)],
+        mergeBranches({ledgerNode}, callback)],
       history: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
@@ -207,7 +207,7 @@ describe('Consensus Agent - Get History API', () => {
       remoteEventsBeta: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: ledgerNodeBeta, mockData}, callback),
       mergeBranchesBeta: ['remoteEventsBeta', (results, callback) =>
-        mergeBranches(ledgerNodeBeta, callback)],
+        mergeBranches({ledgerNode: ledgerNodeBeta}, callback)],
       fromBeta: ['mergeBranchesBeta', (results, callback) => {
         const treeHash = results.mergeBranchesBeta.event.treeHash;
         const eventHash = results.mergeBranchesBeta.meta.eventHash;
@@ -217,7 +217,7 @@ describe('Consensus Agent - Get History API', () => {
           callback);
       }],
       mergeBranches: ['fromBeta', (results, callback) =>
-        mergeBranches(ledgerNode, callback)],
+        mergeBranches({ledgerNode}, callback)],
       history: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
