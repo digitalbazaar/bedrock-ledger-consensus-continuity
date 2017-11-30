@@ -66,7 +66,7 @@ describe('Election API', () => {
     }, done);
   });
 
-  it.only('_getElectorBranches', done => {
+  it('_getElectorBranches', done => {
     /*const history = {
       // merge event
       eventHash: '1',
@@ -293,7 +293,8 @@ describe('Election API', () => {
 
   });
 
-  describe('_getManifest', () => {
+  // FIXME: remove
+  describe.skip('_getManifest', () => {
     before(() => {
       sinon.stub(request, 'get').callsFake((options, callback) => {
         const mockUrl = options.url.substring(voterId.length);
