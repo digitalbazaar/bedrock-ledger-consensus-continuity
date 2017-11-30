@@ -66,7 +66,7 @@ describe('Election API', () => {
     }, done);
   });
 
-  it('_getElectorBranches', done => {
+  it.only('_getElectorBranches', done => {
     /*const history = {
       // merge event
       eventHash: '1',
@@ -247,7 +247,7 @@ describe('Election API', () => {
     // const electors = ['a', 'b', 'c', 'd'];
     const electors = [
       voterId,
-      // mockData.exampleIdentity
+      mockData.exampleIdentity
     ];
     const eventTemplate = mockData.events.alpha;
     const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
@@ -264,6 +264,7 @@ describe('Election API', () => {
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, count: 1, ledgerNode, mockData}, callback),
       mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
+        // return callback();
         mergeBranches({ledgerNode}, callback);
       }],
       history: ['mergeBranches', (results, callback) =>
@@ -272,13 +273,18 @@ describe('Election API', () => {
         const start = Date.now();
         // FIXME: passing in the localBranchHead Event here, correct?
         const branches = consensusApi._worker._election._getElectorBranches(
-          {event: results.history.eventMap[results.history.localBranchHead], electors});
+          {
+            event: results.history.eventMap[results.history.localBranchHead],
+            // events: results.history.eventMap,
+            electors
+          });
         // const branches = consensusApi._worker._election._getElectorBranches(
         //   {event: history, electors});
         const end = Date.now();
         console.log('time', (end - start) + ' ms');
         console.log('head', util.inspect(branches.head, {depth: 20}));
         console.log('tail', util.inspect(branches.tail, {depth: 20}));
+        console.log('ZZZZZZ', Object.keys(branches.tail));
         // console.log('tail.a', util.inspect(branches.tail.a, {depth: 20}));
         // console.log('tail.b', util.inspect(branches.tail.b, {depth: 20}));
         // console.log('tail.c', util.inspect(branches.tail.c, {depth: 20}));

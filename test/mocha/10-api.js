@@ -105,7 +105,7 @@ describe('Continuity2017', () => {
     });
   }); // end add event API
 
-  describe.only('mergeBranches API', () => {
+  describe('mergeBranches API', () => {
     it('collects one local event', done => {
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
