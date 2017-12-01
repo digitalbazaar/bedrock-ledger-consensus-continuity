@@ -253,22 +253,37 @@ describe.only('Election API _findMergeEventProof', () => {
         const {beta, gamma} = nodes;
         _mergeOn({nodes: {beta, gamma}}, callback);
       }],
-      // steps 21 and 22
+      // crossing beta and gamma again
       cp19: ['merge10', (results, callback) => _copyFromMerge({
         mergeEvent: results.merge10.beta,
         from: nodes.beta,
-        to: nodes.alpha
+        to: nodes.gamma
       }, callback)],
       cp20: ['merge10', (results, callback) => _copyFromMerge({
         mergeEvent: results.merge10.gamma,
         from: nodes.gamma,
-        to: nodes.delta
+        to: nodes.beta
       }, callback)],
       merge11: ['cp19', 'cp20', (results, callback) => {
+        const {beta, gamma} = nodes;
+        _mergeOn({nodes: {beta, gamma}}, callback);
+      }],
+      // steps 21 and 22
+      cp21: ['merge11', (results, callback) => _copyFromMerge({
+        mergeEvent: results.merge11.beta,
+        from: nodes.beta,
+        to: nodes.alpha
+      }, callback)],
+      cp22: ['merge11', (results, callback) => _copyFromMerge({
+        mergeEvent: results.merge11.gamma,
+        from: nodes.gamma,
+        to: nodes.delta
+      }, callback)],
+      merge12: ['cp21', 'cp22', (results, callback) => {
         const {alpha, delta} = nodes;
         _mergeOn({nodes: {alpha, delta}}, callback);
       }],
-      testAlpha: ['merge11', (results, callback) => {
+      testAlpha: ['merge12', (results, callback) => {
         // all peers are electors
         const electors = Object.values(peers);
         const ledgerNode = nodes.alpha;
