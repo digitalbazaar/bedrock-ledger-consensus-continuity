@@ -253,7 +253,7 @@ describe.only('Election API _findMergeEventProof', () => {
         const {beta, gamma} = nodes;
         _mergeOn({nodes: {beta, gamma}}, callback);
       }],
-      // crossing beta and gamma again
+      // steps 21 and 22
       cp19: ['merge10', (results, callback) => _copyFromMerge({
         mergeEvent: results.merge10.beta,
         from: nodes.beta,
@@ -268,7 +268,7 @@ describe.only('Election API _findMergeEventProof', () => {
         const {beta, gamma} = nodes;
         _mergeOn({nodes: {beta, gamma}}, callback);
       }],
-      // steps 21 and 22
+      // steps 23 and 24
       cp21: ['merge11', (results, callback) => _copyFromMerge({
         mergeEvent: results.merge11.beta,
         from: nodes.beta,
