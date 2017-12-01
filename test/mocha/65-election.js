@@ -336,7 +336,7 @@ describe('Election API', () => {
             ledgerNode,
             tail: results.branches.tail
           });
-          util.inspect(proof);
+          console.log('PROOF', util.inspect(proof));
           callback();
         }]
       }, done);
