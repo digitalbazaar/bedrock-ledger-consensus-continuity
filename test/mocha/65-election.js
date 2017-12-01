@@ -66,137 +66,69 @@ describe('Election API', () => {
     }, done);
   });
 
-  it('_getElectorBranches', done => {
-    /*const history = {
-      // merge event
-      eventHash: '1',
-      meta: {continuity2017: {creator: 'a'}},
-      _parents: [{
-        // local event
-        eventHash: '2',
+  describe('_getElectorBranches', () => {
+    it('produces heads and tails for two electors', done => {
+      /*const history = {
+        // merge event
+        eventHash: '1',
+        meta: {continuity2017: {creator: 'a'}},
         _parents: [{
-          // merge event
-          eventHash: '3',
-          meta: {continuity2017: {creator: 'a'}},
+          // local event
+          eventHash: '2',
           _parents: [{
             // merge event
-            eventHash: '4',
-            meta: {continuity2017: {creator: 'b'}},
+            eventHash: '3',
+            meta: {continuity2017: {creator: 'a'}},
             _parents: [{
               // merge event
-              eventHash: 'root',
-              meta: {continuity2017: {creator: 'a'}}
-            }]
-          }, {
-            // merge event
-            eventHash: '5',
-            meta: {continuity2017: {creator: 'c'}},
-            _parents: [{
-              // merge event
-              eventHash: 'root',
-              meta: {continuity2017: {creator: 'a'}}
-            }]
-          }]
-        }]
-      }]
-    };*/
-
-/*
-    const history = {
-      // merge event
-      eventHash: '1',
-      meta: {continuity2017: {creator: 'a'}},
-      _parents: [{
-        // local event
-        eventHash: '2',
-        _parents: [{
-          // merge event
-          eventHash: '3',
-          meta: {continuity2017: {creator: 'a'}},
-          _parents: [{
-            // merge event
-            eventHash: '4',
-            meta: {continuity2017: {creator: 'b'}}
-          }, {
-            // merge event
-            eventHash: '5',
-            meta: {continuity2017: {creator: 'c'}}
-          }]
-        }]
-      }]
-    };*/
-
-/* byzantine 'c' because c-merge-2 isn't rooted in c-merge-1
-    const history = {
-      eventHash: 'a-merge-3',
-      meta: {continuity2017: {creator: 'a'}},
-      _parents: [{
-        eventHash: 'a-local-2',
-        _parents: [{
-          eventHash: 'a-merge-2',
-          meta: {continuity2017: {creator: 'a'}},
-          _parents: [{
-            eventHash: 'a-local-1',
-            _parents: [{
-              eventHash: 'a-merge-1',
+              eventHash: '4',
+              meta: {continuity2017: {creator: 'b'}},
               _parents: [{
-                eventHash: 'b-merge-1',
-                meta: {continuity2017: {creator: 'b'}}
-              }, {
-                eventHash: 'c-merge-1',
-                meta: {continuity2017: {creator: 'c'}}
+                // merge event
+                eventHash: 'root',
+                meta: {continuity2017: {creator: 'a'}}
+              }]
+            }, {
+              // merge event
+              eventHash: '5',
+              meta: {continuity2017: {creator: 'c'}},
+              _parents: [{
+                // merge event
+                eventHash: 'root',
+                meta: {continuity2017: {creator: 'a'}}
               }]
             }]
-          }, {
-            eventHash: 'a-merge-1',
+          }]
+        }]
+      };*/
+
+  /*
+      const history = {
+        // merge event
+        eventHash: '1',
+        meta: {continuity2017: {creator: 'a'}},
+        _parents: [{
+          // local event
+          eventHash: '2',
+          _parents: [{
+            // merge event
+            eventHash: '3',
+            meta: {continuity2017: {creator: 'a'}},
             _parents: [{
-              eventHash: 'b-merge-1',
+              // merge event
+              eventHash: '4',
               meta: {continuity2017: {creator: 'b'}}
             }, {
-              eventHash: 'c-merge-1',
+              // merge event
+              eventHash: '5',
               meta: {continuity2017: {creator: 'c'}}
             }]
-          }, {
-            eventHash: 'b-merge-2',
-            meta: {continuity2017: {creator: 'b'}},
-            _parents: [{
-              eventHash: 'b-merge-1',
-              meta: {continuity2017: {creator: 'b'}}
-            }]
-          }, {
-            eventHash: 'c-merge-2',
-            meta: {continuity2017: {creator: 'c'}}
           }]
         }]
-      }]
-    };*/
+      };*/
 
-    const history = {
-      eventHash: 'a-merge-4',
-      meta: {continuity2017: {creator: 'a'}},
-      _parents: [{
-        eventHash: 'b-merge-3',
-        meta: {continuity2017: {creator: 'b'}},
-        _parents: [{
-          eventHash: 'b-merge-2',
-          meta: {continuity2017: {creator: 'b'}},
-          _parents: [{
-            eventHash: 'b-merge-1',
-            meta: {continuity2017: {creator: 'b'}}
-          }]
-        }]
-      }, {
-        eventHash: 'c-merge-3',
-        meta: {continuity2017: {creator: 'c'}},
-        _parents: [{
-          eventHash: 'c-merge-2',
-          meta: {continuity2017: {creator: 'c'}},
-          _parents: [{
-            eventHash: 'c-merge-1',
-            meta: {continuity2017: {creator: 'c'}}
-          }]
-        }]
-      }, {
+  /* byzantine 'c' because c-merge-2 isn't rooted in c-merge-1
+      const history = {
         eventHash: 'a-merge-3',
         meta: {continuity2017: {creator: 'a'}},
         _parents: [{
@@ -234,64 +166,182 @@ describe('Election API', () => {
               }]
             }, {
               eventHash: 'c-merge-2',
-              meta: {continuity2017: {creator: 'c'}},
+              meta: {continuity2017: {creator: 'c'}}
+            }]
+          }]
+        }]
+      };*/
+
+      const history = {
+        eventHash: 'a-merge-4',
+        meta: {continuity2017: {creator: 'a'}},
+        _parents: [{
+          eventHash: 'b-merge-3',
+          meta: {continuity2017: {creator: 'b'}},
+          _parents: [{
+            eventHash: 'b-merge-2',
+            meta: {continuity2017: {creator: 'b'}},
+            _parents: [{
+              eventHash: 'b-merge-1',
+              meta: {continuity2017: {creator: 'b'}}
+            }]
+          }]
+        }, {
+          eventHash: 'c-merge-3',
+          meta: {continuity2017: {creator: 'c'}},
+          _parents: [{
+            eventHash: 'c-merge-2',
+            meta: {continuity2017: {creator: 'c'}},
+            _parents: [{
+              eventHash: 'c-merge-1',
+              meta: {continuity2017: {creator: 'c'}}
+            }]
+          }]
+        }, {
+          eventHash: 'a-merge-3',
+          meta: {continuity2017: {creator: 'a'}},
+          _parents: [{
+            eventHash: 'a-local-2',
+            _parents: [{
+              eventHash: 'a-merge-2',
+              meta: {continuity2017: {creator: 'a'}},
               _parents: [{
-                eventHash: 'c-merge-1',
-                meta: {continuity2017: {creator: 'c'}}
+                eventHash: 'a-local-1',
+                _parents: [{
+                  eventHash: 'a-merge-1',
+                  _parents: [{
+                    eventHash: 'b-merge-1',
+                    meta: {continuity2017: {creator: 'b'}}
+                  }, {
+                    eventHash: 'c-merge-1',
+                    meta: {continuity2017: {creator: 'c'}}
+                  }]
+                }]
+              }, {
+                eventHash: 'a-merge-1',
+                _parents: [{
+                  eventHash: 'b-merge-1',
+                  meta: {continuity2017: {creator: 'b'}}
+                }, {
+                  eventHash: 'c-merge-1',
+                  meta: {continuity2017: {creator: 'c'}}
+                }]
+              }, {
+                eventHash: 'b-merge-2',
+                meta: {continuity2017: {creator: 'b'}},
+                _parents: [{
+                  eventHash: 'b-merge-1',
+                  meta: {continuity2017: {creator: 'b'}}
+                }]
+              }, {
+                eventHash: 'c-merge-2',
+                meta: {continuity2017: {creator: 'c'}},
+                _parents: [{
+                  eventHash: 'c-merge-1',
+                  meta: {continuity2017: {creator: 'c'}}
+                }]
               }]
             }]
           }]
         }]
-      }]
-    };
-    // const electors = ['a', 'b', 'c', 'd'];
-    const electors = [
-      voterId,
-      mockData.exampleIdentity
-    ];
-    const eventTemplate = mockData.events.alpha;
-    const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
-    async.auto({
-      events: callback => helpers.createEvent(
-        {eventTemplate, eventNum: 1, consensus: false, hash: false},
-        callback),
-      localEvents: ['events', (results, callback) => async.map(
-        results.events, (e, callback) => ledgerNode.events.add(
-          e.event, (err, result) => callback(err, result.meta.eventHash)),
-        callback)],
-      // 5 remote merge events from the same creator chained together
-      remoteEvents: callback => helpers.addRemoteEvents(
-        {consensusApi, count: 1, ledgerNode, mockData}, callback),
-      mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
-        // return callback();
-        mergeBranches({ledgerNode}, callback);
-      }],
-      history: ['mergeBranches', (results, callback) =>
-        getRecentHistory({ledgerNode}, callback)],
-      test: ['history', (results, callback) => {
-        const start = Date.now();
-        // FIXME: passing in the localBranchHead Event here, correct?
-        const branches = consensusApi._worker._election._getElectorBranches(
-          {
-            event: results.history.eventMap[results.history.localBranchHead],
-            electors
-          });
-        // const branches = consensusApi._worker._election._getElectorBranches(
-        //   {event: history, electors});
-        const end = Date.now();
-        console.log('time', (end - start) + ' ms');
-        console.log('head', util.inspect(branches.head, {depth: 20}));
-        console.log('tail', util.inspect(branches.tail, {depth: 20}));
-        console.log('ZZZZZZ', Object.keys(branches.tail));
-        // console.log('tail.a', util.inspect(branches.tail.a, {depth: 20}));
-        // console.log('tail.b', util.inspect(branches.tail.b, {depth: 20}));
-        // console.log('tail.c', util.inspect(branches.tail.c, {depth: 20}));
-        callback();
-      }]
-    }, done);
+      };
+      // const electors = ['a', 'b', 'c', 'd'];
+      const electors = [
+        voterId,
+        mockData.exampleIdentity
+      ];
+      const eventTemplate = mockData.events.alpha;
+      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      async.auto({
+        events: callback => helpers.createEvent(
+          {eventTemplate, eventNum: 1, consensus: false, hash: false},
+          callback),
+        localEvents: ['events', (results, callback) => async.map(
+          results.events, (e, callback) => ledgerNode.events.add(
+            e.event, (err, result) => callback(err, result.meta.eventHash)),
+          callback)],
+        remoteEvents: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 1, ledgerNode, mockData}, callback),
+        mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
+          mergeBranches({ledgerNode}, callback);
+        }],
+        history: ['mergeBranches', (results, callback) =>
+          getRecentHistory({ledgerNode}, callback)],
+        test: ['history', (results, callback) => {
+          // const start = Date.now();
+          // const branches = consensusApi._worker._election
+          //   ._getElectorBranches({event: history, electors});
+          const branches = consensusApi._worker._election._getElectorBranches(
+            {
+              event: results.history.eventMap[results.history.localBranchHead],
+              electors
+            });
+          branches.should.be.an('object');
+          should.exist(branches.head);
+          branches.head.should.be.an('object');
+          Object.keys(branches.head).should.have.same.members(electors);
+          should.exist(branches.tail);
+          branches.tail.should.be.an('object');
+          Object.keys(branches.tail).should.have.same.members(electors);
+          should.exist(branches.tail);
+          // const end = Date.now();
+          // console.log('time', (end - start) + ' ms');
+          // console.log('head', util.inspect(branches.head, {depth: 20}));
+          // console.log('tail', util.inspect(branches.tail, {depth: 20}));
+          // console.log('tail.a', util.inspect(branches.tail.a, {depth: 20}));
+          // console.log('tail.b', util.inspect(branches.tail.b, {depth: 20}));
+          // console.log('tail.c', util.inspect(branches.tail.c, {depth: 20}));
+          callback();
+        }]
+      }, done);
+    });
+  }); // end _getElectorBranches
 
-  });
+  describe.only('_findMergeEventProof', () => {
+    it('just works', done => {
+      const electors = [
+        voterId,
+        mockData.exampleIdentity
+      ];
+      const eventTemplate = mockData.events.alpha;
+      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      async.auto({
+        events: callback => helpers.createEvent(
+          {eventTemplate, eventNum: 1, consensus: false, hash: false},
+          callback),
+        localEvents: ['events', (results, callback) => async.map(
+          results.events, (e, callback) => ledgerNode.events.add(
+            e.event, (err, result) => callback(err, result.meta.eventHash)),
+          callback)],
+        remoteEvents: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 1, ledgerNode, mockData}, callback),
+        mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
+          mergeBranches({ledgerNode}, callback);
+        }],
+        history: ['mergeBranches', (results, callback) =>
+          getRecentHistory({ledgerNode}, callback)],
+        branches: ['history', (results, callback) => {
+          const branches = consensusApi._worker._election._getElectorBranches(
+            {
+              event: results.history.eventMap[results.history.localBranchHead],
+              electors
+            });
+          callback(null, branches);
+        }],
+        proof: ['branches', (results, callback) => {
+          const proof = consensusApi._worker._election._findMergeEventProof({
+            electors,
+            ledgerNode,
+            tail: results.branches.tail
+          });
+          util.inspect(proof);
+          callback();
+        }]
+      }, done);
+    });
+  }); // end _findMergeEventProof
 
   // FIXME: remove
   describe.skip('_getManifest', () => {
