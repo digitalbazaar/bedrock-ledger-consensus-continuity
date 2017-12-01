@@ -298,7 +298,7 @@ describe('Election API', () => {
     });
   }); // end _getElectorBranches
 
-  describe.only('_findMergeEventProof', () => {
+  describe('_findMergeEventProof', () => {
     it('just works', done => {
       const electors = [
         voterId,
