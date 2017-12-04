@@ -109,7 +109,7 @@ describe.only('Election API _findMergeEventProof', () => {
           }), callback)]
     }, done);
   });
-  it('Test 1', done => {
+  it.only('Test 1', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -243,19 +243,17 @@ describe.only('Election API _findMergeEventProof', () => {
           history: callback =>
             getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getElectorBranches(
-              {
-                event: results.history
-                  .eventMap[results.history.localBranchHead],
-                electors
-              });
+            const branches = _getElectorBranches({
+              events: results.history.events,
+              electors
+            });
             callback(null, branches);
           }],
           proof: ['branches', (results, callback) => {
             const proof = _findMergeEventProof({
-              electors,
               ledgerNode,
-              tail: results.branches.tail
+              tails: results.branches,
+              electors
             });
             console.log('PROOF', util.inspect(proof));
             callback();
@@ -379,19 +377,17 @@ describe.only('Election API _findMergeEventProof', () => {
             history: callback =>
               getRecentHistory({ledgerNode}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches(
-                {
-                  event: results.history
-                    .eventMap[results.history.localBranchHead],
-                  electors
-                });
+              const branches = _getElectorBranches({
+                events: results.history.events,
+                electors
+              });
               callback(null, branches);
             }],
             proof: ['branches', (results, callback) => {
               const proof = _findMergeEventProof({
-                electors,
                 ledgerNode,
-                tail: results.branches.tail
+                tails: results.branches,
+                electors
               });
               proofs[i] = proof;
               callback();
@@ -500,19 +496,17 @@ describe.only('Election API _findMergeEventProof', () => {
             history: callback =>
               getRecentHistory({ledgerNode}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches(
-                {
-                  event: results.history
-                    .eventMap[results.history.localBranchHead],
-                  electors
-                });
+              const branches = _getElectorBranches({
+                events: results.history.events,
+                electors
+              });
               callback(null, branches);
             }],
             proof: ['branches', (results, callback) => {
               const proof = _findMergeEventProof({
-                electors,
                 ledgerNode,
-                tail: results.branches.tail
+                tails: results.branches,
+                electors
               });
               proofs[i] = proof;
               callback();
