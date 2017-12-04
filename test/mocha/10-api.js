@@ -10,6 +10,7 @@ const brLedgerNode = require('bedrock-ledger-node');
 const expect = global.chai.expect;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
+const util = require('util');
 const uuid = require('uuid/v4');
 
 describe('Continuity2017', () => {
@@ -107,7 +108,7 @@ describe('Continuity2017', () => {
 
   describe('mergeBranches API', () => {
     it('collects one local event', done => {
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.input[0].id = `https://example.com/event/${uuid()}`;
       async.auto({
@@ -150,7 +151,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it('collects five local events', done => {
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
       const eventTemplate = mockData.events.alpha;
       async.auto({
         events: callback => helpers.createEvent(
@@ -178,7 +179,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it('collects one remote merge event', done => {
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
       async.auto({
         remoteEvents: callback => helpers.addRemoteEvents(
           {consensusApi, ledgerNode, mockData}, callback),
@@ -201,7 +202,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it('collects one remote merge events', done => {
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
       async.auto({
         remoteEvents: callback => helpers.addRemoteEvents(
           {consensusApi, count: 5, ledgerNode, mockData}, callback),
@@ -225,7 +226,7 @@ describe('Continuity2017', () => {
     });
     it('collects one remote merge events and eight local events', done => {
       const eventTemplate = mockData.events.alpha;
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
       async.auto({
         events: callback => helpers.createEvent(
           {eventTemplate, eventNum: 8, consensus: false, hash: false},
@@ -258,7 +259,7 @@ describe('Continuity2017', () => {
     // NOTE: no assertions can be made about the events refrenced in the merge
     // events because there is no intervening consensus work occuring
     it('Second merge event has the proper treeHash', done => {
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       const testEvent2 = bedrock.util.clone(mockData.events.alpha);
       testEvent.input[0].id = `https://example.com/event/${uuid()}`;
@@ -293,68 +294,338 @@ describe('Continuity2017', () => {
   }); // end mergeBranches event API
 
   describe('getRecentHistory API', () => {
-    it('history includes one local event', done => {
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
-      const getRecentHistory =
-        ledgerNode.consensus._worker._events.getRecentHistory;
+    it('history includes one local event and one local merge event', done => {
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.input[0].id = `https://example.com/event/${uuid()}`;
       async.auto({
         addEvent: callback => ledgerNode.events.add(testEvent, callback),
-        mergeBranches: ['addEvent', (results, callback) => {
-          mergeBranches({ledgerNode}, (err, result) => {
-            assertNoError(err);
-            const eventHash = results.addEvent.meta.eventHash;
-            should.exist(result.event);
-            const event = result.event;
-            callback();
-          });
-        }],
+        mergeBranches: ['addEvent', (results, callback) =>
+          mergeBranches({ledgerNode}, callback)],
         history: ['mergeBranches', (results, callback) => {
           getRecentHistory({ledgerNode}, (err, result) => {
             assertNoError(err);
-            console.log('TTTTTTT', JSON.stringify(result, null, 2));
+            const mergeEventHash = results.mergeBranches.meta.eventHash;
+            const regularEventHash = results.addEvent.meta.eventHash;
+            // inspect eventMap
+            // it should include keys for the regular event and merge event
+            should.exist(result.eventMap);
+            result.eventMap.should.be.an('object');
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(2);
+            hashes.should.have.same.members([mergeEventHash, regularEventHash]);
+            // inspect the regular event
+            // it should have the merge event as its only child
+            const regularEvent = result.eventMap[regularEventHash];
+            should.exist(regularEvent._children);
+            let children = regularEvent._children;
+            children.should.be.an('array');
+            children.should.have.length(1);
+            const child0 = children[0];
+            child0.should.be.an('object');
+            should.exist(child0.eventHash);
+            should.exist(child0.event);
+            should.exist(child0.meta.continuity2017);
+            child0.eventHash.should.equal(mergeEventHash);
+            should.exist(regularEvent._parents);
+            let parents = regularEvent._parents;
+            parents.should.be.an('array');
+            parents.should.have.length(0);
+            // inspect the merge event
+            // it should have one parent, the regular event
+            const mergeEvent = result.eventMap[mergeEventHash];
+            should.exist(mergeEvent._children);
+            children = mergeEvent._children;
+            children.should.be.an('array');
+            children.should.have.length(0);
+            should.exist(mergeEvent._parents);
+            parents = mergeEvent._parents;
+            parents.should.be.an('array');
+            parents.should.have.length(1);
+            const parent0 = parents[0];
+            parent0.should.be.an('object');
+            should.exist(parent0.eventHash);
+            should.exist(parent0.event);
+            should.exist(parent0.meta.continuity2017);
+            parent0.eventHash.should.equal(regularEventHash);
             callback();
           });
         }]
       }, done);
     });
-    it('contains one remote merge events and eight local events', done => {
-      const eventTemplate = mockData.events.alpha;
-      const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
+    it('history includes 4 local events and one local merge event', done => {
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
       const getRecentHistory =
-        ledgerNode.consensus._worker._events.getRecentHistory;
+        consensusApi._worker._events.getRecentHistory;
+      const eventTemplate = mockData.events.alpha;
       async.auto({
-        events: callback => helpers.createEvent(
-          {eventTemplate, eventNum: 8, consensus: false, hash: false},
-          callback),
-        localEvents: ['events', (results, callback) => async.map(
-          results.events, (e, callback) => ledgerNode.events.add(
-            e.event, (err, result) => callback(err, result.meta.eventHash)),
-          callback)],
-        // 5 remote merge events from the same creator chained together
-        remoteEvents: callback => helpers.addRemoteEvents(
-          {consensusApi, count: 5, ledgerNode, mockData}, callback),
-        // mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
-        //   const remoteMergeHashes = results.remoteEvents.map(e => e.merge);
-        //   mergeBranches({ledgerNode}, (err, result) => {
-        //     assertNoError(err);
-        //     should.exist(result.event);
-        //     const event = result.event;
-        //     callback();
-        //   });
-        // }],
-        history: ['localEvents', 'remoteEvents', (results, callback) => {
+        addEvent: callback => helpers.addEvent(
+          {ledgerNode, count: 4, eventTemplate}, callback),
+        mergeBranches: ['addEvent', (results, callback) =>
+          mergeBranches({ledgerNode}, callback)],
+        history: ['mergeBranches', (results, callback) => {
           getRecentHistory({ledgerNode}, (err, result) => {
             assertNoError(err);
-            result.should.be.an('object');
-            should.exist(result.events);
-            result.events.should.be.an('array');
-            should.exist(result.eventMap);
-            result.eventMap.should.be.an('object');
-            should.exist(result.localBranchHead);
-            result.localBranchHead.should.be.a('string');
-            console.log('YYYYYY', JSON.stringify(result, null, 2));
+            const mergeEventHash = results.mergeBranches.meta.eventHash;
+            const regularEventHash = Object.keys(results.addEvent);
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(5);
+            hashes.should.have.same.members(
+              [mergeEventHash, ...regularEventHash]);
+            // inspect the regular events
+            // it should have the merge event as its only child
+            regularEventHash.forEach(h => {
+              const regularEvent = result.eventMap[h];
+              const children = regularEvent._children;
+              children.should.be.an('array');
+              children.should.have.length(1);
+              children[0].eventHash.should.equal(mergeEventHash);
+              should.exist(regularEvent._parents);
+              const parents = regularEvent._parents;
+              parents.should.be.an('array');
+              parents.should.have.length(0);
+            });
+            // inspect the merge event
+            // it should have four parents, the regular events
+            const mergeEvent = result.eventMap[mergeEventHash];
+            should.exist(mergeEvent._children);
+            const children = mergeEvent._children;
+            children.should.be.an('array');
+            children.should.have.length(0);
+            should.exist(mergeEvent._parents);
+            const parents = mergeEvent._parents;
+            parents.should.be.an('array');
+            parents.should.have.length(4);
+            const parentHashes = parents.map(e => e.eventHash);
+            parentHashes.should.have.same.members(regularEventHash);
+            callback();
+          });
+        }]
+      }, done);
+    });
+    it('history includes 1 remote merge and one local merge event', done => {
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
+      const getRecentHistory =
+        consensusApi._worker._events.getRecentHistory;
+      async.auto({
+        remoteEvent: callback => helpers.addRemoteEvents(
+          {consensusApi, ledgerNode, mockData}, callback),
+        mergeBranches: ['remoteEvent', (results, callback) =>
+          mergeBranches({ledgerNode}, callback)],
+        history: ['mergeBranches', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            const mergeEventHash = results.mergeBranches.meta.eventHash;
+            const remoteMergeHash = results.remoteEvent.merge;
+            // inspect eventMap
+            // it should include keys for the regular event and merge event
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(2);
+            hashes.should.have.same.members(
+              [mergeEventHash, remoteMergeHash]);
+            // inspect the merge event
+            // it should have one parent, the remote merge event
+            const mergeEvent = result.eventMap[mergeEventHash];
+            should.exist(mergeEvent._children);
+            let children = mergeEvent._children;
+            children.should.be.an('array');
+            children.should.have.length(0);
+            should.exist(mergeEvent._parents);
+            let parents = mergeEvent._parents;
+            parents.should.be.an('array');
+            parents.should.have.length(1);
+            const parentHashes = parents.map(e => e.eventHash);
+            parentHashes.should.have.same.members([remoteMergeHash]);
+            // inspect remote merge event
+            const remoteMergeEvent = result.eventMap[remoteMergeHash];
+            should.exist(remoteMergeEvent._children);
+            children = remoteMergeEvent._children;
+            children.should.be.an('array');
+            children.should.have.length(1);
+            const child0 = children[0];
+            child0.should.be.an('object');
+            should.exist(child0.eventHash);
+            should.exist(child0.event);
+            should.exist(child0.meta.continuity2017);
+            child0.eventHash.should.equal(mergeEventHash);
+            should.exist(remoteMergeEvent._parents);
+            parents = remoteMergeEvent._parents;
+            parents.should.be.an('array');
+            parents.should.have.length(0);
+            callback();
+          });
+        }]
+      }, done);
+    });
+    it('contains two remote merge and one local merge event', done => {
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      async.auto({
+        // 2 remote merge events from the same creator chained together
+        remoteEvent: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 2, ledgerNode, mockData}, callback),
+        mergeBranches: ['remoteEvent', (results, callback) =>
+          mergeBranches({ledgerNode}, callback)],
+        history: ['mergeBranches', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            const mergeEventHash = results.mergeBranches.meta.eventHash;
+            const remoteMergeHash = results.remoteEvent.map(e => e.merge);
+            // inspect eventMap
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(3);
+            hashes.should.have.same.members(
+              [mergeEventHash, ...remoteMergeHash]);
+            // inspect local merge
+            const mergeEvent = result.eventMap[mergeEventHash];
+            let children = mergeEvent._children;
+            children.should.have.length(0);
+            let parents = mergeEvent._parents;
+            parents.should.have.length(1);
+            const parentHashes = parents.map(e => e.eventHash);
+            parentHashes.should.have.same.members([remoteMergeHash[1]]);
+            // inspect remote merge event 0
+            const rme0 = result.eventMap[remoteMergeHash[0]];
+            children = rme0._children;
+            children.should.have.length(1);
+            children[0].eventHash.should.equal(remoteMergeHash[1]);
+            rme0._parents.should.have.length(0);
+            // inspect remote merge event 1
+            const rme1 = result.eventMap[remoteMergeHash[1]];
+            children = rme1._children;
+            children.should.have.length(1);
+            children[0].eventHash.should.equal(mergeEventHash);
+            parents = rme1._parents;
+            parents.should.have.length(1);
+            parents[0].eventHash.should.equal(remoteMergeHash[0]);
+            callback();
+          });
+        }]
+      }, done);
+    });
+    it('contains two remote merge events before a local merge', done => {
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      async.auto({
+        // 2 remote merge events from the same creator chained together
+        remoteEvent: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 2, ledgerNode, mockData}, callback),
+        history: ['remoteEvent', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            const remoteMergeHash = results.remoteEvent.map(e => e.merge);
+            // inspect eventMap
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(2);
+            hashes.should.have.same.members(remoteMergeHash);
+            // inspect remote merge event 0
+            const rme0 = result.eventMap[remoteMergeHash[0]];
+            let children = rme0._children;
+            children.should.have.length(1);
+            children[0].eventHash.should.equal(remoteMergeHash[1]);
+            rme0._parents.should.have.length(0);
+            // inspect remote merge event 1
+            const rme1 = result.eventMap[remoteMergeHash[1]];
+            children = rme1._children;
+            children.should.have.length(0);
+            const parents = rme1._parents;
+            parents.should.have.length(1);
+            parents[0].eventHash.should.equal(remoteMergeHash[0]);
+            callback();
+          });
+        }]
+      }, done);
+    });
+    it('history includes one local event before local merge', done => {
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const testEvent = bedrock.util.clone(mockData.events.alpha);
+      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      async.auto({
+        addEvent: callback => ledgerNode.events.add(testEvent, callback),
+        history: ['addEvent', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            const regularEventHash = results.addEvent.meta.eventHash;
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(1);
+            hashes.should.have.same.members([regularEventHash]);
+            const regularEvent = result.eventMap[regularEventHash];
+            const children = regularEvent._children;
+            children.should.have.length(0);
+            const parents = regularEvent._parents;
+            parents.should.have.length(0);
+            callback();
+          });
+        }]
+      }, done);
+    });
+    it('history includes 4 local events before a local merge', done => {
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const eventTemplate = mockData.events.alpha;
+      async.auto({
+        addEvent: callback => helpers.addEvent(
+          {ledgerNode, count: 4, eventTemplate}, callback),
+        history: ['addEvent', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            const regularEventHash = Object.keys(results.addEvent);
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(4);
+            hashes.should.have.same.members(regularEventHash);
+            // inspect the regular events
+            // it should have no parents or children
+            regularEventHash.forEach(h => {
+              const regularEvent = result.eventMap[h];
+              const children = regularEvent._children;
+              children.should.have.length(0);
+              const parents = regularEvent._parents;
+              parents.should.have.length(0);
+            });
+            callback();
+          });
+        }]
+      }, done);
+    });
+    it('includes 4 LEs and 2 RMEs before local merge', done => {
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const eventTemplate = mockData.events.alpha;
+      async.auto({
+        addEvent: callback => helpers.addEvent(
+          {ledgerNode, count: 4, eventTemplate}, callback),
+        // 2 remote merge events from the same creator chained together
+        remoteEvent: callback => helpers.addRemoteEvents(
+          {consensusApi, count: 2, ledgerNode, mockData}, callback),
+        history: ['addEvent', 'remoteEvent', (results, callback) => {
+          getRecentHistory({ledgerNode}, (err, result) => {
+            assertNoError(err);
+            const regularEventHash = Object.keys(results.addEvent);
+            const remoteMergeHash = results.remoteEvent.map(e => e.merge);
+            const hashes = Object.keys(result.eventMap);
+            hashes.should.have.length(6);
+            hashes.should.have.same.members(
+              [...regularEventHash, ...remoteMergeHash]);
+            // inspect the regular events
+            // it should have no parents or children
+            regularEventHash.forEach(h => {
+              const regularEvent = result.eventMap[h];
+              const children = regularEvent._children;
+              children.should.have.length(0);
+              const parents = regularEvent._parents;
+              parents.should.have.length(0);
+            });
+            // inspect remote merge event 0
+            const rme0 = result.eventMap[remoteMergeHash[0]];
+            let children = rme0._children;
+            children.should.have.length(1);
+            children[0].eventHash.should.equal(remoteMergeHash[1]);
+            rme0._parents.should.have.length(0);
+            // inspect remote merge event 1
+            const rme1 = result.eventMap[remoteMergeHash[1]];
+            children = rme1._children;
+            children.should.have.length(0);
+            const parents = rme1._parents;
+            parents.should.have.length(1);
+            parents[0].eventHash.should.equal(remoteMergeHash[0]);
             callback();
           });
         }]

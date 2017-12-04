@@ -23,6 +23,21 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 // test hashing function
 api.testHasher = brLedgerNode.consensus._hasher;
 
+api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
+  const events = {};
+  async.timesSeries(count, (i, callback) => {
+    const testEvent = bedrock.util.clone(eventTemplate);
+    testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+    ledgerNode.events.add(testEvent, (err, result) => {
+      if(err) {
+        return callback(err);
+      }
+      events[result.meta.eventHash] = result;
+      callback();
+    });
+  }, err => callback(err, events));
+};
+
 // add a merge event and regular event as if it came in through gossip
 // NOTE: the events are rooted with the genesis merge event
 api.addRemoteEvents = ({
