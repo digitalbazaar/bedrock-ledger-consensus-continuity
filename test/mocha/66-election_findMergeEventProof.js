@@ -3,6 +3,7 @@
  */
 'use strict';
 
+const _ = require('lodash');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
@@ -235,7 +236,7 @@ describe.only('Election API _findMergeEventProof', () => {
       }, callback)],
       testAlpha: ['cp21', 'cp22', (results, callback) => {
         // all peers are electors
-        const electors = Object.values(peers);
+        const electors = _.values(peers);
         const ledgerNode = nodes.alpha;
         console.log('ELECTORS', electors);
         async.auto({
