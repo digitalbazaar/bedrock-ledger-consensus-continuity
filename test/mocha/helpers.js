@@ -38,6 +38,30 @@ api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
   }, err => callback(err, events));
 };
 
+api.addEventAndMerge = (
+  {consensusApi, eventTemplate, ledgerNode}, callback) => {
+  const events = {};
+  async.auto({
+    addEvent: callback => api.addEvent(
+      {eventTemplate, ledgerNode}, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        events.regular = result;
+        callback();
+      }),
+    merge: ['addEvent', (results, callback) => {
+      const mergeBranches = consensusApi._worker._events.mergeBranches;
+      mergeBranches({ledgerNode}, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        events.merge = result;
+        callback();
+      });
+    }]
+  }, err => callback(err, events));
+};
 // add a merge event and regular event as if it came in through gossip
 // NOTE: the events are rooted with the genesis merge event
 api.addRemoteEvents = ({
