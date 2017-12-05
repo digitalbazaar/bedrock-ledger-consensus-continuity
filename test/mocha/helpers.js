@@ -111,6 +111,61 @@ api.addRemoteEvents = ({
   });
 };
 
+// from may be a single node or an array of nodes
+api.copyAndMerge = ({consensusApi, from, to}, callback) => {
+  const copyFrom = [].concat(from);
+  const mergeBranches = consensusApi._worker._events.mergeBranches;
+  async.auto({
+    copy: callback => async.each(copyFrom, (f, callback) =>
+      api.copyEvents({from: f, to}, callback), callback),
+    merge: ['copy', (results, callback) =>
+      mergeBranches({ledgerNode: to}, callback)]
+  }, (err, results) => err ? callback(err) : callback(null, results.merge));
+};
+
+api.copyEvents = ({from, to}, callback) => {
+  async.auto({
+    events: callback => {
+      const collection = from.storage.events.collection;
+      // FIXME: use a more efficient query, the commented aggregate function
+      // is evidently missing some events.
+      collection.find({
+        'meta.consensus': {$exists: false}
+      }).sort({$natural: 1}).toArray(callback);
+      // collection.aggregate([
+      //   {$match: {eventHash}},
+      //   {
+      //     $graphLookup: {
+      //       from: collection.s.name,
+      //       startWith: '$eventHash',
+      //       connectFromField: "event.parentHash",
+      //       connectToField: "eventHash",
+      //       as: "_parents",
+      //       restrictSearchWithMatch: {
+      //         eventHash: {$ne: treeHash},
+      //         'meta.consensus': {$exists: false}
+      //       }
+      //     },
+      //   },
+      //   {$unwind: '$_parents'},
+      //   {$replaceRoot: {newRoot: '$_parents'}},
+      //   // the order of events is unpredictable without this sort, and we
+      //   // must ensure that events are added in chronological order
+      //   {$sort: {'meta.created': 1}}
+      // ], callback);
+    },
+    add: ['events', (results, callback) => {
+      async.eachSeries(results.events, (e, callback) => {
+        to.events.add(e.event, {continuity2017: {peer: true}}, err => {
+          // FIXME: only ignore dup error
+          // ignore errors
+          callback();
+        });
+      }, callback);
+    }]
+  }, callback);
+};
+
 api.createEvent = (
   {eventTemplate, eventNum, consensus = true, hash = true}, callback) => {
   const events = [];

@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe.only('Election API _findMergeEventProof', () => {
+describe.skip('Election API _findMergeEventProof', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -109,8 +109,12 @@ describe.only('Election API _findMergeEventProof', () => {
           }), callback)]
     }, done);
   });
+<<<<<<< HEAD
   it.only('Test 1', done => {
     console.log('PEERS', peers);
+=======
+  it('Test 1', done => {
+>>>>>>> Add mergeBranches API tests.
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
