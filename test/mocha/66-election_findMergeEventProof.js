@@ -132,7 +132,10 @@ describe.only('Election API _findMergeEventProof', () => {
         consensusApi,
         from: nodes.alpha,
         to: nodes.beta
-      }, callback)],
+      }, (err, result) => {
+        assertNoError(err);
+        callback();
+      })],
       // step 4
       // cp2: ['regularEvent', (results, callback) => helpers.copyAndMerge({
       //   consensusApi,
