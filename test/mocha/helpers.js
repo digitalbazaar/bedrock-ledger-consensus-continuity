@@ -12,6 +12,7 @@ const database = require('bedrock-mongodb');
 const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
+const util = require('util');
 
 jsigs.use('jsonld', jsonld);
 
@@ -155,7 +156,7 @@ api.copyEvents = ({from, to}, callback) => {
       // is evidently missing some events.
       collection.find({
         'meta.consensus': {$exists: false}
-      }).sort({$natural: 1}).toArray(callback);
+      }).sort({'$natural': 1}).toArray(callback);
       // collection.aggregate([
       //   {$match: {eventHash}},
       //   {
@@ -181,8 +182,14 @@ api.copyEvents = ({from, to}, callback) => {
     add: ['events', (results, callback) => {
       async.eachSeries(results.events, (e, callback) => {
         to.events.add(e.event, {continuity2017: {peer: true}}, err => {
-          // FIXME: only ignore dup error
-          // ignore errors
+          // ignore dup errors
+          if(err && err.name === 'DuplicateError') {
+            return callback();
+          }
+          if(err) {
+            console.log('ERRR', err);
+            console.log('------------EVENT', util.inspect(e.event));
+          }
           callback();
         });
       }, callback);
