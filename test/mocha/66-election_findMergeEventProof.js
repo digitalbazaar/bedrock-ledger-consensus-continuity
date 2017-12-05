@@ -132,47 +132,44 @@ describe.only('Election API _findMergeEventProof', () => {
         consensusApi,
         from: nodes.alpha,
         to: nodes.beta
-      }, (err, result) => {
-        assertNoError(err);
-        callback();
-      })],
+      }, callback)],
       // step 4
-      // cp2: ['regularEvent', (results, callback) => helpers.copyAndMerge({
-      //   consensusApi,
-      //   from: nodes.delta,
-      //   to: nodes.gamma
-      // }, callback)],
+      cp2: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.delta,
+        to: nodes.gamma
+      }, callback)],
       // step 5
-      // cp3: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
-      //   consensusApi,
-      //   from: nodes.beta,
-      //   to: nodes.gamma
-      // }, callback)],
-      // // step 6
-      // cp4: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
-      //   consensusApi,
-      //   from: nodes.gamma,
-      //   to: nodes.beta
-      // }, callback)],
-      // // step 7
-      // cp5: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
-      //   consensusApi,
-      //   from: nodes.beta,
-      //   to: nodes.alpha
-      // }, callback)],
-      // // step 8
-      // cp6: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
-      //   consensusApi,
-      //   from: nodes.gamma,
-      //   to: nodes.delta
-      // }, callback)],
-      // // step 9
-      // cp7: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
-      //   consensusApi,
-      //   from: nodes.alpha,
-      //   to: nodes.beta
-      // }, callback)],
-      // // step 10
+      cp3: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.gamma
+      }, callback)],
+      // step 6
+      cp4: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.beta
+      }, callback)],
+      // step 7
+      cp5: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.alpha
+      }, callback)],
+      // step 8
+      cp6: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.delta
+      }, callback)],
+      // step 9
+      cp7: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.alpha,
+        to: nodes.beta
+      }, callback)],
+      // step 10
       // cp8: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
       //   consensusApi,
       //   from: nodes.delta,
