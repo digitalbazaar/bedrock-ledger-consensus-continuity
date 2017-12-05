@@ -151,7 +151,7 @@ describe.only('Continuity2017 events.mergeBranches API', () => {
       }]
     }, done);
   });
-  it.only('parentHash includes only prior merge event hash', done => {
+  it.only('returns NotFoundError if no events since last merge', done => {
     const mergeBranches = consensusApi._worker._events.mergeBranches;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEvent.input[0].id = `https://example.com/event/${uuid()}`;
@@ -162,13 +162,9 @@ describe.only('Continuity2017 events.mergeBranches API', () => {
         mergeBranches({ledgerNode}, callback)],
       mergeBranches2: ['mergeBranches1', (results, callback) => {
         mergeBranches({ledgerNode}, (err, result) => {
-          assertNoError(err);
-          const firstMergeHash = results.mergeBranches1.meta.eventHash;
-          should.exist(result.event);
-          const event = result.event;
-          should.exist(event.treeHash);
-          event.treeHash.should.equal(firstMergeHash);
-          event.parentHash.should.have.same.members([firstMergeHash]);
+          should.exist(err);
+          should.not.exist(result);
+          err.name.should.equal('NotFoundError');
           callback();
         });
       }]
