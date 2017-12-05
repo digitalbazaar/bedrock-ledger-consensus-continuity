@@ -98,7 +98,7 @@ describe.only('Election API _findMergeEventProof', () => {
       //     nodes.epsilon = result;
       //     callback(null, result);
       //   })],
-      creator: ['nodeDelta', (results, callback) =>
+      creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
         async.eachOf(nodes, (n, i, callback) =>
           consensusApi._worker._voters.get(n.id, (err, result) => {
             if(err) {
@@ -110,6 +110,7 @@ describe.only('Election API _findMergeEventProof', () => {
     }, done);
   });
   it.only('Test 1', done => {
+    console.log('PEERS', peers);
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -244,7 +245,7 @@ describe.only('Election API _findMergeEventProof', () => {
             getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
             const branches = _getElectorBranches({
-              events: results.history.events,
+              history: results.history,
               electors
             });
             callback(null, branches);
@@ -378,7 +379,7 @@ describe.only('Election API _findMergeEventProof', () => {
               getRecentHistory({ledgerNode}, callback),
             branches: ['history', (results, callback) => {
               const branches = _getElectorBranches({
-                events: results.history.events,
+                history: results.history,
                 electors
               });
               callback(null, branches);
@@ -497,7 +498,7 @@ describe.only('Election API _findMergeEventProof', () => {
               getRecentHistory({ledgerNode}, callback),
             branches: ['history', (results, callback) => {
               const branches = _getElectorBranches({
-                events: results.history.events,
+                history: results.history,
                 electors
               });
               callback(null, branches);
