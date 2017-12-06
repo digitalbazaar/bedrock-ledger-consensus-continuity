@@ -179,7 +179,7 @@ describe.only('Election API _findMergeEventProof', () => {
         to: nodes.alpha
       }, callback)],
       // step 10
-      cp8: ['cp6', 'cp7', (results, callback) => helpers.copyAndMerge({
+      cp8: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.gamma,
         to: nodes.delta
