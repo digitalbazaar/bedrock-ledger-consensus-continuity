@@ -66,7 +66,8 @@ describe('Election API', () => {
     }, done);
   });
 
-  describe('_getElectorBranches', () => {
+  // FIXME: this is being preserved for the manually created history objects
+  describe.skip('_getElectorBranches', () => {
     it('produces heads and tails for two electors', done => {
       /*const history = {
         // merge event
@@ -254,16 +255,11 @@ describe('Election API', () => {
       const mergeBranches = ledgerNode.consensus._worker._events.mergeBranches;
       const getRecentHistory = consensusApi._worker._events.getRecentHistory;
       async.auto({
-        events: callback => helpers.createEvent(
-          {eventTemplate, eventNum: 1, consensus: false, hash: false},
-          callback),
-        localEvents: ['events', (results, callback) => async.map(
-          results.events, (e, callback) => ledgerNode.events.add(
-            e.event, (err, result) => callback(err, result.meta.eventHash)),
-          callback)],
+        localEvent: callback => helpers.addEvent(
+          {eventTemplate, ledgerNode}, callback),
         remoteEvents: callback => helpers.addRemoteEvents(
           {consensusApi, count: 1, ledgerNode, mockData}, callback),
-        mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
+        mergeBranches: ['localEvent', 'remoteEvents', (results, callback) => {
           mergeBranches({ledgerNode}, callback);
         }],
         history: ['mergeBranches', (results, callback) =>
@@ -274,24 +270,12 @@ describe('Election API', () => {
           //   ._getElectorBranches({event: history, electors});
           const branches = consensusApi._worker._election._getElectorBranches(
             {
-              event: results.history.eventMap[results.history.localBranchHead],
+              history: results.history,
               electors
             });
           branches.should.be.an('object');
-          should.exist(branches.head);
-          branches.head.should.be.an('object');
-          Object.keys(branches.head).should.have.same.members(electors);
-          should.exist(branches.tail);
-          branches.tail.should.be.an('object');
-          Object.keys(branches.tail).should.have.same.members(electors);
-          should.exist(branches.tail);
-          // const end = Date.now();
-          // console.log('time', (end - start) + ' ms');
-          // console.log('head', util.inspect(branches.head, {depth: 20}));
-          // console.log('tail', util.inspect(branches.tail, {depth: 20}));
-          // console.log('tail.a', util.inspect(branches.tail.a, {depth: 20}));
-          // console.log('tail.b', util.inspect(branches.tail.b, {depth: 20}));
-          // console.log('tail.c', util.inspect(branches.tail.c, {depth: 20}));
+          console.log('BBBBBBB', branches);
+          Object.keys(branches).should.have.same.members(electors);
           callback();
         }]
       }, done);
