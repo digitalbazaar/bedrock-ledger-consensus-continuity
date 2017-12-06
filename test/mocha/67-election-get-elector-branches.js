@@ -147,10 +147,10 @@ describe.only('Election API _getElectorBranches', () => {
                 history: results.history,
                 electors
               });
-              const peerId = [peers[i]];
+              const peerId = peers[i];
               const keys = Object.keys(branches);
               keys.should.have.length(1);
-              keys.should.have.same.members([peers[i]]);
+              keys.should.have.same.members([peerId]);
               const tailArray = branches[peerId];
               tailArray.should.be.an('array');
               // NOTE: an honest/healthy node should always have exactly 1 tail
@@ -173,7 +173,66 @@ describe.only('Election API _getElectorBranches', () => {
             }],
           }, callback);
         }, callback);
-      }]
+      }],
+      // step 3
+      cp1: ['test1', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.alpha,
+        to: nodes.beta
+      }, callback)],
+      test2: ['cp1', (results, callback) => {
+        // test beta
+        const addEvent = results.addEvent1;
+        const cp1 = results.cp1;
+        const electors = _.values(peers);
+        const ledgerNode = nodes.beta;
+        async.auto({
+          history: callback => getRecentHistory({ledgerNode}, callback),
+          branches: ['history', (results, callback) => {
+            const branches = _getElectorBranches({
+              history: results.history,
+              electors
+            });
+            const peerId = [peers.alpha, peers.beta];
+            const keys = Object.keys(branches);
+            keys.should.have.length(2);
+            keys.should.have.same.members(peerId);
+            // inspect beta tail
+            const tailBeta = branches[peers.beta];
+            tailBeta.should.have.length(1);
+            let tail = tailBeta[0];
+            // should be merge after copy
+            let mergeEventHash = cp1.meta.eventHash;
+
+            // FIXME: the tail should be the latest merge event from copy?
+            // PASSES tail is still the merge event from addEvent
+            tail.eventHash.should.equal(addEvent.beta.merge.meta.eventHash);
+            // FAILS tail is not the latest merge event
+            tail.eventHash.should.equal(mergeEventHash);
+
+            // tail._children.should.have.length(0);
+            // inspect alpha tail
+            const tailAlpha = branches[peers.alpha];
+            tailAlpha.should.have.length(1);
+            tail = tailAlpha[0];
+            // tail should be merge event
+            mergeEventHash = addEvent.alpha.merge.meta.eventHash;
+            tail.eventHash.should.equal(mergeEventHash);
+            tail._children.should.have.length(1);
+            // FIXME: assert child is beta tail
+            // the regular event
+            // tail._parents.should.have.length(1);
+            // const parent = tail._parents[0];
+            // const regularEventHash = Object.keys(addEvent.alpha.regular)[0];
+            // parent.eventHash.should.equal(regularEventHash);
+            // should.equal(tail._treeParent, null);
+            // parent._children.should.have.length(1);
+            // const childOfRegularEvent = parent._children[0];
+            // childOfRegularEvent.eventHash.should.equal(mergeEventHash);
+            callback();
+          }],
+        }, callback);
+      }],
     }, done);
   });
 });
