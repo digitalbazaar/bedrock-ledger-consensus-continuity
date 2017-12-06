@@ -90,6 +90,7 @@ describe.only('Election API _findMergeEventProof', () => {
           nodes.delta = result;
           callback(null, result);
         })],
+      // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps
       // nodeEpsilon: ['genesisBlock', (results, callback) => brLedgerNode.add(
       //   null, {genesisBlock: results.genesisBlock}, (err, result) => {
       //     if(err) {
