@@ -281,6 +281,7 @@ describe.only('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
+            console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
             console.log('PROOF', util.inspect(proof));
             callback();
           }]
