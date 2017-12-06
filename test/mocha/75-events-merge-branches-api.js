@@ -13,7 +13,7 @@ const uuid = require('uuid/v4');
 
 let consensusApi;
 
-describe.only('events.mergeBranches API', () => {
+describe('events.mergeBranches API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
