@@ -206,8 +206,15 @@ describe.only('Election API _getElectorBranches', () => {
             // tail's child should be merge after copy
             const mergeEventHash_cp1 = cp1.meta.eventHash;
             tail._children.should.have.length(1);
-            tail._children[0].eventHash.should.equal(mergeEventHash_cp1);
-
+            const child0 = tail._children[0];
+            child0.eventHash.should.equal(mergeEventHash_cp1);
+            child0._children.should.have.length(0);
+            child0._parents.should.have.length(2);
+            const child0ParentHashes = child0._parents.map(e => e.eventHash);
+            child0ParentHashes.should.have.same.members([
+              addEvent.beta.merge.meta.eventHash,
+              addEvent.alpha.merge.meta.eventHash
+            ]);
             // inspect alpha tail
             const tailAlpha = branches[peers.alpha];
             tailAlpha.should.have.length(1);
@@ -217,17 +224,66 @@ describe.only('Election API _getElectorBranches', () => {
             tail.eventHash.should.equal(mergeEventHash);
             tail._children.should.have.length(1);
             tail._children[0].eventHash.should.equal(mergeEventHash_cp1);
-            // the regular event
-            // FIXME: failing here, parents.length is 0, the regular event is
-            // missing
-            tail._parents.should.have.length(1);
-            const parent = tail._parents[0];
-            const regularEventHash = Object.keys(addEvent.alpha.regular)[0];
-            parent.eventHash.should.equal(regularEventHash);
+            // the regular event on alpha will not be refenced here
+            tail._parents.should.have.length(0);
             should.equal(tail._treeParent, null);
-            parent._children.should.have.length(1);
-            const childOfRegularEvent = parent._children[0];
-            childOfRegularEvent.eventHash.should.equal(mergeEventHash);
+            callback();
+          }],
+        }, callback);
+      }],
+      // step 4
+      cp2: ['test2', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.delta,
+        to: nodes.gamma
+      }, callback)],
+      test3: ['cp2', (results, callback) => {
+        // test gamma
+        const addEvent = results.addEvent1;
+        const cp2 = results.cp2;
+        const electors = _.values(peers);
+        const ledgerNode = nodes.gamma;
+        async.auto({
+          history: callback => getRecentHistory({ledgerNode}, callback),
+          branches: ['history', (results, callback) => {
+            const branches = _getElectorBranches({
+              history: results.history,
+              electors
+            });
+            const peerId = [peers.gamma, peers.delta];
+            const keys = Object.keys(branches);
+            keys.should.have.length(2);
+            keys.should.have.same.members(peerId);
+            // inspect gamma tail
+            const tailGamma = branches[peers.gamma];
+            tailGamma.should.have.length(1);
+            let tail = tailGamma[0];
+            // tail is oldest merge even which has not reached consensus
+            tail.eventHash.should.equal(addEvent.gamma.merge.meta.eventHash);
+            // tail's child should be merge after copy
+            const mergeEventHash_cp2 = cp2.meta.eventHash;
+            tail._children.should.have.length(1);
+            const child0 = tail._children[0];
+            child0.eventHash.should.equal(mergeEventHash_cp2);
+            child0._children.should.have.length(0);
+            child0._parents.should.have.length(2);
+            const child0ParentHashes = child0._parents.map(e => e.eventHash);
+            child0ParentHashes.should.have.same.members([
+              addEvent.gamma.merge.meta.eventHash,
+              addEvent.delta.merge.meta.eventHash
+            ]);
+            // inspect delta tail
+            const tailDelta = branches[peers.delta];
+            tailDelta.should.have.length(1);
+            tail = tailDelta[0];
+            // tail should be merge event
+            const mergeEventHash = addEvent.delta.merge.meta.eventHash;
+            tail.eventHash.should.equal(mergeEventHash);
+            tail._children.should.have.length(1);
+            tail._children[0].eventHash.should.equal(mergeEventHash_cp2);
+            // the regular event on alpha will not be refenced here
+            tail._parents.should.have.length(0);
+            should.equal(tail._treeParent, null);
             callback();
           }],
         }, callback);
