@@ -201,34 +201,33 @@ describe.only('Election API _getElectorBranches', () => {
             const tailBeta = branches[peers.beta];
             tailBeta.should.have.length(1);
             let tail = tailBeta[0];
-            // should be merge after copy
-            let mergeEventHash = cp1.meta.eventHash;
-
-            // FIXME: the tail should be the latest merge event from copy?
-            // PASSES tail is still the merge event from addEvent
+            // tail is oldest merge even which has not reached consensus
             tail.eventHash.should.equal(addEvent.beta.merge.meta.eventHash);
-            // FAILS tail is not the latest merge event
-            tail.eventHash.should.equal(mergeEventHash);
+            // tail's child should be merge after copy
+            const mergeEventHash_cp1 = cp1.meta.eventHash;
+            tail._children.should.have.length(1);
+            tail._children[0].eventHash.should.equal(mergeEventHash_cp1);
 
-            // tail._children.should.have.length(0);
             // inspect alpha tail
             const tailAlpha = branches[peers.alpha];
             tailAlpha.should.have.length(1);
             tail = tailAlpha[0];
             // tail should be merge event
-            mergeEventHash = addEvent.alpha.merge.meta.eventHash;
+            const mergeEventHash = addEvent.alpha.merge.meta.eventHash;
             tail.eventHash.should.equal(mergeEventHash);
             tail._children.should.have.length(1);
-            // FIXME: assert child is beta tail
+            tail._children[0].eventHash.should.equal(mergeEventHash_cp1);
             // the regular event
-            // tail._parents.should.have.length(1);
-            // const parent = tail._parents[0];
-            // const regularEventHash = Object.keys(addEvent.alpha.regular)[0];
-            // parent.eventHash.should.equal(regularEventHash);
-            // should.equal(tail._treeParent, null);
-            // parent._children.should.have.length(1);
-            // const childOfRegularEvent = parent._children[0];
-            // childOfRegularEvent.eventHash.should.equal(mergeEventHash);
+            // FIXME: failing here, parents.length is 0, the regular event is
+            // missing
+            tail._parents.should.have.length(1);
+            const parent = tail._parents[0];
+            const regularEventHash = Object.keys(addEvent.alpha.regular)[0];
+            parent.eventHash.should.equal(regularEventHash);
+            should.equal(tail._treeParent, null);
+            parent._children.should.have.length(1);
+            const childOfRegularEvent = parent._children[0];
+            childOfRegularEvent.eventHash.should.equal(mergeEventHash);
             callback();
           }],
         }, callback);
