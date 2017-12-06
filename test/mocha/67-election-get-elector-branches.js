@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe.only('Election API _getElectorBranches', () => {
+describe('Election API _getElectorBranches', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -107,7 +107,7 @@ describe.only('Election API _getElectorBranches', () => {
           }), callback)]
     }, done);
   });
-  it.only('Test 1', done => {
+  it('Test 1', done => {
     console.log('PEERS', peers);
     console.log('COLLECTIONS');
     Object.keys(nodes).forEach(nodeLabel => {

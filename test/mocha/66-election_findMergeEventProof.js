@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe.skip('Election API _findMergeEventProof', () => {
+describe.only('Election API _findMergeEventProof', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });

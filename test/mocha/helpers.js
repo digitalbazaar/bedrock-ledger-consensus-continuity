@@ -151,22 +151,10 @@ api.copyAndMerge = (
 
 const snapshot = {};
 api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
-  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
-  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
-  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
-  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
-  console.log('useSnapshot', useSnapshot);
-  console.log('SSSSSSSSS', snapshot);
   async.auto({
     events: callback => {
       const collection = from.storage.events.collection;
       if(useSnapshot && snapshot[collection.s.name]) {
-        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
-        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
-        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
-        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
-        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
-        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
         return callback(null, snapshot[collection.s.name]);
       }
       // FIXME: use a more efficient query, the commented aggregate function
