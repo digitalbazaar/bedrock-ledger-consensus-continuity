@@ -137,21 +137,38 @@ api.addRemoteEvents = ({
 };
 
 // from may be a single node or an array of nodes
-api.copyAndMerge = ({consensusApi, from, to}, callback) => {
+api.copyAndMerge = (
+  {consensusApi, from, to, useSnapshot = false}, callback) => {
   const copyFrom = [].concat(from);
   const mergeBranches = consensusApi._worker._events.mergeBranches;
   async.auto({
     copy: callback => async.each(copyFrom, (f, callback) =>
-      api.copyEvents({from: f, to}, callback), callback),
+      api.copyEvents({from: f, to, useSnapshot}, callback), callback),
     merge: ['copy', (results, callback) =>
       mergeBranches({ledgerNode: to}, callback)]
   }, (err, results) => err ? callback(err) : callback(null, results.merge));
 };
 
-api.copyEvents = ({from, to}, callback) => {
+const snapshot = {};
+api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
+  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
+  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
+  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
+  console.log('ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZzzzz');
+  console.log('useSnapshot', useSnapshot);
+  console.log('SSSSSSSSS', snapshot);
   async.auto({
     events: callback => {
       const collection = from.storage.events.collection;
+      if(useSnapshot && snapshot[collection.s.name]) {
+        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
+        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
+        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
+        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
+        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
+        console.log('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH');
+        return callback(null, snapshot[collection.s.name]);
+      }
       // FIXME: use a more efficient query, the commented aggregate function
       // is evidently missing some events.
       collection.find({
@@ -264,6 +281,22 @@ api.prepareDatabase = function(mockData, callback) {
       insertTestData(mockData, callback);
     }
   ], callback);
+};
+
+api.snapshotEvents = ({ledgerNode}, callback) => {
+  const collection = ledgerNode.storage.events.collection;
+  // FIXME: use a more efficient query, the commented aggregate function
+  // is evidently missing some events.
+  collection.find({
+    'meta.consensus': {$exists: false}
+  }).sort({'$natural': 1}).toArray((err, result) => {
+    if(err) {
+      return callback(err);
+    }
+    // make snapshot
+    snapshot[collection.s.name] = result;
+    callback(null, result);
+  });
 };
 
 // Insert identities and public keys used for testing into database

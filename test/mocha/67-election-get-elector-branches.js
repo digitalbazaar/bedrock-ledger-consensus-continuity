@@ -302,7 +302,10 @@ describe.only('Election API _getElectorBranches', () => {
         }, callback);
       }],
       // step 5
-      cp3: ['test3', (results, callback) => helpers.copyAndMerge({
+      // snapshot gamma before copy
+      ss1: ['test3', (results, callback) => helpers.snapshotEvents(
+        {ledgerNode: nodes.gamma}, callback)],
+      cp3: ['ss1', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.beta,
         to: nodes.gamma
@@ -415,7 +418,8 @@ describe.only('Election API _getElectorBranches', () => {
       cp4: ['test4', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.gamma,
-        to: nodes.beta
+        to: nodes.beta,
+        useSnapshot: true
       }, callback)],
       test5: ['cp4', (results, callback) => {
         // test gamma
@@ -458,7 +462,7 @@ describe.only('Election API _getElectorBranches', () => {
             child0._children.should.have.length(1);
             // should be merge event after cp3
             const child0Child0 = child0._children[0];
-            child0Child0.eventHash.should.equal(cp3.meta.eventHash);
+            child0Child0.eventHash.should.equal(cp4.meta.eventHash);
 
             // inspect delta tail
             const tailDelta = branches[peers.delta];
@@ -482,12 +486,10 @@ describe.only('Election API _getElectorBranches', () => {
             tail._children.should.have.length(1);
             const alphaChild0 = tail._children[0];
             alphaChild0.eventHash.should.equal(cp1.meta.eventHash);
-            alphaChild0._children.should.have.length(2);
+            alphaChild0._children.should.have.length(1);
             // FIXME: this is broken, should not be seeing cp3 here
             alphaChild0._children.map(e => e.eventHash)
-              .should.have.same.members([
-                cp3.meta.eventHash, cp4.meta.eventHash
-              ]);
+              .should.have.same.members([cp4.meta.eventHash]);
             return callback();
             // const alphaChild0Child0 = alphaChild0._children[0];
             // alphaChild0Child0.eventHash.should.equal(cp3.meta.eventHash);
