@@ -197,13 +197,11 @@ describe('events.mergeBranches API', () => {
   });
   it('collects one remote merge event', done => {
     const mergeBranches = consensusApi._worker._events.mergeBranches;
+    const eventTemplate = mockData.events.alpha;
     async.auto({
-      eventsBeta: callback => helpers.addRemoteEvents(
-        {consensusApi, ledgerNode: nodes.beta, mockData}, callback),
-      mergeBeta: ['eventsBeta', (results, callback) => {
-        mergeBranches({ledgerNode: nodes.beta}, callback);
-      }],
-      mergeBranches: ['mergeBeta', (results, callback) => {
+      eventBeta: callback => helpers.addEventAndMerge(
+        {consensusApi, ledgerNode: nodes.beta, eventTemplate}, callback),
+      mergeBranches: ['eventBeta', (results, callback) => {
         helpers.copyAndMerge(
           {consensusApi, from: nodes.beta, to: nodes.alpha}, (err, result) => {
             assertNoError(err);
@@ -215,7 +213,7 @@ describe('events.mergeBranches API', () => {
             const parentHash = event.parentHash;
             parentHash.should.be.an('array');
             parentHash.should.have.length(2);
-            const betaMergeHash = results.mergeBeta.meta.eventHash;
+            const betaMergeHash = results.eventBeta.merge.meta.eventHash;
             parentHash.should.have.same.members(
               [betaMergeHash, event.treeHash]);
             callback();
@@ -223,6 +221,8 @@ describe('events.mergeBranches API', () => {
       }]
     }, done);
   });
+  // two chained merge events from beta are copied to alpha and merged, only
+  // the second beta merge event hash should be included in parentHash
   it('collects one remote merge events', done => {
     const eventTemplate = mockData.events.alpha;
     async.auto({
