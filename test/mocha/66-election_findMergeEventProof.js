@@ -128,7 +128,6 @@ describe.only('Election API _findMergeEventProof', () => {
       regularEvent: callback => async.each(nodes, (n, callback) =>
         helpers.addEventAndMerge(
           {consensusApi, eventTemplate, ledgerNode: n}, callback), callback),
-      // step 3
       cpa: ['regularEvent', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.beta,
@@ -139,7 +138,6 @@ describe.only('Election API _findMergeEventProof', () => {
         from: nodes.alpha,
         to: nodes.beta
       }, callback)],
-      // step 4
       cpb: ['regularEvent', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.gamma,
@@ -153,13 +151,11 @@ describe.only('Election API _findMergeEventProof', () => {
       // snapshot gamma before copy
       ss1: ['cp1', 'cp2', (results, callback) => helpers.snapshotEvents(
         {ledgerNode: nodes.gamma}, callback)],
-      // step 5
       cp3: ['ss1', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: [nodes.beta, nodes.delta],
         to: nodes.gamma
       }, callback)],
-      // step 6
       cp4: ['ss1', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: [nodes.alpha, nodes.gamma],
@@ -169,38 +165,32 @@ describe.only('Election API _findMergeEventProof', () => {
       // snapshot gamma before copy
       ss2: ['cp3', 'cp4', (results, callback) => helpers.snapshotEvents(
         {ledgerNode: nodes.gamma}, callback)],
-      // step 7
       cp5: ['ss2', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.beta,
         to: nodes.gamma
       }, callback)],
-      // step 8
       cp6: ['ss2', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.gamma,
         to: nodes.beta,
         useSnapshot: true
       }, callback)],
-      // step 9
       cp7: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.beta,
         to: nodes.alpha
       }, callback)],
-      // step 10
       cp8: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.gamma,
         to: nodes.delta
       }, callback)],
-      // step 11
       cp9: ['cp7', 'cp8', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.alpha,
         to: nodes.beta
       }, callback)],
-      // step 12
       cp10: ['cp7', 'cp8', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.delta,
@@ -321,261 +311,309 @@ describe.only('Election API _findMergeEventProof', () => {
       }]
     }, done);
   });
-  it('Test 2', done => {
+  it.only('Test 2', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
     const _findMergeEventProof =
       consensusApi._worker._election._findMergeEventProof;
+    const eventTemplate = mockData.events.alpha;
     async.auto({
-      regularEvent: callback => async.each(nodes, (n, callback) => {
-        const testEvent = bedrock.util.clone(mockData.events.alpha);
-        testEventId = 'https://example.com/events/' + uuid();
-        testEvent.input[0].id = testEventId;
-        n.events.add(testEvent, callback);
-      }, callback),
-      merge1: ['regularEvent', (results, callback) =>
-        _mergeOn({nodes}, callback)],
-      // step 3
-      cp1: ['merge1', (results, callback) => helpers.copyAndMerge({
-        from: nodes.alpha,
-        to: nodes.beta
-      }, callback)],
-      // step 4
-      cp2: ['merge1', (results, callback) => helpers.copyAndMerge({
-        from: nodes.delta,
-        to: nodes.gamma
-      }, callback)],
-      // step 5
-      cp3: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
-        from: nodes.beta,
-        to: nodes.gamma
-      }, callback)],
-      // step 6
-      cp4: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
-        from: nodes.gamma,
-        to: nodes.beta
-      }, callback)],
-      // step 7
-      cp5: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
+      // add a regular event and merge on every node
+      regularEvent: callback => async.each(nodes, (n, callback) =>
+        helpers.addEventAndMerge(
+          {consensusApi, eventTemplate, ledgerNode: n}, callback), callback),
+      cpa: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.beta,
         to: nodes.alpha
       }, callback)],
-      // step 8
-      cp6: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
-        from: nodes.gamma,
-        to: nodes.delta
-      }, callback)],
-      // step 9
-      cp7: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
+      cp1: ['cpa', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.alpha,
         to: nodes.beta
       }, callback)],
-      // step 10
-      cp8: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
+      cpb: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.delta
+      }, callback)],
+      cp2: ['cpb', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.delta,
         to: nodes.gamma
       }, callback)],
-      // step 11
+      // snapshot gamma before copy
+      ss1: ['cp1', 'cp2', (results, callback) => helpers.snapshotEvents(
+        {ledgerNode: nodes.gamma}, callback)],
+      cp3: ['ss1', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: [nodes.beta, nodes.delta],
+        to: nodes.gamma
+      }, callback)],
+      cp4: ['ss1', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: [nodes.alpha, nodes.gamma],
+        to: nodes.beta,
+        useSnapshot: true
+      }, callback)],
+      // snapshot gamma before copy
+      ss2: ['cp3', 'cp4', (results, callback) => helpers.snapshotEvents(
+        {ledgerNode: nodes.gamma}, callback)],
+      cp5: ['ss2', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.gamma
+      }, callback)],
+      cp6: ['ss2', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.beta,
+        useSnapshot: true
+      }, callback)],
+      cp7: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.alpha
+      }, callback)],
+      cp8: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.delta
+      }, callback)],
       cp9: ['cp7', 'cp8', (results, callback) => helpers.copyAndMerge({
-        from: nodes.beta,
-        to: nodes.gamma
+        consensusApi,
+        from: nodes.alpha,
+        to: nodes.beta
       }, callback)],
-      // step 12
       cp10: ['cp7', 'cp8', (results, callback) => helpers.copyAndMerge({
-        from: nodes.gamma,
-        to: nodes.beta
+        consensusApi,
+        from: nodes.delta,
+        to: nodes.gamma
       }, callback)],
-      // step 13
-      cp11: ['cp9', 'cp10', (results, callback) => helpers.copyAndMerge({
+      // snapshot gamma before copy
+      ss3: ['cp9', 'cp10', (results, callback) => helpers.snapshotEvents(
+        {ledgerNode: nodes.gamma}, callback)],
+      cp11: ['ss3', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.beta,
         to: nodes.gamma
       }, callback)],
-      // step 14
-      cp12: ['cp9', 'cp10', (results, callback) => helpers.copyAndMerge({
+      cp12: ['ss3', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.gamma,
-        to: nodes.beta
+        to: nodes.beta,
+        useSnapshot: true
       }, callback)],
-      // cp beta to delta, merge
-      cp13: ['cp11', 'cp12', (results, callback) => helpers.copyAndMerge({
+      // snapshot gamma before copy
+      ss4: ['cp11', 'cp12', (results, callback) => helpers.snapshotEvents(
+        {ledgerNode: nodes.gamma}, callback)],
+      cp13: ['ss4', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.gamma
+      }, callback)],
+      cp14: ['ss4', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.beta,
+        useSnapshot: true
+      }, callback)],
+      cp15: ['cp14', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.beta,
         to: nodes.delta
       }, callback)],
-      // cp beta and delta to alpha, merge
-      cp14: ['cp13', (results, callback) => helpers.copyAndMerge({
+      cp16: ['cp15', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: [nodes.beta, nodes.delta],
         to: nodes.alpha
       }, callback)],
-      // cp alpha to beta, merge
-      cp15: ['cp14', (results, callback) => helpers.copyAndMerge({
-        from: nodes.alpha,
+      cp17: ['cp16', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: [nodes.alpha, nodes.delta],
         to: nodes.beta
       }, callback)],
-      // cp beta to alpha, merge
-      cp16: ['cp15', (results, callback) => helpers.copyAndMerge({
+      cp18: ['cp17', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.beta,
         to: nodes.alpha
       }, callback)],
-      // cp beta to delta, merge
-      cp17: ['cp15', (results, callback) => helpers.copyAndMerge({
+      cp19: ['cp18', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.beta,
         to: nodes.delta
       }, callback)],
-      // cp delta to gamma, merge
-      cp18: ['cp17', (results, callback) => helpers.copyAndMerge({
+      cp20: ['cp19', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.delta,
         to: nodes.gamma
       }, callback)],
-      proof: ['cp18', (results, callback) => {
-        const proofs = {};
+      testAlpha: ['cp20', (results, callback) => {
         // all peers are electors
         const electors = _.values(peers);
+        const ledgerNode = nodes.alpha;
         console.log('ELECTORS', electors);
-        async.eachOf(nodes, (ledgerNode, i, callback) => {
-          async.auto({
-            history: callback =>
-              getRecentHistory({ledgerNode}, callback),
-            branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
-                history: results.history,
-                electors
-              });
-              callback(null, branches);
-            }],
-            proof: ['branches', (results, callback) => {
-              const proof = _findMergeEventProof({
-                ledgerNode,
-                tails: results.branches,
-                electors
-              });
-              proofs[i] = proof;
-              callback();
-            }]
-          }, callback);
-        }, err => callback(err, proofs));
-      }],
-      test: ['proof', (results, callback) => {
-        console.log('PROOF', util.inspect(results.proof));
-        callback();
+        async.auto({
+          history: callback =>
+            getRecentHistory({ledgerNode}, callback),
+          branches: ['history', (results, callback) => {
+            const branches = _getElectorBranches({
+              history: results.history,
+              electors
+            });
+            callback(null, branches);
+          }],
+          proof: ['branches', (results, callback) => {
+            const proof = _findMergeEventProof({
+              ledgerNode,
+              tails: results.branches,
+              electors
+            });
+            console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
+            console.log('PROOF', util.inspect(proof));
+            callback();
+          }]
+        }, callback);
       }]
     }, done);
   }); // end test 2
-  it('Test 3', done => {
+  it.only('Test 3', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
     const _findMergeEventProof =
       consensusApi._worker._election._findMergeEventProof;
+    const eventTemplate = mockData.events.alpha;
     async.auto({
-      regularEvent: callback => async.each(nodes, (n, callback) => {
-        const testEvent = bedrock.util.clone(mockData.events.alpha);
-        testEventId = 'https://example.com/events/' + uuid();
-        testEvent.input[0].id = testEventId;
-        n.events.add(testEvent, callback);
-      }, callback),
-      merge1: ['regularEvent', (results, callback) =>
-        _mergeOn({nodes}, callback)],
-      // step 3
-      cp1: ['merge1', (results, callback) => helpers.copyAndMerge({
+      // add a regular event and merge on every node
+      regularEvent: callback => async.each(nodes, (n, callback) =>
+        helpers.addEventAndMerge(
+          {consensusApi, eventTemplate, ledgerNode: n}, callback), callback),
+      cpa: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.alpha
+      }, callback)],
+      cp1: ['cpa', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.alpha,
         to: nodes.beta
       }, callback)],
-      // step 4
-      cp2: ['merge1', (results, callback) => helpers.copyAndMerge({
+      cpb: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.delta
+      }, callback)],
+      cp2: ['cpb', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.delta,
         to: nodes.gamma
       }, callback)],
-      // step 5
-      cp3: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
+      // snapshot gamma before copy
+      ss1: ['cp1', 'cp2', (results, callback) => helpers.snapshotEvents(
+        {ledgerNode: nodes.gamma}, callback)],
+      cp3: ['ss1', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: [nodes.beta, nodes.delta],
+        to: nodes.gamma
+      }, callback)],
+      cp4: ['ss1', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: [nodes.alpha, nodes.gamma],
+        to: nodes.beta,
+        useSnapshot: true
+      }, callback)],
+      // snapshot gamma before copy
+      ss2: ['cp3', 'cp4', (results, callback) => helpers.snapshotEvents(
+        {ledgerNode: nodes.gamma}, callback)],
+      cp5: ['ss2', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.beta,
         to: nodes.gamma
       }, callback)],
-      // step 6
-      cp4: ['cp1', 'cp2', (results, callback) => helpers.copyAndMerge({
+      cp6: ['ss2', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.gamma,
-        to: nodes.beta
+        to: nodes.beta,
+        useSnapshot: true
       }, callback)],
-      // step 7
-      cp5: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
+      cp7: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.beta,
         to: nodes.alpha
       }, callback)],
-      // step 8
-      cp6: ['cp3', 'cp4', (results, callback) => helpers.copyAndMerge({
+      cp8: ['cp5', 'cp6', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: nodes.gamma,
         to: nodes.delta
       }, callback)],
-      // cp alpha and delta to beta, merge
-      cp7: ['cp6', (results, callback) => helpers.copyAndMerge({
+      cp9: ['cp8', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: [nodes.alpha, nodes.delta],
         to: nodes.beta
       }, callback)],
-      // cp alpha and delta to gamma, merge
-      cp8: ['cp6', (results, callback) => helpers.copyAndMerge({
-        from: [nodes.alpha, nodes.delta],
-        to: nodes.gamma
-      }, callback)],
-      // cp beta to alpha, merge
-      cp9: ['cp7', (results, callback) => helpers.copyAndMerge({
-        from: nodes.beta,
-        to: nodes.alpha
-      }, callback)],
-      // cp gamma to delta, merge
       cp10: ['cp8', (results, callback) => helpers.copyAndMerge({
-        from: nodes.gamma,
-        to: nodes.delta
-      }, callback)],
-      // cp alpha and delta to beta, merge
-      cp11: ['cp10', (results, callback) => helpers.copyAndMerge({
-        from: [nodes.alpha, nodes.delta],
-        to: nodes.beta
-      }, callback)],
-      // cp alpha and delta to gamma, merge
-      cp12: ['cp10', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: [nodes.alpha, nodes.delta],
         to: nodes.gamma
       }, callback)],
-      // cp beta and gamma to alpha, merge
-      cp13: ['cp12', (results, callback) => helpers.copyAndMerge({
+      cp11: ['cp9', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.alpha
+      }, callback)],
+      cp12: ['cp10', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.delta
+      }, callback)],
+      cp13: ['cp11', 'cp12', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: [nodes.alpha, nodes.delta],
+        to: nodes.beta
+      }, callback)],
+      cp14: ['cp11', 'cp12', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: [nodes.alpha, nodes.delta],
+        to: nodes.gamma
+      }, callback)],
+      cp15: ['cp13', 'cp14', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: [nodes.beta, nodes.gamma],
         to: nodes.alpha
       }, callback)],
-      // cp beta and gamma to delta, merge
-      cp14: ['cp12', (results, callback) => helpers.copyAndMerge({
+      cp16: ['cp13', 'cp14', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
         from: [nodes.beta, nodes.gamma],
         to: nodes.delta
       }, callback)],
-      proof: ['cp14', (results, callback) => {
-        const proofs = {};
+      testAlpha: ['cp15', 'cp16', (results, callback) => {
         // all peers are electors
         const electors = _.values(peers);
+        const ledgerNode = nodes.alpha;
         console.log('ELECTORS', electors);
-        async.eachOf(nodes, (ledgerNode, i, callback) => {
-          async.auto({
-            history: callback =>
-              getRecentHistory({ledgerNode}, callback),
-            branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
-                history: results.history,
-                electors
-              });
-              callback(null, branches);
-            }],
-            proof: ['branches', (results, callback) => {
-              const proof = _findMergeEventProof({
-                ledgerNode,
-                tails: results.branches,
-                electors
-              });
-              proofs[i] = proof;
-              callback();
-            }]
-          }, callback);
-        }, err => callback(err, proofs));
-      }],
-      test: ['proof', (results, callback) => {
-        console.log('PROOF', util.inspect(results.proof));
-        callback();
+        async.auto({
+          history: callback =>
+            getRecentHistory({ledgerNode}, callback),
+          branches: ['history', (results, callback) => {
+            const branches = _getElectorBranches({
+              history: results.history,
+              electors
+            });
+            callback(null, branches);
+          }],
+          proof: ['branches', (results, callback) => {
+            const proof = _findMergeEventProof({
+              ledgerNode,
+              tails: results.branches,
+              electors
+            });
+            console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
+            console.log('PROOF', util.inspect(proof));
+            callback();
+          }]
+        }, callback);
       }]
     }, done);
   });
