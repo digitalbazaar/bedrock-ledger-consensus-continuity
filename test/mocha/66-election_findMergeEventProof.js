@@ -129,13 +129,23 @@ describe.only('Election API _findMergeEventProof', () => {
         helpers.addEventAndMerge(
           {consensusApi, eventTemplate, ledgerNode: n}, callback), callback),
       // step 3
-      cp1: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+      cpa: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.beta,
+        to: nodes.alpha
+      }, callback)],
+      cp1: ['cpa', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.alpha,
         to: nodes.beta
       }, callback)],
       // step 4
-      cp2: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+      cpb: ['regularEvent', (results, callback) => helpers.copyAndMerge({
+        consensusApi,
+        from: nodes.gamma,
+        to: nodes.delta
+      }, callback)],
+      cp2: ['cpb', (results, callback) => helpers.copyAndMerge({
         consensusApi,
         from: nodes.delta,
         to: nodes.gamma
@@ -146,13 +156,13 @@ describe.only('Election API _findMergeEventProof', () => {
       // step 5
       cp3: ['ss1', (results, callback) => helpers.copyAndMerge({
         consensusApi,
-        from: nodes.beta,
+        from: [nodes.beta, nodes.delta],
         to: nodes.gamma
       }, callback)],
       // step 6
       cp4: ['ss1', (results, callback) => helpers.copyAndMerge({
         consensusApi,
-        from: nodes.gamma,
+        from: [nodes.alpha, nodes.gamma],
         to: nodes.beta,
         useSnapshot: true
       }, callback)],
