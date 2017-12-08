@@ -316,9 +316,10 @@ describe('Election API', () => {
         }],
         proof: ['branches', (results, callback) => {
           const proof = consensusApi._worker._election._findMergeEventProof({
-            electors,
             ledgerNode,
-            tail: results.branches.tail
+            history: results.history,
+            tails: results.branches,
+            electors
           });
           console.log('PROOF', util.inspect(proof));
           callback();

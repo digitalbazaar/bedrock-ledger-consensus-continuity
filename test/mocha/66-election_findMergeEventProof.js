@@ -300,6 +300,7 @@ describe.only('Election API _findMergeEventProof', () => {
           proof: ['branches', (results, callback) => {
             const proof = _findMergeEventProof({
               ledgerNode,
+              history: results.history,
               tails: results.branches,
               electors
             });
@@ -467,6 +468,7 @@ describe.only('Election API _findMergeEventProof', () => {
           proof: ['branches', (results, callback) => {
             const proof = _findMergeEventProof({
               ledgerNode,
+              history: results.history,
               tails: results.branches,
               electors
             });
@@ -606,6 +608,7 @@ describe.only('Election API _findMergeEventProof', () => {
           proof: ['branches', (results, callback) => {
             const proof = _findMergeEventProof({
               ledgerNode,
+              history: results.history,
               tails: results.branches,
               electors
             });
