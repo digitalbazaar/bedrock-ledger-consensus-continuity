@@ -288,9 +288,11 @@ describe.only('Election API _findMergeEventProof', () => {
         const ledgerNode = nodes.alpha;
         const {cp5, cp6} = results;
         const copyMergeHashes = {};
+        const copyMergeHashesIndex = {};
         Object.keys(results).forEach(key => {
           if(key.startsWith('cp')) {
             copyMergeHashes[key] = results[key].meta.eventHash;
+            copyMergeHashesIndex[results[key].meta.eventHash] = key;
           }
         });
         console.log('ELECTORS', electors);
@@ -343,6 +345,9 @@ describe.only('Election API _findMergeEventProof', () => {
                 console.log(y);
               }
             }
+            console.log(
+              'REPORTED yCandidates',
+              yCandidates.map(c => copyMergeHashesIndex[c]));
             callback();
           }]
         }, callback);
