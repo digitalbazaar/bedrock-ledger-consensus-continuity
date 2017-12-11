@@ -285,7 +285,7 @@ describe.only('Election API _findMergeEventProof', () => {
       testAlpha: ['cp23', 'cp24', (results, callback) => {
         // all peers are electors
         const electors = _.values(peers);
-        const ledgerNode = nodes.beta;
+        const ledgerNode = nodes.alpha;
         const {cp5, cp6} = results;
         const copyMergeHashes = {};
         Object.keys(results).forEach(key => {
@@ -311,10 +311,11 @@ describe.only('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            console.log('PPPPPPP', util.inspect(proof.map(p => p.yCandidates)));
-            console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
+            console.log('PPPPPPP', util.inspect(proof.yCandidates));
+            console.log('ALPHA COLLECTION: ',
+              ledgerNode.storage.events.collection.s.name);
             // console.log('PROOF', util.inspect(proof, {depth: 3}));
-            const allXs = proof.map(p => p.x.eventHash);
+            const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(2);
             // a is reporting cp5 and cp7
             // FIXME: this is incorrect, but passes
@@ -322,10 +323,10 @@ describe.only('Election API _findMergeEventProof', () => {
             //   copyMergeHashes.cp5,
             //   copyMergeHashes.cp7
             // ]);
-            const allYs = proof.map(p => p.y.eventHash);
+            const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(2);
             console.log('CCCCCCCC', proof.yCandidates);
-            const yCandidates = proof.map(p => p.yCandidates.eventHash);
+            const yCandidates = proof.yCandidates.map(c => c.eventHash);
             console.log('COPYHASHES', JSON.stringify(copyMergeHashes, null, 2));
             console.log('XXXXXXXXXXX', allXs);
             console.log('YYYYYYYYY', allYs);
