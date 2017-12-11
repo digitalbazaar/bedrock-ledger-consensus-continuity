@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe('Election API _getAncestors', () => {
+describe('Election API findConsensus', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -110,116 +110,44 @@ describe('Election API _getAncestors', () => {
           }), callback)]
     }, done);
   });
-  it('gets no events', done => {
+  it.skip('Test 1', done => {
     // the genesisMerge already has consensus
-    const getAncestors = consensusApi._worker._election._getAncestors;
-    getAncestors(
-      {ledgerNode: nodes.alpha, eventHash: genesisMerge},
-      (err, result) => {
-        assertNoError(err);
-        should.exist(result);
-        result.should.be.an('array');
-        result.should.have.length(0);
-        done();
-      });
-  });
-  it('gets two events', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
+    const findConsensus = consensusApi._worker._election.findConsensus;
+    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
-    const eventTemplate = mockData.events.alpha;
+    const electors = [peers.alpha];
     async.auto({
-      event1: callback => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode}, callback),
-      test: ['event1', (results, callback) => getAncestors(
-        {ledgerNode, eventHash: results.event1.merge.meta.eventHash},
-        (err, result) => {
-          assertNoError(err);
-          should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(2);
-          callback();
-        })]
+      history: callback => getRecentHistory({ledgerNode}, callback),
+      consensus: ['history', (results, callback) => {
+        console.log('tTTTTTTt', results.history);
+        findConsensus(
+          {electors, ledgerNode, history: results.history}, (err, result) => {
+            assertNoError(err);
+            console.log('TTTTTTT', result);
+            callback();
+          });
+      }]
     }, done);
   });
-  it('gets four events', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
+  it.only('Test 2', done => {
+    // the genesisMerge already has consensus
+    const findConsensus = consensusApi._worker._election.findConsensus;
+    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
+    const electors = [peers.alpha];
     const eventTemplate = mockData.events.alpha;
     async.auto({
       event1: callback => helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode}, callback),
-      event2: ['event1', (results, callback) => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode}, callback)],
-      test: ['event2', (results, callback) => getAncestors(
-        {ledgerNode, eventHash: results.event2.merge.meta.eventHash},
-        (err, result) => {
-          assertNoError(err);
-          should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(4);
-          callback();
-        })]
-    }, done);
-  });
-  it('gets 4 events involving 2 nodes', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
-    const ledgerNode = nodes.alpha;
-    const eventTemplate = mockData.events.alpha;
-    async.auto({
-      event1: callback => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode}, callback),
-      cp1: ['event1', (results, callback) => helpers.copyAndMerge({
-        consensusApi,
-        from: nodes.alpha,
-        to: nodes.beta
-      }, callback)],
-      cp2: ['cp1', (results, callback) => helpers.copyAndMerge({
-        consensusApi,
-        from: nodes.beta,
-        to: nodes.alpha
-      }, callback)],
-      test: ['cp2', (results, callback) => getAncestors(
-        {ledgerNode, eventHash: results.cp2.meta.eventHash},
-        (err, result) => {
-          assertNoError(err);
-          should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(4);
-          callback();
-        })]
-    }, done);
-  });
-  it('gets 4 events without duplicates', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
-    const ledgerNode = nodes.alpha;
-    const eventTemplate = mockData.events.alpha;
-    async.auto({
-      event1: callback => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode}, callback),
-      cp1: ['event1', (results, callback) => helpers.copyAndMerge({
-        consensusApi,
-        from: nodes.alpha,
-        to: nodes.beta
-      }, callback)],
-      cp2: ['cp1', (results, callback) => helpers.copyAndMerge({
-        consensusApi,
-        from: nodes.beta,
-        to: nodes.alpha
-      }, callback)],
-      test: ['cp2', (results, callback) => getAncestors({
-        ledgerNode,
-        eventHash: [results.cp1.meta.eventHash, results.cp2.meta.eventHash]
-      }, (err, result) => {
-        assertNoError(err);
-        should.exist(result);
-        result.should.be.an('array');
-        result.should.have.length(4);
-        result.forEach(e => {
-          e.event.should.be.an('array');
-          e.event.should.have.length(1);
-        });
-        callback();
-      })]
+      history: ['event1', (results, callback) => getRecentHistory(
+        {ledgerNode}, callback)],
+      consensus: ['history', (results, callback) => {
+        findConsensus(
+          {electors, ledgerNode, history: results.history}, (err, result) => {
+            assertNoError(err);
+            callback();
+          });
+      }]
     }, done);
   });
 });
