@@ -305,7 +305,7 @@ describe.only('Election API _findMergeEventProof', () => {
               electors
             });
             console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            console.log('PROOF', util.inspect(proof));
+            console.log('PROOF', util.inspect(proof, {depth: 3}));
             callback();
           }]
         }, callback);
@@ -473,7 +473,7 @@ describe.only('Election API _findMergeEventProof', () => {
               electors
             });
             console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            console.log('PROOF', util.inspect(proof));
+            console.log('PROOF', util.inspect(proof, {depth: 3}));
             callback();
           }]
         }, callback);
@@ -613,7 +613,7 @@ describe.only('Election API _findMergeEventProof', () => {
               electors
             });
             console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            console.log('PROOF', util.inspect(proof));
+            console.log('PROOF', util.inspect(proof, {depth: 3}));
             callback();
           }]
         }, callback);
