@@ -110,7 +110,7 @@ describe('Election API findConsensus', () => {
           }), callback)]
     }, done);
   });
-  it.skip('Test 1', done => {
+  it.only('Test 1', done => {
     // the genesisMerge already has consensus
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
@@ -119,18 +119,16 @@ describe('Election API findConsensus', () => {
     async.auto({
       history: callback => getRecentHistory({ledgerNode}, callback),
       consensus: ['history', (results, callback) => {
-        console.log('tTTTTTTt', results.history);
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
-            console.log('TTTTTTT', result);
+            should.not.exist(result);
             callback();
           });
       }]
     }, done);
   });
   it.only('Test 2', done => {
-    // the genesisMerge already has consensus
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
@@ -145,6 +143,7 @@ describe('Election API findConsensus', () => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
+            should.not.exist(result);
             callback();
           });
       }]
