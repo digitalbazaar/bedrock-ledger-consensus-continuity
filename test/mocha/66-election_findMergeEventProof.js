@@ -286,7 +286,6 @@ describe.only('Election API _findMergeEventProof', () => {
         // all peers are electors
         const electors = _.values(peers);
         const ledgerNode = nodes.alpha;
-        const {cp5, cp6} = results;
         const copyMergeHashes = {};
         const copyMergeHashesIndex = {};
         Object.keys(results).forEach(key => {
@@ -327,7 +326,7 @@ describe.only('Election API _findMergeEventProof', () => {
       }]
     }, done);
   });
-  it('Test 2', done => {
+  it.only('Test 2', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -470,6 +469,14 @@ describe.only('Election API _findMergeEventProof', () => {
         const electors = _.values(peers);
         const ledgerNode = nodes.alpha;
         console.log('ELECTORS', electors);
+        const copyMergeHashes = {};
+        const copyMergeHashesIndex = {};
+        Object.keys(results).forEach(key => {
+          if(key.startsWith('cp')) {
+            copyMergeHashes[key] = results[key].meta.eventHash;
+            copyMergeHashesIndex[results[key].meta.eventHash] = key;
+          }
+        });
         async.auto({
           history: callback =>
             getRecentHistory({ledgerNode}, callback),
@@ -488,7 +495,7 @@ describe.only('Election API _findMergeEventProof', () => {
               electors
             });
             console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            console.log('PROOF', util.inspect(proof, {depth: 3}));
+            proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
             callback();
           }]
         }, callback);
@@ -610,6 +617,14 @@ describe.only('Election API _findMergeEventProof', () => {
         const electors = _.values(peers);
         const ledgerNode = nodes.alpha;
         console.log('ELECTORS', electors);
+        const copyMergeHashes = {};
+        const copyMergeHashesIndex = {};
+        Object.keys(results).forEach(key => {
+          if(key.startsWith('cp')) {
+            copyMergeHashes[key] = results[key].meta.eventHash;
+            copyMergeHashesIndex[results[key].meta.eventHash] = key;
+          }
+        });
         async.auto({
           history: callback =>
             getRecentHistory({ledgerNode}, callback),
@@ -628,7 +643,7 @@ describe.only('Election API _findMergeEventProof', () => {
               electors
             });
             console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            console.log('PROOF', util.inspect(proof, {depth: 3}));
+            proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
             callback();
           }]
         }, callback);
