@@ -313,41 +313,14 @@ describe.only('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            console.log('PPPPPPP', util.inspect(proof.yCandidates));
             console.log('ALPHA COLLECTION: ',
               ledgerNode.storage.events.collection.s.name);
-            // console.log('PROOF', util.inspect(proof, {depth: 3}));
+            proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(2);
-            // a is reporting cp5 and cp7
-            // FIXME: this is incorrect, but passes
-            // allXs.should.have.same.members([
-            //   copyMergeHashes.cp5,
-            //   copyMergeHashes.cp7
-            // ]);
             const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(2);
-            console.log('CCCCCCCC', proof.yCandidates);
             const yCandidates = proof.yCandidates.map(c => c.eventHash);
-            console.log('COPYHASHES', JSON.stringify(copyMergeHashes, null, 2));
-            console.log('XXXXXXXXXXX', allXs);
-            console.log('YYYYYYYYY', allYs);
-            console.log('YCANDIDATE', yCandidates);
-            console.log('REPORTED Xs');
-            for(const x in copyMergeHashes) {
-              if(allXs.includes(copyMergeHashes[x])) {
-                console.log(x);
-              }
-            }
-            console.log('REPORTED Ys');
-            for(const y in copyMergeHashes) {
-              if(allYs.includes(copyMergeHashes[y])) {
-                console.log(y);
-              }
-            }
-            console.log(
-              'REPORTED yCandidates',
-              yCandidates.map(c => copyMergeHashesIndex[c]));
             callback();
           }]
         }, callback);
@@ -673,4 +646,29 @@ function _mergeOn({nodes}, callback) {
       events[i] = result;
       callback(err);
     }), err => callback(err, events));
+}
+
+function proofReport({proof, copyMergeHashes, copyMergeHashesIndex}) {
+  const allXs = proof.consensus.map(p => p.x.eventHash);
+  const allYs = proof.consensus.map(p => p.y.eventHash);
+  const yCandidates = proof.yCandidates.map(c => c.eventHash);
+  console.log('COPYHASHES', JSON.stringify(copyMergeHashes, null, 2));
+  console.log('XXXXXXXXX', allXs);
+  console.log('YYYYYYYYY', allYs);
+  console.log('YCANDIDATE', yCandidates);
+  console.log('REPORTED Xs');
+  for(const x in copyMergeHashes) {
+    if(allXs.includes(copyMergeHashes[x])) {
+      console.log(x);
+    }
+  }
+  console.log('REPORTED Ys');
+  for(const y in copyMergeHashes) {
+    if(allYs.includes(copyMergeHashes[y])) {
+      console.log(y);
+    }
+  }
+  console.log(
+    'REPORTED yCandidates',
+    yCandidates.map(c => copyMergeHashesIndex[c]));
 }
