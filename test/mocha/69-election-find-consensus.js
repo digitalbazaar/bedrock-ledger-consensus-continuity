@@ -6,6 +6,7 @@
 const _ = require('lodash');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
+const buildLedger1 = require('./helpers-build-ledger-1');
 const async = require('async');
 const uuid = require('uuid/v4');
 const util = require('util');
@@ -110,7 +111,7 @@ describe('Election API findConsensus', () => {
           }), callback)]
     }, done);
   });
-  it.only('Test 1', done => {
+  it('Test 1', done => {
     // the genesisMerge already has consensus
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
@@ -128,7 +129,7 @@ describe('Election API findConsensus', () => {
       }]
     }, done);
   });
-  it.only('Test 2', done => {
+  it('Test 2', done => {
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
@@ -144,6 +145,30 @@ describe('Election API findConsensus', () => {
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
             should.not.exist(result);
+            callback();
+          });
+      }]
+    }, done);
+  });
+  it('Test 3 - gets some events', done => {
+    const findConsensus = consensusApi._worker._election.findConsensus;
+    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const ledgerNode = nodes.alpha;
+    const electors = _.values(peers);
+    async.auto({
+      event1: callback => buildLedger1({consensusApi, nodes}, callback),
+      history: ['event1', (results, callback) => getRecentHistory(
+        {ledgerNode}, callback)],
+      consensus: ['history', (results, callback) => {
+        findConsensus(
+          {electors, ledgerNode, history: results.history}, (err, result) => {
+            assertNoError(err);
+            should.exist(result);
+            should.exist(result.event);
+            result.event.should.be.an('array');
+            console.log('888888888', result.event.length);
+            console.log('777777777', result);
+            // should.not.exist(result);
             callback();
           });
       }]
