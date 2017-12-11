@@ -326,7 +326,7 @@ describe.only('Election API _findMergeEventProof', () => {
       }]
     }, done);
   });
-  it.only('Test 2', done => {
+  it('Test 2', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
