@@ -14,7 +14,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe('Election API _findMergeEventProof', () => {
+describe.only('Election API _findMergeEventProof', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -202,7 +202,7 @@ describe('Election API _findMergeEventProof', () => {
       }]
     }, done);
   }); // end test 2
-  it.only('ledger history gamma', done => {
+  it('ledger history gamma', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -211,12 +211,11 @@ describe('Election API _findMergeEventProof', () => {
     async.auto({
       build: callback => helpers.buildHistory(
         {consensusApi, historyId: 'gamma', mockData, nodes}, callback),
-      testAlpha: ['build', (results, callback) => {
+      testAll: ['build', (results, callback) => {
         const build = results.build;
         // all peers are electors
         const electors = _.values(peers);
-        const ledgerNode = nodes.beta;
-        async.auto({
+        async.each(nodes, (ledgerNode, callback) => async.auto({
           history: callback =>
             getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
@@ -233,11 +232,10 @@ describe('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            // console.log('8888888 proof', proof);
-            proofReport({
-              proof,
-              copyMergeHashes: build.copyMergeHashes,
-              copyMergeHashesIndex: build.copyMergeHashesIndex});
+            // proofReport({
+            //   proof,
+            //   copyMergeHashes: build.copyMergeHashes,
+            //   copyMergeHashesIndex: build.copyMergeHashesIndex});
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(2);
             allXs.should.have.same.members([
@@ -250,7 +248,7 @@ describe('Election API _findMergeEventProof', () => {
             ]);
             callback();
           }]
-        }, callback);
+        }, callback), callback);
       }]
     }, done);
   });
