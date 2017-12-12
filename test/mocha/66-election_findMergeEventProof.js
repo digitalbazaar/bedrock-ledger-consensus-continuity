@@ -312,21 +312,26 @@ describe.only('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            console.log('ALPHA COLLECTION: ',
-              ledgerNode.storage.events.collection.s.name);
-            proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
+            // console.log('ALPHA COLLECTION: ',
+            //   ledgerNode.storage.events.collection.s.name);
+            // proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(2);
+            allXs.should.have.same.members([
+              copyMergeHashes.cp5, copyMergeHashes.cp6
+            ]);
             const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(2);
-            const yCandidates = proof.yCandidates.map(c => c.eventHash);
+            allYs.should.have.same.members([
+              copyMergeHashes.cp13, copyMergeHashes.cp14
+            ]);
             callback();
           }]
         }, callback);
       }]
     }, done);
   });
-  it('Test 2', done => {
+  it.only('Test 2', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -494,15 +499,21 @@ describe.only('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
+            // console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
+            // proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
+            const allXs = proof.consensus.map(p => p.x.eventHash);
+            allXs.should.have.length(1);
+            allXs.should.have.same.members([copyMergeHashes.cp6]);
+            const allYs = proof.consensus.map(p => p.y.eventHash);
+            allYs.should.have.length(1);
+            allYs.should.have.same.members([copyMergeHashes.cp14]);
             callback();
           }]
         }, callback);
       }]
     }, done);
   }); // end test 2
-  it('Test 3', done => {
+  it.only('Test 3', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -642,8 +653,18 @@ describe.only('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
+            // console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
+            // proofReport({proof, copyMergeHashes, copyMergeHashesIndex});
+            const allXs = proof.consensus.map(p => p.x.eventHash);
+            allXs.should.have.length(2);
+            allXs.should.have.same.members([
+              copyMergeHashes.cp5, copyMergeHashes.cp6
+            ]);
+            const allYs = proof.consensus.map(p => p.y.eventHash);
+            allYs.should.have.length(2);
+            allYs.should.have.same.members([
+              copyMergeHashes.cp13, copyMergeHashes.cp14
+            ]);
             callback();
           }]
         }, callback);
