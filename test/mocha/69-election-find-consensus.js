@@ -117,9 +117,9 @@ describe('Election API findConsensus', () => {
     const ledgerNode = nodes.alpha;
     const electors = [peers.alpha];
     async.auto({
-      build: callback => helpers.buildHistory(
-        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
-      consensus: ['build', (results, callback) => {
+      history: ['event1', (results, callback) => getRecentHistory(
+        {ledgerNode}, callback)],
+      consensus: ['history', (results, callback) => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
@@ -156,8 +156,9 @@ describe('Election API findConsensus', () => {
     const ledgerNode = nodes.alpha;
     const electors = _.values(peers);
     async.auto({
-      event1: callback => buildLedger1({consensusApi, nodes}, callback),
-      history: ['event1', (results, callback) => getRecentHistory(
+      build: callback => helpers.buildHistory(
+        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
+      history: ['build', (results, callback) => getRecentHistory(
         {ledgerNode}, callback)],
       consensus: ['history', (results, callback) => {
         findConsensus(
@@ -166,8 +167,9 @@ describe('Election API findConsensus', () => {
             should.exist(result);
             should.exist(result.event);
             result.event.should.be.an('array');
-            console.log('888888888', result.event.length);
-            console.log('777777777', result);
+            result.event.should.have.length(16);
+            // console.log('888888888', result.event.length);
+            // console.log('777777777', result);
             // should.not.exist(result);
             callback();
           });
