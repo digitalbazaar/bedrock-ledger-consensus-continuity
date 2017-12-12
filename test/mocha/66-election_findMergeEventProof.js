@@ -252,6 +252,58 @@ describe.only('Election API _findMergeEventProof', () => {
       }]
     }, done);
   });
+  // add regular event on alpha before running findMergeEventProof on alpha
+  it.only('add regular local event before getting proof', done => {
+    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const _getElectorBranches =
+      consensusApi._worker._election._getElectorBranches;
+    const _findMergeEventProof =
+      consensusApi._worker._election._findMergeEventProof;
+    const ledgerNode = nodes.alpha;
+    const eventTemplate = mockData.events.alpha;
+    async.auto({
+      build: callback => helpers.buildHistory(
+        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
+      event: ['build', (results, callback) => helpers.addEvent(
+        {ledgerNode, eventTemplate}, callback)],
+      testAll: ['event', (results, callback) => {
+        // NOTE: for ledger history alpha, all nodes should have the same view
+        const build = results.build;
+        // all peers are electors
+        const electors = _.values(peers);
+        async.auto({
+          history: callback => getRecentHistory({ledgerNode}, callback),
+          proof: ['history', (results, callback) => {
+            const branches = _getElectorBranches({
+              history: results.history,
+              electors
+            });
+            const proof = _findMergeEventProof({
+              ledgerNode,
+              history: results.history,
+              tails: branches,
+              electors
+            });
+            // proofReport({
+            //   proof,
+            //   copyMergeHashes: build.copyMergeHashes,
+            //   copyMergeHashesIndex: build.copyMergeHashesIndex});
+            const allXs = proof.consensus.map(p => p.x.eventHash);
+            allXs.should.have.length(2);
+            allXs.should.have.same.members([
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6
+            ]);
+            const allYs = proof.consensus.map(p => p.y.eventHash);
+            allYs.should.have.length(2);
+            allYs.should.have.same.members([
+              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14
+            ]);
+            callback();
+          }]
+        }, callback);
+      }]
+    }, done);
+  });
 });
 
 function _mergeOn({nodes}, callback) {
