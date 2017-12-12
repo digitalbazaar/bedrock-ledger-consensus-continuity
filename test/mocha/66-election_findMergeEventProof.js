@@ -109,13 +109,7 @@ describe('Election API _findMergeEventProof', () => {
           }), callback)]
     }, done);
   });
-  it('Test 1', done => {
-    console.log('PEERS', peers);
-    console.log('COLLECTIONS');
-    Object.keys(nodes).forEach(nodeLabel => {
-      console.log(
-        `${nodeLabel}: ${nodes[nodeLabel].storage.events.collection.s.name}`);
-    });
+  it('ledger history alpha', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -124,31 +118,24 @@ describe('Election API _findMergeEventProof', () => {
     async.auto({
       build: callback => helpers.buildHistory(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
-      testAlpha: ['build', (results, callback) => {
+      testAll: ['build', (results, callback) => {
+        // NOTE: for ledger history alpha, all nodes should have the same view
         const build = results.build;
         // all peers are electors
         const electors = _.values(peers);
-        const ledgerNode = nodes.alpha;
-        console.log('ELECTORS', electors);
-        async.auto({
-          history: callback =>
-            getRecentHistory({ledgerNode}, callback),
-          branches: ['history', (results, callback) => {
+        async.each(nodes, (ledgerNode, callback) => async.auto({
+          history: callback => getRecentHistory({ledgerNode}, callback),
+          proof: ['history', (results, callback) => {
             const branches = _getElectorBranches({
               history: results.history,
               electors
             });
-            callback(null, branches);
-          }],
-          proof: ['branches', (results, callback) => {
             const proof = _findMergeEventProof({
               ledgerNode,
               history: results.history,
-              tails: results.branches,
+              tails: branches,
               electors
             });
-            // console.log('ALPHA COLLECTION: ',
-            //   ledgerNode.storage.events.collection.s.name);
             // proofReport({
             //   proof,
             //   copyMergeHashes: build.copyMergeHashes,
@@ -165,11 +152,11 @@ describe('Election API _findMergeEventProof', () => {
             ]);
             callback();
           }]
-        }, callback);
+        }, callback), callback);
       }]
     }, done);
   });
-  it('Test 2', done => {
+  it('ledger history beta', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -182,9 +169,7 @@ describe('Election API _findMergeEventProof', () => {
         const build = results.build;
         // all peers are electors
         const electors = _.values(peers);
-        const ledgerNode = nodes.alpha;
-        console.log('ELECTORS', electors);
-        async.auto({
+        async.each(nodes, (ledgerNode, callback) => async.auto({
           history: callback =>
             getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
@@ -205,7 +190,6 @@ describe('Election API _findMergeEventProof', () => {
             //   proof,
             //   copyMergeHashes: build.copyMergeHashes,
             //   copyMergeHashesIndex: build.copyMergeHashesIndex});
-            // console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(1);
             allXs.should.have.same.members([build.copyMergeHashes.cp6]);
@@ -214,11 +198,11 @@ describe('Election API _findMergeEventProof', () => {
             allYs.should.have.same.members([build.copyMergeHashes.cp14]);
             callback();
           }]
-        }, callback);
+        }, callback), callback);
       }]
     }, done);
   }); // end test 2
-  it('Test 3', done => {
+  it.only('ledger history gamma', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
@@ -231,8 +215,7 @@ describe('Election API _findMergeEventProof', () => {
         const build = results.build;
         // all peers are electors
         const electors = _.values(peers);
-        const ledgerNode = nodes.alpha;
-        console.log('ELECTORS', electors);
+        const ledgerNode = nodes.beta;
         async.auto({
           history: callback =>
             getRecentHistory({ledgerNode}, callback),
@@ -250,11 +233,11 @@ describe('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            // console.log('ALPHA COLLECTION: ', ledgerNode.storage.events.collection.s.name);
-            // proofReport({
-            //   proof,
-            //   copyMergeHashes: build.copyMergeHashes,
-            //   copyMergeHashesIndex: build.copyMergeHashesIndex});
+            // console.log('8888888 proof', proof);
+            proofReport({
+              proof,
+              copyMergeHashes: build.copyMergeHashes,
+              copyMergeHashesIndex: build.copyMergeHashesIndex});
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(2);
             allXs.should.have.same.members([

@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe.only('Election API findConsensus', () => {
+describe('Election API findConsensus', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
