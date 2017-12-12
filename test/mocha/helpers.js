@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-/* jshint node: true */
 'use strict';
 
 const async = require('async');
@@ -15,6 +14,12 @@ const uuid = require('uuid/v4');
 const util = require('util');
 
 jsigs.use('jsonld', jsonld);
+
+const ledgerHistory = {
+  alpha: require('./history-alpha'),
+  beta: require('./history-beta'),
+  gamma: require('./history-gamma'),
+};
 
 const api = {};
 module.exports = api;
@@ -134,6 +139,27 @@ api.addRemoteEvents = ({
     }
     callback(null, results);
   });
+};
+
+api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
+  const eventTemplate = mockData.events.alpha;
+  async.auto(
+    ledgerHistory[historyId](api, consensusApi, eventTemplate, nodes),
+    (err, results) => {
+      if(err) {
+        return callback(err);
+      }
+      const copyMergeHashes = {};
+      const copyMergeHashesIndex = {};
+      Object.keys(results).forEach(key => {
+        if(key.startsWith('cp')) {
+          copyMergeHashes[key] = results[key].meta.eventHash;
+          copyMergeHashesIndex[results[key].meta.eventHash] = key;
+        }
+      });
+      const regularEvent = results.regularEvent;
+      callback(null, {copyMergeHashes, copyMergeHashesIndex, regularEvent});
+    });
 };
 
 // from may be a single node or an array of nodes

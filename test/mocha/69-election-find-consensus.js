@@ -6,7 +6,6 @@
 const _ = require('lodash');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
-const buildLedger1 = require('./helpers-build-ledger-1');
 const async = require('async');
 const uuid = require('uuid/v4');
 const util = require('util');
@@ -118,8 +117,9 @@ describe('Election API findConsensus', () => {
     const ledgerNode = nodes.alpha;
     const electors = [peers.alpha];
     async.auto({
-      history: callback => getRecentHistory({ledgerNode}, callback),
-      consensus: ['history', (results, callback) => {
+      build: callback => helpers.buildHistory(
+        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
+      consensus: ['build', (results, callback) => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
