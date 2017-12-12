@@ -110,7 +110,7 @@ describe.only('Election API findConsensus', () => {
           }), callback)]
     }, done);
   });
-  it('Test 1', done => {
+  it('single node consensus', done => {
     // the genesisMerge already has consensus
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
@@ -126,18 +126,24 @@ describe.only('Election API findConsensus', () => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
-            console.log('777777777', result);
-            // should.not.exist(result);
+            result.consensusProof.should.have.length(0);
+            result.consensusProofHash.should.have.length(0);
+            result.event.should.have.length(2);
+            result.eventHash.should.have.length(2);
+            result.eventHash.should.have.same.members([
+              Object.keys(results.event1.regular)[0],
+              results.event1.merge.meta.eventHash
+            ]);
             callback();
           });
       }]
     }, done);
   });
-  it.skip('Test 2', done => {
+  it.only('does not reach consensus with two electors', done => {
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
-    const electors = [peers.alpha];
+    const electors = [peers.alpha, peers.beta];
     const eventTemplate = mockData.events.alpha;
     async.auto({
       event1: callback => helpers.addEventAndMerge(
