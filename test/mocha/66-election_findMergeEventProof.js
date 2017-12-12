@@ -254,7 +254,7 @@ describe.only('Election API _findMergeEventProof', () => {
             const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(2);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14
+              build.copyMergeHashes.cp9, build.copyMergeHashes.cp10
             ]);
             callback();
           }]
