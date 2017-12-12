@@ -167,11 +167,49 @@ describe.only('Election API findConsensus', () => {
       consensus: ['history', (results, callback) => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
+            const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
+              results.build;
             assertNoError(err);
             should.exist(result);
             should.exist(result.event);
             result.event.should.be.an('array');
             result.event.should.have.length(16);
+            should.exist(result.eventHash);
+            result.eventHash.should.be.an('array');
+            result.eventHash.should.have.length(16);
+            result.eventHash.should.have.same.members([
+              ...regularEvent.regularHash,
+              ...regularEvent.mergeHash,
+              copyMergeHashes.cpa,
+              copyMergeHashes.cpb,
+              copyMergeHashes.cp1,
+              copyMergeHashes.cp2,
+              copyMergeHashes.cp3,
+              copyMergeHashes.cp4,
+              copyMergeHashes.cp5,
+              copyMergeHashes.cp6,
+            ]);
+            should.exist(result.consensusProof);
+            result.consensusProof.should.be.an('array');
+            result.consensusProof.should.have.length(8);
+            should.exist(result.consensusProofHash);
+            result.consensusProofHash.should.be.an('array');
+            result.consensusProofHash.should.have.length(8);
+            result.consensusProofHash.should.have.same.members([
+              copyMergeHashes.cp7,
+              copyMergeHashes.cp8,
+              copyMergeHashes.cp9,
+              copyMergeHashes.cp10,
+              copyMergeHashes.cp11,
+              copyMergeHashes.cp12,
+              copyMergeHashes.cp13,
+              copyMergeHashes.cp14
+            ]);
+            proofReport({
+              copyMergeHashes,
+              copyMergeHashesIndex,
+              consensusProofHash: result.consensusProofHash,
+            });
             // console.log('888888888', result.event.length);
             // console.log('777777777', result);
             // should.not.exist(result);
@@ -181,3 +219,10 @@ describe.only('Election API findConsensus', () => {
     }, done);
   });
 });
+
+function proofReport(
+  {copyMergeHashes, copyMergeHashesIndex, consensusProofHash}) {
+  console.log(
+    'REPORTED PROOF',
+    consensusProofHash.map(c => copyMergeHashesIndex[c]));
+}

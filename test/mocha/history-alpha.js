@@ -5,9 +5,31 @@ const async = require('async');
 
 module.exports = (api, consensusApi, eventTemplate, nodes) => ({
   // add a regular event and merge on every node
-  regularEvent: callback => async.each(nodes, (n, callback) =>
-    api.addEventAndMerge(
-      {consensusApi, eventTemplate, ledgerNode: n}, callback), callback),
+  regularEvent: callback => {
+    const rVal = {
+      mergeHash: [],
+      regularHash: []
+    };
+    async.eachOf(nodes, (n, i, callback) =>
+      api.addEventAndMerge(
+        {consensusApi, eventTemplate, ledgerNode: n}, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          rVal[i] = result;
+          callback();
+        }),
+    err => {
+      if(err) {
+        return callback(err);
+      }
+      Object.keys(nodes).forEach(k => {
+        rVal.regularHash.push(Object.keys(rVal[k].regular)[0]);
+        rVal.mergeHash.push(rVal[k].merge.meta.eventHash);
+      });
+      callback(null, rVal);
+    });
+  },
   cpa: ['regularEvent', (results, callback) => api.copyAndMerge({
     consensusApi,
     from: nodes.beta,
