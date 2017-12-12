@@ -1,13 +1,11 @@
 /*!
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
-const async = require('async');
 
 module.exports = (api, consensusApi, eventTemplate, nodes) => ({
   // add a regular event and merge on every node
-  regularEvent: callback => async.each(nodes, (n, callback) =>
-    api.addEventAndMerge(
-      {consensusApi, eventTemplate, ledgerNode: n}, callback), callback),
+  regularEvent: callback => api.addEventMultiNode(
+    {consensusApi, eventTemplate, nodes}, callback),
   cpa: ['regularEvent', (results, callback) => api.copyAndMerge({
     consensusApi,
     from: nodes.beta,

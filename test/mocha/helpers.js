@@ -68,6 +68,33 @@ api.addEventAndMerge = (
     }]
   }, err => callback(err, events));
 };
+
+api.addEventMultiNode = ({consensusApi, eventTemplate, nodes}, callback) => {
+  const rVal = {
+    mergeHash: [],
+    regularHash: []
+  };
+  async.eachOf(nodes, (n, i, callback) =>
+    api.addEventAndMerge(
+      {consensusApi, eventTemplate, ledgerNode: n}, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        rVal[i] = result;
+        callback();
+      }),
+  err => {
+    if(err) {
+      return callback(err);
+    }
+    Object.keys(nodes).forEach(k => {
+      rVal.regularHash.push(Object.keys(rVal[k].regular)[0]);
+      rVal.mergeHash.push(rVal[k].merge.meta.eventHash);
+    });
+    callback(null, rVal);
+  });
+};
+
 // add a merge event and regular event as if it came in through gossip
 // NOTE: the events are rooted with the genesis merge event
 api.addRemoteEvents = ({
