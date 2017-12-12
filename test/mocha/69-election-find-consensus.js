@@ -139,7 +139,7 @@ describe.only('Election API findConsensus', () => {
       }]
     }, done);
   });
-  it.only('does not reach consensus with two electors', done => {
+  it('properly does not reach consensus with two electors', done => {
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
