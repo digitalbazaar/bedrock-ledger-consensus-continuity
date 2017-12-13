@@ -9,7 +9,7 @@
   "dependencies": {
     "async": "^2.4.1",
     "bedrock": "digitalbazaar/bedrock#jsonld-1.1",
-    "bedrock-did-client": "^1.1.0",
+    "bedrock-did-client": "digitalbazaar/bedrock-did-client#jsonld-1.1",
     "bedrock-docs": "^2.1.0",
     "bedrock-express": "^2.0.6",
     "bedrock-identity": "^4.6.0",
@@ -27,7 +27,7 @@
     "bedrock-test": "^1.2.0",
     "bedrock-validation": "digitalbazaar/bedrock-validation#2.x",
     "bedrock-views": "^5.1.0",
-    "did-io": "digitalbazaar/did-io#master",
+    "did-io": "digitalbazaar/did-io#jsonld-1.1",
     "grunt": "^1.0.1",
     "jsonld-signatures": "digitalbazaar/jsonld-signatures#multiSignature",
     "lodash": "^4.17.4",
