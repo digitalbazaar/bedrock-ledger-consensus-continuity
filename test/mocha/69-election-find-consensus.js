@@ -160,7 +160,8 @@ describe.only('Election API findConsensus', () => {
       }]
     }, done);
   });
-  it('ledger history alpha', done => {
+  it('ledger history alpha', function(done) {
+    this.timeout(120000);
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const electors = _.values(peers);
@@ -224,7 +225,8 @@ describe.only('Election API findConsensus', () => {
       }]
     }, done);
   });
-  it('ledger history beta', done => {
+  it('ledger history beta', function(done) {
+    this.timeout(120000);
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const electors = _.values(peers);
@@ -275,7 +277,8 @@ describe.only('Election API findConsensus', () => {
       }]
     }, done);
   });
-  it('ledger history gamma', done => {
+  it('ledger history gamma', function(done) {
+    this.timeout(120000);
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const electors = _.values(peers);
