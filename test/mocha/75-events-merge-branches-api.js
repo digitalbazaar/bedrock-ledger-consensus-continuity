@@ -168,10 +168,7 @@ describe.only('events.mergeBranches API', () => {
       mergeBranches1: ['history1', (results, callback) =>
         mergeBranches({history: results.history1, ledgerNode}, callback)],
       history2: ['mergeBranches1', (results, callback) =>
-        getRecentHistory({ledgerNode}, (err, result) => {
-          console.log('TTTTTTT', result);
-          callback(err, result);
-        })],
+        getRecentHistory({ledgerNode}, callback)],
       mergeBranches2: ['history2', (results, callback) => mergeBranches(
         {history: results.history2, ledgerNode}, (err, result) => {
           assertNoError();
