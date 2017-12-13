@@ -317,6 +317,70 @@ describe('Election API findConsensus', () => {
       }]
     }, done);
   });
+  it.only('add regular event with no merge before findConsensus', done => {
+    const findConsensus = consensusApi._worker._election.findConsensus;
+    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const ledgerNode = nodes.alpha;
+    const electors = _.values(peers);
+    const eventTemplate = mockData.events.alpha;
+    async.auto({
+      build: callback => helpers.buildHistory(
+        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
+      history: ['build', (results, callback) => getRecentHistory(
+        {ledgerNode}, callback)],
+      event: ['history', (results, callback) => helpers.addEvent(
+        {ledgerNode, eventTemplate}, callback)],
+      consensus: ['event', (results, callback) => {
+        findConsensus(
+          {electors, ledgerNode, history: results.history}, (err, result) => {
+            const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
+              results.build;
+            assertNoError(err);
+            should.exist(result);
+            should.exist(result.event);
+            result.event.should.be.an('array');
+            result.event.should.have.length(16);
+            should.exist(result.eventHash);
+            result.eventHash.should.be.an('array');
+            result.eventHash.should.have.length(16);
+            result.eventHash.should.have.same.members([
+              ...regularEvent.regularHash,
+              ...regularEvent.mergeHash,
+              copyMergeHashes.cpa,
+              copyMergeHashes.cpb,
+              copyMergeHashes.cp1,
+              copyMergeHashes.cp2,
+              copyMergeHashes.cp3,
+              copyMergeHashes.cp4,
+              copyMergeHashes.cp5,
+              copyMergeHashes.cp6,
+            ]);
+            should.exist(result.consensusProof);
+            result.consensusProof.should.be.an('array');
+            result.consensusProof.should.have.length(8);
+            should.exist(result.consensusProofHash);
+            result.consensusProofHash.should.be.an('array');
+            result.consensusProofHash.should.have.length(8);
+            result.consensusProofHash.should.have.same.members([
+              copyMergeHashes.cp7,
+              copyMergeHashes.cp8,
+              copyMergeHashes.cp9,
+              copyMergeHashes.cp10,
+              copyMergeHashes.cp11,
+              copyMergeHashes.cp12,
+              copyMergeHashes.cp13,
+              copyMergeHashes.cp14
+            ]);
+            proofReport({
+              copyMergeHashes,
+              copyMergeHashesIndex,
+              consensusProofHash: result.consensusProofHash,
+            });
+            callback();
+          });
+      }]
+    }, done);
+  });
 });
 
 function proofReport(
