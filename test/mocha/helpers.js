@@ -19,6 +19,7 @@ const ledgerHistory = {
   alpha: require('./history-alpha'),
   beta: require('./history-beta'),
   gamma: require('./history-gamma'),
+  delta: require('./history-delta'),
 };
 
 const api = {};
