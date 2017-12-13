@@ -12,10 +12,9 @@ const mock = {};
 module.exports = mock;
 
 const identities = mock.identities = {};
-let userName;
 
 // identity with permission to access its own agreements
-userName = 'regularUser';
+const userName = 'regularUser';
 identities[userName] = {};
 identities[userName].identity = helpers.createIdentity(userName);
 identities[userName].identity.sysResourceRole.push({
@@ -154,15 +153,17 @@ mock.groups = {
   }
 };
 
-mock.exampleIdentity = 'https://example.com/i/alpha';
+const fingerprint = helpers.getPublicKeyFingerprint(
+  mock.groups.authorized.publicKey);
+mock.exampleIdentity = `https://example.com/i/${fingerprint}`;
 mock.ldDocuments = {
-  "https://example.com/i/alpha": {
+  [mock.exampleIdentity]: {
     "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
-    "id": "https://example.com/i/alpha",
+    "id": mock.exampleIdentity,
     "publicKey": [{
       "id": mock.authorizedSignerUrl,
       "type": "CryptographicKey",
-      "owner": "https://example.com/i/alpha",
+      "owner": mock.exampleIdentity,
       "publicKeyPem": mock.groups.authorized.publicKey
     }]
   }
@@ -170,7 +171,7 @@ mock.ldDocuments = {
 mock.ldDocuments[mock.authorizedSignerUrl] = {
   "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
   "type": "CryptographicKey",
-  "owner": "https://example.com/i/alpha",
+  "owner": mock.exampleIdentity,
   "label": "Signing Key 2",
   "id": mock.authorizedSignerUrl,
   "publicKeyPem": mock.groups.authorized.publicKey

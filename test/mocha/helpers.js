@@ -8,6 +8,7 @@ const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const database = require('bedrock-mongodb');
+const forge = require('node-forge');
 const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
@@ -328,6 +329,28 @@ api.prepareDatabase = function(mockData, callback) {
       insertTestData(mockData, callback);
     }
   ], callback);
+};
+
+/**
+ * Get the SubjectPublicKeyInfo base64url-encoded fingerprint for the
+ * given public key PEM.
+ *
+ * @param publicKeyPem the public key PEM to get the fingerprint for.
+ *
+ * @return the public key's fingerprint.
+ */
+api.getPublicKeyFingerprint = publicKeyPem => {
+  const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+  const fingerprint = forge.pki.getPublicKeyFingerprint(
+    publicKey, {
+      md: forge.md.sha256.create(),
+      type: 'SubjectPublicKeyInfo'
+    });
+  // base64url encode
+  return forge.util.encode64(fingerprint.getBytes())
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 };
 
 api.snapshotEvents = ({ledgerNode}, callback) => {
