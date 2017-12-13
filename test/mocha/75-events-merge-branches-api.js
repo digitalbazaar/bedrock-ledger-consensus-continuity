@@ -13,7 +13,7 @@ const uuid = require('uuid/v4');
 
 let consensusApi;
 
-describe('events.mergeBranches API', () => {
+describe.only('events.mergeBranches API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -113,7 +113,7 @@ describe('events.mergeBranches API', () => {
     }, done);
   });
 
-  it.only('collects one local event', done => {
+  it('collects one local event', done => {
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     async.auto({
@@ -157,22 +157,27 @@ describe('events.mergeBranches API', () => {
       }]
     }, done);
   });
-  it('returns NotFoundError if no events since last merge', done => {
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+  it('returns null if no events since last merge', done => {
+    const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     async.auto({
-      addEvent: callback => ledgerNode.events.add(testEvent, callback),
-      mergeBranches1: ['addEvent', (results, callback) =>
-        mergeBranches({ledgerNode}, callback)],
-      mergeBranches2: ['mergeBranches1', (results, callback) => {
-        mergeBranches({ledgerNode}, (err, result) => {
+      addEvent: callback => helpers.addEvent(
+        {ledgerNode, eventTemplate}, callback),
+      history1: ['addEvent', (results, callback) =>
+        getRecentHistory({ledgerNode}, callback)],
+      mergeBranches1: ['history1', (results, callback) =>
+        mergeBranches({history: results.history1, ledgerNode}, callback)],
+      history2: ['mergeBranches1', (results, callback) =>
+        getRecentHistory({ledgerNode}, (err, result) => {
+          console.log('TTTTTTT', result);
+          callback(err, result);
+        })],
+      mergeBranches2: ['history2', (results, callback) => mergeBranches(
+        {history: results.history2, ledgerNode}, (err, result) => {
           should.exist(err);
-          should.not.exist(result);
-          err.name.should.equal('NotFoundError');
+          should.equal(result, null);
           callback();
-        });
-      }]
+        })]
     }, done);
   });
   it('collects five local events', done => {
@@ -181,8 +186,10 @@ describe('events.mergeBranches API', () => {
     async.auto({
       addEvent: callback => helpers.addEvent(
         {eventTemplate, count: 5, ledgerNode}, callback),
-      mergeBranches: ['addEvent', (results, callback) => {
-        mergeBranches({ledgerNode}, (err, result) => {
+      history: ['addEvent', (results, callback) =>
+        getRecentHistory({ledgerNode}, callback)],
+      mergeBranches: ['history', (results, callback) => {
+        mergeBranches({history: results.history, ledgerNode}, (err, result) => {
           assertNoError(err);
           should.exist(result.event);
           const event = result.event;

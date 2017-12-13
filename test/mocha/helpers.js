@@ -194,12 +194,15 @@ api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
 api.copyAndMerge = (
   {consensusApi, from, to, useSnapshot = false}, callback) => {
   const copyFrom = [].concat(from);
-  const mergeBranches = consensusApi._worker._events.mergeBranches;
+  const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+  const mergeBranches = consensusApi._worker._events.mergeBranchesNEW;
   async.auto({
     copy: callback => async.each(copyFrom, (f, callback) =>
       api.copyEvents({from: f, to, useSnapshot}, callback), callback),
-    merge: ['copy', (results, callback) =>
-      mergeBranches({ledgerNode: to}, callback)]
+    history: ['copy', (results, callback) =>
+      getRecentHistory({ledgerNode: to}, callback)],
+    merge: ['history', (results, callback) =>
+      mergeBranches({history: results.history, ledgerNode: to}, callback)]
   }, (err, results) => err ? callback(err) : callback(null, results.merge));
 };
 
