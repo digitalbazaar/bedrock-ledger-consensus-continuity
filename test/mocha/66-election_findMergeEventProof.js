@@ -14,7 +14,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe.only('Election API _findMergeEventProof', () => {
+describe('Election API _findMergeEventProof', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -253,7 +253,7 @@ describe.only('Election API _findMergeEventProof', () => {
     }, done);
   });
   // add regular event on alpha before running findMergeEventProof on alpha
-  it.only('add regular local event before getting proof', done => {
+  it('add regular local event before getting proof', done => {
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
       consensusApi._worker._election._getElectorBranches;
