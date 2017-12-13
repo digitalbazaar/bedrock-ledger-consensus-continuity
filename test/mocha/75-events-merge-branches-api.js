@@ -157,7 +157,7 @@ describe.only('events.mergeBranches API', () => {
       }]
     }, done);
   });
-  it('returns null if no events since last merge', done => {
+  it('returns `null` if no events since last merge', done => {
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     async.auto({
@@ -174,7 +174,7 @@ describe.only('events.mergeBranches API', () => {
         })],
       mergeBranches2: ['history2', (results, callback) => mergeBranches(
         {history: results.history2, ledgerNode}, (err, result) => {
-          should.exist(err);
+          assertNoError();
           should.equal(result, null);
           callback();
         })]
