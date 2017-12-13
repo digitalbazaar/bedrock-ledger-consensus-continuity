@@ -13,7 +13,7 @@ const uuid = require('uuid/v4');
 
 let consensusApi;
 
-describe.only('events.mergeBranches API', () => {
+describe('events.mergeBranches API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -39,7 +39,7 @@ describe.only('events.mergeBranches API', () => {
           }
           consensusApi = result.api;
           getRecentHistory = consensusApi._worker._events.getRecentHistory;
-          mergeBranches = consensusApi._worker._events.mergeBranchesNEW;
+          mergeBranches = consensusApi._worker._events.mergeBranches;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(

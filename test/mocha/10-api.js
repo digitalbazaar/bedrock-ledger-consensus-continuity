@@ -108,19 +108,16 @@ describe('Continuity2017', () => {
 
   describe('getRecentHistory API', () => {
     it('history includes one local event and one local merge event', done => {
-      const mergeBranches = consensusApi._worker._events.mergeBranches;
       const getRecentHistory = consensusApi._worker._events.getRecentHistory;
-      const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      const eventTemplate = mockData.events.alpha;
       async.auto({
-        addEvent: callback => ledgerNode.events.add(testEvent, callback),
-        mergeBranches: ['addEvent', (results, callback) =>
-          mergeBranches({ledgerNode}, callback)],
-        history: ['mergeBranches', (results, callback) => {
+        addEvent: callback => helpers.addEventAndMerge(
+          {consensusApi, eventTemplate, ledgerNode}, callback),
+        history: ['addEvent', (results, callback) => {
           getRecentHistory({ledgerNode}, (err, result) => {
             assertNoError(err);
-            const mergeEventHash = results.mergeBranches.meta.eventHash;
-            const regularEventHash = results.addEvent.meta.eventHash;
+            const mergeEventHash = results.addEvent.merge.meta.eventHash;
+            const regularEventHash = Object.keys(results.addEvent.regular)[0];
             // inspect eventMap
             // it should include keys for the regular event and merge event
             should.exist(result.eventMap);
@@ -168,20 +165,16 @@ describe('Continuity2017', () => {
       }, done);
     });
     it('history includes 4 local events and one local merge event', done => {
-      const mergeBranches = consensusApi._worker._events.mergeBranches;
-      const getRecentHistory =
-        consensusApi._worker._events.getRecentHistory;
+      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
       const eventTemplate = mockData.events.alpha;
       async.auto({
-        addEvent: callback => helpers.addEvent(
-          {ledgerNode, count: 4, eventTemplate}, callback),
-        mergeBranches: ['addEvent', (results, callback) =>
-          mergeBranches({ledgerNode}, callback)],
-        history: ['mergeBranches', (results, callback) => {
+        addEvent: callback => helpers.addEventAndMerge(
+          {consensusApi, count: 4, eventTemplate, ledgerNode}, callback),
+        history: ['addEvent', (results, callback) => {
           getRecentHistory({ledgerNode}, (err, result) => {
             assertNoError(err);
-            const mergeEventHash = results.mergeBranches.meta.eventHash;
-            const regularEventHash = Object.keys(results.addEvent);
+            const mergeEventHash = results.addEvent.merge.meta.eventHash;
+            const regularEventHash = Object.keys(results.addEvent.regular);
             const hashes = Object.keys(result.eventMap);
             hashes.should.have.length(5);
             hashes.should.have.same.members(
@@ -224,9 +217,11 @@ describe('Continuity2017', () => {
       async.auto({
         remoteEvent: callback => helpers.addRemoteEvents(
           {consensusApi, ledgerNode, mockData}, callback),
-        mergeBranches: ['remoteEvent', (results, callback) =>
-          mergeBranches({ledgerNode}, callback)],
-        history: ['mergeBranches', (results, callback) => {
+        history1: ['remoteEvent', (results, callback) =>
+          getRecentHistory({ledgerNode}, callback)],
+        mergeBranches: ['history1', (results, callback) =>
+          mergeBranches({history: results.history1, ledgerNode}, callback)],
+        history2: ['mergeBranches', (results, callback) => {
           getRecentHistory({ledgerNode}, (err, result) => {
             assertNoError(err);
             const mergeEventHash = results.mergeBranches.meta.eventHash;
@@ -278,9 +273,11 @@ describe('Continuity2017', () => {
         // 2 remote merge events from the same creator chained together
         remoteEvent: callback => helpers.addRemoteEvents(
           {consensusApi, count: 2, ledgerNode, mockData}, callback),
-        mergeBranches: ['remoteEvent', (results, callback) =>
-          mergeBranches({ledgerNode}, callback)],
-        history: ['mergeBranches', (results, callback) => {
+        history1: ['remoteEvent', (results, callback) =>
+          getRecentHistory({ledgerNode}, callback)],
+        mergeBranches: ['history1', (results, callback) =>
+          mergeBranches({history: results.history1, ledgerNode}, callback)],
+        history2: ['mergeBranches', (results, callback) => {
           getRecentHistory({ledgerNode}, (err, result) => {
             assertNoError(err);
             const mergeEventHash = results.mergeBranches.meta.eventHash;

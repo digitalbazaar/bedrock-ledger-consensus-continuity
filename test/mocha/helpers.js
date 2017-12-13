@@ -46,27 +46,29 @@ api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
 };
 
 api.addEventAndMerge = (
-  {consensusApi, eventTemplate, ledgerNode}, callback) => {
+  {consensusApi, count = 1, eventTemplate, ledgerNode}, callback) => {
   const events = {};
+  const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+  const mergeBranches = consensusApi._worker._events.mergeBranches;
   async.auto({
     addEvent: callback => api.addEvent(
-      {eventTemplate, ledgerNode}, (err, result) => {
+      {count, eventTemplate, ledgerNode}, (err, result) => {
         if(err) {
           return callback(err);
         }
         events.regular = result;
         callback();
       }),
-    merge: ['addEvent', (results, callback) => {
-      const mergeBranches = consensusApi._worker._events.mergeBranches;
-      mergeBranches({ledgerNode}, (err, result) => {
+    history: ['addEvent', (results, callback) =>
+      getRecentHistory({ledgerNode}, callback)],
+    merge: ['history', (results, callback) => mergeBranches(
+      {history: results.history, ledgerNode}, (err, result) => {
         if(err) {
           return callback(err);
         }
         events.merge = result;
         callback();
-      });
-    }]
+      })]
   }, err => callback(err, events));
 };
 
@@ -195,7 +197,7 @@ api.copyAndMerge = (
   {consensusApi, from, to, useSnapshot = false}, callback) => {
   const copyFrom = [].concat(from);
   const getRecentHistory = consensusApi._worker._events.getRecentHistory;
-  const mergeBranches = consensusApi._worker._events.mergeBranchesNEW;
+  const mergeBranches = consensusApi._worker._events.mergeBranches;
   async.auto({
     copy: callback => async.each(copyFrom, (f, callback) =>
       api.copyEvents({from: f, to, useSnapshot}, callback), callback),

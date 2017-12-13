@@ -259,18 +259,20 @@ describe('Election API', () => {
           {eventTemplate, ledgerNode}, callback),
         remoteEvents: callback => helpers.addRemoteEvents(
           {consensusApi, count: 1, ledgerNode, mockData}, callback),
-        mergeBranches: ['localEvent', 'remoteEvents', (results, callback) => {
-          mergeBranches({ledgerNode}, callback);
-        }],
-        history: ['mergeBranches', (results, callback) =>
+        history1: ['remoteEvents', 'localEvent', (results, callback) =>
           getRecentHistory({ledgerNode}, callback)],
-        test: ['history', (results, callback) => {
+        mergeBranches: ['history1', , (results, callback) => {
+          mergeBranches({history: results.history1, ledgerNode}, callback);
+        }],
+        history2: ['mergeBranches', (results, callback) =>
+          getRecentHistory({ledgerNode}, callback)],
+        test: ['history2', (results, callback) => {
           // const start = Date.now();
           // const branches = consensusApi._worker._election
           //   ._getElectorBranches({event: history, electors});
           const branches = consensusApi._worker._election._getElectorBranches(
             {
-              history: results.history,
+              history: results.history2,
               electors
             });
           branches.should.be.an('object');
@@ -301,15 +303,17 @@ describe('Election API', () => {
           callback)],
         remoteEvents: callback => helpers.addRemoteEvents(
           {consensusApi, count: 1, ledgerNode, mockData}, callback),
-        mergeBranches: ['localEvents', 'remoteEvents', (results, callback) => {
-          mergeBranches({ledgerNode}, callback);
-        }],
-        history: ['mergeBranches', (results, callback) =>
+        history1: ['localEvents', 'remoteEvents', (results, callback) =>
           getRecentHistory({ledgerNode}, callback)],
-        branches: ['history', (results, callback) => {
+        mergeBranches: ['history1', (results, callback) => {
+          mergeBranches({history: results.history1, ledgerNode}, callback);
+        }],
+        history2: ['mergeBranches', (results, callback) =>
+          getRecentHistory({ledgerNode}, callback)],
+        branches: ['history2', (results, callback) => {
           const branches = consensusApi._worker._election._getElectorBranches(
             {
-              event: results.history.eventMap[results.history.localBranchHead],
+              history: results.history2,
               electors
             });
           callback(null, branches);
@@ -317,10 +321,11 @@ describe('Election API', () => {
         proof: ['branches', (results, callback) => {
           const proof = consensusApi._worker._election._findMergeEventProof({
             ledgerNode,
-            history: results.history,
+            history: results.history2,
             tails: results.branches,
             electors
           });
+          // FIXME: add assertions
           console.log('PROOF', util.inspect(proof));
           callback();
         }]

@@ -19,8 +19,11 @@ describe('Consensus Agent - Get History API', () => {
 
   let consensusApi;
   let genesisMerge;
+  let getHistory;
+  let getRecentHistory;
   let ledgerNode;
   let ledgerNodeBeta;
+  let mergeBranches;
   let peerId;
   let eventHash;
   let testEventId;
@@ -38,6 +41,9 @@ describe('Consensus Agent - Get History API', () => {
             return callback(err);
           }
           consensusApi = result.api;
+          getHistory = consensusApi._worker._client.getHistory;
+          getRecentHistory = consensusApi._worker._events.getRecentHistory;
+          mergeBranches = consensusApi._worker._events.mergeBranches;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
@@ -92,7 +98,6 @@ describe('Consensus Agent - Get History API', () => {
     }, done);
   });
   it('should return an empty array', done => {
-    const getHistory = consensusApi._worker._client.getHistory;
     async.auto({
       history: callback => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
@@ -105,12 +110,12 @@ describe('Consensus Agent - Get History API', () => {
     }, done);
   });
   it('should return one local merge event', done => {
-    const getHistory = consensusApi._worker._client.getHistory;
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
     async.auto({
       // merge the local event added in `before`
-      mergeBranches: callback => mergeBranches({ledgerNode}, callback),
-      history: ['mergeBranches', (results, callback) => getHistory(
+      history1: callback => getRecentHistory({ledgerNode}, callback),
+      mergeBranches: ['history1', (results, callback) => mergeBranches(
+        {history: results.history1, ledgerNode}, callback)],
+      history2: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
@@ -130,14 +135,14 @@ describe('Consensus Agent - Get History API', () => {
        one remote merge event
   */
   it('returns a local merge and a remote merge event ', done => {
-    const getHistory = consensusApi._worker._client.getHistory;
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
     async.auto({
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode, mockData}, callback),
-      mergeBranches: ['remoteEvents', (results, callback) =>
-        mergeBranches({ledgerNode}, callback)],
-      history: ['mergeBranches', (results, callback) => getHistory(
+      history1: ['remoteEvents', (results, callback) =>
+        getRecentHistory({ledgerNode}, callback)],
+      mergeBranches: ['history1', (results, callback) =>
+        mergeBranches({history: results.history1, ledgerNode}, callback)],
+      history2: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
@@ -160,14 +165,15 @@ describe('Consensus Agent - Get History API', () => {
   */
   it('returns a local merge and two remote merge event ', done => {
     const getHistory = consensusApi._worker._client.getHistory;
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
     async.auto({
       remoteEvents: callback => async.times(2, (i, callback) =>
         helpers.addRemoteEvents(
           {consensusApi, ledgerNode, mockData}, callback), callback),
-      mergeBranches: ['remoteEvents', (results, callback) =>
-        mergeBranches({ledgerNode}, callback)],
-      history: ['mergeBranches', (results, callback) => getHistory(
+      history1: ['remoteEvents', (results, callback) =>
+        getRecentHistory({ledgerNode}, callback)],
+      mergeBranches: ['history1', (results, callback) =>
+        mergeBranches({history: results.history1, ledgerNode}, callback)],
+      history2: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
@@ -199,15 +205,13 @@ describe('Consensus Agent - Get History API', () => {
   //   one from ledgerNodeBeta
   //   one from fictitious node
   it('returns merge events from three different nodes', done => {
-    const getHistory = consensusApi._worker._client.getHistory;
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
-    // console.log('alphaeventscollection', ledgerNode.storage.events.collection.s.name);
-    // console.log('betaeventscollection', ledgerNodeBeta.storage.events.collection.s.name);
     async.auto({
       remoteEventsBeta: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: ledgerNodeBeta, mockData}, callback),
-      mergeBranchesBeta: ['remoteEventsBeta', (results, callback) =>
-        mergeBranches({ledgerNode: ledgerNodeBeta}, callback)],
+      history1: ['remoteEventsBeta', (results, callback) =>
+        getRecentHistory({ledgerNode: ledgerNodeBeta}, callback)],
+      mergeBranchesBeta: ['history1', (results, callback) => mergeBranches(
+        {history: results.history1, ledgerNode: ledgerNodeBeta}, callback)],
       fromBeta: ['mergeBranchesBeta', (results, callback) => {
         const treeHash = results.mergeBranchesBeta.event.treeHash;
         const eventHash = results.mergeBranchesBeta.meta.eventHash;
@@ -216,9 +220,11 @@ describe('Consensus Agent - Get History API', () => {
           {eventHash, from: ledgerNodeBeta, to: ledgerNode, treeHash},
           callback);
       }],
-      mergeBranches: ['fromBeta', (results, callback) =>
-        mergeBranches({ledgerNode}, callback)],
-      history: ['mergeBranches', (results, callback) => getHistory(
+      history2: ['fromBeta', (results, callback) =>
+        getRecentHistory({ledgerNode}, callback)],
+      mergeBranches: ['history2', (results, callback) =>
+        mergeBranches({history: results.history2, ledgerNode}, callback)],
+      history3: ['mergeBranches', (results, callback) => getHistory(
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
@@ -235,6 +241,7 @@ describe('Consensus Agent - Get History API', () => {
   });
 });
 
+// FIXME: use helpers
 function _copyEvents({eventHash, from, to, treeHash}, callback) {
   async.auto({
     // events: callback => async.map(events, (e, callback) =>
