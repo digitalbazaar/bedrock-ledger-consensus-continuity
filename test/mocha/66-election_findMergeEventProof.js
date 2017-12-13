@@ -369,17 +369,6 @@ describe('Election API _findMergeEventProof', () => {
   });
 });
 
-function _mergeOn({nodes}, callback) {
-  // FIXME: get mergeBranches by some other reference
-  const mergeBranches = consensusApi._worker._events.mergeBranches;
-  const events = {};
-  async.eachOf(nodes, (n, i, callback) =>
-    mergeBranches({ledgerNode: n}, (err, result) => {
-      events[i] = result;
-      callback(err);
-    }), err => callback(err, events));
-}
-
 function proofReport({proof, copyMergeHashes, copyMergeHashesIndex}) {
   const allXs = proof.consensus.map(p => p.x.eventHash);
   const allYs = proof.consensus.map(p => p.y.eventHash);
