@@ -331,7 +331,7 @@ describe('Election API findConsensus', () => {
       }]
     }, done);
   });
-  it.only('ledger history delta', function(done) {
+  it('ledger history delta', function(done) {
     this.timeout(120000);
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;

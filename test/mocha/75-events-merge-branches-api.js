@@ -17,6 +17,8 @@ describe('events.mergeBranches API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
+  let getRecentHistory;
+  let mergeBranches;
   let genesisMergeHash;
   let eventHash;
   let testEventId;
@@ -36,6 +38,8 @@ describe('events.mergeBranches API', () => {
             return callback(err);
           }
           consensusApi = result.api;
+          getRecentHistory = consensusApi._worker._events.getRecentHistory;
+          mergeBranches = consensusApi._worker._events.mergeBranchesNEW;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
@@ -109,17 +113,18 @@ describe('events.mergeBranches API', () => {
     }, done);
   });
 
-  it('collects one local event', done => {
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+  it.only('collects one local event', done => {
+    const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     async.auto({
-      addEvent: callback => ledgerNode.events.add(testEvent, callback),
-      mergeBranches: ['addEvent', (results, callback) => {
-        mergeBranches({ledgerNode}, (err, result) => {
+      addEvent: callback => helpers.addEvent(
+        {ledgerNode, eventTemplate}, callback),
+      history: ['addEvent', (results, callback) =>
+        getRecentHistory({ledgerNode}, callback)],
+      mergeBranches: ['history', (results, callback) => {
+        mergeBranches({ledgerNode, history: results.history}, (err, result) => {
           assertNoError(err);
-          const eventHash = results.addEvent.meta.eventHash;
+          const eventHash = Object.keys(results.addEvent)[0];
           should.exist(result.event);
           const event = result.event;
           should.exist(event.type);
@@ -153,7 +158,6 @@ describe('events.mergeBranches API', () => {
     }, done);
   });
   it('returns NotFoundError if no events since last merge', done => {
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEvent.input[0].id = `https://example.com/event/${uuid()}`;
     const ledgerNode = nodes.alpha;
@@ -172,7 +176,6 @@ describe('events.mergeBranches API', () => {
     }, done);
   });
   it('collects five local events', done => {
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     async.auto({
@@ -197,7 +200,6 @@ describe('events.mergeBranches API', () => {
     }, done);
   });
   it('collects one remote merge event', done => {
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
     const eventTemplate = mockData.events.alpha;
     async.auto({
       eventBeta: callback => helpers.addEventAndMerge(

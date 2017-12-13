@@ -255,7 +255,7 @@ describe('Election API _findMergeEventProof', () => {
     }, done);
   });
   // involves 4 elector nodes and one non-elector
-  it.only('ledger history delta produces same results as alpha', done => {
+  it('ledger history delta produces same results as alpha', done => {
     // add node epsilon for this test and remove it afterwards
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const _getElectorBranches =
