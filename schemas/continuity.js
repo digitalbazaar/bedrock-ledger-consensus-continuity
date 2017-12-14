@@ -5,6 +5,12 @@ const config = require('bedrock').config;
 const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
 
+// FIXME: rudamentary implementation
+const RFC6920 = {
+  type: 'string',
+  pattern: '^ni:\/\/\/'
+};
+
 const continuityMergeEvent = {
   title: 'ContinuityMergeEvent',
   type: 'object',
@@ -82,25 +88,25 @@ const webLedgerEvent = {
     },
     parentHash: {
       type: 'array',
-      items: {
-        type: 'string'
-      },
+      items: RFC6920,
       minItems: 1
     },
-    treeHash: {
-      type: 'string'
-    },
+    treeHash: RFC6920,
     type: {
       type: 'string',
       enum: ['WebLedgerEvent']
     },
   },
-  require: ['@context', 'input', 'operation', 'parentHash', 'treeHash', 'type']
+  required: ['@context', 'input', 'operation', 'parentHash', 'treeHash', 'type']
 };
 
 const webLedgerEvents = {
   title: 'Web Ledger Events',
-  oneOf: [webLedgerEvent, webLedgerConfigEvent, continuityMergeEvent]
+  oneOf: [
+    webLedgerEvent,
+    webLedgerConfigEvent,
+    continuityMergeEvent
+  ]
 };
 
 const event = {

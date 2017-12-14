@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe.skip('Consensus Client - sendEvent API', () => {
+describe('Consensus Client - sendEvent API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -47,13 +47,22 @@ describe.skip('Consensus Client - sendEvent API', () => {
       }]
     }, done);
   });
-  // FIXME: are events supposed to be signed?
   it('should send an event', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     const testEventId = 'https://example.com/events/' + uuid();
     testEvent.input[0].id = testEventId;
+    const getHead = ledgerNode.consensus._worker._events._getLocalBranchHead;
     async.auto({
-      hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
+      head: callback => getHead({
+        eventsCollection: ledgerNode.storage.events.collection,
+        creator: peerId
+      }, (err, result) => {
+        testEvent.parentHash = [result];
+        testEvent.treeHash = result;
+        callback();
+      }),
+      hash: ['head', (results, callback) =>
+        helpers.testHasher(testEvent, callback)],
       send: ['hash', (results, callback) =>
         consensusApi._worker._client.sendEvent(
           {eventHash: results.hash, event: testEvent, peerId},
