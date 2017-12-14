@@ -25,7 +25,7 @@
     "bedrock-rest": "^2.1.0",
     "bedrock-server": "^2.2.0",
     "bedrock-test": "^1.2.0",
-    "bedrock-validation": "digitalbazaar/bedrock-validation#2.x",
+    "bedrock-validation": "digitalbazaar/bedrock-validation#3.x",
     "bedrock-views": "^5.1.0",
     "did-io": "digitalbazaar/did-io#jsonld-1.1",
     "grunt": "^1.0.1",
