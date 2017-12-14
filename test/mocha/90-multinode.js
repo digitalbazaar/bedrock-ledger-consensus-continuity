@@ -101,11 +101,12 @@ describe.only('Multinode', () => {
             delete event.signature;
             event.should.deep.equal(configEvent);
             should.exist(eventBlock.meta);
-            should.exist(eventBlock.block.electionResult);
-            eventBlock.block.electionResult.should.be.an('array');
-            eventBlock.block.electionResult.should.have.length(1);
-            const electionResult = eventBlock.block.electionResult[0];
-            should.exist(electionResult.recommendedElector);
+            should.exist(eventBlock.block.consensusProof);
+            const consensusProof = eventBlock.block.consensusProof;
+            consensusProof.should.be.an('array');
+            consensusProof.should.have.length(1);
+            // FIXME: make assertions about the contents of consensusProof
+            // console.log('8888888', JSON.stringify(eventBlock, null, 2));
             callback(null, eventBlock.meta.blockHash);
           }), callback),
         testHash: ['getLatest', (results, callback) => {
