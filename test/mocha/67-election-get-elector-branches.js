@@ -24,7 +24,8 @@ describe('Election API _getElectorBranches', () => {
   let testEventId;
   const nodes = {};
   const peers = {};
-  beforeEach(done => {
+  beforeEach(function(done) {
+    this.timeout(120000);
     const configEvent = mockData.events.config;
     async.auto({
       clean: callback =>

@@ -28,7 +28,8 @@ describe('Worker - _gossipWith', () => {
   let peerDeltaId;
   let peerGammaId;
   let testEventId;
-  beforeEach(done => {
+  beforeEach(function(done) {
+    this.timeout(120000);
     const configEvent = mockData.events.config;
     async.auto({
       clean: callback =>

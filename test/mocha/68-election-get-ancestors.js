@@ -24,7 +24,8 @@ describe('Election API _getAncestors', () => {
   let testEventId;
   const nodes = {};
   const peers = {};
-  beforeEach(done => {
+  beforeEach(function(done) {
+    this.timeout(120000);
     const configEvent = mockData.events.config;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
