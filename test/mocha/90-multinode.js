@@ -142,11 +142,16 @@ describe.only('Multinode', () => {
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
         // instruct consenses on which electors to use for Block 2
         // these recommended electors will be included in Block 1
-        consensusApi._election._recommendElectors =
-          (ledgerNode, voter, electors, manifest, callback) => {
-            callback(null, recommendedElectorsBlock1);
-          };
-
+        // consensusApi._election._recommendElectors =
+        //   (ledgerNode, voter, electors, manifest, callback) => {
+        //     callback(null, recommendedElectorsBlock1);
+        //   };
+        consensusApi._election.getBlockElectors =
+          (ledgerNode, blockHeight, callback) =>
+            callback(null, [
+              recommendedElectorsBlock1[0],
+              // recommendedElectorsBlock1[1]
+            ]);
         async.auto({
           addEvent: callback => genesisLedgerNode.events.add(
             testEvent, callback),
@@ -161,22 +166,24 @@ describe.only('Multinode', () => {
                 should.exist(eventBlock.block);
                 eventBlock.block.blockHeight.should.equal(1);
                 eventBlock.block.event.should.be.an('array');
-                eventBlock.block.event.should.have.length(1);
-                const event = eventBlock.block.event[0];
-                event.input.should.be.an('array');
-                event.input.should.have.length(1);
-                // TODO: signature is dynamic... needs a better check
-                delete event.signature;
-                event.should.deep.equal(testEvent);
-                should.exist(eventBlock.meta);
-                should.exist(eventBlock.block.electionResult);
-                eventBlock.block.electionResult.should.be.an('array');
-                eventBlock.block.electionResult.should.have.length(1);
-                const electionResult = eventBlock.block.electionResult[0];
-                should.exist(electionResult.recommendedElector);
-                electionResult.recommendedElector.map(e => e.id)
-                  .should.have.same.members(recommendedElectorsBlock1.map(
-                    e => e.id));
+                // a regular event and a merge event
+                eventBlock.block.event.should.have.length(2);
+                console.log('TWOEVENTS', eventBlock.block.event);
+                // const event = eventBlock.block.event[0];
+                // event.input.should.be.an('array');
+                // event.input.should.have.length(1);
+                // // TODO: signature is dynamic... needs a better check
+                // delete event.signature;
+                // event.should.deep.equal(testEvent);
+                // should.exist(eventBlock.meta);
+                // should.exist(eventBlock.block.electionResult);
+                // eventBlock.block.electionResult.should.be.an('array');
+                // eventBlock.block.electionResult.should.have.length(1);
+                // const electionResult = eventBlock.block.electionResult[0];
+                // should.exist(electionResult.recommendedElector);
+                // electionResult.recommendedElector.map(e => e.id)
+                //   .should.have.same.members(recommendedElectorsBlock1.map(
+                //     e => e.id));
                 callback(null, eventBlock.meta.blockHash);
               }), callback)],
           testHash: ['getLatest', (results, callback) => {
@@ -187,7 +194,7 @@ describe.only('Multinode', () => {
         }, done);
       });
     }); // end block 1
-    describe('Block 2', () => {
+    describe.only('Block 2', () => {
       it('should add an event and achieve consensus', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
@@ -206,18 +213,21 @@ describe.only('Multinode', () => {
                 should.exist(eventBlock.block);
                 eventBlock.block.blockHeight.should.equal(2);
                 eventBlock.block.event.should.be.an('array');
-                eventBlock.block.event.should.have.length(1);
-                const event = eventBlock.block.event[0];
-                event.input.should.be.an('array');
-                event.input.should.have.length(1);
-                // TODO: signature is dynamic... needs a better check
-                delete event.signature;
-                event.should.deep.equal(testEvent);
-                should.exist(eventBlock.meta);
-                should.exist(eventBlock.block.electionResult);
-                eventBlock.block.electionResult.should.be.an('array');
-                eventBlock.block.electionResult.should.have.length.at.least(
-                  _twoThirdsMajority(nodes));
+                eventBlock.block.event.should.have.length(2);
+                eventBlock.block.event
+                  .filter(e => e.type === 'WebLedgerEvent')[0]
+                  .should.deep.equal(testEvent);
+                // const event = eventBlock.block.event[0];
+                // event.input.should.be.an('array');
+                // event.input.should.have.length(1);
+                // // TODO: signature is dynamic... needs a better check
+                // delete event.signature;
+                // event.should.deep.equal(testEvent);
+                // should.exist(eventBlock.meta);
+                // should.exist(eventBlock.block.electionResult);
+                // eventBlock.block.electionResult.should.be.an('array');
+                // eventBlock.block.electionResult.should.have.length.at.least(
+                //   _twoThirdsMajority(nodes));
                 callback(null, eventBlock.meta.blockHash);
               }), callback)],
           testHash: ['getLatest', (results, callback) => {
