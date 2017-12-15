@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe.only('Multinode', () => {
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -136,7 +136,7 @@ describe.only('Multinode', () => {
         });
       });
 
-      it.only('should add an event and achieve consensus', function(done) {
+      it('should add an event and achieve consensus', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
@@ -194,7 +194,7 @@ describe.only('Multinode', () => {
         }, done);
       });
     }); // end block 1
-    describe.only('Block 2', () => {
+    describe('Block 2', () => {
       it('should add an event and achieve consensus', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
