@@ -147,31 +147,33 @@ describe('Election API _findMergeEventProof', () => {
               tails: branches,
               electors
             });
-            try {
-              report[i] = proofReport({
-                proof,
-                copyMergeHashes: build.copyMergeHashes,
-                copyMergeHashesIndex: build.copyMergeHashesIndex});
-            } catch(e) {
-              report[i] = 'NO PROOF';
-            }
-            // const allXs = proof.consensus.map(p => p.x.eventHash);
-            // allXs.should.have.length(2);
-            // allXs.should.have.same.members([
-            //   build.copyMergeHashes.cp5, build.copyMergeHashes.cp6
-            // ]);
-            // const allYs = proof.consensus.map(p => p.y.eventHash);
-            // allYs.should.have.length(2);
-            // allYs.should.have.same.members([
-            //   build.copyMergeHashes.cp13, build.copyMergeHashes.cp14
-            // ]);
+            // try {
+            //   report[i] = proofReport({
+            //     proof,
+            //     copyMergeHashes: build.copyMergeHashes,
+            //     copyMergeHashesIndex: build.copyMergeHashesIndex});
+            // } catch(e) {
+            //   report[i] = 'NO PROOF';
+            // }
+            const allXs = proof.consensus.map(p => p.x.eventHash);
+            allXs.should.have.length(4);
+            allXs.should.have.same.members([
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
+            ]);
+            const allYs = proof.consensus.map(p => p.y.eventHash);
+            allYs.should.have.length(4);
+            allYs.should.have.same.members([
+              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14,
+              build.copyMergeHashes.cp15, build.copyMergeHashes.cp16
+            ]);
             callback();
           }]
         }, callback), callback);
       }]
     }, err => {
-      console.log('PPER', peers);
-      console.log('FINAL REPORT', JSON.stringify(report, null, 2));
+      // console.log('PPER', peers);
+      // console.log('FINAL REPORT', JSON.stringify(report, null, 2));
       done(err);
     });
   });
