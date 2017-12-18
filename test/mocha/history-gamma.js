@@ -74,12 +74,12 @@ module.exports = (api, consensusApi, eventTemplate, nodes) => ({
     from: [nodes.alpha, nodes.delta],
     to: nodes.gamma
   }, callback)],
-  cp11: ['cp9', (results, callback) => api.copyAndMerge({
+  cp11: ['cp9', 'cp10', (results, callback) => api.copyAndMerge({
     consensusApi,
     from: [nodes.beta, nodes.gamma],
     to: nodes.alpha
   }, callback)],
-  cp12: ['cp10', (results, callback) => api.copyAndMerge({
+  cp12: ['cp9', 'cp10', (results, callback) => api.copyAndMerge({
     consensusApi,
     from: [nodes.beta, nodes.gamma],
     to: nodes.delta

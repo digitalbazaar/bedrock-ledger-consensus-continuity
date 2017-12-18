@@ -267,6 +267,9 @@ describe('Election API _findMergeEventProof', () => {
               report[i] = 'NO PROOF';
             }
             const allXs = proof.consensus.map(p => p.x.eventHash);
+            if(allXs.length !== 4) {
+              console.log('FAILURE REPORT', JSON.stringify(report, null, 2));
+            }
             allXs.should.have.length(4);
             allXs.should.have.same.members([
               build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
