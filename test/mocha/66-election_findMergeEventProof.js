@@ -355,7 +355,7 @@ describe('Election API _findMergeEventProof', () => {
     });
   });
   // FIXME: enable test
-  it.only('ledger history epsilon', done => {
+  it('ledger history epsilon', done => {
     const report = {};
     async.auto({
       build: callback => helpers.buildHistory(

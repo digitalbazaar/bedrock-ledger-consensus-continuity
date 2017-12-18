@@ -139,7 +139,7 @@ describe('Election API _getElectorBranches', () => {
       test1: ['addEvent1', (results, callback) => {
         // all peers are electors
         const addEvent = results.addEvent1;
-        const electors = _.values(peers);
+        const electors = _.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (n, i, callback) => {
           async.auto({
             history: callback => getRecentHistory({ledgerNode: n}, callback),
@@ -185,7 +185,7 @@ describe('Election API _getElectorBranches', () => {
         // test beta
         const addEvent = results.addEvent1;
         const cp1 = results.cp1;
-        const electors = _.values(peers);
+        const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.beta;
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
@@ -255,7 +255,7 @@ describe('Election API _getElectorBranches', () => {
         // test gamma
         const addEvent = results.addEvent1;
         const cp2 = results.cp2;
-        const electors = _.values(peers);
+        const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.gamma;
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
@@ -317,7 +317,7 @@ describe('Election API _getElectorBranches', () => {
         const cp1 = results.cp1;
         const cp2 = results.cp2;
         const cp3 = results.cp3;
-        const electors = _.values(peers);
+        const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.gamma;
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
@@ -330,7 +330,7 @@ describe('Election API _getElectorBranches', () => {
             const peerId = electors;
             const keys = Object.keys(branches);
             keys.should.have.length(4);
-            keys.should.have.same.members(peerId);
+            keys.should.have.same.members(_.values(peers));
             // inspect gamma tail
             const tailGamma = branches[peers.gamma];
             tailGamma.should.have.length(1);
@@ -429,7 +429,7 @@ describe('Election API _getElectorBranches', () => {
         const cp2 = results.cp2;
         const cp3 = results.cp3;
         const cp4 = results.cp4;
-        const electors = _.values(peers);
+        const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.beta;
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
@@ -442,7 +442,7 @@ describe('Election API _getElectorBranches', () => {
             const peerId = electors;
             const keys = Object.keys(branches);
             keys.should.have.length(4);
-            keys.should.have.same.members(peerId);
+            keys.should.have.same.members(_.values(peers));
             // inspect gamma tail
             const tailGamma = branches[peers.gamma];
             tailGamma.should.have.length(1);
