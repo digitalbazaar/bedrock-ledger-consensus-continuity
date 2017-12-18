@@ -119,6 +119,7 @@ describe('Election API _findMergeEventProof', () => {
               return callback(err);
             }
             peers[i] = result.id;
+            helpers.peersReverse[result.id] = i;
             callback();
           }), callback)]
     }, done);
@@ -169,6 +170,7 @@ describe('Election API _findMergeEventProof', () => {
         }, callback), callback);
       }]
     }, err => {
+      console.log('PPER', peers);
       console.log('FINAL REPORT', JSON.stringify(report, null, 2));
       done(err);
     });

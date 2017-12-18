@@ -27,6 +27,8 @@ const ledgerHistory = {
 const api = {};
 module.exports = api;
 
+api.peersReverse = {};
+
 api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 
 // test hashing function
@@ -310,8 +312,10 @@ api.deterministicCompareTallies = ({a, b}) => {
     return lengthA < lengthB;
   }
   const setA = a.set.map(e => e.meta.continuity2017.creator)
+    .map(c => api.peersReverse[c])
     .sort((a, b) => a.localeCompare(b));
   const setB = b.set.map(e => e.meta.continuity2017.creator)
+    .map(c => api.peersReverse[c])
     .sort((a, b) => a.localeCompare(b));
   let rVal;
   for(let i = 0; i < lengthA; ++i) {
