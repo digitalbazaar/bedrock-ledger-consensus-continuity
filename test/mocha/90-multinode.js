@@ -238,7 +238,7 @@ describe('Multinode', () => {
         }, done);
       });
     });
-    describe('Block 3', () => {
+    describe.skip('Block 3', () => {
       it('should achieve consensus with only 7 nodes', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
@@ -287,7 +287,7 @@ describe('Multinode', () => {
         }, done);
       });
     });
-    describe('Block 4', () => {
+    describe.skip('Block 4', () => {
       it('should achieve consensus with 10 nodes again', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
@@ -340,7 +340,7 @@ describe('Multinode', () => {
         }, done);
       });
     });
-    describe('Block 5 - staggered worker kick-off', () => {
+    describe.skip('Block 5 - staggered worker kick-off', () => {
       it('achieves consensus when an event is added at each node',
         function(done) {
           this.timeout(120000);
@@ -381,7 +381,7 @@ describe('Multinode', () => {
           }, done);
         });
     });
-    describe('Catch-up', () => {
+    describe.skip('Catch-up', () => {
       let catchUpNode;
       before(done => brLedger.add(null, {
         genesisBlock: genesisRecord.block,
