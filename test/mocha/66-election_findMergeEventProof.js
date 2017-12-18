@@ -176,7 +176,7 @@ describe('Election API _findMergeEventProof', () => {
       done(err);
     });
   });
-  it.only('ledger history beta', done => {
+  it('ledger history beta', done => {
     const report = {};
     async.auto({
       build: callback => helpers.buildHistory(
@@ -231,15 +231,17 @@ describe('Election API _findMergeEventProof', () => {
       done(err);
     });
   }); // end test 2
-  it('ledger history gamma', done => {
+  it.only('ledger history gamma', function(done) {
+    this.timeout(120000);
+    const report = {};
     async.auto({
       build: callback => helpers.buildHistory(
         {consensusApi, historyId: 'gamma', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const build = results.build;
         // all peers are electors
-        const electors = _.values(peers);
-        async.each(nodes, (ledgerNode, callback) => async.auto({
+        const electors = _.values(peers).map(p => ({id: p}));
+        async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
           history: callback =>
             getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
@@ -256,25 +258,34 @@ describe('Election API _findMergeEventProof', () => {
               tails: results.branches,
               electors
             });
-            // proofReport({
-            //   proof,
-            //   copyMergeHashes: build.copyMergeHashes,
-            //   copyMergeHashesIndex: build.copyMergeHashesIndex});
+            try {
+              report[i] = proofReport({
+                proof,
+                copyMergeHashes: build.copyMergeHashes,
+                copyMergeHashesIndex: build.copyMergeHashesIndex});
+            } catch(e) {
+              report[i] = 'NO PROOF';
+            }
             const allXs = proof.consensus.map(p => p.x.eventHash);
-            allXs.should.have.length(2);
+            allXs.should.have.length(4);
             allXs.should.have.same.members([
-              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
             ]);
             const allYs = proof.consensus.map(p => p.y.eventHash);
-            allYs.should.have.length(2);
+            allYs.should.have.length(4);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp9, build.copyMergeHashes.cp10
+              build.copyMergeHashes.cp9, build.copyMergeHashes.cp10,
+              build.copyMergeHashes.cp11, build.copyMergeHashes.cp12
             ]);
             callback();
           }]
         }, callback), callback);
       }]
-    }, done);
+    }, err => {
+      console.log('FINAL REPORT', JSON.stringify(report, null, 2));
+      done(err);
+    });
   });
   // involves 4 elector nodes and one non-elector
   it('ledger history delta produces same results as alpha', done => {
