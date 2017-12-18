@@ -47,6 +47,9 @@ describe('Election API _findMergeEventProof', () => {
             consensusApi._worker._election._getElectorBranches;
           _findMergeEventProof =
             consensusApi._worker._election._findMergeEventProof;
+          // override _compareTallies
+          consensusApi._worker._election._compareTallies =
+            helpers.deterministicCompareTallies;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
@@ -121,6 +124,7 @@ describe('Election API _findMergeEventProof', () => {
     }, done);
   });
   it.only('ledger history alpha', done => {
+    const report = {};
     async.auto({
       build: callback => helpers.buildHistory(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
@@ -129,8 +133,7 @@ describe('Election API _findMergeEventProof', () => {
         const build = results.build;
         // all peers are electors
         const electors = _.values(peers).map(p => ({id: p}));
-        console.log('TESTING123');
-        async.each(nodes, (ledgerNode, callback) => async.auto({
+        async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           proof: ['history', (results, callback) => {
             const branches = _getElectorBranches({
@@ -143,10 +146,14 @@ describe('Election API _findMergeEventProof', () => {
               tails: branches,
               electors
             });
-            // proofReport({
-            //   proof,
-            //   copyMergeHashes: build.copyMergeHashes,
-            //   copyMergeHashesIndex: build.copyMergeHashesIndex});
+            try {
+              report[i] = proofReport({
+                proof,
+                copyMergeHashes: build.copyMergeHashes,
+                copyMergeHashesIndex: build.copyMergeHashesIndex});
+            } catch(e) {
+              report[i] = 'NO PROOF';
+            }
             // const allXs = proof.consensus.map(p => p.x.eventHash);
             // allXs.should.have.length(2);
             // allXs.should.have.same.members([
@@ -161,7 +168,10 @@ describe('Election API _findMergeEventProof', () => {
           }]
         }, callback), callback);
       }]
-    }, done);
+    }, err => {
+      console.log('FINAL REPORT', JSON.stringify(report, null, 2));
+      done(err);
+    });
   });
   it('ledger history beta', done => {
     async.auto({

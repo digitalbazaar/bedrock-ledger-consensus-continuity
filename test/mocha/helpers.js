@@ -303,6 +303,26 @@ api.createIdentity = function(userName) {
   return newIdentity;
 };
 
+api.deterministicCompareTallies = ({a, b}) => {
+  const lengthA = a.set.length;
+  const lengthB = b.set.length;
+  if(lengthA !== lengthB) {
+    return lengthA < lengthB;
+  }
+  const setA = a.set.map(e => e.meta.continuity2017.creator)
+    .sort((a, b) => a.localeCompare(b));
+  const setB = b.set.map(e => e.meta.continuity2017.creator)
+    .sort((a, b) => a.localeCompare(b));
+  let rVal;
+  for(let i = 0; i < lengthA; ++i) {
+    rVal = setA[i].localeCompare(setB[i]);
+    if(rVal !== 0) {
+      break;
+    }
+  }
+  return !!rVal;
+};
+
 // collections may be a string or array
 api.removeCollections = function(collections, callback) {
   const collectionNames = [].concat(collections);
