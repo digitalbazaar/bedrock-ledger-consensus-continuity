@@ -288,7 +288,7 @@ describe('Election API _findMergeEventProof', () => {
     });
   });
   // involves 4 elector nodes and one non-elector
-  it.only('ledger history delta produces same as alpha result', function(done) {
+  it('ledger history delta produces same as alpha result', function(done) {
     this.timeout(120000);
     const report = {};
     // add node epsilon for this test and remove it afterwards
@@ -355,7 +355,7 @@ describe('Election API _findMergeEventProof', () => {
     });
   });
   // FIXME: enable test
-  it.skip('ledger history epsilon', done => {
+  it.only('ledger history epsilon', done => {
     const report = {};
     async.auto({
       build: callback => helpers.buildHistory(
@@ -401,11 +401,8 @@ describe('Election API _findMergeEventProof', () => {
         }, callback), callback);
       }]
     }, err => {
-      if(err) {
-        return done(err);
-      }
-      // console.log('REPORT', JSON.stringify(report, null, 2));
-      done();
+      console.log('REPORT', JSON.stringify(report, null, 2));
+      done(err);
     });
   });
   // add regular event on alpha before running findMergeEventProof on alpha
@@ -421,7 +418,7 @@ describe('Election API _findMergeEventProof', () => {
         // NOTE: for ledger history alpha, all nodes should have the same view
         const build = results.build;
         // all peers are electors
-        const electors = _.values(peers);
+        const electors = _.values(peers).map(p => ({id: p}));
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           proof: ['history', (results, callback) => {
@@ -440,14 +437,16 @@ describe('Election API _findMergeEventProof', () => {
             //   copyMergeHashes: build.copyMergeHashes,
             //   copyMergeHashesIndex: build.copyMergeHashesIndex});
             const allXs = proof.consensus.map(p => p.x.eventHash);
-            allXs.should.have.length(2);
+            allXs.should.have.length(4);
             allXs.should.have.same.members([
-              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
             ]);
             const allYs = proof.consensus.map(p => p.y.eventHash);
-            allYs.should.have.length(2);
+            allYs.should.have.length(4);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14
+              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14,
+              build.copyMergeHashes.cp15, build.copyMergeHashes.cp16
             ]);
             callback();
           }]
