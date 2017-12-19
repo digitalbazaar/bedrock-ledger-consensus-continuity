@@ -130,8 +130,15 @@ describe.only('Multinode Basics', () => {
         async.auto({
           addEvent: callback => peers[1].events.add(
             testEvent, callback),
-          runWorker: ['addEvent', (results, callback) =>
+          // this will merge event on peer[1] and transmit to peer[0]
+          runWorker1: ['addEvent', (results, callback) =>
             consensusApi._worker._run(peers[1], callback)],
+          // this should merge events from peer[1] and create a new block
+          runWorker2: ['runWorker1', (results, callback) =>
+            consensusApi._worker._run(peers[0], err => {
+              assertNoError(err);
+              callback(err);
+            })]
         }, done);
       });
     }); // end block 1
