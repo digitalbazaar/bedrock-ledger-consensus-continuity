@@ -138,7 +138,31 @@ describe.only('Multinode Basics', () => {
             consensusApi._worker._run(peers[0], err => {
               assertNoError(err);
               callback(err);
-            })]
+            })],
+          test1: ['runWorker2', (results, callback) =>
+            peers[0].storage.blocks.getLatest((err, result) => {
+              assertNoError(err);
+              result.eventBlock.block.blockHeight.should.equal(1);
+              callback();
+            })],
+          // this should receive events from peers[0], merge and generate block
+          runWorker3: ['test1', (results, callback) =>
+            consensusApi._worker._run(peers[1], err => {
+              assertNoError(err);
+              callback(err);
+            })],
+          // FIXME: having to run worker a second time to generat a block
+          runWorker4: ['runWorker3', (results, callback) =>
+            consensusApi._worker._run(peers[1], err => {
+              assertNoError(err);
+              callback(err);
+            })],
+          test2: ['runWorker4', (results, callback) =>
+            peers[1].storage.blocks.getLatest((err, result) => {
+              assertNoError(err);
+              result.eventBlock.block.blockHeight.should.equal(1);
+              callback();
+            })],
         }, done);
       });
     }); // end block 1
