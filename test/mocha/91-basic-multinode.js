@@ -151,7 +151,7 @@ describe.only('Multinode Basics', () => {
               assertNoError(err);
               callback(err);
             })],
-          // FIXME: having to run worker a second time to generat a block
+          // FIXME: having to run worker a second time to generate a block
           runWorker4: ['runWorker3', (results, callback) =>
             consensusApi._worker._run(peers[1], err => {
               assertNoError(err);
