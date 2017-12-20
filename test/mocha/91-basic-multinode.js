@@ -138,7 +138,7 @@ describe('Multinode Basics', () => {
             consensusApi._worker._run(nodes.beta, callback)],
           // this should merge events from peer[1] and create a new block
           runWorker2: ['runWorker1', (results, callback) =>
-            consensusApi._worker._run(nodes.beta, err => {
+            consensusApi._worker._run(nodes.alpha, err => {
               assertNoError(err);
               callback(err);
             })],
@@ -148,24 +148,24 @@ describe('Multinode Basics', () => {
               result.eventBlock.block.blockHeight.should.equal(1);
               callback();
             })],
-          // this should receive events from peers[0], merge and generate block
-          runWorker3: ['test1', (results, callback) =>
-            consensusApi._worker._run(nodes.beta, err => {
-              assertNoError(err);
-              callback(err);
-            })],
-          // FIXME: having to run worker a second time to generate a block
-          runWorker4: ['runWorker3', (results, callback) =>
-            consensusApi._worker._run(nodes.beta, err => {
-              assertNoError(err);
-              callback(err);
-            })],
-          test2: ['runWorker4', (results, callback) =>
-            nodes.beta.storage.blocks.getLatest((err, result) => {
-              assertNoError(err);
-              result.eventBlock.block.blockHeight.should.equal(1);
-              callback();
-            })],
+          // // this should receive events from peers[0], merge and generate block
+          // runWorker3: ['test1', (results, callback) =>
+          //   consensusApi._worker._run(nodes.beta, err => {
+          //     assertNoError(err);
+          //     callback(err);
+          //   })],
+          // // FIXME: having to run worker a second time to generate a block
+          // runWorker4: ['runWorker3', (results, callback) =>
+          //   consensusApi._worker._run(nodes.beta, err => {
+          //     assertNoError(err);
+          //     callback(err);
+          //   })],
+          // test2: ['runWorker4', (results, callback) =>
+          //   nodes.beta.storage.blocks.getLatest((err, result) => {
+          //     assertNoError(err);
+          //     result.eventBlock.block.blockHeight.should.equal(1);
+          //     callback();
+          //   })],
         }, done);
       });
     }); // end one block
