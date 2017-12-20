@@ -170,7 +170,7 @@ describe('Multinode Basics', () => {
       });
     }); // end one block
     describe('More Blocks', () => {
-      it.only('should add an event and achieve consensus', function(done) {
+      it.skip('should add an event and achieve consensus', function(done) {
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
         this.timeout(120000);
         const eventTemplate = mockData.events.alpha;
@@ -185,7 +185,7 @@ describe('Multinode Basics', () => {
               ledgerNode.storage.events.collection.find({})
                 .toArray((err, result) => {
                   assertNoError(err);
-                  result.should.have.length(4);
+                  result.should.have.length(6);
                   callback();
                 });
             }, callback)],
