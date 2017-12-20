@@ -15,13 +15,17 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe.only('Multinode Basics', () => {
+// NOTE: alpha is assigned manually
+const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon'];
+const nodes = {};
+
+describe('Multinode Basics', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
 
   describe('Consensus with 2 Nodes', () => {
-    const nodes = 2;
+    const nodeCount = 2;
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
@@ -68,11 +72,10 @@ describe.only('Multinode Basics', () => {
     });
 
     // add N - 1 more private nodes
-    const peers = [];
     before(function(done) {
       this.timeout(120000);
-      peers.push(genesisLedgerNode);
-      async.times(nodes - 1, (i, callback) => {
+      nodes.alpha = genesisLedgerNode;
+      async.times(nodeCount - 1, (i, callback) => {
         brLedger.add(null, {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
@@ -80,7 +83,7 @@ describe.only('Multinode Basics', () => {
           if(err) {
             return callback(err);
           }
-          peers.push(ledgerNode);
+          nodes[nodeLabels[i]] = ledgerNode;
           callback();
         });
       }, done);
@@ -88,7 +91,7 @@ describe.only('Multinode Basics', () => {
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => async.auto({
-        getLatest: callback => async.map(peers, (ledgerNode, callback) =>
+        getLatest: callback => async.each(nodes, (ledgerNode, callback) =>
           ledgerNode.storage.blocks.getLatest((err, result) => {
             assertNoError(err);
             const eventBlock = result.eventBlock;
@@ -122,46 +125,130 @@ describe.only('Multinode Basics', () => {
       1. add regular event on peer[1]
       2. run worker on peer[1]
      */
-    describe('Block 1', () => {
+    describe.only('One Block', () => {
       it('should add an event and achieve consensus', function(done) {
         this.timeout(120000);
         const testEvent = bedrock.util.clone(mockData.events.alpha);
         testEvent.input[0].id = 'https://example.com/events/' + uuid();
         async.auto({
-          addEvent: callback => peers[1].events.add(
+          addEvent: callback => nodes.beta.events.add(
             testEvent, callback),
           // this will merge event on peer[1] and transmit to peer[0]
           runWorker1: ['addEvent', (results, callback) =>
-            consensusApi._worker._run(peers[1], callback)],
+            consensusApi._worker._run(nodes.beta, callback)],
           // this should merge events from peer[1] and create a new block
           runWorker2: ['runWorker1', (results, callback) =>
-            consensusApi._worker._run(peers[0], err => {
+            consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
               callback(err);
             })],
           test1: ['runWorker2', (results, callback) =>
-            peers[0].storage.blocks.getLatest((err, result) => {
+            nodes.alpha.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
               result.eventBlock.block.blockHeight.should.equal(1);
               callback();
             })],
           // this should receive events from peers[0], merge and generate block
           runWorker3: ['test1', (results, callback) =>
-            consensusApi._worker._run(peers[1], err => {
+            consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
               callback(err);
             })],
           // FIXME: having to run worker a second time to generate a block
           runWorker4: ['runWorker3', (results, callback) =>
-            consensusApi._worker._run(peers[1], err => {
+            consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
               callback(err);
             })],
           test2: ['runWorker4', (results, callback) =>
-            peers[1].storage.blocks.getLatest((err, result) => {
+            nodes.beta.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
               result.eventBlock.block.blockHeight.should.equal(1);
               callback();
+            })],
+        }, done);
+      });
+    }); // end one block
+    describe('More Blocks', () => {
+      it.only('should add an event and achieve consensus', function(done) {
+        console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
+        this.timeout(120000);
+        const eventTemplate = mockData.events.alpha;
+        async.auto({
+          addEvent: callback => nodes.beta.events.add(
+            helpers.createEventBasic({eventTemplate}), callback),
+          // this will merge event on peer[1] and transmit to peer[0]
+          worker1: ['addEvent', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, callback)],
+          count1: ['worker1', (results, callback) =>
+            async.each(nodes, (ledgerNode, callback) => {
+              ledgerNode.storage.events.collection.find({})
+                .toArray((err, result) => {
+                  assertNoError(err);
+                  result.should.have.length(4);
+                  callback();
+                });
+            }, callback)],
+          // this should merge events from beta and create a new block
+          worker2: ['count1', (results, callback) =>
+            consensusApi._worker._run(nodes.alpha, err => {
+              assertNoError(err);
+              callback(err);
+            })],
+          test1: ['worker2', (results, callback) =>
+            nodes.alpha.storage.blocks.getLatest((err, result) => {
+              assertNoError(err);
+              result.eventBlock.block.blockHeight.should.equal(1);
+              callback();
+            })],
+          // this should receive events from alpha, merge and generate block
+          worker3: ['test1', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, err => {
+              assertNoError(err);
+              console.log('AFTER WORKER3 -----------------------------');
+              callback(err);
+            })],
+          // FIXME: this will likely change to have a new merge event on beta
+          // after runWorker3
+          count2: ['worker3', (results, callback) =>
+            async.each(nodes, (ledgerNode, callback) => {
+              ledgerNode.storage.events.collection.find({})
+                .toArray((err, result) => {
+                  assertNoError(err);
+                  result.should.have.length(5);
+                  callback();
+                });
+            }, callback)],
+          // FIXME: having to run worker a second time to generate a block
+          worker4: ['count2', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, err => {
+              console.log('AFTER WORKER4 -----------------------------');
+              assertNoError(err);
+              callback(err);
+            })],
+          test2: ['worker4', (results, callback) =>
+            nodes.beta.storage.blocks.getLatest((err, result) => {
+              assertNoError(err);
+              // console.log('999999999', result.eventBlock.block.event);
+              result.eventBlock.block.blockHeight.should.equal(1);
+              callback();
+            })],
+          // // add another event on beta
+          addEvent2: ['test2', (results, callback) => nodes.beta.events.add(
+            helpers.createEventBasic({eventTemplate}), callback)],
+          // this iteration only transmit that merge event that beta created
+          // after the alpha merge event
+          worker5: ['addEvent2', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, err => {
+              assertNoError(err);
+              console.log('AFTER WORKER4 -----------------------------');
+              callback(err);
+            })],
+          worker6: ['worker5', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, err => {
+              assertNoError(err);
+              console.log('AFTER WORKER5 -----------------------------');
+              callback(err);
             })],
         }, done);
       });

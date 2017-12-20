@@ -288,6 +288,12 @@ api.createEvent = (
   }, err => callback(err, events));
 };
 
+api.createEventBasic = ({eventTemplate}) => {
+  const event = bedrock.util.clone(eventTemplate);
+  event.input[0].id = 'https://example.com/events/' + uuid();
+  return event;
+};
+
 api.createIdentity = function(userName) {
   const newIdentity = {
     id: 'did:' + uuid(),
