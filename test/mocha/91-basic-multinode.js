@@ -297,10 +297,24 @@ describe('Multinode Basics', () => {
               console.log('after worker12 --------------------');
               callback(err);
             })],
-          test2: ['worker12', (results, callback) =>
+          count7: ['worker12', (results, callback) => async.auto({
+            alpha: callback => nodes.alpha.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(12);
+                callback();
+              }),
+            beta: callback => nodes.beta.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(13);
+                callback();
+              }),
+          }, callback)],
+          test2: ['count7', (results, callback) =>
             nodes.alpha.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
-              console.log('PROOF', result.eventBlock.block.consensusProof);
+              // console.log('PROOFINBLOCK', result.eventBlock.block.consensusProof);
               // result.eventBlock.block.consensusProof.should.have.length(0);
               result.eventBlock.block.blockHeight.should.equal(2);
               callback();
