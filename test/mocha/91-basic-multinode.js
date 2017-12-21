@@ -129,12 +129,12 @@ describe('Multinode Basics', () => {
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
         const eventTemplate = mockData.events.alpha;
         async.auto({
-          addEvent: callback => nodes.beta.events.add(
+          addBetaEvent1: callback => nodes.beta.events.add(
             helpers.createEventBasic({eventTemplate}), callback),
-          // this will merge the regular event on beta
-          worker1: ['addEvent', (results, callback) =>
+          // beta will merge its new regular event
+          betaWorker1: ['addBetaEvent1', (results, callback) =>
             consensusApi._worker._run(nodes.beta, callback)],
-          count1: ['worker1', (results, callback) => async.auto({
+          test1: ['betaWorker1', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -148,13 +148,13 @@ describe('Multinode Basics', () => {
                 callback();
               }),
           }, callback)],
-          // this will transmit the regular and merge events to alpha
-          worker2: ['count1', (results, callback) =>
+          // beta will push the regular and merge events to alpha
+          betaWorker2: ['test1', (results, callback) =>
             consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
               callback(err);
             })],
-          count2: ['worker2', (results, callback) => async.auto({
+          test2: ['betaWorker2', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -168,13 +168,13 @@ describe('Multinode Basics', () => {
                 callback();
               }),
           }, callback)],
-          // this will merge the events from beta, and create a block
-          worker3: ['count2', (results, callback) =>
+          // alpha will merge the event received from beta and create a block
+          alphaWorker1: ['test2', (results, callback) =>
             consensusApi._worker._run(nodes.alpha, err => {
               assertNoError(err);
               callback(err);
             })],
-          test1: ['worker3', (results, callback) =>
+          test3: ['alphaWorker1', (results, callback) =>
             nodes.alpha.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
               // first block has no proof because alpha is only elector
@@ -182,20 +182,29 @@ describe('Multinode Basics', () => {
               result.eventBlock.block.blockHeight.should.equal(1);
               callback();
             })],
-          // and a regular event on beta
-          addEvent2: ['test1', (results, callback) => nodes.beta.events.add(
+          // add a regular event on beta
+          addBetaEvent2: ['test3', (results, callback) => nodes.beta.events.add(
             helpers.createEventBasic({eventTemplate}), callback)],
-          // this will merge the regular event on beta
-          worker4: ['addEvent2', (results, callback) =>
+          // this will merge the regular event on beta and create its first
+          // block now that alpha has endorsed its previous events
+          betaWorker3: ['addBetaEvent2', (results, callback) =>
             consensusApi._worker._run(nodes.beta, callback)],
-          // transmit events to alpha
-          worker5: ['worker4', (results, callback) =>
-            consensusApi._worker._run(nodes.beta, err => {
+          test4: ['betaWorker3', (results, callback) =>
+            nodes.beta.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
-              console.log('after worker 5 --------------------');
+              // first block has no proof because alpha is only elector
+              result.eventBlock.block.consensusProof.should.have.length(0);
+              result.eventBlock.block.blockHeight.should.equal(1);
               callback();
             })],
-          count3: ['worker5', (results, callback) => async.auto({
+          // beta pushes regular and merge events to alpha
+          betaWorker4: ['test4', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, err => {
+              assertNoError(err);
+              console.log('after beta worker 4 --------------------');
+              callback();
+            })],
+          test5: ['betaWorker4', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -211,13 +220,15 @@ describe('Multinode Basics', () => {
           }, callback)],
           // this will merge the events from beta, and alpha will consider
           // beta an elector and attempt to gossip with it
-          worker6: ['count3', (results, callback) =>
+          // ... and alpha's merge event will be an endorsement of beta's
+          // first merge event, so the next merge event on beta will be an X
+          alphaWorker2: ['test5', (results, callback) =>
             consensusApi._worker._run(nodes.alpha, err => {
               assertNoError(err);
-              console.log('after worker6 --------------------');
+              console.log('after alpha worker 2 --------------------');
               callback(err);
             })],
-          count4: ['worker6', (results, callback) => async.auto({
+          test6: ['alphaWorker2', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -231,14 +242,16 @@ describe('Multinode Basics', () => {
                 callback();
               }),
           }, callback)],
-          // this retrieves merge event from alpha and merges it
-          worker7: ['count4', (results, callback) =>
+          // beta will retrieve merge event from alpha and see an X; it will
+          // also generate its own merge event ... which endorses alpha's
+          // merge event
+          betaWorker5: ['test6', (results, callback) =>
             consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
-              console.log('after worker7 --------------------');
+              console.log('after beta worker 5 --------------------');
               callback(err);
             })],
-          count5: ['worker7', (results, callback) => async.auto({
+          test7: ['betaWorker5', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -252,14 +265,14 @@ describe('Multinode Basics', () => {
                 callback();
               }),
           }, callback)],
-          // transmits merge event to alpha
-          worker8: ['count5', (results, callback) =>
+          // beta will send merge event to alpha
+          betaWorker6: ['test7', (results, callback) =>
             consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
-              console.log('after worker8 --------------------');
+              console.log('after beta worker 6 --------------------');
               callback(err);
             })],
-          count6: ['worker8', (results, callback) => async.auto({
+          test8: ['betaWorker6', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -273,31 +286,40 @@ describe('Multinode Basics', () => {
                 callback();
               }),
           }, callback)],
-          worker9: ['count6', (results, callback) =>
+          // alpha will create a merge event that is alpha's X and that
+          // endorse's beta's X
+          alphaWorker3: ['test8', (results, callback) =>
             consensusApi._worker._run(nodes.alpha, err => {
               assertNoError(err);
-              console.log('after worker9 --------------------');
+              console.log('after alpha worker 3 --------------------');
               callback(err);
             })],
-          worker10: ['worker9', (results, callback) =>
+          // beta will receive alpha's merge event and create its own that
+          // endorse's alpha's X and that is its Y
+          betaWorker7: ['alphaWorker3', (results, callback) =>
             consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
-              console.log('after worker10 --------------------');
+              console.log('after beta worker 7 --------------------');
               callback(err);
             })],
-          worker11: ['worker10', (results, callback) =>
+          // alpha receive's beta's Y and merges it creating alpha's Y; alpha's
+          // Y supports [betaY, alphaY]
+          alphaWorker4: ['betaWorker7', (results, callback) =>
             consensusApi._worker._run(nodes.alpha, err => {
               assertNoError(err);
-              console.log('after worker11 --------------------');
+              console.log('after alpha worker 4 --------------------');
               callback(err);
             })],
-          worker12: ['worker11', (results, callback) =>
+          // beta receive's alpha's Y and creates a merge event, beta's Y
+          // supports [betaY] and this new merge event supports [betaY, alphaY]
+          // which creates a block
+          betaWorker8: ['alphaWorker4', (results, callback) =>
             consensusApi._worker._run(nodes.beta, err => {
               assertNoError(err);
-              console.log('after worker12 --------------------');
+              console.log('after beta worker 8 --------------------');
               callback(err);
             })],
-          count7: ['worker12', (results, callback) => async.auto({
+          test9: ['betaWorker8', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -311,14 +333,45 @@ describe('Multinode Basics', () => {
                 callback();
               }),
           }, callback)],
-          test2: ['count7', (results, callback) =>
-            nodes.alpha.storage.blocks.getLatest((err, result) => {
+          test10: ['test9', (results, callback) =>
+            nodes.beta.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
               // console.log('PROOFINBLOCK', result.eventBlock.block.consensusProof);
               // result.eventBlock.block.consensusProof.should.have.length(0);
               result.eventBlock.block.blockHeight.should.equal(2);
               callback();
             })],
+          // alpha receive's beta's merge event that supports [betaY,alphaY]
+          // and creates its own merge event (that is not in the block) and
+          // creates a block
+          alphaWorker5: ['test10', (results, callback) =>
+            consensusApi._worker._run(nodes.alpha, err => {
+              assertNoError(err);
+              console.log('after alpha worker 5 --------------------');
+              callback(err);
+            })],
+          test11: ['alphaWorker5', (results, callback) => async.auto({
+            alpha: callback => nodes.alpha.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(13);
+                callback();
+              }),
+            beta: callback => nodes.beta.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(13);
+                callback();
+              }),
+          }, callback)],
+          test12: ['test11', (results, callback) =>
+            nodes.alpha.storage.blocks.getLatest((err, result) => {
+              assertNoError(err);
+              // console.log('PROOFINBLOCK', result.eventBlock.block.consensusProof);
+              // result.eventBlock.block.consensusProof.should.have.length(0);
+              result.eventBlock.block.blockHeight.should.equal(2);
+              callback();
+            })]
         }, done);
       });
     }); // end one block
