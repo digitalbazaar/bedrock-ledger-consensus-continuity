@@ -354,7 +354,7 @@ describe('Multinode Basics', () => {
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
-                result.should.have.length(13);
+                result.should.have.length(14);
                 callback();
               }),
             beta: callback => nodes.beta.storage.events.collection.find({})
