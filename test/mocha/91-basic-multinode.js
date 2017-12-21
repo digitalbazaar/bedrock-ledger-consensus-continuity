@@ -302,7 +302,7 @@ describe('Multinode Basics', () => {
               console.log('after beta worker 7 --------------------');
               callback(err);
             })],
-          // alpha receive's beta's Y and merges it creating alpha's Y; alpha's
+          // alpha receives beta's Y and merges it creating alpha's Y; alpha's
           // Y supports [betaY, alphaY]
           alphaWorker4: ['betaWorker7', (results, callback) =>
             consensusApi._worker._run(nodes.alpha, err => {
@@ -310,7 +310,7 @@ describe('Multinode Basics', () => {
               console.log('after alpha worker 4 --------------------');
               callback(err);
             })],
-          // beta receive's alpha's Y and creates a merge event, beta's Y
+          // beta receives alpha's Y and creates a merge event, beta's Y
           // supports [betaY] and this new merge event supports [betaY, alphaY]
           // which creates a block
           betaWorker8: ['alphaWorker4', (results, callback) =>
@@ -341,7 +341,7 @@ describe('Multinode Basics', () => {
               result.eventBlock.block.blockHeight.should.equal(2);
               callback();
             })],
-          // alpha receive's beta's merge event that supports [betaY,alphaY]
+          // alpha receives beta's merge event that supports [betaY,alphaY]
           // and creates its own merge event (that is not in the block) and
           // creates a block
           alphaWorker5: ['test10', (results, callback) =>
