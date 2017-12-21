@@ -13,6 +13,8 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
+const eventTemplate = mockData.events.alpha;
+
 // NOTE: alpha is assigned manually
 const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon'];
 const nodes = {};
@@ -123,11 +125,10 @@ describe('Multinode Basics', () => {
       1. add regular event on peer[1]
       2. run worker on peer[1]
      */
-    describe.only('One Block', () => {
-      it('should add an event and achieve consensus', function(done) {
+    describe.only('Two Nodes', () => {
+      it('two nodes reach consensus on two blocks', function(done) {
         this.timeout(120000);
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
-        const eventTemplate = mockData.events.alpha;
         async.auto({
           addBetaEvent1: callback => nodes.beta.events.add(
             helpers.createEventBasic({eventTemplate}), callback),
@@ -332,25 +333,29 @@ describe('Multinode Basics', () => {
                 result.should.have.length(13);
                 callback();
               }),
+            alphaBlock: callback => nodes.alpha.storage.blocks.getLatest(
+              (err, result) => {
+                assertNoError(err);
+                // should not be a new block on alpha yet
+                result.eventBlock.block.blockHeight.should.equal(1);
+                callback();
+              }),
+            betaBlock: callback => nodes.beta.storage.blocks.getLatest(
+              (err, result) => {
+                assertNoError(err);
+                // should be a new block on beta
+                result.eventBlock.block.blockHeight.should.equal(2);
+                result.eventBlock.block.consensusProof.should.have.length(3);
+                callback();
+              }),
           }, callback)],
-          test10: ['test9', (results, callback) =>
-            nodes.beta.storage.blocks.getLatest((err, result) => {
-              assertNoError(err);
-              // console.log('PROOFINBLOCK', result.eventBlock.block.consensusProof);
-              // result.eventBlock.block.consensusProof.should.have.length(0);
-              result.eventBlock.block.blockHeight.should.equal(2);
-              callback();
-            })],
-          // alpha receives beta's merge event that supports [betaY,alphaY]
-          // and creates its own merge event (that is not in the block) and
-          // creates a block
-          alphaWorker5: ['test10', (results, callback) =>
+          alphaWorker5: ['test9', (results, callback) =>
             consensusApi._worker._run(nodes.alpha, err => {
               assertNoError(err);
               console.log('after alpha worker 5 --------------------');
               callback(err);
             })],
-          test11: ['alphaWorker5', (results, callback) => async.auto({
+          test10: ['alphaWorker5', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
@@ -363,20 +368,66 @@ describe('Multinode Basics', () => {
                 result.should.have.length(13);
                 callback();
               }),
+            alphaBlock: callback => nodes.beta.storage.blocks.getLatest(
+              (err, result) => {
+                assertNoError(err);
+                // should be a new alpha on beta
+                result.eventBlock.block.blockHeight.should.equal(2);
+                result.eventBlock.block.consensusProof.should.have.length(3);
+                callback();
+              }),
           }, callback)],
-          test12: ['test11', (results, callback) =>
-            nodes.alpha.storage.blocks.getLatest((err, result) => {
-              assertNoError(err);
-              // console.log('PROOFINBLOCK', result.eventBlock.block.consensusProof);
-              // result.eventBlock.block.consensusProof.should.have.length(0);
-              result.eventBlock.block.blockHeight.should.equal(2);
-              callback();
-            })]
+        }, done);
+      });
+      it('two nodes reach consensus on a 3rd block', function(done) {
+        this.timeout(120000);
+        async.auto({
+          alphaAddEvent1: callback => nodes.alpha.events.add(
+            helpers.createEventBasic({eventTemplate}), callback),
+          // beta will merge its new regular event
+          workCycle1: ['alphaAddEvent1', (results, callback) =>
+            _workerCycle({consensusApi, nodes}, callback)],
+          workCycle2: ['workCycle1', (results, callback) =>
+            _workerCycle({consensusApi, nodes}, callback)],
+          // workCycle3: ['workCycle2', (results, callback) =>
+          //   _workerCycle({consensusApi, nodes}, callback)],
+          // workCycle4: ['workCycle3', (results, callback) =>
+          //   _workerCycle({consensusApi, nodes}, callback)],
+          test10: ['workCycle2', (results, callback) => async.auto({
+            alpha: callback => nodes.alpha.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(18);
+                callback();
+              }),
+            beta: callback => nodes.beta.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(19);
+                callback();
+              }),
+            alphaBlock: callback => nodes.alpha.storage.blocks.getLatest(
+              (err, result) => {
+                assertNoError(err);
+                // should be a new alpha on beta
+                result.eventBlock.block.blockHeight.should.equal(2);
+                // result.eventBlock.block.consensusProof.should.have.length(3);
+                callback();
+              }),
+            betaBlock: callback => nodes.beta.storage.blocks.getLatest(
+              (err, result) => {
+                assertNoError(err);
+                // should be a new alpha on beta
+                result.eventBlock.block.blockHeight.should.equal(3);
+                // result.eventBlock.block.consensusProof.should.have.length(3);
+                callback();
+              }),
+          }, callback)],
         }, done);
       });
     }); // end one block
-    describe('More Blocks', () => {
-      it.skip('should add an event and achieve consensus', function(done) {
+    describe.skip('More Blocks', () => {
+      it('should add an event and achieve consensus', function(done) {
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
         this.timeout(120000);
         const eventTemplate = mockData.events.alpha;
@@ -461,3 +512,8 @@ describe('Multinode Basics', () => {
     }); // end block 1
   });
 });
+
+function _workerCycle({consensusApi, nodes}, callback) {
+  async.eachSeries(nodes, (ledgerNode, callback) =>
+    consensusApi._worker._run(ledgerNode, callback), callback);
+}
