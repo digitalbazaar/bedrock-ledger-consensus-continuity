@@ -15,6 +15,7 @@ describe('Worker - _gossipWith', () => {
     helpers.prepareDatabase(mockData, done);
   });
 
+  let aggregateHistory;
   let consensusApi;
   let genesisMergeHash;
   let getRecentHistory;
@@ -39,6 +40,7 @@ describe('Worker - _gossipWith', () => {
           consensusApi = result.api;
           getRecentHistory = consensusApi._worker._events.getRecentHistory;
           mergeBranches = consensusApi._worker._events.mergeBranches;
+          aggregateHistory = consensusApi._worker._events.aggregateHistory;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
@@ -405,8 +407,22 @@ describe('Worker - _gossipWith', () => {
               results.alphaAddEvent1.allHashes);
             callback();
           })],
-      // gamma gossips with alpha
-      gammaGossip1: ['alphaGossip2', (results, callback) =>
+      test1: ['alphaGossip2', (results, callback) => async.series([
+        callback => nodes.alpha.storage.events.collection.find({})
+          .count((err, result) => {
+            assertNoError(err);
+            result.should.equal(10);
+            callback();
+          }),
+        callback => nodes.beta.storage.events.collection.find({})
+          .count((err, result) => {
+            assertNoError(err);
+            result.should.equal(10);
+            callback();
+          }),
+      ], callback)],
+      // gamma gossips with alpha for the first time
+      gammaGossip1: ['test1', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
@@ -452,6 +468,7 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
+            result.treeHash.should.equal(results.betaAddEvent1.mergeHash);
             result.peerHistory.callerHead.should.equal(genesisMergeHash);
             result.peerHistory.history.should.have.length(0);
             result.localHistory.should.have.length(2);
@@ -459,6 +476,62 @@ describe('Worker - _gossipWith', () => {
               results.addEvent.gamma.allHashes);
             callback();
           })],
-    }, done);
+      gammaAddEvent1: ['gammaGossip4', (results, callback) =>
+        helpers.addEventAndMerge(
+          {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback)],
+      test2: ['gammaAddEvent1', (results, callback) => async.auto({
+        betaViewBeta: callback => aggregateHistory({
+          eventTypeFilter: 'ContinuityMergeEvent',
+          ledgerNode: nodes.beta,
+          startHash: results.betaAddEvent1.mergeHash,
+        }, callback),
+        gammaViewBeta: callback => aggregateHistory({
+          eventTypeFilter: 'ContinuityMergeEvent',
+          ledgerNode: nodes.gamma,
+          startHash: results.betaAddEvent1.mergeHash,
+        }, callback),
+      }, (err, results2) => {
+        if(err) {
+          return callback(err);
+        }
+        results2.betaViewBeta.should.have.same.members(results2.gammaViewBeta);
+        callback(null, results);
+      })],
+      gammaGossip5: ['gammaAddEvent1', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.gamma, peerId: peers.beta}, (err, result) => {
+            assertNoError(err);
+            // console.log('8888888888888', result);
+            result.treeHash.should.equal(results.betaAddEvent1.mergeHash);
+            result.peerHistory.callerHead.should.equal(
+              results.addEvent.gamma.mergeHash);
+            result.peerHistory.history.should.have.length(0);
+            result.localHistory.should.have.length(4);
+            result.localHistory.should.have.same.members([
+              // NOTE: although beta already has a copy of alphaAddEvent1 events
+              // they have not been merged there yet, so those events are not
+              // included in history even from beta's perspective
+              ...results.alphaAddEvent1.allHashes,
+              ...results.gammaAddEvent1.allHashes
+            ]);
+            callback();
+          })],
+    }, (err, results) => {
+      if(err) {
+        return done(err);
+      }
+      // console.log('GGGGGenesisMerge', genesisMergeHash);
+      // console.log('AddEventMerge', results.addEvent.mergeHash);
+      // console.log('AddEventRegular', results.addEvent.regularHash);
+      // Object.keys(results).forEach(k => {
+      //   if(!k.includes('AddEvent')) {
+      //     return;
+      //   }
+      //   console.log('KKKKKK', k);
+      //   console.log('Merge', results[k].mergeHash);
+      //   console.log('Regular', results[k].regularHashes);
+      // });
+      done();
+    });
   });
 });
