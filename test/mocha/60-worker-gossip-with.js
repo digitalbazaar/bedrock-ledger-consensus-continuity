@@ -325,7 +325,8 @@ describe('Worker - _gossipWith', () => {
         callback => consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.gamma}, (err, result) => {
             assertNoError(err);
-            result.peerHistory.callerHead.should.equal(genesisMergeHash);
+            result.peerHistory.creatorHeads[peers.beta]
+              .should.equal(genesisMergeHash);
             callback();
           }),
       ], callback)],
@@ -353,7 +354,8 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
-            result.peerHistory.callerHead.should.equal(genesisMergeHash);
+            result.peerHistory.creatorHeads[peers.beta]
+              .should.equal(genesisMergeHash);
             result.localHistory.should.have.length(2);
             result.localHistory.should.have.same.members(
               results.addEvent.beta.allHashes);
@@ -364,8 +366,8 @@ describe('Worker - _gossipWith', () => {
           {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
             // callerHead should be the merge event from addEvent
-            result.peerHistory.callerHead.should.equal(
-              results.addEvent.beta.merge.meta.eventHash);
+            result.peerHistory.creatorHeads[peers.beta]
+              .should.equal(results.addEvent.beta.merge.meta.eventHash);
             // no new events available from alpha
             result.peerHistory.history.should.have.length(0);
             // beta has no new events to send to alpha
@@ -381,8 +383,8 @@ describe('Worker - _gossipWith', () => {
           {ledgerNode: nodes.alpha, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
             // callerHead should be the merge event from addEvent
-            result.peerHistory.callerHead.should.equal(
-              results.addEvent.alpha.merge.meta.eventHash);
+            result.peerHistory.creatorHeads[peers.alpha]
+              .should.equal(results.addEvent.alpha.merge.meta.eventHash);
             // one new merge event event available from beta
             result.peerHistory.history.should.have.length(1);
             result.peerHistory.history.should.have.same.members(
@@ -398,8 +400,8 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.alpha, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
-            result.peerHistory.callerHead.should.equal(
-              results.addEvent.alpha.merge.meta.eventHash);
+            result.peerHistory.creatorHeads[peers.alpha]
+              .should.equal(results.addEvent.alpha.merge.meta.eventHash);
             result.peerHistory.history.should.have.length(0);
             // alpha has two new events to send to beta
             result.localHistory.should.have.length(2);
@@ -425,8 +427,8 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.alpha, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
-            result.peerHistory.callerHead.should.equal(
-              results.alphaAddEvent1.mergeHash);
+            result.peerHistory.creatorHeads[peers.alpha]
+              .should.equal(results.alphaAddEvent1.mergeHash);
             result.peerHistory.history.should.have.length(0);
             result.localHistory.should.have.length(0);
             callback();
@@ -436,7 +438,8 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
-            result.peerHistory.callerHead.should.equal(genesisMergeHash);
+            result.peerHistory.creatorHeads[peers.gamma]
+              .should.equal(genesisMergeHash);
             result.peerHistory.history.should.have.length(1);
             result.peerHistory.history.should.have.same.members(
               [results.addEvent.alpha.mergeHash]);
@@ -449,8 +452,8 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
-            result.peerHistory.callerHead.should.equal(
-              results.addEvent.gamma.mergeHash);
+            result.peerHistory.creatorHeads[peers.gamma]
+              .should.equal(results.addEvent.gamma.mergeHash);
             result.peerHistory.history.should.have.length(3);
             result.peerHistory.history.should.have.same.members([
               results.addEvent.beta.mergeHash,
@@ -458,28 +461,26 @@ describe('Worker - _gossipWith', () => {
               results.alphaAddEvent1.mergeHash,
             ]);
             result.localHistory.should.have.length(0);
-            // result.localHistory.should.have.same.members(
-            //   results.addEvent.gamma.allHashes);
             callback();
           })],
       gammaGossip3: ['gammaGossip2', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
-            result.peerHistory.callerHead.should.equal(
-              results.addEvent.gamma.mergeHash);
+            result.peerHistory.creatorHeads[peers.gamma]
+              .should.equal(results.addEvent.gamma.mergeHash);
             result.peerHistory.history.should.have.length(0);
             result.localHistory.should.have.length(0);
             callback();
           })],
-      // gamma gossips with beta for the first time
-      // gamma has all of beta's history from gossiping with alpha
+      // // gamma gossips with beta for the first time
+      // // gamma has all of beta's history from gossiping with alpha
       gammaGossip4: ['gammaGossip3', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
-            result.treeHash.should.equal(results.betaAddEvent1.mergeHash);
-            result.peerHistory.callerHead.should.equal(genesisMergeHash);
+            result.peerHistory.creatorHeads[peers.gamma]
+              .should.equal(genesisMergeHash);
             result.peerHistory.history.should.have.length(0);
             result.localHistory.should.have.length(2);
             result.localHistory.should.have.same.members(
@@ -511,17 +512,13 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
-            // console.log('8888888888888', result);
-            result.treeHash.should.equal(results.betaAddEvent1.mergeHash);
-            result.peerHistory.callerHead.should.equal(
-              results.addEvent.gamma.mergeHash);
+            result.peerHistory.creatorHeads[peers.gamma]
+              .should.equal(results.addEvent.gamma.mergeHash);
+            result.peerHistory.creatorHeads[peers.alpha]
+              .should.equal(results.alphaAddEvent1.mergeHash);
             result.peerHistory.history.should.have.length(0);
-            result.localHistory.should.have.length(4);
+            result.localHistory.should.have.length(2);
             result.localHistory.should.have.same.members([
-              // NOTE: although beta already has a copy of alphaAddEvent1 events
-              // they have not been merged there yet, so those events are not
-              // included in history even from beta's perspective
-              ...results.alphaAddEvent1.allHashes,
               ...results.gammaAddEvent1.allHashes
             ]);
             callback();
@@ -541,7 +538,7 @@ describe('Worker - _gossipWith', () => {
       //   console.log('Merge', results[k].mergeHash);
       //   console.log('Regular', results[k].regularHashes);
       // });
-      done();
+      done(null, results);
     });
   });
 });
