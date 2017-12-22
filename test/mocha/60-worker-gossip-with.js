@@ -343,7 +343,7 @@ describe('Worker - _gossipWith', () => {
       }]
     }, done);
   });
-  it('properly selects events for push gossip', done => {
+  it.only('properly selects events for push gossip', done => {
     const eventTemplate = mockData.events.alpha;
     async.auto({
       addEvent: callback => helpers.addEventMultiNode(
@@ -421,8 +421,18 @@ describe('Worker - _gossipWith', () => {
             callback();
           }),
       ], callback)],
+      alphaGossip3: ['test1', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.alpha, peerId: peers.beta}, (err, result) => {
+            assertNoError(err);
+            result.peerHistory.callerHead.should.equal(
+              results.alphaAddEvent1.mergeHash);
+            result.peerHistory.history.should.have.length(0);
+            result.localHistory.should.have.length(0);
+            callback();
+          })],
       // gamma gossips with alpha for the first time
-      gammaGossip1: ['test1', (results, callback) =>
+      gammaGossip1: ['alphaGossip3', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
