@@ -16,18 +16,15 @@ describe('Worker - _gossipWith', () => {
   });
 
   let consensusApi;
-  let eventHash;
+  let genesisMergeHash;
   let getRecentHistory;
-  let ledgerNode;
-  let ledgerNodeBeta;
-  let ledgerNodeGamma;
-  let ledgerNodeDelta;
   let mergeBranches;
-  let peerId;
-  let peerBetaId;
-  let peerDeltaId;
-  let peerGammaId;
   let testEventId;
+  const nodeCount = 4;
+  // NOTE: alpha is assigned manually
+  const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon'];
+  const nodes = {};
+  const peers = {};
   beforeEach(function(done) {
     this.timeout(120000);
     const configEvent = mockData.events.config;
@@ -49,99 +46,79 @@ describe('Worker - _gossipWith', () => {
           if(err) {
             return callback(err);
           }
-          ledgerNode = result;
+          nodes.alpha = result;
           callback();
         })],
-      getPeer: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
-          peerId = result.id;
+      genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
+        consensusApi._worker._events._getLocalBranchHead({
+          eventsCollection: nodes.alpha.storage.events.collection
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          genesisMergeHash = result;
           callback();
         });
       }],
       genesisBlock: ['ledgerNode', (results, callback) =>
-        ledgerNode.blocks.getGenesis((err, result) => {
+        nodes.alpha.blocks.getGenesis((err, result) => {
           if(err) {
             return callback(err);
           }
           callback(null, result.genesisBlock.block);
         })],
-      nodeBeta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
+      createNodes: ['genesisBlock', (results, callback) => {
+        async.times(nodeCount - 1, (i, callback) => brLedgerNode.add(null, {
+          genesisBlock: results.genesisBlock,
+        }, (err, ledgerNode) => {
           if(err) {
             return callback(err);
           }
-          ledgerNodeBeta = result;
-          callback(null, result);
-        })],
-      getPeerBeta: ['consensusPlugin', 'nodeBeta', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNodeBeta.id, (err, result) => {
-          peerBetaId = result.id;
+          nodes[nodeLabels[i]] = ledgerNode;
           callback();
-        });
+        }), callback);
       }],
-      nodeGamma: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          ledgerNodeGamma = result;
-          callback(null, result);
-        })],
-      getPeerGamma: ['consensusPlugin', 'nodeGamma', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNodeGamma.id, (err, result) => {
-          peerGammaId = result.id;
-          callback();
-        });
-      }],
-      nodeDelta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          ledgerNodeDelta = result;
-          callback(null, result);
-        })],
-      getPeerDelta: ['consensusPlugin', 'nodeDelta', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNodeDelta.id, (err, result) => {
-          peerDeltaId = result.id;
-          callback();
-        });
-      }],
+      getPeer: ['createNodes', (results, callback) =>
+        async.eachOf(nodes, (ledgerNode, i, callback) =>
+          consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+            peers[i] = result.id;
+            callback();
+          }), callback)],
     }, done);
   });
   /*
-    gossip wih ledgerNode from ledgerNodeBeta, there is no merge event on
+    gossip wih ledgerNode from nodes.beta, there is no merge event on
     ledgerNode beyond the genesis merge event, so the gossip should complete
     without an error.  There is also nothing to be sent.
   */
   it('completes without an error when nothing to be received or sent', done => {
     async.auto({
       gossipWith: callback => consensusApi._worker._gossipWith(
-        {ledgerNode: ledgerNodeBeta, peerId}, err => {
+        {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
           assertNoError(err);
           callback();
         })
     }, done);
   });
   /*
-    gossip wih ledgerNode from ledgerNodeBeta. There is a regular event and a
+    gossip wih ledgerNode from nodes.beta. There is a regular event and a
     merge event on ledgerNode to be gossiped.  There is nothing to be sent from
-    ledgerNodeBeta.
+    nodes.beta.
   */
   it('properly gossips one regular event and one merge event', done => {
     const eventTemplate = mockData.events.alpha;
     async.auto({
       addEvent: callback => helpers.addEventAndMerge(
-        {consensusApi, ledgerNode, eventTemplate}, callback),
+        {consensusApi, ledgerNode: nodes.alpha, eventTemplate}, callback),
       gossipWith: ['addEvent', (results, callback) =>
         consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeBeta, peerId}, err => {
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
       test: ['gossipWith', (results, callback) => {
-        // the events from ledgerNode should now be present on ledgerNodeBeta
-        ledgerNodeBeta.storage.events.exists([
+        // the events from ledgerNode should now be present on nodes.beta
+        nodes.beta.storage.events.exists([
           Object.keys(results.addEvent.regular)[0],
           results.addEvent.merge.meta.eventHash
         ], (err, result) => {
@@ -153,32 +130,32 @@ describe('Worker - _gossipWith', () => {
     }, done);
   });
   /*
-    gossip wih ledgerNode from ledgerNodeBeta. There is a regular event and a
+    gossip wih ledgerNode from nodes.beta. There is a regular event and a
     merge event on ledgerNode to be gossiped. There is a regular event and a
     merge event from a fictitious node as well. There is nothing to be sent from
-    ledgerNodeBeta.
+    nodes.beta.
   */
   it('properly gossips two regular events and two merge events', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.input[0].id = testEventId;
     async.auto({
-      addEvent: callback => ledgerNode.events.add(testEvent, callback),
+      addEvent: callback => nodes.alpha.events.add(testEvent, callback),
       remoteEvents: callback => helpers.addRemoteEvents(
-        {consensusApi, ledgerNode, mockData}, callback),
+        {consensusApi, ledgerNode: nodes.alpha, mockData}, callback),
       history: ['addEvent', 'remoteEvents', (results, callback) =>
-        getRecentHistory({ledgerNode}, callback)],
-      mergeBranches: ['history', (results, callback) =>
-        mergeBranches({history: results.history, ledgerNode}, callback)],
+        getRecentHistory({ledgerNode: nodes.alpha}, callback)],
+      mergeBranches: ['history', (results, callback) => mergeBranches(
+        {history: results.history, ledgerNode: nodes.alpha}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
         consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeBeta, peerId}, err => {
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
       test: ['gossipWith', (results, callback) => {
-        // the events from ledgerNode should now be present on ledgerNodeBeta
-        ledgerNodeBeta.storage.events.exists([
+        // the events from ledgerNode should now be present on nodes.beta
+        nodes.beta.storage.events.exists([
           // results.remoteEvents.merge,
           // results.remoteEvents.regular,
           results.addEvent.meta.eventHash,
@@ -192,8 +169,8 @@ describe('Worker - _gossipWith', () => {
     }, done);
   });
   /*
-    gossip with ledgerNode from ledgerNodeBeta. There are no new events on
-    ledgerNode, but ledgerNodeBeta has one regular event and one merge event
+    gossip with ledgerNode from nodes.beta. There are no new events on
+    ledgerNode, but nodes.beta has one regular event and one merge event
     to be push gossipped.
   */
   it('properly push gossips a regular event and a merge event', done => {
@@ -202,20 +179,20 @@ describe('Worker - _gossipWith', () => {
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.input[0].id = testEventId;
     async.auto({
-      addEvent: callback => ledgerNodeBeta.events.add(testEvent, callback),
+      addEvent: callback => nodes.beta.events.add(testEvent, callback),
       history: ['addEvent', (results, callback) =>
-        getRecentHistory({ledgerNode: ledgerNodeBeta}, callback)],
+        getRecentHistory({ledgerNode: nodes.beta}, callback)],
       mergeBranches: ['history', (results, callback) => mergeBranches(
-        {history: results.history, ledgerNode: ledgerNodeBeta}, callback)],
+        {history: results.history, ledgerNode: nodes.beta}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
         consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeBeta, peerId}, err => {
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
       test: ['gossipWith', (results, callback) => {
-        // the events from ledgerNodeBeta should now be present on ledgerNode
-        ledgerNode.storage.events.exists([
+        // the events from nodes.beta should now be present on ledgerNode
+        nodes.alpha.storage.events.exists([
           results.addEvent.meta.eventHash,
           results.mergeBranches.meta.eventHash
         ], (err, result) => {
@@ -227,10 +204,10 @@ describe('Worker - _gossipWith', () => {
     }, done);
   });
   /*
-    gossip wih ledgerNode from ledgerNodeBeta. There are no new events on
+    gossip wih ledgerNode from nodes.beta. There are no new events on
     ledgerNode, but there is a regular event and a merge event from ledgerNode
     as well as a regular event and merged event from a fictitious node on
-    ledgerNode to be gossiped to ledgerNodeBeta.
+    ledgerNode to be gossiped to nodes.beta.
   */
   it('properly push gossips two regular events and two merge events', done => {
     const mergeBranches = consensusApi._worker._events.mergeBranches;
@@ -238,22 +215,22 @@ describe('Worker - _gossipWith', () => {
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.input[0].id = testEventId;
     async.auto({
-      addEvent: callback => ledgerNodeBeta.events.add(testEvent, callback),
+      addEvent: callback => nodes.beta.events.add(testEvent, callback),
       remoteEvents: callback => helpers.addRemoteEvents(
-        {consensusApi, ledgerNode: ledgerNodeBeta, mockData}, callback),
+        {consensusApi, ledgerNode: nodes.beta, mockData}, callback),
       history: ['addEvent', 'remoteEvents', (results, callback) =>
-        getRecentHistory({ledgerNode: ledgerNodeBeta}, callback)],
+        getRecentHistory({ledgerNode: nodes.beta}, callback)],
       mergeBranches: ['history', (results, callback) => mergeBranches(
-        {history: results.history, ledgerNode: ledgerNodeBeta}, callback)],
+        {history: results.history, ledgerNode: nodes.beta}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
         consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeBeta, peerId}, err => {
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
       test: ['gossipWith', (results, callback) => {
-        // the events from ledgerNode should now be present on ledgerNodeBeta
-        ledgerNode.storage.events.exists([
+        // the events from ledgerNode should now be present on nodes.beta
+        nodes.alpha.storage.events.exists([
           results.remoteEvents.merge,
           results.remoteEvents.regular,
           results.addEvent.meta.eventHash,
@@ -267,7 +244,7 @@ describe('Worker - _gossipWith', () => {
     }, done);
   });
   /*
-    ledgerNode and ledgerNodeBeta each have unique local regular events.
+    ledgerNode and nodes.beta each have unique local regular events.
     The also have the same set of regular event and merge event communicated
     to them by a fictitious node. ledgerNode and ledgeNodeBeta have eached
     merged the events from the fictitious node into their respective histories.
@@ -280,24 +257,24 @@ describe('Worker - _gossipWith', () => {
     testEvent.input[0].id = testEventId;
     const testEventBetaId = 'https://example.com/events/' + uuid();
     testEventBeta.input[0].id = testEventBetaId;
-    const testNodes = [ledgerNode, ledgerNodeBeta];
+    const testNodes = [nodes.alpha, nodes.beta];
     async.auto({
-      addEvent: callback => ledgerNode.events.add(testEvent, callback),
-      addEventBeta: callback => ledgerNodeBeta.events.add(
+      addEvent: callback => nodes.alpha.events.add(testEvent, callback),
+      addEventBeta: callback => nodes.beta.events.add(
         testEventBeta, callback),
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: testNodes, mockData}, callback),
       history1: ['addEvent', 'remoteEvents', (results, callback) =>
-        getRecentHistory({ledgerNode}, callback)],
-      mergeBranches: ['history1', (results, callback) =>
-        mergeBranches({history: results.history1, ledgerNode}, callback)],
+        getRecentHistory({ledgerNode: nodes.alpha}, callback)],
+      mergeBranches: ['history1', (results, callback) => mergeBranches(
+        {history: results.history1, ledgerNode: nodes.alpha}, callback)],
       history2: ['addEventBeta', 'remoteEvents', (results, callback) =>
-        getRecentHistory({ledgerNode: ledgerNodeBeta}, callback)],
+        getRecentHistory({ledgerNode: nodes.beta}, callback)],
       mergeBranchesBeta: ['history2', (results, callback) => mergeBranches(
-        {history: results.history2, ledgerNode: ledgerNodeBeta}, callback)],
+        {history: results.history2, ledgerNode: nodes.beta}, callback)],
       gossipWith: ['mergeBranches', 'mergeBranchesBeta', (results, callback) =>
         consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeBeta, peerId}, err => {
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
@@ -325,37 +302,34 @@ describe('Worker - _gossipWith', () => {
   */
   it('properly gossips among three nodes', done => {
     const eventTemplate = mockData.events.alpha;
-    const nodes = {
-      alpha: ledgerNode,
-      beta: ledgerNodeBeta,
-      gamma: ledgerNodeGamma
-    };
+    const testNodes = [nodes.alpha, nodes.beta, nodes.gamma];
     async.auto({
       addEvent: callback => helpers.addEventMultiNode(
-        {consensusApi, eventTemplate, nodes}, callback),
+        {consensusApi, eventTemplate, nodes: testNodes}, callback),
       gossipWith: ['addEvent', (results, callback) => async.series([
         // beta to alpha
         callback => consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeBeta, peerId}, err => {
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           }),
         // gamma to alpha
         callback => consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeGamma, peerId}, err => {
+          {ledgerNode: nodes.gamma, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           }),
         // beta to gamma
         callback => consensusApi._worker._gossipWith(
-          {ledgerNode: ledgerNodeBeta, peerId: peerGammaId}, err => {
+          {ledgerNode: nodes.beta, peerId: peers.gamma}, (err, result) => {
             assertNoError(err);
+            result.peerHistory.callerHead.should.equal(genesisMergeHash);
             callback();
           }),
       ], callback)],
       test: ['gossipWith', (results, callback) => {
         // all nodes should have the same events
-        async.eachSeries(nodes, (node, callback) =>
+        async.eachSeries(testNodes, (node, callback) =>
           node.storage.events.exists([
             ...results.addEvent.mergeHash,
             ...results.addEvent.regularHash,
@@ -365,6 +339,126 @@ describe('Worker - _gossipWith', () => {
             callback();
           }), callback);
       }]
+    }, done);
+  });
+  it('properly selects events for push gossip', done => {
+    const eventTemplate = mockData.events.alpha;
+    async.auto({
+      addEvent: callback => helpers.addEventMultiNode(
+        {consensusApi, eventTemplate, nodes}, callback),
+      // beta to alpha
+      betaGossip1: ['addEvent', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
+            assertNoError(err);
+            result.peerHistory.callerHead.should.equal(genesisMergeHash);
+            result.localHistory.should.have.length(2);
+            result.localHistory.should.have.same.members(
+              results.addEvent.beta.allHashes);
+            callback();
+          })],
+      betaGossip2: ['betaGossip1', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
+            assertNoError(err);
+            // callerHead should be the merge event from addEvent
+            result.peerHistory.callerHead.should.equal(
+              results.addEvent.beta.merge.meta.eventHash);
+            // no new events available from alpha
+            result.peerHistory.history.should.have.length(0);
+            // beta has no new events to send to alpha
+            result.localHistory.should.have.length(0);
+            callback();
+          })],
+      betaAddEvent1: ['betaGossip2', (results, callback) =>
+        helpers.addEventAndMerge(
+          {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback)],
+      // alpha gossips with beta
+      alphaGossip1: ['betaAddEvent1', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.alpha, peerId: peers.beta}, (err, result) => {
+            assertNoError(err);
+            // callerHead should be the merge event from addEvent
+            result.peerHistory.callerHead.should.equal(
+              results.addEvent.alpha.merge.meta.eventHash);
+            // one new merge event event available from beta
+            result.peerHistory.history.should.have.length(1);
+            result.peerHistory.history.should.have.same.members(
+              [results.betaAddEvent1.mergeHash]);
+            // alpha has no new events to send to beta
+            result.localHistory.should.have.length(0);
+            callback();
+          })],
+      alphaAddEvent1: ['alphaGossip1', (results, callback) =>
+        helpers.addEventAndMerge(
+          {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback)],
+      alphaGossip2: ['alphaAddEvent1', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.alpha, peerId: peers.beta}, (err, result) => {
+            assertNoError(err);
+            result.peerHistory.callerHead.should.equal(
+              results.addEvent.alpha.merge.meta.eventHash);
+            result.peerHistory.history.should.have.length(0);
+            // alpha has two new events to send to beta
+            result.localHistory.should.have.length(2);
+            result.localHistory.should.have.same.members(
+              results.alphaAddEvent1.allHashes);
+            callback();
+          })],
+      // gamma gossips with alpha
+      gammaGossip1: ['alphaGossip2', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
+            assertNoError(err);
+            result.peerHistory.callerHead.should.equal(genesisMergeHash);
+            result.peerHistory.history.should.have.length(1);
+            result.peerHistory.history.should.have.same.members(
+              [results.addEvent.alpha.mergeHash]);
+            result.localHistory.should.have.length(2);
+            result.localHistory.should.have.same.members(
+              results.addEvent.gamma.allHashes);
+            callback();
+          })],
+      gammaGossip2: ['gammaGossip1', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
+            assertNoError(err);
+            result.peerHistory.callerHead.should.equal(
+              results.addEvent.gamma.mergeHash);
+            result.peerHistory.history.should.have.length(3);
+            result.peerHistory.history.should.have.same.members([
+              results.addEvent.beta.mergeHash,
+              results.betaAddEvent1.mergeHash,
+              results.alphaAddEvent1.mergeHash,
+            ]);
+            result.localHistory.should.have.length(0);
+            // result.localHistory.should.have.same.members(
+            //   results.addEvent.gamma.allHashes);
+            callback();
+          })],
+      gammaGossip3: ['gammaGossip2', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
+            assertNoError(err);
+            result.peerHistory.callerHead.should.equal(
+              results.addEvent.gamma.mergeHash);
+            result.peerHistory.history.should.have.length(0);
+            result.localHistory.should.have.length(0);
+            callback();
+          })],
+      // gamma gossips with beta for the first time
+      // gamma has all of beta's history from gossiping with alpha
+      gammaGossip4: ['gammaGossip3', (results, callback) =>
+        consensusApi._worker._gossipWith(
+          {ledgerNode: nodes.gamma, peerId: peers.beta}, (err, result) => {
+            assertNoError(err);
+            result.peerHistory.callerHead.should.equal(genesisMergeHash);
+            result.peerHistory.history.should.have.length(0);
+            result.localHistory.should.have.length(2);
+            result.localHistory.should.have.same.members(
+              results.addEvent.gamma.allHashes);
+            callback();
+          })],
     }, done);
   });
 });

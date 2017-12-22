@@ -103,8 +103,9 @@ describe('Consensus Agent - Get History API', () => {
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(0);
+          result.should.be.an('object');
+          should.exist(result.history);
+          result.history.should.have.length(0);
           callback();
         })
     }, done);
@@ -119,9 +120,10 @@ describe('Consensus Agent - Get History API', () => {
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(1);
-          result.should.have.same.members([
+          result.should.be.an('object');
+          result.history.should.be.an('array');
+          result.history.should.have.length(1);
+          result.history.should.have.same.members([
             results.mergeBranches.meta.eventHash]);
           callback();
         })]
@@ -146,9 +148,10 @@ describe('Consensus Agent - Get History API', () => {
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(2);
-          result.should.have.same.members([
+          result.should.be.an('object');
+          result.history.should.be.an('array');
+          result.history.should.have.length(2);
+          result.history.should.have.same.members([
             results.remoteEvents.merge,
             results.mergeBranches.meta.eventHash
           ]);
@@ -177,9 +180,10 @@ describe('Consensus Agent - Get History API', () => {
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(3);
-          result.should.have.same.members([
+          result.should.be.an('object');
+          result.history.should.be.an('array');
+          result.history.should.have.length(3);
+          result.history.should.have.same.members([
             ...results.remoteEvents.map(e => e.merge),
             results.mergeBranches.meta.eventHash
           ]);
@@ -228,9 +232,10 @@ describe('Consensus Agent - Get History API', () => {
         {peerId, treeHash: genesisMerge}, (err, result) => {
           assertNoError(err);
           should.exist(result);
-          result.should.be.an('array');
-          result.should.have.length(3);
-          result.should.have.same.members([
+          result.should.be.an('object');
+          result.history.should.be.an('array');
+          result.history.should.have.length(3);
+          result.history.should.have.same.members([
             results.remoteEventsBeta.merge,
             results.mergeBranchesBeta.meta.eventHash,
             results.mergeBranches.meta.eventHash,

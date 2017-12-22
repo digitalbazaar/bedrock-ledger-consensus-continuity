@@ -90,34 +90,37 @@ describe('Multinode Basics', () => {
     });
 
     describe('Check Genesis Block', () => {
-      it('should have the proper information', done => async.auto({
-        getLatest: callback => async.each(nodes, (ledgerNode, callback) =>
-          ledgerNode.storage.blocks.getLatest((err, result) => {
-            assertNoError(err);
-            const eventBlock = result.eventBlock;
-            should.exist(eventBlock.block);
-            eventBlock.block.blockHeight.should.equal(0);
-            eventBlock.block.event.should.be.an('array');
-            eventBlock.block.event.should.have.length(1);
-            const event = eventBlock.block.event[0];
-            // TODO: signature is dynamic... needs a better check
-            delete event.signature;
-            event.should.deep.equal(configEvent);
-            should.exist(eventBlock.meta);
-            should.exist(eventBlock.block.consensusProof);
-            const consensusProof = eventBlock.block.consensusProof;
-            consensusProof.should.be.an('array');
-            consensusProof.should.have.length(1);
-            // FIXME: make assertions about the contents of consensusProof
-            // console.log('8888888', JSON.stringify(eventBlock, null, 2));
-            callback(null, eventBlock.meta.blockHash);
-          }), callback),
-        testHash: ['getLatest', (results, callback) => {
-          const blockHashes = results.getLatest;
-          blockHashes.every(h => h === blockHashes[0]).should.be.true;
-          callback();
-        }]
-      }, done));
+      it('should have the proper information', done => {
+        const blockHashes = [];
+        async.auto({
+          getLatest: callback => async.each(nodes, (ledgerNode, callback) =>
+            ledgerNode.storage.blocks.getLatest((err, result) => {
+              assertNoError(err);
+              const eventBlock = result.eventBlock;
+              should.exist(eventBlock.block);
+              eventBlock.block.blockHeight.should.equal(0);
+              eventBlock.block.event.should.be.an('array');
+              eventBlock.block.event.should.have.length(1);
+              const event = eventBlock.block.event[0];
+              // TODO: signature is dynamic... needs a better check
+              delete event.signature;
+              event.should.deep.equal(configEvent);
+              should.exist(eventBlock.meta);
+              should.exist(eventBlock.block.consensusProof);
+              const consensusProof = eventBlock.block.consensusProof;
+              consensusProof.should.be.an('array');
+              consensusProof.should.have.length(1);
+              // FIXME: make assertions about the contents of consensusProof
+              // console.log('8888888', JSON.stringify(eventBlock, null, 2));
+              blockHashes.push(eventBlock.meta.blockHash);
+              callback();
+            }), callback),
+          testHash: ['getLatest', (results, callback) => {
+            blockHashes.every(h => h === blockHashes[0]).should.be.true;
+            callback();
+          }]
+        }, done);
+      });
     });
     /*
       going into this test, there are two node, peer[0] which is the genesisNode
@@ -125,7 +128,7 @@ describe('Multinode Basics', () => {
       1. add regular event on peer[1]
       2. run worker on peer[1]
      */
-    describe.only('Two Nodes', () => {
+    describe('Two Nodes', () => {
       it('two nodes reach consensus on two blocks', function(done) {
         this.timeout(120000);
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);

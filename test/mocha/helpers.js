@@ -51,6 +51,10 @@ api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
 
 api.addEventAndMerge = (
   {consensusApi, count = 1, eventTemplate, ledgerNode}, callback) => {
+  if(!(consensusApi && eventTemplate && ledgerNode)) {
+    throw new TypeError(
+      '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
+  }
   const events = {};
   const getRecentHistory = consensusApi._worker._events.getRecentHistory;
   const mergeBranches = consensusApi._worker._events.mergeBranches;
@@ -61,6 +65,7 @@ api.addEventAndMerge = (
           return callback(err);
         }
         events.regular = result;
+        events.regularHashes = Object.keys(result);
         callback();
       }),
     history: ['addEvent', (results, callback) =>
@@ -71,6 +76,8 @@ api.addEventAndMerge = (
           return callback(err);
         }
         events.merge = result;
+        events.mergeHash = result.meta.eventHash;
+        events.allHashes = [events.mergeHash, ...events.regularHashes];
         callback();
       })]
   }, err => callback(err, events));
