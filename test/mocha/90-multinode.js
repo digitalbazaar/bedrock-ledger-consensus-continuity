@@ -146,12 +146,17 @@ describe('Multinode', () => {
         //   (ledgerNode, voter, electors, manifest, callback) => {
         //     callback(null, recommendedElectorsBlock1);
         //   };
-        consensusApi._election.getBlockElectors =
-          (ledgerNode, blockHeight, callback) =>
-            callback(null, [
-              recommendedElectorsBlock1[0],
-              // recommendedElectorsBlock1[1]
-            ]);
+
+        // FIXME: this method probably won't work with new algo
+        // FIXME: if overrides like this are implemented it is essential that
+        // the override get restored in `after`
+
+        // consensusApi._election.getBlockElectors =
+        //   (ledgerNode, blockHeight, callback) =>
+        //     callback(null, [
+        //       recommendedElectorsBlock1[0],
+        //       // recommendedElectorsBlock1[1]
+        //     ]);
         async.auto({
           addEvent: callback => genesisLedgerNode.events.add(
             testEvent, callback),
@@ -168,7 +173,7 @@ describe('Multinode', () => {
                 eventBlock.block.event.should.be.an('array');
                 // a regular event and a merge event
                 eventBlock.block.event.should.have.length(2);
-                console.log('TWOEVENTS', eventBlock.block.event);
+                // console.log('TWOEVENTS', eventBlock.block.event);
                 // const event = eventBlock.block.event[0];
                 // event.input.should.be.an('array');
                 // event.input.should.have.length(1);

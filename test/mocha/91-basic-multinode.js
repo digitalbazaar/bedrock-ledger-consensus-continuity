@@ -4,7 +4,7 @@
 'use strict';
 
 const brIdentity = require('bedrock-identity');
-const brLedger = require('bedrock-ledger-node');
+const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
 
 const helpers = require('./helpers');
@@ -29,23 +29,22 @@ describe('Multinode Basics', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    let genesisLedgerNode;
     const mockIdentity = mockData.identities.regularUser;
     const configEvent = mockData.events.config;
     before(done => {
       async.auto({
-        clean: callback =>
-          helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-        actor: ['clean', (results, callback) => brIdentity.get(
+        actor: callback => brIdentity.get(
           null, mockIdentity.identity.id, (err, identity) => {
             callback(err, identity);
-          })],
-        consensusPlugin: callback => brLedger.use('Continuity2017', callback),
+          }),
+        consensusPlugin: callback => brLedgerNode.use(
+          'Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => {
-          brLedger.add(null, {configEvent}, (err, ledgerNode) => {
+          brLedgerNode.add(null, {configEvent}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
+            nodes.alpha = ledgerNode;
             callback(null, ledgerNode);
           });
         }]
@@ -53,7 +52,6 @@ describe('Multinode Basics', () => {
         if(err) {
           return done(err);
         }
-        genesisLedgerNode = results.ledgerNode;
         consensusApi = results.consensusPlugin.api;
         done();
       });
@@ -62,7 +60,7 @@ describe('Multinode Basics', () => {
     // get genesis record (block + meta)
     let genesisRecord;
     before(done => {
-      genesisLedgerNode.blocks.getGenesis((err, result) => {
+      nodes.alpha.blocks.getGenesis((err, result) => {
         if(err) {
           return done(err);
         }
@@ -74,9 +72,8 @@ describe('Multinode Basics', () => {
     // add N - 1 more private nodes
     before(function(done) {
       this.timeout(120000);
-      nodes.alpha = genesisLedgerNode;
       async.times(nodeCount - 1, (i, callback) => {
-        brLedger.add(null, {
+        brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
         }, (err, ledgerNode) => {
@@ -133,10 +130,10 @@ describe('Multinode Basics', () => {
         this.timeout(120000);
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
         async.auto({
-          addBetaEvent1: callback => nodes.beta.events.add(
+          betaAddEvent1: callback => nodes.beta.events.add(
             helpers.createEventBasic({eventTemplate}), callback),
           // beta will merge its new regular event
-          betaWorker1: ['addBetaEvent1', (results, callback) =>
+          betaWorker1: ['betaAddEvent1', (results, callback) =>
             consensusApi._worker._run(nodes.beta, callback)],
           test1: ['betaWorker1', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
@@ -187,11 +184,11 @@ describe('Multinode Basics', () => {
               callback();
             })],
           // add a regular event on beta
-          addBetaEvent2: ['test3', (results, callback) => nodes.beta.events.add(
+          betaAddEvent2: ['test3', (results, callback) => nodes.beta.events.add(
             helpers.createEventBasic({eventTemplate}), callback)],
           // this will merge the regular event on beta and create its first
           // block now that alpha has endorsed its previous events
-          betaWorker3: ['addBetaEvent2', (results, callback) =>
+          betaWorker3: ['betaAddEvent2', (results, callback) =>
             consensusApi._worker._run(nodes.beta, callback)],
           test4: ['betaWorker3', (results, callback) =>
             nodes.beta.storage.blocks.getLatest((err, result) => {
