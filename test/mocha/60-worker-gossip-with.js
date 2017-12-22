@@ -343,7 +343,7 @@ describe('Worker - _gossipWith', () => {
       }]
     }, done);
   });
-  it.only('properly selects events for push gossip', done => {
+  it('properly selects events for push gossip', done => {
     const eventTemplate = mockData.events.alpha;
     async.auto({
       addEvent: callback => helpers.addEventMultiNode(
