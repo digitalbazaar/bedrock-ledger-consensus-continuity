@@ -399,23 +399,33 @@ describe.only('Multinode Basics', () => {
             consensusApi._worker._run(nodes.beta, callback)],
           alphaWorker1: ['betaWorker1', (results, callback) =>
             consensusApi._worker._run(nodes.alpha, callback)],
+          betaWorker2: ['alphaWorker1', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, callback)],
+          alphaWorker2: ['betaWorker2', (results, callback) =>
+            consensusApi._worker._run(nodes.alpha, callback)],
+          betaWorker3: ['alphaWorker2', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, callback)],
+          // new merge events are continually generated on alpha, must end
+          // with a beta worker to equalizet the events
 
           // NOTE: this test shows that two nodes with the same events are
           // not reaching consensus at the same time.  Unclear if beta is
-          // reaching consenus too soon or alpha not soon enough
+          // reaching consenus too soon or alpha not soon enough.  Alpha does
+          // not move from blockHeight 2 as can be shows from the tests
+          // `makes many more blocks` below
 
-          test10: ['betaWorker1', (results, callback) => async.auto({
+          test10: ['betaWorker3', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
-                result.should.have.length(21);
+                result.should.have.length(24);
                 callback(err, result.map(e => e.eventHash));
               }),
             beta: ['alpha', (results, callback) =>
               nodes.beta.storage.events.collection.find({})
                 .toArray((err, result) => {
                   assertNoError(err);
-                  result.should.have.length(21);
+                  result.should.have.length(24);
                   result.map(e => e.eventHash)
                     .should.have.same.members(results.alpha);
                   callback();
@@ -435,8 +445,8 @@ describe.only('Multinode Basics', () => {
                 (err, result) => {
                   assertNoError(err);
 
-                  // FIXME: should this be 2?
-                  result.eventBlock.block.blockHeight.should.equal(3);
+                  // FIXME: should this be 2, 3?
+                  result.eventBlock.block.blockHeight.should.equal(4);
 
                   callback();
                 })],
