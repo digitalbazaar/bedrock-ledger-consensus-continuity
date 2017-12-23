@@ -19,7 +19,7 @@ const eventTemplate = mockData.events.alpha;
 const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon'];
 const nodes = {};
 
-describe('Multinode Basics', () => {
+describe.only('Multinode Basics', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -389,40 +389,92 @@ describe('Multinode Basics', () => {
             _workerCycle({consensusApi, nodes}, callback)],
           workCycle2: ['workCycle1', (results, callback) =>
             _workerCycle({consensusApi, nodes}, callback)],
-          // workCycle3: ['workCycle2', (results, callback) =>
-          //   _workerCycle({consensusApi, nodes}, callback)],
+          workCycle3: ['workCycle2', (results, callback) =>
+            _workerCycle({consensusApi, nodes}, callback)],
           // workCycle4: ['workCycle3', (results, callback) =>
           //   _workerCycle({consensusApi, nodes}, callback)],
-          test10: ['workCycle2', (results, callback) => async.auto({
+
+          // run workers on both nodes to equalize events
+          betaWorker1: ['workCycle3', (results, callback) =>
+            consensusApi._worker._run(nodes.beta, callback)],
+          alphaWorker1: ['betaWorker1', (results, callback) =>
+            consensusApi._worker._run(nodes.alpha, callback)],
+
+          // NOTE: this test shows that two nodes with the same events are
+          // not reaching consensus at the same time.  Unclear if beta is
+          // reaching consenus too soon or alpha not soon enough
+
+          test10: ['betaWorker1', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
-                result.should.have.length(18);
-                callback();
+                result.should.have.length(21);
+                callback(err, result.map(e => e.eventHash));
               }),
-            beta: callback => nodes.beta.storage.events.collection.find({})
-              .toArray((err, result) => {
-                assertNoError(err);
-                result.should.have.length(19);
-                callback();
-              }),
-            alphaBlock: callback => nodes.alpha.storage.blocks.getLatest(
-              (err, result) => {
-                assertNoError(err);
-                // should be a new alpha on beta
-                result.eventBlock.block.blockHeight.should.equal(2);
-                // result.eventBlock.block.consensusProof.should.have.length(3);
-                callback();
-              }),
-            betaBlock: callback => nodes.beta.storage.blocks.getLatest(
-              (err, result) => {
-                assertNoError(err);
-                // should be a new alpha on beta
-                result.eventBlock.block.blockHeight.should.equal(3);
-                // result.eventBlock.block.consensusProof.should.have.length(3);
-                callback();
-              }),
+            beta: ['alpha', (results, callback) =>
+              nodes.beta.storage.events.collection.find({})
+                .toArray((err, result) => {
+                  assertNoError(err);
+                  result.should.have.length(21);
+                  result.map(e => e.eventHash)
+                    .should.have.same.members(results.alpha);
+                  callback();
+                })],
+            alphaBlock: ['beta', (results, callback) =>
+              nodes.alpha.storage.blocks.getLatest(
+                (err, result) => {
+                  assertNoError(err);
+
+                  // FIXME: should this be 3??
+                  result.eventBlock.block.blockHeight.should.equal(2);
+
+                  callback();
+                })],
+            betaBlock: ['alphaBlock', (results, callback) =>
+              nodes.beta.storage.blocks.getLatest(
+                (err, result) => {
+                  assertNoError(err);
+
+                  // FIXME: should this be 2?
+                  result.eventBlock.block.blockHeight.should.equal(3);
+
+                  callback();
+                })],
           }, callback)],
+        }, done);
+      });
+      it.skip('makes many more blocks', function(done) {
+        this.timeout(300000);
+        async.timesSeries(1000, (i, callback) => {
+          console.log('---------------------------------------');
+          console.log('Iteration', i);
+          console.log('--- start -----------------------------');
+          async.auto({
+            alphaAddEvent1: callback => nodes.alpha.events.add(
+              helpers.createEventBasic({eventTemplate}), callback),
+            workCycle1: ['alphaAddEvent1', (results, callback) =>
+              _workerCycle({consensusApi, nodes}, callback)],
+            report: ['workCycle1', (results, callback) =>
+              async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
+                console.log('Report', i);
+                async.auto({
+                  blockHeight: callback => ledgerNode.storage.blocks.getLatest(
+                    (err, result) => {
+                      assertNoError(err);
+                      console.log(
+                        'blockHeight', result.eventBlock.block.blockHeight);
+                      callback();
+                    }),
+                  events: ['blockHeight', (results, callback) =>
+                    ledgerNode.storage.events.collection.find({})
+                      .count((err, result) => {
+                        assertNoError(err);
+                        console.log('events', result);
+                        callback();
+                      })],
+                }, callback);
+              }, callback)]
+          }, callback);
         }, done);
       });
     }); // end one block
