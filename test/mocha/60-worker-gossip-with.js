@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe.only('Worker - _gossipWith', () => {
+describe('Worker - _gossipWith', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -354,8 +354,14 @@ describe.only('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
+            // console.log('BETACol', nodes.beta.storage.events.collection.s.name);
+            // console.log('PPPPPPP', peers);
+            // console.log('LLLLLLLLLLLL', result);
             result.peerHistory.creatorHeads[peers.beta]
               .should.equal(genesisMergeHash);
+            result.peerHistory.history.should.have.length(1);
+            result.peerHistory.history.should.have.same.members(
+              [results.addEvent.alpha.mergeHash]);
             result.localHistory.should.have.length(2);
             result.localHistory.should.have.same.members(
               results.addEvent.beta.allHashes);
@@ -385,6 +391,8 @@ describe.only('Worker - _gossipWith', () => {
             // callerHead should be the merge event from addEvent
             result.peerHistory.creatorHeads[peers.alpha]
               .should.equal(results.addEvent.alpha.merge.meta.eventHash);
+            result.peerHistory.creatorHeads[peers.beta]
+              .should.equal(results.betaAddEvent1.mergeHash);
             // one new merge event event available from beta
             result.peerHistory.history.should.have.length(1);
             result.peerHistory.history.should.have.same.members(
