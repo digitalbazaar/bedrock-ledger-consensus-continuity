@@ -197,14 +197,47 @@ describe.only('Multinode Basics', () => {
           // block now that alpha has endorsed its previous events
           betaWorker3: ['betaAddEvent2', (results, callback) =>
             consensusApi._worker._run(nodes.beta, callback)],
-          test4: ['betaWorker3', (results, callback) =>
-            nodes.beta.storage.blocks.getLatest((err, result) => {
-              assertNoError(err);
-              // first block has no proof because alpha is only elector
-              result.eventBlock.block.consensusProof.should.have.length(0);
-              result.eventBlock.block.blockHeight.should.equal(1);
-              callback();
-            })],
+          test4: ['betaWorker3', (results, callback) => async.auto({
+            alpha: callback => nodes.alpha.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(5);
+                callback();
+              }),
+            beta: callback => nodes.beta.storage.events.collection.find({})
+              .toArray((err, result) => {
+                assertNoError(err);
+                result.should.have.length(7);
+                callback();
+              }),
+            alphaBlock: callback => nodes.alpha.storage.blocks.getLatest(
+              (err, result) => {
+                assertNoError(err);
+                // should not be a new block on alpha yet
+                result.eventBlock.block.blockHeight.should.equal(1);
+                result.eventBlock.block.consensusProof.should.have.length(0);
+                callback(null, result);
+              }),
+            betaBlock: ['alphaBlock', (results, callback) =>
+              nodes.beta.storage.blocks.getLatest((err, result) => {
+                assertNoError(err);
+                // should be a new block on beta
+                result.eventBlock.block.blockHeight.should.equal(1);
+                result.eventBlock.block.consensusProof.should.have.length(0);
+                const betaSigs = result.eventBlock.block
+                  .consensusProof.map(p => p.signature.signatureValue);
+                const alphaSigs = results.alphaBlock.eventBlock.block
+                  .consensusProof.map(p => p.signature.signatureValue);
+                betaSigs.should.have.same.members(alphaSigs);
+                result.eventBlock.block.previousBlockHash.should.equal(
+                  results.alphaBlock.eventBlock.block.previousBlockHash
+                );
+                // check blockHash last, it encompasses much of the above
+                result.eventBlock.meta.blockHash.should.equal(
+                  results.alphaBlock.eventBlock.meta.blockHash);
+                callback();
+              })],
+          }, callback)],
           // beta pushes regular and merge events to alpha
           betaWorker4: ['test4', (results, callback) =>
             consensusApi._worker._run(nodes.beta, err => {
@@ -375,10 +408,10 @@ describe.only('Multinode Basics', () => {
                 result.should.have.length(13);
                 callback();
               }),
-            alphaBlock: callback => nodes.beta.storage.blocks.getLatest(
+            alphaBlock: callback => nodes.alpha.storage.blocks.getLatest(
               (err, result) => {
                 assertNoError(err);
-                // should be a new alpha on beta
+                // should be a new block on alpha
                 result.eventBlock.block.blockHeight.should.equal(2);
                 result.eventBlock.block.consensusProof.should.have.length(3);
                 callback(null, result);
@@ -387,15 +420,24 @@ describe.only('Multinode Basics', () => {
               nodes.beta.storage.blocks.getLatest((err, result) => {
                 assertNoError(err);
                 // should be a new block on beta
+                const betaEvents = result.eventBlock.block.event
+                  .map(e => helpers.testHasher(e));
+                const alphaEvents = results.alphaBlock.eventBlock.block.event
+                  .map(e => helpers.testHasher(e));
+                betaEvents.should.have.same.members(alphaEvents);
                 result.eventBlock.block.blockHeight.should.equal(2);
                 result.eventBlock.block.consensusProof.should.have.length(3);
-                result.eventBlock.meta.blockHash.should.equal(
-                  results.alphaBlock.eventBlock.meta.blockHash);
                 const betaSigs = result.eventBlock.block
                   .consensusProof.map(p => p.signature.signatureValue);
                 const alphaSigs = results.alphaBlock.eventBlock.block
                   .consensusProof.map(p => p.signature.signatureValue);
                 betaSigs.should.have.same.members(alphaSigs);
+                result.eventBlock.block.previousBlockHash.should.equal(
+                  results.alphaBlock.eventBlock.block.previousBlockHash
+                );
+                // check blockHash last, it encompasses much of the above
+                result.eventBlock.meta.blockHash.should.equal(
+                  results.alphaBlock.eventBlock.meta.blockHash);
                 callback();
               })],
           }, callback)],
@@ -433,40 +475,37 @@ describe.only('Multinode Basics', () => {
             consensusApi._worker._run(nodes.alpha, callback)],
           betaWorker2: ['alphaWorker1', (results, callback) =>
             consensusApi._worker._run(nodes.beta, callback)],
-          alphaWorker2: ['betaWorker2', (results, callback) =>
-            consensusApi._worker._run(nodes.alpha, callback)],
-          betaWorker3: ['alphaWorker2', (results, callback) =>
-            consensusApi._worker._run(nodes.beta, callback)],
           // new merge events are continually generated on alpha, must end
           // with a beta worker to equalize the events
 
-          test10: ['betaWorker3', (results, callback) => async.auto({
+          test10: ['betaWorker2', (results, callback) => async.auto({
             alpha: callback => nodes.alpha.storage.events.collection.find({})
               .toArray((err, result) => {
                 assertNoError(err);
-                result.should.have.length(23);
+                // result.should.have.length(23);
                 callback(err, result.map(e => e.eventHash));
               }),
             beta: ['alpha', (results, callback) =>
               nodes.beta.storage.events.collection.find({})
                 .toArray((err, result) => {
                   assertNoError(err);
-                  result.should.have.length(23);
-                  result.map(e => e.eventHash)
-                    .should.have.same.members(results.alpha);
+                  // result.should.have.length(23);
+                  // result.map(e => e.eventHash)
+                  //   .should.have.same.members(results.alpha);
                   callback();
                 })],
             alphaBlock: ['beta', (results, callback) =>
               nodes.alpha.storage.blocks.getLatest(
                 (err, result) => {
                   assertNoError(err);
-                  result.eventBlock.block.blockHeight.should.equal(4);
+                  result.eventBlock.block.blockHeight.should.equal(3);
                   callback(null, result);
                 })],
             betaBlock: ['alphaBlock', (results, callback) =>
               nodes.beta.storage.blocks.getLatest(
                 (err, result) => {
                   assertNoError(err);
+                  result.eventBlock.block.blockHeight.should.equal(3);
                   const betaSigs = result.eventBlock.block
                     .consensusProof.map(p => p.signature.signatureValue);
                   const alphaSigs = results.alphaBlock.eventBlock.block
@@ -477,11 +516,11 @@ describe.only('Multinode Basics', () => {
                   const alphaEvents = results.alphaBlock.eventBlock.block.event
                     .map(e => helpers.testHasher(e));
                   betaEvents.should.have.same.members(alphaEvents);
-                  // result.eventBlock.block.event.should.deep.equal(
-                  //   results.alphaBlock.eventBlock.block.event);
-                  // result.eventBlock.meta.blockHash.should.equal(
-                  //   results.alphaBlock.eventBlock.meta.blockHash);
-                  result.eventBlock.block.blockHeight.should.equal(4);
+                  result.eventBlock.block.previousBlockHash.should.equal(
+                    results.alphaBlock.eventBlock.block.previousBlockHash
+                  );
+                  result.eventBlock.meta.blockHash.should.equal(
+                    results.alphaBlock.eventBlock.meta.blockHash);
                   callback();
                 })],
           }, callback)],
@@ -544,7 +583,7 @@ describe.only('Multinode Basics', () => {
               ledgerNode.storage.events.collection.find({})
                 .toArray((err, result) => {
                   assertNoError(err);
-                  result.should.have.length(6);
+                  result.should.have.length(21);
                   callback();
                 });
             }, callback)],
