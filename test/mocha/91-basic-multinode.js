@@ -25,7 +25,7 @@ describe.only('Multinode Basics', () => {
   });
 
   describe('Consensus with 2 Nodes', () => {
-    const nodeCount = 2;
+    const nodeCount = 4;
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
@@ -381,28 +381,47 @@ describe.only('Multinode Basics', () => {
                 // should be a new alpha on beta
                 result.eventBlock.block.blockHeight.should.equal(2);
                 result.eventBlock.block.consensusProof.should.have.length(3);
-                callback();
+                callback(null, result);
               }),
+            betaBlock: ['alphaBlock', (results, callback) =>
+              nodes.beta.storage.blocks.getLatest((err, result) => {
+                assertNoError(err);
+                // should be a new block on beta
+                result.eventBlock.block.blockHeight.should.equal(2);
+                result.eventBlock.block.consensusProof.should.have.length(3);
+                result.eventBlock.meta.blockHash.should.equal(
+                  results.alphaBlock.eventBlock.meta.blockHash);
+                const betaSigs = result.eventBlock.block
+                  .consensusProof.map(p => p.signature.signatureValue);
+                const alphaSigs = results.alphaBlock.eventBlock.block
+                  .consensusProof.map(p => p.signature.signatureValue);
+                betaSigs.should.have.same.members(alphaSigs);
+                callback();
+              })],
           }, callback)],
         }, done);
       });
       it('two nodes reach consensus on a 3rd block', function(done) {
         this.timeout(120000);
+        const testNodes = {
+          alpha: nodes.alpha,
+          beta: nodes.beta
+        };
         async.auto({
-          alphaAddEvent1: callback => nodes.alpha.events.add(
+          alphaAddEvent1: callback => testNodes.alpha.events.add(
             helpers.createEventBasic({eventTemplate}), callback),
           // beta will merge its new regular event
           workCycle1: ['alphaAddEvent1', (results, callback) => {
             console.log('WORKER CYCLE 1 ---------------------');
-            _workerCycle({consensusApi, nodes}, callback);
+            _workerCycle({consensusApi, nodes: testNodes}, callback);
           }],
           workCycle2: ['workCycle1', (results, callback) => {
             console.log('WORKER CYCLE 2 ---------------------');
-            _workerCycle({consensusApi, nodes}, callback);
+            _workerCycle({consensusApi, nodes: testNodes}, callback);
           }],
           workCycle3: ['workCycle2', (results, callback) => {
             console.log('WORKER CYCLE 3 ---------------------');
-            _workerCycle({consensusApi, nodes}, callback);
+            _workerCycle({consensusApi, nodes: testNodes}, callback);
           }],
           // workCycle4: ['workCycle3', (results, callback) =>
           //   _workerCycle({consensusApi, nodes}, callback)],
@@ -442,19 +461,39 @@ describe.only('Multinode Basics', () => {
                 (err, result) => {
                   assertNoError(err);
                   result.eventBlock.block.blockHeight.should.equal(4);
-                  callback();
+                  callback(null, result);
                 })],
             betaBlock: ['alphaBlock', (results, callback) =>
               nodes.beta.storage.blocks.getLatest(
                 (err, result) => {
                   assertNoError(err);
+                  const betaSigs = result.eventBlock.block
+                    .consensusProof.map(p => p.signature.signatureValue);
+                  const alphaSigs = results.alphaBlock.eventBlock.block
+                    .consensusProof.map(p => p.signature.signatureValue);
+                  betaSigs.should.have.same.members(alphaSigs);
+                  const betaEvents = result.eventBlock.block.event
+                    .map(e => helpers.testHasher(e));
+                  const alphaEvents = results.alphaBlock.eventBlock.block.event
+                    .map(e => helpers.testHasher(e));
+                  betaEvents.should.have.same.members(alphaEvents);
+                  // result.eventBlock.block.event.should.deep.equal(
+                  //   results.alphaBlock.eventBlock.block.event);
+                  // result.eventBlock.meta.blockHash.should.equal(
+                  //   results.alphaBlock.eventBlock.meta.blockHash);
                   result.eventBlock.block.blockHeight.should.equal(4);
                   callback();
                 })],
           }, callback)],
         }, done);
       });
-      it.skip('makes many more blocks', function(done) {
+
+      // NOTE: `nodes` includes 4 nodes, nodes gamma and delta have not been
+      // participating in the ledger until now. Each iteration of the test
+      // 1. add new event on alpha
+      // 2. run worker on all nodes
+      // 3. report blockheight and event counts
+      it('makes many more blocks', function(done) {
         this.timeout(300000);
         async.timesSeries(1000, (i, callback) => {
           console.log('---------------------------------------');
@@ -549,7 +588,6 @@ describe.only('Multinode Basics', () => {
           test2: ['worker4', (results, callback) =>
             nodes.beta.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
-              // console.log('999999999', result.eventBlock.block.event);
               result.eventBlock.block.blockHeight.should.equal(1);
               callback();
             })],
@@ -576,7 +614,8 @@ describe.only('Multinode Basics', () => {
   });
 });
 
-function _workerCycle({consensusApi, nodes}, callback) {
-  async.eachSeries(nodes, (ledgerNode, callback) =>
+function _workerCycle({consensusApi, nodes, series = false}, callback) {
+  const func = series ? async.eachSeries : async.each;
+  func(nodes, (ledgerNode, callback) =>
     consensusApi._worker._run(ledgerNode, callback), callback);
 }
