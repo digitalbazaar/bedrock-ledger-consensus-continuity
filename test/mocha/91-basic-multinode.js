@@ -420,11 +420,6 @@ describe.only('Multinode Basics', () => {
               nodes.beta.storage.blocks.getLatest((err, result) => {
                 assertNoError(err);
                 // should be a new block on beta
-                const betaEvents = result.eventBlock.block.event
-                  .map(e => helpers.testHasher(e));
-                const alphaEvents = results.alphaBlock.eventBlock.block.event
-                  .map(e => helpers.testHasher(e));
-                betaEvents.should.have.same.members(alphaEvents);
                 result.eventBlock.block.blockHeight.should.equal(2);
                 result.eventBlock.block.consensusProof.should.have.length(3);
                 const betaSigs = result.eventBlock.block
@@ -438,8 +433,22 @@ describe.only('Multinode Basics', () => {
                 // check blockHash last, it encompasses much of the above
                 result.eventBlock.meta.blockHash.should.equal(
                   results.alphaBlock.eventBlock.meta.blockHash);
-                callback();
+                callback(null, result);
               })],
+            eventTest: ['betaBlock', (results, callback) => {
+              const alphaEvent = results.alphaBlock.eventBlock.block.event;
+              const betaEvent = results.betaBlock.eventBlock.block.event;
+              async.auto({
+                alpha: callback => async.map(alphaEvent, (e, callback) =>
+                  helpers.testHasher(e, callback), callback),
+                beta: callback => async.map(betaEvent, (e, callback) =>
+                  helpers.testHasher(e, callback), callback),
+              }, (err, results) => {
+                assertNoError(err);
+                results.alpha.should.have.same.members(results.beta);
+                callback();
+              });
+            }]
           }, callback)],
         }, done);
       });
@@ -511,18 +520,27 @@ describe.only('Multinode Basics', () => {
                   const alphaSigs = results.alphaBlock.eventBlock.block
                     .consensusProof.map(p => p.signature.signatureValue);
                   betaSigs.should.have.same.members(alphaSigs);
-                  const betaEvents = result.eventBlock.block.event
-                    .map(e => helpers.testHasher(e));
-                  const alphaEvents = results.alphaBlock.eventBlock.block.event
-                    .map(e => helpers.testHasher(e));
-                  betaEvents.should.have.same.members(alphaEvents);
                   result.eventBlock.block.previousBlockHash.should.equal(
                     results.alphaBlock.eventBlock.block.previousBlockHash
                   );
                   result.eventBlock.meta.blockHash.should.equal(
                     results.alphaBlock.eventBlock.meta.blockHash);
-                  callback();
+                  callback(null, result);
                 })],
+            eventTest: ['betaBlock', (results, callback) => {
+              const alphaEvent = results.alphaBlock.eventBlock.block.event;
+              const betaEvent = results.betaBlock.eventBlock.block.event;
+              async.auto({
+                alpha: callback => async.map(alphaEvent, (e, callback) =>
+                  helpers.testHasher(e, callback), callback),
+                beta: callback => async.map(betaEvent, (e, callback) =>
+                  helpers.testHasher(e, callback), callback),
+              }, (err, results) => {
+                assertNoError(err);
+                results.alpha.should.have.same.members(results.beta);
+                callback();
+              });
+            }]
           }, callback)],
         }, done);
       });
