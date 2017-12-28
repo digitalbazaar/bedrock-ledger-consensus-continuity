@@ -581,20 +581,21 @@ describe.only('Multinode Basics', () => {
                     (err, result) => {
                       assertNoError(err);
                       const blockHeight = result.eventBlock.block.blockHeight;
-                      console.log('blockHeight', blockHeight);
+                      console.log('  blockHeight', blockHeight);
                       if(blockHeight > maxBlockHeight) {
                         blockTime = Date.now() - blockStartTime;
                         blockStartTime = Date.now();
                         maxBlockHeight = blockHeight;
                       }
-                      console.log('block time', (blockTime / 1000).toFixed(3) + 's');
+                      console.log(
+                        '  block time', (blockTime / 1000).toFixed(3) + 's');
                       callback();
                     }),
                   events: ['blockHeight', (results, callback) =>
                     ledgerNode.storage.events.collection.find({})
                       .count((err, result) => {
                         assertNoError(err);
-                        console.log('events', result);
+                        console.log('  events', result);
                         callback();
                       })],
                 }, callback);
