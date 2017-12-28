@@ -577,7 +577,7 @@ describe.only('Multinode Basics', () => {
               async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
                 console.log('Report', i);
                 async.auto({
-                  blockHeight: callback => ledgerNode.storage.blocks.getLatest(
+                  blockHeight: callback => ledgerNode.storage.blocks.getLatestSummary(
                     (err, result) => {
                       assertNoError(err);
                       const blockHeight = result.eventBlock.block.blockHeight;
