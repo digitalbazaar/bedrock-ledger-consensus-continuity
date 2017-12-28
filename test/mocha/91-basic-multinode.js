@@ -559,8 +559,17 @@ describe.only('Multinode Basics', () => {
           async.auto({
             alphaAddEvent1: callback => nodes.alpha.events.add(
               helpers.createEventBasic({eventTemplate}), callback),
-            workCycle1: ['alphaAddEvent1', (results, callback) =>
-              _workerCycle({consensusApi, nodes}, callback)],
+            betaAddEvent1: callback => nodes.beta.events.add(
+              helpers.createEventBasic({eventTemplate}), callback),
+            gammaAddEvent1: callback => nodes.gamma.events.add(
+              helpers.createEventBasic({eventTemplate}), callback),
+            deltaAddEvent1: callback => nodes.delta.events.add(
+              helpers.createEventBasic({eventTemplate}), callback),
+            workCycle1: [
+              'alphaAddEvent1', 'betaAddEvent1',
+              'gammaAddEvent1', 'deltaAddEvent1',
+              (results, callback) =>
+                _workerCycle({consensusApi, nodes}, callback)],
             report: ['workCycle1', (results, callback) =>
               async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
                 console.log('Report', i);
