@@ -19,7 +19,7 @@ const eventTemplate = mockData.events.alpha;
 const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta'];
 const nodes = {};
 
-describe('Multinode Basics', () => {
+describe.only('Multinode Basics', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
