@@ -40,9 +40,6 @@ describe('Election API findConsensus', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          // override _compareTallies
-          consensusApi._worker._election._compareTallies =
-            helpers.deterministicCompareTallies;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(

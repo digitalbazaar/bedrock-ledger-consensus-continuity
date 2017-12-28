@@ -47,9 +47,6 @@ describe('Election API _findMergeEventProof', () => {
             consensusApi._worker._election._getElectorBranches;
           _findMergeEventProof =
             consensusApi._worker._election._findMergeEventProof;
-          // override _compareTallies
-          consensusApi._worker._election._compareTallies =
-            helpers.deterministicCompareTallies;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
