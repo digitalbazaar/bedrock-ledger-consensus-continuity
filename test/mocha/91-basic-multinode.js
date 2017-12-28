@@ -19,7 +19,7 @@ const eventTemplate = mockData.events.alpha;
 const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta'];
 const nodes = {};
 
-describe.only('Multinode Basics', () => {
+describe('Multinode Basics', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -550,7 +550,7 @@ describe.only('Multinode Basics', () => {
       // 1. add new event on alpha
       // 2. run worker on all nodes
       // 3. report blockheight and event counts
-      it('makes many more blocks', function(done) {
+      it.skip('makes many more blocks', function(done) {
         this.timeout(300000);
         let blockStartTime = Date.now();
         let blockTime = 0;
