@@ -552,6 +552,9 @@ describe.only('Multinode Basics', () => {
       // 3. report blockheight and event counts
       it('makes many more blocks', function(done) {
         this.timeout(300000);
+        let blockStartTime = Date.now();
+        let blockTime = 0;
+        let maxBlockHeight = 0;
         async.timesSeries(1000, (i, callback) => {
           console.log('---------------------------------------');
           console.log('Iteration', i);
@@ -577,8 +580,14 @@ describe.only('Multinode Basics', () => {
                   blockHeight: callback => ledgerNode.storage.blocks.getLatest(
                     (err, result) => {
                       assertNoError(err);
-                      console.log(
-                        'blockHeight', result.eventBlock.block.blockHeight);
+                      const blockHeight = result.eventBlock.block.blockHeight;
+                      console.log('blockHeight', blockHeight);
+                      if(blockHeight > maxBlockHeight) {
+                        blockTime = Date.now() - blockStartTime;
+                        blockStartTime = Date.now();
+                        maxBlockHeight = blockHeight;
+                      }
+                      console.log('block time', (blockTime / 1000).toFixed(3) + 's');
                       callback();
                     }),
                   events: ['blockHeight', (results, callback) =>
