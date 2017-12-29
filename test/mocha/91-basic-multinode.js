@@ -550,7 +550,7 @@ describe.only('Multinode Basics', () => {
       // 1. add new event on alpha
       // 2. run worker on all nodes
       // 3. report blockheight and event counts
-      it.skip('makes many more blocks', function(done) {
+      it('makes many more blocks', function(done) {
         this.timeout(300000);
         let blockStartTime = Date.now();
         let blockTime = 0;
