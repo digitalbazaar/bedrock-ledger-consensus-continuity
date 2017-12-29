@@ -19,12 +19,12 @@ const eventTemplate = mockData.events.alpha;
 const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta'];
 const nodes = {};
 
-describe.only('Multinode Basics', () => {
+describe('Multinode Basics', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
 
-  describe('Consensus with 2 Nodes', () => {
+  describe.only('Consensus with 2 Nodes', () => {
     const nodeCount = 6;
 
     // get consensus plugin and create genesis ledger node

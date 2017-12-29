@@ -252,29 +252,14 @@ describe('Worker - _gossipWith', () => {
     merged the events from the fictitious node into their respective histories.
   */
   it('properly gossips in both directions', done => {
-    const mergeBranches = consensusApi._worker._events.mergeBranches;
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    const testEventBeta = bedrock.util.clone(mockData.events.alpha);
-    testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
-    const testEventBetaId = 'https://example.com/events/' + uuid();
-    testEventBeta.input[0].id = testEventBetaId;
     const testNodes = [nodes.alpha, nodes.beta];
+    const eventTemplate = mockData.events.alpha;
     async.auto({
-      addEvent: callback => nodes.alpha.events.add(testEvent, callback),
-      addEventBeta: callback => nodes.beta.events.add(
-        testEventBeta, callback),
-      remoteEvents: callback => helpers.addRemoteEvents(
-        {consensusApi, ledgerNode: testNodes, mockData}, callback),
-      history1: ['addEvent', 'remoteEvents', (results, callback) =>
-        getRecentHistory({ledgerNode: nodes.alpha}, callback)],
-      mergeBranches: ['history1', (results, callback) => mergeBranches(
-        {history: results.history1, ledgerNode: nodes.alpha}, callback)],
-      history2: ['addEventBeta', 'remoteEvents', (results, callback) =>
-        getRecentHistory({ledgerNode: nodes.beta}, callback)],
-      mergeBranchesBeta: ['history2', (results, callback) => mergeBranches(
-        {history: results.history2, ledgerNode: nodes.beta}, callback)],
-      gossipWith: ['mergeBranches', 'mergeBranchesBeta', (results, callback) =>
+      addEvent: callback => helpers.addEventAndMerge(
+        {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback),
+      addEventBeta: callback => helpers.addEventAndMerge(
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback),
+      gossipWith: ['addEvent', 'addEventBeta', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
@@ -284,12 +269,8 @@ describe('Worker - _gossipWith', () => {
         // ledgerNode and ledgerNode beta should have the same events
         async.eachSeries(testNodes, (node, callback) =>
           node.storage.events.exists([
-            results.remoteEvents.merge,
-            results.remoteEvents.regular,
-            results.addEvent.meta.eventHash,
-            results.mergeBranches.meta.eventHash,
-            results.addEventBeta.meta.eventHash,
-            results.mergeBranchesBeta.meta.eventHash
+            ...results.addEvent.allHashes,
+            ...results.addEventBeta.allHashes
           ], (err, result) => {
             assertNoError(err);
             result.should.be.true;
@@ -304,7 +285,8 @@ describe('Worker - _gossipWith', () => {
   */
   it('properly gossips among three nodes', done => {
     const eventTemplate = mockData.events.alpha;
-    const testNodes = [nodes.alpha, nodes.beta, nodes.gamma];
+    const testNodes =
+      {alpha: nodes.alpha, beta: nodes.beta, gamma: nodes.gamma};
     async.auto({
       addEvent: callback => helpers.addEventMultiNode(
         {consensusApi, eventTemplate, nodes: testNodes}, callback),
@@ -325,17 +307,31 @@ describe('Worker - _gossipWith', () => {
         callback => consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.gamma}, (err, result) => {
             assertNoError(err);
+            result.peerHistory.creatorHeads[peers.alpha]
+              .should.equal(results.addEvent.alpha.mergeHash);
             result.peerHistory.creatorHeads[peers.beta]
               .should.equal(genesisMergeHash);
+            result.peerHistory.creatorHeads[peers.gamma]
+              .should.equal(results.addEvent.gamma.mergeHash);
             callback();
           }),
       ], callback)],
-      test: ['gossipWith', (results, callback) => {
+      count: ['gossipWith', (results, callback) => {
+        async.eachOfSeries(testNodes, (ledgerNode, i, callback) => {
+          ledgerNode.storage.events.collection.find({})
+            .count((err, result) => {
+              assertNoError(err);
+              result.should.equal(8);
+              callback();
+            });
+        }, callback);
+      }],
+      test: ['count', (results, callback) => {
         // all nodes should have the same events
         async.eachSeries(testNodes, (node, callback) =>
           node.storage.events.exists([
             ...results.addEvent.mergeHash,
-            ...results.addEvent.regularHash,
+            ...results.addEvent.regularHash
           ], (err, result) => {
             assertNoError(err);
             result.should.be.true;
@@ -354,17 +350,14 @@ describe('Worker - _gossipWith', () => {
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
-            // console.log('BETACol', nodes.beta.storage.events.collection.s.name);
-            // console.log('PPPPPPP', peers);
-            // console.log('LLLLLLLLLLLL', result);
             result.peerHistory.creatorHeads[peers.beta]
               .should.equal(genesisMergeHash);
             result.peerHistory.history.should.have.length(1);
             result.peerHistory.history.should.have.same.members(
               [results.addEvent.alpha.mergeHash]);
-            result.localHistory.should.have.length(2);
-            result.localHistory.should.have.same.members(
-              results.addEvent.beta.allHashes);
+            result.partitionHistory.history.should.have.length(2);
+            result.partitionHistory.history
+              .should.have.same.members(results.addEvent.beta.allHashes);
             callback();
           })],
       betaGossip2: ['betaGossip1', (results, callback) =>
@@ -377,7 +370,7 @@ describe('Worker - _gossipWith', () => {
             // no new events available from alpha
             result.peerHistory.history.should.have.length(0);
             // beta has no new events to send to alpha
-            result.localHistory.should.have.length(0);
+            result.partitionHistory.history.should.have.length(0);
             callback();
           })],
       betaAddEvent1: ['betaGossip2', (results, callback) =>
@@ -398,7 +391,7 @@ describe('Worker - _gossipWith', () => {
             result.peerHistory.history.should.have.same.members(
               [results.betaAddEvent1.mergeHash]);
             // alpha has no new events to send to beta
-            result.localHistory.should.have.length(0);
+            result.partitionHistory.history.should.have.length(0);
             callback();
           })],
       alphaAddEvent1: ['alphaGossip1', (results, callback) =>
@@ -412,8 +405,8 @@ describe('Worker - _gossipWith', () => {
               .should.equal(results.addEvent.alpha.merge.meta.eventHash);
             result.peerHistory.history.should.have.length(0);
             // alpha has two new events to send to beta
-            result.localHistory.should.have.length(2);
-            result.localHistory.should.have.same.members(
+            result.partitionHistory.history.should.have.length(2);
+            result.partitionHistory.history.should.have.same.members(
               results.alphaAddEvent1.allHashes);
             callback();
           })],
@@ -438,7 +431,7 @@ describe('Worker - _gossipWith', () => {
             result.peerHistory.creatorHeads[peers.alpha]
               .should.equal(results.alphaAddEvent1.mergeHash);
             result.peerHistory.history.should.have.length(0);
-            result.localHistory.should.have.length(0);
+            result.partitionHistory.history.should.have.length(0);
             callback();
           })],
       // gamma gossips with alpha for the first time
@@ -451,8 +444,8 @@ describe('Worker - _gossipWith', () => {
             result.peerHistory.history.should.have.length(1);
             result.peerHistory.history.should.have.same.members(
               [results.addEvent.alpha.mergeHash]);
-            result.localHistory.should.have.length(2);
-            result.localHistory.should.have.same.members(
+            result.partitionHistory.history.should.have.length(2);
+            result.partitionHistory.history.should.have.same.members(
               results.addEvent.gamma.allHashes);
             callback();
           })],
@@ -468,7 +461,7 @@ describe('Worker - _gossipWith', () => {
               results.betaAddEvent1.mergeHash,
               results.alphaAddEvent1.mergeHash,
             ]);
-            result.localHistory.should.have.length(0);
+            result.partitionHistory.history.should.have.length(0);
             callback();
           })],
       gammaGossip3: ['gammaGossip2', (results, callback) =>
@@ -478,7 +471,7 @@ describe('Worker - _gossipWith', () => {
             result.peerHistory.creatorHeads[peers.gamma]
               .should.equal(results.addEvent.gamma.mergeHash);
             result.peerHistory.history.should.have.length(0);
-            result.localHistory.should.have.length(0);
+            result.partitionHistory.history.should.have.length(0);
             callback();
           })],
       // // gamma gossips with beta for the first time
@@ -490,8 +483,8 @@ describe('Worker - _gossipWith', () => {
             result.peerHistory.creatorHeads[peers.gamma]
               .should.equal(genesisMergeHash);
             result.peerHistory.history.should.have.length(0);
-            result.localHistory.should.have.length(2);
-            result.localHistory.should.have.same.members(
+            result.partitionHistory.history.should.have.length(2);
+            result.partitionHistory.history.should.have.same.members(
               results.addEvent.gamma.allHashes);
             callback();
           })],
@@ -525,8 +518,8 @@ describe('Worker - _gossipWith', () => {
             result.peerHistory.creatorHeads[peers.alpha]
               .should.equal(results.alphaAddEvent1.mergeHash);
             result.peerHistory.history.should.have.length(0);
-            result.localHistory.should.have.length(2);
-            result.localHistory.should.have.same.members([
+            result.partitionHistory.history.should.have.length(2);
+            result.partitionHistory.history.should.have.same.members([
               ...results.gammaAddEvent1.allHashes
             ]);
             callback();
