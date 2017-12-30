@@ -618,7 +618,7 @@ describe('Multinode Basics', () => {
                 tableData[0].push(i);
                 async.auto({
                   blockHeight: callback =>
-                    ledgerNode.storage.blocks.getLatestSummary(
+                    ledgerNode.storage.blocks.getLatest(
                       (err, result) => {
                         assertNoError(err);
                         const block = result.eventBlock.block;
@@ -631,7 +631,7 @@ describe('Multinode Basics', () => {
                         }
                         tableData[2].push(
                           (blockTime / 1000).toFixed(3).toString());
-                        // tableData[3].push(block.event.length.toString());
+                        tableData[3].push(block.event.length.toString());
                         if(!block.consensusProof) {
                           tableData[4].push('0');
                         } else {
