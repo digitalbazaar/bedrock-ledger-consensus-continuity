@@ -582,7 +582,7 @@ describe('Multinode Basics', () => {
       // 2. run worker on all nodes
       // 3. report blockheight and event counts
       it('makes many more blocks', function(done) {
-        this.timeout(300000);
+        this.timeout(600000);
         screen.render();
         let blockStartTime = Date.now();
         let blockTime = 0;
@@ -626,7 +626,7 @@ describe('Multinode Basics', () => {
         async.timesSeries(1000, (i, callback) => {
           tableData = [
             ['label'], ['blockHeight'], ['block time'], ['events'],
-            ['consensus events']
+            ['consensus events'], ['iteration', i.toString()]
           ];
           // reportText = '';
           // reportText += `Iteration ${i}\n`;
