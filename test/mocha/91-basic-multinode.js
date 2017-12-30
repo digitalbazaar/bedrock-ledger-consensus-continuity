@@ -672,7 +672,7 @@ describe('Multinode Basics', () => {
                 blockMap[n.blockHeight.toString()] = n['consensus events'];
               } else if(blockMap[n.blockHeight] !== n['consensus events']) {
                 screen.destroy();
-                console.console.log('EVENT MISMATCH');
+                console.log('EVENT MISMATCH');
                 // DO OTHER LOGGING
                 console.log('Summary',
                   JSON.stringify(blessedSummary(tableData), null, 2));
