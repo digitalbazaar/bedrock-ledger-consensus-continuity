@@ -9,6 +9,37 @@ const async = require('async');
 
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
+const blessed = require('blessed');
+
+const screen = blessed.screen({smartCSR: true});
+
+// Create a box perfectly centered horizontally and vertically.
+const box = blessed.box({
+  top: 'center',
+  left: 'center',
+  width: '75%',
+  height: '75%',
+  content: 'Hello {bold}world{/bold}!',
+  tags: true,
+  border: {
+    type: 'line'
+  },
+  style: {
+    fg: 'white',
+    bg: 'magenta',
+    border: {
+      fg: '#f0f0f0'
+    },
+    hover: {
+      bg: 'green'
+    }
+  }
+});
+
+// screen.append(box);
+screen.key(['C-c'], (ch, key) => process.exit(0));
+// screen.render();
+
 
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
@@ -552,13 +583,56 @@ describe('Multinode Basics', () => {
       // 3. report blockheight and event counts
       it('makes many more blocks', function(done) {
         this.timeout(300000);
+        screen.render();
         let blockStartTime = Date.now();
         let blockTime = 0;
         let maxBlockHeight = 0;
+        let reportText = '';
+        // const table = box.list.table();
+        // table.setData['A', 'B', 'C'];
+        const table = blessed.listtable({parent: screen,
+          top: 'center',
+          left: 'center',
+          // data: [['A', 'B', 'C', 'D', 'E']],
+          border: 'line',
+          align: 'center',
+          keys: true,
+          width: '75%',
+          height: '75%',
+          vi: false,
+          name: 'table',
+          style: {
+            bg: 'white',
+            cell: {
+              fg: 'white',
+              bg: 'blue',
+              border: {
+                fg: '#f0f0f0'
+              },
+            },
+            header: {
+              fg: 'white',
+              bg: 'magenta',
+              border: {
+                fg: '#f0f0f0'
+              },
+            }
+          }
+        });
+        // const table = list.table();
+        screen.append(table);
+        // table.setData(['A', 'B', 'C']);
+        let tableData;
         async.timesSeries(1000, (i, callback) => {
-          console.log('---------------------------------------');
-          console.log('Iteration', i);
-          console.log('--- start -----------------------------');
+          tableData = [
+            ['label'], ['blockHeight'], ['block time'], ['events'],
+            ['consensus events']
+          ];
+          // reportText = '';
+          // reportText += `Iteration ${i}\n`;
+          // console.log('---------------------------------------');
+          // console.log('Iteration', i);
+          // console.log('--- start -----------------------------');
           async.auto({
             alphaAddEvent1: callback => helpers.addEvent(
               {count: 10, eventTemplate, ledgerNode: nodes.alpha}, callback),
@@ -575,33 +649,65 @@ describe('Multinode Basics', () => {
                 _workerCycle({consensusApi, nodes, series: false}, callback)],
             report: ['workCycle1', (results, callback) =>
               async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
-                console.log('Report', i);
+                tableData[0].push(i);
+                // reportText += `Node ${i}\n`;
+                // console.log('Report', i);
                 async.auto({
                   blockHeight: callback =>
                     ledgerNode.storage.blocks.getLatestSummary(
                       (err, result) => {
                         assertNoError(err);
                         const blockHeight = result.eventBlock.block.blockHeight;
-                        console.log('  blockHeight', blockHeight);
+                        tableData[1].push(blockHeight.toString());
+                        // console.log('  blockHeight', blockHeight);
                         if(blockHeight > maxBlockHeight) {
                           blockTime = Date.now() - blockStartTime;
                           blockStartTime = Date.now();
                           maxBlockHeight = blockHeight;
                         }
-                        console.log(
-                          '  block time', (blockTime / 1000).toFixed(3) + 's');
+                        tableData[2].push(
+                          (blockTime / 1000).toFixed(3).toString());
                         callback();
                       }),
-                  events: ['blockHeight', (results, callback) =>
+                  events: callback =>
                     ledgerNode.storage.events.collection.find({})
                       .count((err, result) => {
                         assertNoError(err);
-                        console.log('  events', result);
+                        tableData[3].push(result.toString());
+                        // reportText += `events ${result}\n`;
+                        // console.log('  events', result);
                         callback();
-                      })],
+                      }),
+                  events: callback =>
+                    ledgerNode.storage.events.collection.find({})
+                      .count((err, result) => {
+                        assertNoError(err);
+                        tableData[3].push(result.toString());
+                        // reportText += `events ${result}\n`;
+                        // console.log('  events', result);
+                        callback();
+                      }),
+                  consensus: callback =>
+                    ledgerNode.storage.events.collection.find({
+                      'meta.consensus': {$exists: true}
+                    }).count((err, result) => {
+                      assertNoError(err);
+                      tableData[4].push(result.toString());
+                      // reportText += `events ${result}\n`;
+                      // console.log('  events', result);
+                      callback();
+                    }),
                 }, callback);
               }, callback)]
-          }, callback);
+          }, err => {
+            if(err) {
+              return callback(err);
+            }
+            table.setData(tableData);
+            // box.setContent(reportText);
+            screen.render();
+            callback();
+          });
         }, done);
       });
     }); // end one block
