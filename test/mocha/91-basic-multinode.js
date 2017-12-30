@@ -621,7 +621,7 @@ describe('Multinode Basics', () => {
         });
         screen.append(table);
         let tableData;
-        async.timesSeries(1, (i, callback) => {
+        async.timesSeries(1000, (i, callback) => {
           tableData = [
             ['label'], ['blockHeight'], ['block time'],
             ['block events'], ['block proof events'], ['events'],
