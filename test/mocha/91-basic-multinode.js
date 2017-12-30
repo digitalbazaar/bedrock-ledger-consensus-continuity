@@ -13,33 +13,7 @@ const blessed = require('blessed');
 
 const screen = blessed.screen({smartCSR: true});
 
-// Create a box perfectly centered horizontally and vertically.
-const box = blessed.box({
-  top: 'center',
-  left: 'center',
-  width: '75%',
-  height: '75%',
-  content: 'Hello {bold}world{/bold}!',
-  tags: true,
-  border: {
-    type: 'line'
-  },
-  style: {
-    fg: 'white',
-    bg: 'magenta',
-    border: {
-      fg: '#f0f0f0'
-    },
-    hover: {
-      bg: 'green'
-    }
-  }
-});
-
-// screen.append(box);
 screen.key(['C-c'], (ch, key) => process.exit(0));
-// screen.render();
-
 
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
@@ -582,14 +556,11 @@ describe('Multinode Basics', () => {
       // 2. run worker on all nodes
       // 3. report blockheight and event counts
       it('makes many more blocks', function(done) {
-        this.timeout(600000);
+        this.timeout(900000);
         screen.render();
         let blockStartTime = Date.now();
         let blockTime = 0;
         let maxBlockHeight = 0;
-        let reportText = '';
-        // const table = box.list.table();
-        // table.setData['A', 'B', 'C'];
         const table = blessed.listtable({parent: screen,
           top: 'center',
           left: 'center',
@@ -621,17 +592,13 @@ describe('Multinode Basics', () => {
         });
         screen.append(table);
         let tableData;
+        const blockMap = {};
         async.timesSeries(1000, (i, callback) => {
           tableData = [
             ['label'], ['blockHeight'], ['block time'],
             ['block events'], ['block proof events'], ['events'],
             ['consensus events'], ['iteration', i.toString()]
           ];
-          // reportText = '';
-          // reportText += `Iteration ${i}\n`;
-          // console.log('---------------------------------------');
-          // console.log('Iteration', i);
-          // console.log('--- start -----------------------------');
           async.auto({
             alphaAddEvent1: callback => helpers.addEvent(
               {count: 10, eventTemplate, ledgerNode: nodes.alpha}, callback),
@@ -649,17 +616,14 @@ describe('Multinode Basics', () => {
             report: ['workCycle1', (results, callback) =>
               async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
                 tableData[0].push(i);
-                // reportText += `Node ${i}\n`;
-                // console.log('Report', i);
                 async.auto({
                   blockHeight: callback =>
-                    ledgerNode.storage.blocks.getLatest(
+                    ledgerNode.storage.blocks.getLatestSummary(
                       (err, result) => {
                         assertNoError(err);
                         const block = result.eventBlock.block;
                         const blockHeight = block.blockHeight;
                         tableData[1].push(blockHeight.toString());
-                        // console.log('  blockHeight', blockHeight);
                         if(blockHeight > maxBlockHeight) {
                           blockTime = Date.now() - blockStartTime;
                           blockStartTime = Date.now();
@@ -667,7 +631,7 @@ describe('Multinode Basics', () => {
                         }
                         tableData[2].push(
                           (blockTime / 1000).toFixed(3).toString());
-                        tableData[3].push(block.event.length.toString());
+                        // tableData[3].push(block.event.length.toString());
                         if(!block.consensusProof) {
                           tableData[4].push('0');
                         } else {
@@ -691,8 +655,6 @@ describe('Multinode Basics', () => {
                     }).count((err, result) => {
                       assertNoError(err);
                       tableData[6].push(result.toString());
-                      // reportText += `events ${result}\n`;
-                      // console.log('  events', result);
                       callback();
                     }),
                 }, callback);
@@ -702,8 +664,24 @@ describe('Multinode Basics', () => {
               return callback(err);
             }
             table.setData(tableData);
-            // box.setContent(reportText);
+            const summary = blessedSummary(tableData);
+            // console.log('Summary', JSON.stringify(summary, null, 2));
+            for(const node in summary) {
+              const n = summary[node];
+              if(!blockMap[n.blockHeight]) {
+                blockMap[n.blockHeight.toString()] = n['consensus events'];
+              } else if(blockMap[n.blockHeight] !== n['consensus events']) {
+                screen.destroy();
+                console.console.log('EVENT MISMATCH');
+                // DO OTHER LOGGING
+                console.log('Summary',
+                  JSON.stringify(blessedSummary(tableData), null, 2));
+                throw new Error('EVENT MISMATCH');
+              }
+            }
+            // NOTE: JUST COMMENT `screen.render()` to disable blessed
             screen.render();
+
             callback();
           });
         }, err => {
