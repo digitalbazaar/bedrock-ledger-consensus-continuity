@@ -668,11 +668,15 @@ describe('Multinode Basics', () => {
             // console.log('Summary', JSON.stringify(summary, null, 2));
             for(const node in summary) {
               const n = summary[node];
-              if(!blockMap[n.blockHeight]) {
-                blockMap[n.blockHeight.toString()] = n['consensus events'];
-              } else if(blockMap[n.blockHeight] !== n['consensus events']) {
+              if(!blockMap[n.blockHeight.toString()]) {
+                blockMap[n.blockHeight.toString()] = n['block events'];
+              } else if(
+                blockMap[n.blockHeight.toString()] !== n['block events']) {
                 screen.destroy();
-                console.log('EVENT MISMATCH');
+                console.log('EVENT MISMATCH at', n.blockHeight);
+                console.log(
+                  blockMap[n.blockHeight.toString()], ' !== ',
+                  n['block events']);
                 // DO OTHER LOGGING
                 console.log('Summary',
                   JSON.stringify(blessedSummary(tableData), null, 2));
