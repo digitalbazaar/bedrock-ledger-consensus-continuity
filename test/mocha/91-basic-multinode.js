@@ -560,37 +560,38 @@ describe('Multinode Basics', () => {
           console.log('Iteration', i);
           console.log('--- start -----------------------------');
           async.auto({
-            alphaAddEvent1: callback => nodes.alpha.events.add(
-              helpers.createEventBasic({eventTemplate}), callback),
-            betaAddEvent1: callback => nodes.beta.events.add(
-              helpers.createEventBasic({eventTemplate}), callback),
-            gammaAddEvent1: callback => nodes.gamma.events.add(
-              helpers.createEventBasic({eventTemplate}), callback),
-            deltaAddEvent1: callback => nodes.delta.events.add(
-              helpers.createEventBasic({eventTemplate}), callback),
+            alphaAddEvent1: callback => helpers.addEvent(
+              {count: 10, eventTemplate, ledgerNode: nodes.alpha}, callback),
+            betaAddEvent1: callback => helpers.addEvent(
+              {count: 10, eventTemplate, ledgerNode: nodes.beta}, callback),
+            gammaAddEvent1: callback => helpers.addEvent(
+              {count: 10, eventTemplate, ledgerNode: nodes.gamma}, callback),
+            deltaAddEvent1: callback => helpers.addEvent(
+              {count: 10, eventTemplate, ledgerNode: nodes.delta}, callback),
             workCycle1: [
               'alphaAddEvent1', 'betaAddEvent1',
               'gammaAddEvent1', 'deltaAddEvent1',
               (results, callback) =>
-                _workerCycle({consensusApi, nodes}, callback)],
+                _workerCycle({consensusApi, nodes, series: false}, callback)],
             report: ['workCycle1', (results, callback) =>
               async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
                 console.log('Report', i);
                 async.auto({
-                  blockHeight: callback => ledgerNode.storage.blocks.getLatestSummary(
-                    (err, result) => {
-                      assertNoError(err);
-                      const blockHeight = result.eventBlock.block.blockHeight;
-                      console.log('  blockHeight', blockHeight);
-                      if(blockHeight > maxBlockHeight) {
-                        blockTime = Date.now() - blockStartTime;
-                        blockStartTime = Date.now();
-                        maxBlockHeight = blockHeight;
-                      }
-                      console.log(
-                        '  block time', (blockTime / 1000).toFixed(3) + 's');
-                      callback();
-                    }),
+                  blockHeight: callback =>
+                    ledgerNode.storage.blocks.getLatestSummary(
+                      (err, result) => {
+                        assertNoError(err);
+                        const blockHeight = result.eventBlock.block.blockHeight;
+                        console.log('  blockHeight', blockHeight);
+                        if(blockHeight > maxBlockHeight) {
+                          blockTime = Date.now() - blockStartTime;
+                          blockStartTime = Date.now();
+                          maxBlockHeight = blockHeight;
+                        }
+                        console.log(
+                          '  block time', (blockTime / 1000).toFixed(3) + 's');
+                        callback();
+                      }),
                   events: ['blockHeight', (results, callback) =>
                     ledgerNode.storage.events.collection.find({})
                       .count((err, result) => {
