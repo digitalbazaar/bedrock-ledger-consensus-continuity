@@ -625,7 +625,8 @@ describe('Multinode Basics', () => {
         let tableData;
         async.timesSeries(1000, (i, callback) => {
           tableData = [
-            ['label'], ['blockHeight'], ['block time'], ['events'],
+            ['label'], ['blockHeight'], ['block time'],
+            ['block events'], ['block proof events'], ['events'],
             ['consensus events'], ['iteration', i.toString()]
           ];
           // reportText = '';
@@ -654,10 +655,11 @@ describe('Multinode Basics', () => {
                 // console.log('Report', i);
                 async.auto({
                   blockHeight: callback =>
-                    ledgerNode.storage.blocks.getLatestSummary(
+                    ledgerNode.storage.blocks.getLatest(
                       (err, result) => {
                         assertNoError(err);
-                        const blockHeight = result.eventBlock.block.blockHeight;
+                        const block = result.eventBlock.block;
+                        const blockHeight = block.blockHeight;
                         tableData[1].push(blockHeight.toString());
                         // console.log('  blockHeight', blockHeight);
                         if(blockHeight > maxBlockHeight) {
@@ -667,22 +669,20 @@ describe('Multinode Basics', () => {
                         }
                         tableData[2].push(
                           (blockTime / 1000).toFixed(3).toString());
+                        tableData[3].push(block.event.length.toString());
+                        if(!block.consensusProof) {
+                          tableData[4].push('0');
+                        } else {
+                          tableData[4].push(
+                            block.consensusProof.length.toString());
+                        }
                         callback();
                       }),
                   events: callback =>
                     ledgerNode.storage.events.collection.find({})
                       .count((err, result) => {
                         assertNoError(err);
-                        tableData[3].push(result.toString());
-                        // reportText += `events ${result}\n`;
-                        // console.log('  events', result);
-                        callback();
-                      }),
-                  events: callback =>
-                    ledgerNode.storage.events.collection.find({})
-                      .count((err, result) => {
-                        assertNoError(err);
-                        tableData[3].push(result.toString());
+                        tableData[5].push(result.toString());
                         // reportText += `events ${result}\n`;
                         // console.log('  events', result);
                         callback();
@@ -692,7 +692,7 @@ describe('Multinode Basics', () => {
                       'meta.consensus': {$exists: true}
                     }).count((err, result) => {
                       assertNoError(err);
-                      tableData[4].push(result.toString());
+                      tableData[6].push(result.toString());
                       // reportText += `events ${result}\n`;
                       // console.log('  events', result);
                       callback();
