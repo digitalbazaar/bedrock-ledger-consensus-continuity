@@ -619,11 +619,9 @@ describe('Multinode Basics', () => {
             }
           }
         });
-        // const table = list.table();
         screen.append(table);
-        // table.setData(['A', 'B', 'C']);
         let tableData;
-        async.timesSeries(1000, (i, callback) => {
+        async.timesSeries(1, (i, callback) => {
           tableData = [
             ['label'], ['blockHeight'], ['block time'],
             ['block events'], ['block proof events'], ['events'],
@@ -708,7 +706,12 @@ describe('Multinode Basics', () => {
             screen.render();
             callback();
           });
-        }, done);
+        }, err => {
+          screen.destroy();
+          console.log(
+            'Summary', JSON.stringify(blessedSummary(tableData), null, 2));
+          done(err);
+        });
       });
     }); // end one block
     describe.skip('More Blocks', () => {
@@ -796,6 +799,22 @@ describe('Multinode Basics', () => {
     }); // end block 1
   });
 });
+
+function blessedSummary(tableData) {
+  const sum = {};
+  // skip 0 because that's `label` header
+  for(let i = 1; i < tableData[0].length; ++i) {
+    sum[tableData[0][i]] = {};
+  }
+  // now start with row 1, because row 0 is the column headers
+  for(let i = 1; i < tableData.length; ++i) {
+    const rowLabel = tableData[i][0];
+    for(let n = 1; n < tableData[0].length; ++n) {
+      sum[tableData[0][n]][rowLabel] = tableData[i][n];
+    }
+  }
+  return sum;
+}
 
 function _workerCycle({consensusApi, nodes, series = false}, callback) {
   const func = series ? async.eachSeries : async.each;
