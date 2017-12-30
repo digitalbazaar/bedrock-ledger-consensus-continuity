@@ -133,8 +133,7 @@ describe('Election API findConsensus', () => {
             result.consensusProof.should.have.length(0);
             result.consensusProofHash.should.have.length(0);
             result.event.should.have.length(2);
-            result.eventHash.should.have.length(2);
-            result.eventHash.should.have.same.members([
+            result.event.map(r => r.eventHash).should.have.same.members([
               Object.keys(results.event1.regular)[0],
               results.event1.merge.meta.eventHash
             ]);
@@ -186,10 +185,10 @@ describe('Election API findConsensus', () => {
                 should.exist(result.event);
                 result.event.should.be.an('array');
                 result.event.should.have.length(18);
-                should.exist(result.eventHash);
-                result.eventHash.should.be.an('array');
-                result.eventHash.should.have.length(18);
-                result.eventHash.should.have.same.members([
+                const eventHash = result.event.map(r => r.eventHash);
+                eventHash.should.be.an('array');
+                eventHash.should.have.length(18);
+                eventHash.should.have.same.members([
                   ...regularEvent.regularHash,
                   ...regularEvent.mergeHash,
                   copyMergeHashes.cpa,
@@ -252,8 +251,8 @@ describe('Election API findConsensus', () => {
               (err, result) => {
                 assertNoError(err);
                 result.event.should.have.length(18);
-                result.eventHash.should.have.length(18);
-                result.eventHash.should.have.same.members([
+                const eventHash = result.event.map(r => r.eventHash);
+                eventHash.should.have.same.members([
                   ...regularEvent.regularHash,
                   ...regularEvent.mergeHash,
                   copyMergeHashes.cpa,
@@ -311,8 +310,8 @@ describe('Election API findConsensus', () => {
               (err, result) => {
                 assertNoError(err);
                 result.event.should.have.length(18);
-                result.eventHash.should.have.length(18);
-                result.eventHash.should.have.same.members([
+                const eventHash = result.event.map(r => r.eventHash);
+                eventHash.should.have.same.members([
                   ...regularEvent.regularHash,
                   ...regularEvent.mergeHash,
                   copyMergeHashes.cpa,
@@ -378,10 +377,9 @@ describe('Election API findConsensus', () => {
                 should.exist(result.event);
                 result.event.should.be.an('array');
                 result.event.should.have.length(20);
-                should.exist(result.eventHash);
-                result.eventHash.should.be.an('array');
-                result.eventHash.should.have.length(20);
-                result.eventHash.should.have.same.members([
+                const eventHash = result.event.map(r => r.eventHash);
+                eventHash.should.have.length(20);
+                eventHash.should.have.same.members([
                   ...regularEvent.regularHash,
                   ...regularEvent.mergeHash,
                   copyMergeHashes.cpa,
@@ -444,8 +442,8 @@ describe('Election API findConsensus', () => {
               results.build;
             assertNoError(err);
             result.event.should.have.length(18);
-            result.eventHash.should.have.length(18);
-            result.eventHash.should.have.same.members([
+            const eventHash = result.event.map(r => r.eventHash);
+            eventHash.should.have.same.members([
               ...regularEvent.regularHash,
               ...regularEvent.mergeHash,
               copyMergeHashes.cpa,
