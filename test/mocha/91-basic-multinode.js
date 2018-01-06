@@ -12,8 +12,15 @@ const mockData = require('./mock.data');
 const blessed = require('blessed');
 
 const screen = blessed.screen({smartCSR: true});
-
 screen.key(['C-c'], (ch, key) => process.exit(0));
+
+/*const blessed = {};
+blessed.listtable = table => {
+  table.setData = () => {};
+  return table;
+};
+const screen = {};
+screen.render = screen.append = screen.destroy = () => {};*/
 
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
