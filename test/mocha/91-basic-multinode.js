@@ -11,8 +11,16 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const blessed = require('blessed');
 
-const screen = blessed.screen({smartCSR: true});
-screen.key(['C-c'], (ch, key) => process.exit(0));
+let screen;
+let table;
+let tableHead;
+
+const blessedEnabled = true;
+
+if(blessedEnabled) {
+  screen = blessed.screen({smartCSR: true});
+  screen.key(['C-c'], (ch, key) => process.exit(0));
+}
 
 /*const blessed = {};
 blessed.listtable = table => {
@@ -30,6 +38,8 @@ const eventTemplate = mockData.events.alpha;
 // NOTE: alpha is assigned manually
 const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta'];
 const nodes = {};
+const peers = {};
+const heads = {};
 
 describe('Multinode Basics', () => {
   before(done => {
@@ -97,6 +107,14 @@ describe('Multinode Basics', () => {
         });
       }, done);
     });
+
+    // populate peers and init heads
+    before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
+      consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+        peers[i] = result.id;
+        heads[i] = [];
+        callback();
+      }), done));
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => {
@@ -559,53 +577,92 @@ describe('Multinode Basics', () => {
 
       // NOTE: `nodes` includes 4 nodes, nodes gamma and delta have not been
       // participating in the ledger until now. Each iteration of the test
-      // 1. add new event on alpha
+      // 1. add new regular event on each node
       // 2. run worker on all nodes
       // 3. report blockheight and event counts
       it('makes many more blocks', function(done) {
         this.timeout(900000);
-        screen.render();
+        if(blessedEnabled) {
+          screen.render();
+        }
         let blockStartTime = Date.now();
         let blockTime = 0;
         let maxBlockHeight = 0;
-        const table = blessed.listtable({parent: screen,
-          top: 'center',
-          left: 'center',
-          // data: [['A', 'B', 'C', 'D', 'E']],
-          border: 'line',
-          align: 'center',
-          keys: true,
-          width: '75%',
-          height: '75%',
-          vi: false,
-          name: 'table',
-          style: {
-            bg: 'white',
-            cell: {
-              fg: 'white',
-              bg: 'blue',
-              border: {
-                fg: '#f0f0f0'
+        if(blessedEnabled) {
+          table = blessed.listtable({parent: screen,
+            top: 'center',
+            left: 'center',
+            // data: [['A', 'B', 'C', 'D', 'E']],
+            border: 'line',
+            align: 'center',
+            keys: true,
+            width: '75%',
+            height: '75%',
+            vi: false,
+            name: 'table',
+            style: {
+              bg: 'white',
+              cell: {
+                fg: 'white',
+                bg: 'blue',
+                border: {
+                  fg: '#f0f0f0'
+                },
               },
-            },
-            header: {
-              fg: 'white',
-              bg: 'magenta',
-              border: {
-                fg: '#f0f0f0'
-              },
+              header: {
+                fg: 'white',
+                bg: 'magenta',
+                border: {
+                  fg: '#f0f0f0'
+                },
+              }
             }
-          }
-        });
-        screen.append(table);
+          });
+          screen.append(table);
+          tableHead = blessed.listtable({parent: screen,
+            top: '400',
+            left: '10',
+            // data: [['A', 'B', 'C', 'D', 'E']],
+            border: 'line',
+            align: 'center',
+            keys: true,
+            width: '75%',
+            height: '30%',
+            vi: false,
+            name: 'table',
+            style: {
+              bg: 'white',
+              cell: {
+                fg: 'white',
+                bg: 'blue',
+                border: {
+                  fg: '#f0f0f0'
+                },
+              },
+              header: {
+                fg: 'white',
+                bg: 'magenta',
+                border: {
+                  fg: '#f0f0f0'
+                },
+              }
+            }
+          });
+          screen.append(tableHead);
+        }
         let tableData;
+        let tableHeadData;
+        let counterHead = -1;
         const blockMap = {};
         async.timesSeries(1000, (i, callback) => {
+          counterHead = -1;
           tableData = [
             ['label'], ['blockHeight'], ['block time'],
             ['block events'], ['block proof events'], ['events'],
             ['consensus events'], ['iteration', i.toString()]
           ];
+          tableHeadData = [['label'], ['']];
+          // Object.keys(peers).forEach(p => tableHeadData.push([p]));
           async.auto({
             alphaAddEvent1: callback => helpers.addEvent(
               {count: 10, eventTemplate, ledgerNode: nodes.alpha}, callback),
@@ -619,58 +676,112 @@ describe('Multinode Basics', () => {
               'alphaAddEvent1', 'betaAddEvent1',
               'gammaAddEvent1', 'deltaAddEvent1',
               (results, callback) =>
-                _workerCycle({consensusApi, nodes, series: false}, callback)],
-            report: ['workCycle1', (results, callback) =>
-              async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
-                tableData[0].push(i);
-                async.auto({
-                  blockHeight: callback =>
-                    ledgerNode.storage.blocks.getLatest(
-                      (err, result) => {
+                _workerCycle({consensusApi, nodes, series: true}, callback)],
+            report: ['workCycle1', (results, callback) => async.auto({
+              // get each peers own head
+              peerHead: callback => async.eachOfSeries(
+                nodes, (ledgerNode, iNode, callback) =>
+                  consensusApi.events._getLocalBranchHead({
+                    eventsCollection: ledgerNode.storage.events.collection,
+                    creator: peers[iNode]
+                  }, (err, result) => {
+                    if(err) {
+                      return callback(err);
+                    }
+                    heads[iNode].push(result);
+                    callback();
+                  }), callback),
+              generateReport: ['peerHead', (results, callback) =>
+                async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
+                  const offsetHead = 2;
+                  counterHead++;
+                  tableHeadData[offsetHead + counterHead] = [i];
+                  tableData[0].push(i);
+                  // add column header for each node (alpha, beta ...)
+                  // 0 element is already setup with 'label'
+                  tableHeadData[0].push(i);
+                  async.auto({
+                    blockHeight: callback =>
+                      ledgerNode.storage.blocks.getLatest(
+                        (err, result) => {
+                          assertNoError(err);
+                          const block = result.eventBlock.block;
+                          const blockHeight = block.blockHeight;
+                          tableData[1].push(blockHeight.toString());
+                          if(blockHeight > maxBlockHeight) {
+                            blockTime = Date.now() - blockStartTime;
+                            blockStartTime = Date.now();
+                            maxBlockHeight = blockHeight;
+                          }
+                          tableData[2].push(
+                            (blockTime / 1000).toFixed(3).toString());
+                          tableData[3].push(block.event.length.toString());
+                          if(!block.consensusProof) {
+                            tableData[4].push('0');
+                          } else {
+                            tableData[4].push(
+                              block.consensusProof.length.toString());
+                          }
+                          callback();
+                        }),
+                    events: callback =>
+                      ledgerNode.storage.events.collection.find({})
+                        .count((err, result) => {
+                          assertNoError(err);
+                          tableData[5].push(result.toString());
+                          // reportText += `events ${result}\n`;
+                          // console.log('  events', result);
+                          callback();
+                        }),
+                    consensus: callback =>
+                      ledgerNode.storage.events.collection.find({
+                        'meta.consensus': {$exists: true}
+                      }).count((err, result) => {
                         assertNoError(err);
-                        const block = result.eventBlock.block;
-                        const blockHeight = block.blockHeight;
-                        tableData[1].push(blockHeight.toString());
-                        if(blockHeight > maxBlockHeight) {
-                          blockTime = Date.now() - blockStartTime;
-                          blockStartTime = Date.now();
-                          maxBlockHeight = blockHeight;
-                        }
-                        tableData[2].push(
-                          (blockTime / 1000).toFixed(3).toString());
-                        tableData[3].push(block.event.length.toString());
-                        if(!block.consensusProof) {
-                          tableData[4].push('0');
-                        } else {
-                          tableData[4].push(
-                            block.consensusProof.length.toString());
-                        }
+                        tableData[6].push(result.toString());
                         callback();
                       }),
-                  events: callback =>
-                    ledgerNode.storage.events.collection.find({})
-                      .count((err, result) => {
-                        assertNoError(err);
-                        tableData[5].push(result.toString());
-                        // reportText += `events ${result}\n`;
-                        // console.log('  events', result);
-                        callback();
-                      }),
-                  consensus: callback =>
-                    ledgerNode.storage.events.collection.find({
-                      'meta.consensus': {$exists: true}
-                    }).count((err, result) => {
-                      assertNoError(err);
-                      tableData[6].push(result.toString());
-                      callback();
-                    }),
-                }, callback);
-              }, callback)]
+                    head: callback => {
+                      // for the node being reported on, find out what heads it
+                      // has for all the other nodes
+                      async.eachOfSeries(
+                        nodes, (node, iNode, callback) =>
+                          consensusApi.events._getLocalBranchHead({
+                            eventsCollection:
+                              ledgerNode.storage.events.collection,
+                            creator: peers[iNode]
+                          }, (err, result) => {
+                            if(err) {
+                              return callback(err);
+                            }
+                            const relativeHead = heads[iNode].indexOf(result);
+                            if(relativeHead === -1) {
+                              tableHeadData[offsetHead + counterHead]
+                                .push('unk');
+                              return callback();
+                            }
+                            // NOTE: this shows that heads are moving
+                            // tableHeadData[offsetHead + counterHead].push(
+                            //   relativeHead.toString());
+                            tableHeadData[offsetHead + counterHead].push(
+                              (heads[iNode].length - 1 -
+                                relativeHead).toString());
+                            callback();
+                          }), callback);
+                    }
+                  }, callback);
+                }, callback)]
+            }, callback)]
           }, err => {
             if(err) {
               return callback(err);
             }
-            table.setData(tableData);
+            // console.log('Heads', heads);
+            // console.log('TTTTTTt', tableHeadData);
+            if(blessedEnabled) {
+              table.setData(tableData);
+              tableHead.setData(tableHeadData);
+            }
             const summary = blessedSummary(tableData);
             // console.log('Summary', JSON.stringify(summary, null, 2));
             for(const node in summary) {
@@ -679,7 +790,9 @@ describe('Multinode Basics', () => {
                 blockMap[n.blockHeight.toString()] = n['block events'];
               } else if(
                 blockMap[n.blockHeight.toString()] !== n['block events']) {
-                screen.destroy();
+                if(blessedEnabled) {
+                  screen.destroy();
+                }
                 console.log('EVENT MISMATCH at', n.blockHeight);
                 console.log(
                   blockMap[n.blockHeight.toString()], ' !== ',
@@ -690,13 +803,15 @@ describe('Multinode Basics', () => {
                 throw new Error('EVENT MISMATCH');
               }
             }
-            // NOTE: JUST COMMENT `screen.render()` to disable blessed
-            screen.render();
-
+            if(blessedEnabled) {
+              screen.render();
+            }
             callback();
           });
         }, err => {
-          screen.destroy();
+          if(blessedEnabled) {
+            screen.destroy();
+          }
           console.log(
             'Summary', JSON.stringify(blessedSummary(tableData), null, 2));
           done(err);
