@@ -659,10 +659,9 @@ describe('Multinode Basics', () => {
           tableData = [
             ['label'], ['blockHeight'], ['block time'],
             ['block events'], ['block proof events'], ['events'],
-            ['consensus events'], ['iteration', i.toString()]
+            ['consensus events'], ['iteration', i.toString()], ['head']
           ];
-          tableHeadData = [['label'], ['']];
-          // Object.keys(peers).forEach(p => tableHeadData.push([p]));
+          tableHeadData = [['label'], [''], ['localHead']];
           async.auto({
             alphaAddEvent1: callback => helpers.addEvent(
               {count: 10, eventTemplate, ledgerNode: nodes.alpha}, callback),
@@ -693,10 +692,13 @@ describe('Multinode Basics', () => {
                   }), callback),
               generateReport: ['peerHead', (results, callback) =>
                 async.forEachOfSeries(nodes, (ledgerNode, i, callback) => {
-                  const offsetHead = 2;
+                  const offsetHead = 3;
                   counterHead++;
+                  const shortHead = heads[i][heads[i].length - 1].substring(50);
+                  tableHeadData[2].push(shortHead);
                   tableHeadData[offsetHead + counterHead] = [i];
                   tableData[0].push(i);
+                  tableData[8].push(shortHead);
                   // add column header for each node (alpha, beta ...)
                   // 0 element is already setup with 'label'
                   tableHeadData[0].push(i);
