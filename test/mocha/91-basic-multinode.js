@@ -664,13 +664,13 @@ describe('Multinode Basics', () => {
           tableHeadData = [['label'], [''], ['localHead']];
           async.auto({
             alphaAddEvent1: callback => helpers.addEvent(
-              {count: 10, eventTemplate, ledgerNode: nodes.alpha}, callback),
+              {count: 1, eventTemplate, ledgerNode: nodes.alpha}, callback),
             betaAddEvent1: callback => helpers.addEvent(
-              {count: 10, eventTemplate, ledgerNode: nodes.beta}, callback),
+              {count: 1, eventTemplate, ledgerNode: nodes.beta}, callback),
             gammaAddEvent1: callback => helpers.addEvent(
-              {count: 10, eventTemplate, ledgerNode: nodes.gamma}, callback),
+              {count: 1, eventTemplate, ledgerNode: nodes.gamma}, callback),
             deltaAddEvent1: callback => helpers.addEvent(
-              {count: 10, eventTemplate, ledgerNode: nodes.delta}, callback),
+              {count: 1, eventTemplate, ledgerNode: nodes.delta}, callback),
             workCycle1: [
               'alphaAddEvent1', 'betaAddEvent1',
               'gammaAddEvent1', 'deltaAddEvent1',
