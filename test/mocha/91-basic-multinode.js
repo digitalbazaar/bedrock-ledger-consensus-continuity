@@ -16,6 +16,7 @@ let table;
 let tableHead;
 
 const blessedEnabled = true;
+const tracerInterval = 25;
 
 if(blessedEnabled) {
   screen = blessed.screen({smartCSR: true});
@@ -620,7 +621,7 @@ describe('Multinode Basics', () => {
           });
           screen.append(table);
           tableHead = blessed.listtable({parent: screen,
-            top: '400',
+            top: '500',
             left: '10',
             // data: [['A', 'B', 'C', 'D', 'E']],
             border: 'line',
@@ -654,6 +655,7 @@ describe('Multinode Basics', () => {
         let tableHeadData;
         let counterHead = -1;
         const blockMap = {};
+        const tracerEvent = {};
         async.timesSeries(1000, (i, callback) => {
           counterHead = -1;
           tableData = [
@@ -676,7 +678,20 @@ describe('Multinode Basics', () => {
               'gammaAddEvent1', 'deltaAddEvent1',
               (results, callback) =>
                 _workerCycle({consensusApi, nodes, series: false}, callback)],
-            report: ['workCycle1', (results, callback) => async.auto({
+            setTracer: ['workCycle1', (results, callback) => {
+              if(i % tracerInterval === 0) {
+                tracerEvent.alpha = Object.keys(results.alphaAddEvent1)[0];
+                tracerEvent.beta = Object.keys(results.betaAddEvent1)[0];
+                tracerEvent.gamma = Object.keys(results.gammaAddEvent1)[0];
+                tracerEvent.delta = Object.keys(results.deltaAddEvent1)[0];
+              }
+              tableData.push([`alpha-${tracerEvent.alpha.substring(50)}`]);
+              tableData.push([`beta-${tracerEvent.beta.substring(50)}`]);
+              tableData.push([`gamma-${tracerEvent.gamma.substring(50)}`]);
+              tableData.push([`delta-${tracerEvent.delta.substring(50)}`]);
+              callback();
+            }],
+            report: ['setTracer', (results, callback) => async.auto({
               // get each peers own head
               peerHead: callback => async.eachOfSeries(
                 nodes, (ledgerNode, iNode, callback) =>
@@ -703,6 +718,38 @@ describe('Multinode Basics', () => {
                   // 0 element is already setup with 'label'
                   tableHeadData[0].push(i);
                   async.auto({
+                    alphaTracer: callback => ledgerNode.storage.events.exists(
+                      tracerEvent.alpha, (err, result) => {
+                        if(err) {
+                          return callback(err);
+                        }
+                        tableData[9].push(result.toString());
+                        callback();
+                      }),
+                    betaTracer: callback => ledgerNode.storage.events.exists(
+                      tracerEvent.beta, (err, result) => {
+                        if(err) {
+                          return callback(err);
+                        }
+                        tableData[10].push(result.toString());
+                        callback();
+                      }),
+                    gammaTracer: callback => ledgerNode.storage.events.exists(
+                      tracerEvent.gamma, (err, result) => {
+                        if(err) {
+                          return callback(err);
+                        }
+                        tableData[11].push(result.toString());
+                        callback();
+                      }),
+                    deltaTracer: callback => ledgerNode.storage.events.exists(
+                      tracerEvent.delta, (err, result) => {
+                        if(err) {
+                          return callback(err);
+                        }
+                        tableData[12].push(result.toString());
+                        callback();
+                      }),
                     blockHeight: callback =>
                       ledgerNode.storage.blocks.getLatest(
                         (err, result) => {
