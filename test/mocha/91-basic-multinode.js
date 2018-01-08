@@ -675,7 +675,7 @@ describe('Multinode Basics', () => {
               'alphaAddEvent1', 'betaAddEvent1',
               'gammaAddEvent1', 'deltaAddEvent1',
               (results, callback) =>
-                _workerCycle({consensusApi, nodes, series: true}, callback)],
+                _workerCycle({consensusApi, nodes, series: false}, callback)],
             report: ['workCycle1', (results, callback) => async.auto({
               // get each peers own head
               peerHead: callback => async.eachOfSeries(
