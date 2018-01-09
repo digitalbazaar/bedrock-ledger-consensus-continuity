@@ -587,4 +587,46 @@ describe('Worker - _gossipWith', () => {
       done();
     });
   }); // end cycle beta
+  it('performs gossip cycle gamma 100 times', function(done) {
+    this.timeout(120000);
+    const eventTemplate = mockData.events.alpha;
+    let previousResult;
+    async.timesSeries(100, (i, callback) => {
+      gossipCycle.gamma(
+        {consensusApi, eventTemplate, nodes, peers, previousResult},
+        (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          previousResult = result;
+          callback();
+        });
+    }, err => {
+      if(err) {
+        return done(err);
+      }
+      done();
+    });
+  }); // end cycle gamma
+  it.only('performs gossip cycle delta 100 times', function(done) {
+    this.timeout(120000);
+    const eventTemplate = mockData.events.alpha;
+    let previousResult;
+    async.timesSeries(100, (i, callback) => {
+      gossipCycle.delta(
+        {consensusApi, eventTemplate, nodes, peers, previousResult},
+        (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          previousResult = result;
+          callback();
+        });
+    }, err => {
+      if(err) {
+        return done(err);
+      }
+      done();
+    });
+  }); // end cycle delta
 });

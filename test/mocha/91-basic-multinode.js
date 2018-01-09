@@ -15,7 +15,7 @@ let screen;
 let table;
 let tableHead;
 
-const blessedEnabled = true;
+const blessedEnabled = false;
 const tracerInterval = 25;
 
 if(blessedEnabled) {
@@ -42,7 +42,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('Multinode Basics', () => {
+describe.skip('Multinode Basics', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
