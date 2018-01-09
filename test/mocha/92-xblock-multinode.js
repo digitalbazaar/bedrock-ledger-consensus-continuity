@@ -22,13 +22,13 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('Multinode Basics', () => {
+describe('X Block Test', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
 
-  describe('Consensus with 2 Nodes', () => {
-    const nodeCount = 6;
+  const nodeCount = 6;
+  describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
