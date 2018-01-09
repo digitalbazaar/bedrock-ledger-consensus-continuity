@@ -444,9 +444,13 @@ describe('Worker - _gossipWith', () => {
             assertNoError(err);
             result.peerHistory.creatorHeads[peers.gamma]
               .should.equal(genesisMergeHash);
-            result.peerHistory.history.should.have.length(1);
-            result.peerHistory.history.should.have.same.members(
-              [results.addEvent.alpha.mergeHash]);
+            result.peerHistory.history.should.have.length(4);
+            result.peerHistory.history.should.have.same.members([
+              results.addEvent.alpha.mergeHash,
+              results.addEvent.beta.mergeHash,
+              results.alphaAddEvent1.mergeHash,
+              results.betaAddEvent1.mergeHash
+            ]);
             result.partitionHistory.history.should.have.length(2);
             result.partitionHistory.history.should.have.same.members(
               results.addEvent.gamma.allHashes);
@@ -458,28 +462,13 @@ describe('Worker - _gossipWith', () => {
             assertNoError(err);
             result.peerHistory.creatorHeads[peers.gamma]
               .should.equal(results.addEvent.gamma.mergeHash);
-            result.peerHistory.history.should.have.length(3);
-            result.peerHistory.history.should.have.same.members([
-              results.addEvent.beta.mergeHash,
-              results.betaAddEvent1.mergeHash,
-              results.alphaAddEvent1.mergeHash,
-            ]);
-            result.partitionHistory.history.should.have.length(0);
-            callback();
-          })],
-      gammaGossip3: ['gammaGossip2', (results, callback) =>
-        consensusApi._worker._gossipWith(
-          {ledgerNode: nodes.gamma, peerId: peers.alpha}, (err, result) => {
-            assertNoError(err);
-            result.peerHistory.creatorHeads[peers.gamma]
-              .should.equal(results.addEvent.gamma.mergeHash);
             result.peerHistory.history.should.have.length(0);
             result.partitionHistory.history.should.have.length(0);
             callback();
           })],
       // // gamma gossips with beta for the first time
       // // gamma has all of beta's history from gossiping with alpha
-      gammaGossip4: ['gammaGossip3', (results, callback) =>
+      gammaGossip4: ['gammaGossip2', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.gamma, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
@@ -608,7 +597,7 @@ describe('Worker - _gossipWith', () => {
       done();
     });
   }); // end cycle gamma
-  it.only('performs gossip cycle delta 100 times', function(done) {
+  it('performs gossip cycle delta 100 times', function(done) {
     this.timeout(120000);
     const eventTemplate = mockData.events.alpha;
     let previousResult;

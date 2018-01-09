@@ -219,7 +219,6 @@ api.delta = (
           result.peerHistory.history.should.have.length(1);
           result.peerHistory.history.should.have.same.members(
             [results.alphaAddEvent1.mergeHash]);
-          console.log('xxxxxxxxxxxxxxxxxxxxxx');
 
           if(previousResult) {
             result.peerHistory.creatorHeads[peers.beta]
@@ -227,15 +226,20 @@ api.delta = (
             result.peerHistory.creatorHeads[peers.gamma]
               .should.equal(previousResult.gammaAddEvent1.mergeHash);
             result.peerHistory.creatorHeads[peers.delta]
-              .should.equal(previousResult.deltaAddEvent1.mergeHash);
+              .should.equal(previousResult.deltaAddEvent2.mergeHash);
           }
 
-          // FIXME: this should not be 2.
-          result.partitionHistory.history.should.have.length(2);
+          result.partitionHistory.history.should.have.length(8);
           // NOTE: checking for exact order of these events
           result.partitionHistory.history.should.deep.equal([
             results.deltaAddEvent1.regularHashes[0],
             results.deltaAddEvent1.mergeHash,
+            results.gammaAddEvent1.regularHashes[0],
+            results.gammaAddEvent1.mergeHash,
+            results.betaAddEvent1.regularHashes[0],
+            results.betaAddEvent1.mergeHash,
+            results.deltaAddEvent2.regularHashes[0],
+            results.deltaAddEvent2.mergeHash,
           ]);
           callback();
         })],

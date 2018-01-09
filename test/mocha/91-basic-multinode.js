@@ -15,8 +15,8 @@ let screen;
 let table;
 let tableHead;
 
-const blessedEnabled = false;
-const tracerInterval = 25;
+const blessedEnabled = true;
+const tracerInterval = 10;
 
 if(blessedEnabled) {
   screen = blessed.screen({smartCSR: true});
@@ -42,7 +42,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.skip('Multinode Basics', () => {
+describe('Multinode Basics', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
