@@ -6,6 +6,7 @@
 const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
+const gossipCycle = require('./gossip-cycle');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
@@ -122,7 +123,7 @@ describe('Worker - _gossipWith', () => {
         // the events from ledgerNode should now be present on nodes.beta
         nodes.beta.storage.events.exists([
           Object.keys(results.addEvent.regular)[0],
-          results.addEvent.merge.meta.eventHash
+          results.addEvent.mergeHash
         ], (err, result) => {
           assertNoError(err);
           result.should.be.true;
@@ -360,19 +361,21 @@ describe('Worker - _gossipWith', () => {
               .should.have.same.members(results.addEvent.beta.allHashes);
             callback();
           })],
+      // beta to alpha again
       betaGossip2: ['betaGossip1', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
             assertNoError(err);
             // callerHead should be the merge event from addEvent
             result.peerHistory.creatorHeads[peers.beta]
-              .should.equal(results.addEvent.beta.merge.meta.eventHash);
+              .should.equal(results.addEvent.beta.mergeHash);
             // no new events available from alpha
             result.peerHistory.history.should.have.length(0);
             // beta has no new events to send to alpha
             result.partitionHistory.history.should.have.length(0);
             callback();
           })],
+      // add event on beta
       betaAddEvent1: ['betaGossip2', (results, callback) =>
         helpers.addEventAndMerge(
           {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback)],
@@ -383,7 +386,7 @@ describe('Worker - _gossipWith', () => {
             assertNoError(err);
             // callerHead should be the merge event from addEvent
             result.peerHistory.creatorHeads[peers.alpha]
-              .should.equal(results.addEvent.alpha.merge.meta.eventHash);
+              .should.equal(results.addEvent.alpha.mergeHash);
             result.peerHistory.creatorHeads[peers.beta]
               .should.equal(results.betaAddEvent1.mergeHash);
             // one new merge event event available from beta
@@ -402,7 +405,7 @@ describe('Worker - _gossipWith', () => {
           {ledgerNode: nodes.alpha, peerId: peers.beta}, (err, result) => {
             assertNoError(err);
             result.peerHistory.creatorHeads[peers.alpha]
-              .should.equal(results.addEvent.alpha.merge.meta.eventHash);
+              .should.equal(results.addEvent.alpha.mergeHash);
             result.peerHistory.history.should.have.length(0);
             // alpha has two new events to send to beta
             result.partitionHistory.history.should.have.length(2);
@@ -541,5 +544,47 @@ describe('Worker - _gossipWith', () => {
       // });
       done(null, results);
     });
-  });
+  }); // end it
+  it('performs gossip-cycle alpha 100 times', function(done) {
+    this.timeout(120000);
+    const eventTemplate = mockData.events.alpha;
+    let previousResult;
+    async.timesSeries(100, (i, callback) => {
+      gossipCycle.alpha(
+        {consensusApi, eventTemplate, nodes, peers, previousResult},
+        (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          previousResult = result;
+          callback();
+        });
+    }, err => {
+      if(err) {
+        return done(err);
+      }
+      done();
+    });
+  }); // end cycle alpha
+  it('performs gossip cycle beta 100 times', function(done) {
+    this.timeout(120000);
+    const eventTemplate = mockData.events.alpha;
+    let previousResult;
+    async.timesSeries(100, (i, callback) => {
+      gossipCycle.beta(
+        {consensusApi, eventTemplate, nodes, peers, previousResult},
+        (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          previousResult = result;
+          callback();
+        });
+    }, err => {
+      if(err) {
+        return done(err);
+      }
+      done();
+    });
+  }); // end cycle beta
 });
