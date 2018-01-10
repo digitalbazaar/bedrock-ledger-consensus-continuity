@@ -668,7 +668,7 @@ describe('Multinode Basics', () => {
               'alphaAddEvent1', 'betaAddEvent1',
               'gammaAddEvent1', 'deltaAddEvent1',
               (results, callback) =>
-                _workerCycle({consensusApi, nodes, series: true}, callback)],
+                _workerCycle({consensusApi, nodes, series: false}, callback)],
             setTracer: ['workCycle1', (results, callback) => {
               if(i % tracerInterval === 0) {
                 tracerEvent.alpha = Object.keys(results.alphaAddEvent1)[0];
