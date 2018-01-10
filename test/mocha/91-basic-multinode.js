@@ -15,7 +15,7 @@ let screen;
 let table;
 let tableHead;
 
-const blessedEnabled = false;
+const blessedEnabled = true;
 const tracerInterval = 10;
 
 // NOTE: the tests in this file are designed to run in series
@@ -749,7 +749,9 @@ describe('Multinode Basics', () => {
                           const blockHeight = block.blockHeight;
                           tableData[1].push(blockHeight.toString());
                           if(blockHeight > maxBlockHeight) {
-                            blockTime = Date.now() - blockStartTime;
+                            // possibly more than 1 block created
+                            const blocks = blockHeight - maxBlockHeight;
+                            blockTime = (Date.now() - blockStartTime) / blocks;
                             blockStartTime = Date.now();
                             maxBlockHeight = blockHeight;
                           }
