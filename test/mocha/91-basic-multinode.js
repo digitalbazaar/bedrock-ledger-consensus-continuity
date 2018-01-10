@@ -15,7 +15,7 @@ let screen;
 let table;
 let tableHead;
 
-const blessedEnabled = true;
+const blessedEnabled = false;
 const tracerInterval = 10;
 
 // NOTE: the tests in this file are designed to run in series
@@ -668,7 +668,7 @@ describe('Multinode Basics', () => {
               'alphaAddEvent1', 'betaAddEvent1',
               'gammaAddEvent1', 'deltaAddEvent1',
               (results, callback) =>
-                _workerCycle({consensusApi, nodes, series: false}, callback)],
+                _workerCycle({consensusApi, nodes, series: true}, callback)],
             setTracer: ['workCycle1', (results, callback) => {
               if(i % tracerInterval === 0) {
                 tracerEvent.alpha = Object.keys(results.alphaAddEvent1)[0];
