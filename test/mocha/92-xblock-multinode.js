@@ -146,14 +146,9 @@ describe.only('X Block Test', () => {
         this.timeout(900000);
 
         const targetBlockHashMap = {};
-        const blockMap = {};
         async.until(() => {
-          const nodeList = Object.keys(blockMap);
-          if(nodeList.length === 0) {
-            return false;
-          }
-          return nodeList.map(k => blockMap[k].blockHeight)
-            .every(h => h >= targetBlockHeight);
+          return Object.keys(targetBlockHashMap).length ===
+            Object.keys(nodes).length;
         }, callback => {
           async.auto({
             alphaAddEvent1: callback => helpers.addEvent(
@@ -175,9 +170,15 @@ describe.only('X Block Test', () => {
                   (err, result) => {
                     assertNoError(err);
                     const block = result.eventBlock.block;
-                    blockMap[i] = block;
-                    if(block.blockHeight === targetBlockHeight) {
-                      targetBlockHashMap[i] = result.eventBlock.meta.blockHash;
+                    if(block.blockHeight >= targetBlockHeight) {
+                      return ledgerNode.storage.blocks.getByHeight(
+                        targetBlockHeight, (err, result) => {
+                          if(err) {
+                            return callback(err);
+                          }
+                          targetBlockHashMap[i] = result.meta.blockHash;
+                          callback();
+                        });
                     }
                     callback();
                   });
@@ -192,7 +193,8 @@ describe.only('X Block Test', () => {
           if(err) {
             return done(err);
           }
-          console.log('hash map', JSON.stringify(targetBlockHashMap, null, 2));
+          console.log(
+            'targetBlockHashMap', JSON.stringify(targetBlockHashMap, null, 2));
           _.values(targetBlockHashMap)
             .every(h => h === targetBlockHashMap.alpha).should.be.true;
           done(err);
