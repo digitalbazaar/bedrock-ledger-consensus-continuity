@@ -22,7 +22,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.only('X Block Test', () => {
+describe('X Block Test', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
