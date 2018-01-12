@@ -3,7 +3,7 @@
   "version": "0.0.1-0",
   "private": true,
   "scripts": {
-    "test": "node --preserve-symlinks test test",
+    "test": "redis-cli flushall && node --preserve-symlinks test test",
     "watch": "grunt watch"
   },
   "dependencies": {
