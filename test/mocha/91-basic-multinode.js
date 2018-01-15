@@ -14,6 +14,7 @@ const blessed = require('blessed');
 let screen;
 let table;
 let tableHead;
+let tableData;
 
 const blessedEnabled = false;
 const tracerInterval = 10;
@@ -148,6 +149,13 @@ describe('Multinode Basics', () => {
       2. run worker on peer[1]
      */
     describe('Two Nodes', () => {
+      after(() => {
+        if(blessedEnabled) {
+          screen.destroy();
+        }
+        console.log('Summary',
+          JSON.stringify(blessedSummary(tableData), null, 2));
+      });
       it('two nodes reach consensus on two blocks', function(done) {
         this.timeout(120000);
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
@@ -642,7 +650,6 @@ describe('Multinode Basics', () => {
           });
           screen.append(tableHead);
         }
-        let tableData;
         let tableHeadData;
         let counterHead = -1;
         const blockMap = {};
