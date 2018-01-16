@@ -4,5 +4,5 @@ while [ $? -eq 0 ]
 do
 echo 'Pass ==================' $counter
 ((++counter))
-npm test
+npm test >test-pass-${counter}.log 2>&1
 done
