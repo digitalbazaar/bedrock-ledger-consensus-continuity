@@ -22,7 +22,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('X Block Test', () => {
+describe.only('X Block Test', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -136,7 +136,7 @@ describe('X Block Test', () => {
       1. add regular event on peer[1]
       2. run worker on peer[1]
      */
-    const targetBlockHeight = 100;
+    const targetBlockHeight = 500;
     describe(`${targetBlockHeight} Blocks`, () => {
       // 1. add new regular event on each node
       // 2. run worker on all nodes

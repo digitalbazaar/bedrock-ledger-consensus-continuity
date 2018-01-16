@@ -39,7 +39,7 @@ describe('Multinode Basics', () => {
     helpers.prepareDatabase(mockData, done);
   });
 
-  describe.only('Consensus with 2 Nodes', () => {
+  describe('Consensus with 2 Nodes', () => {
     const nodeCount = 6;
 
     // get consensus plugin and create genesis ledger node
