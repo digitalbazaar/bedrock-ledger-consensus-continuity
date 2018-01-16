@@ -146,7 +146,7 @@ describe.only('X Block Test', () => {
       // 3. report blockheight and event counts
 
       it('makes many more blocks', function(done) {
-        this.timeout(1500000);
+        this.timeout(0);
 
         const targetBlockHashMap = {};
         async.until(() => {
