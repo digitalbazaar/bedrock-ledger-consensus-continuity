@@ -139,14 +139,14 @@ describe.only('X Block Test', () => {
       1. add regular event on peer[1]
       2. run worker on peer[1]
      */
-    const targetBlockHeight = 100;
+    const targetBlockHeight = 2;
     describe(`${targetBlockHeight} Blocks`, () => {
       // 1. add new regular event on each node
       // 2. run worker on all nodes
       // 3. report blockheight and event counts
 
       it('makes many more blocks', function(done) {
-        this.timeout(900000);
+        this.timeout(1000000);
 
         const targetBlockHashMap = {};
         async.until(() => {
