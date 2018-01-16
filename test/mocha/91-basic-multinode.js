@@ -16,7 +16,7 @@ let table;
 let tableHead;
 let tableData;
 
-const blessedEnabled = false;
+const blessedEnabled = true;
 const tracerInterval = 10;
 
 // NOTE: the tests in this file are designed to run in series

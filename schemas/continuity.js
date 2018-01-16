@@ -113,14 +113,20 @@ const event = {
   type: 'object',
   title: 'Continuity Event',
   properties: {
+    callerId: {
+      type: 'string'
+    },
     event: {
       oneOf: [webLedgerEvents]
     },
     eventHash: {
       type: 'string'
-    }
+    },
+    mergeHash: {
+      type: 'string'
+    },
   },
-  required: ['event', 'eventHash']
+  required: ['callerId', 'event', 'eventHash', 'mergeHash']
 };
 
 module.exports.event = () => (event);
