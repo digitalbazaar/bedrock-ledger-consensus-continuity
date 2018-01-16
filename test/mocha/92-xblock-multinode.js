@@ -17,7 +17,10 @@ const mockData = require('./mock.data');
 const eventTemplate = mockData.events.alpha;
 
 // NOTE: alpha is assigned manually
-const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta'];
+// NOTE: all these may not be used
+const nodeLabels = [
+  'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota'
+];
 const nodes = {};
 const peers = {};
 const heads = {};
@@ -27,7 +30,7 @@ describe.only('X Block Test', () => {
     helpers.prepareDatabase(mockData, done);
   });
 
-  const nodeCount = 6;
+  const nodeCount = 9;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // get consensus plugin and create genesis ledger node
@@ -136,7 +139,7 @@ describe.only('X Block Test', () => {
       1. add regular event on peer[1]
       2. run worker on peer[1]
      */
-    const targetBlockHeight = 500;
+    const targetBlockHeight = 100;
     describe(`${targetBlockHeight} Blocks`, () => {
       // 1. add new regular event on each node
       // 2. run worker on all nodes
