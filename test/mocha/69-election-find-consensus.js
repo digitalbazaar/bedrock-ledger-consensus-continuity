@@ -125,13 +125,16 @@ describe('Election API findConsensus', () => {
       event1: callback => helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode}, callback),
       history: ['event1', (results, callback) => getRecentHistory(
-        {ledgerNode}, callback)],
+        {ledgerNode, excludeLocalRegularEvents: true}, callback)],
       consensus: ['history', (results, callback) => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
-            result.consensusProof.should.have.length(0);
-            result.consensusProofHash.should.have.length(0);
+            result.consensusProof.should.have.length(1);
+            result.consensusProofHash.should.have.length(1);
+            result.consensusProof[0].should.deep.equal(results.event1.merge.event);
+            result.consensusProofHash[0].should.equal(
+              results.event1.mergeHash);
             result.event.should.have.length(2);
             result.event.map(r => r.eventHash).should.have.same.members([
               Object.keys(results.event1.regular)[0],
@@ -142,17 +145,19 @@ describe('Election API findConsensus', () => {
       }]
     }, done);
   });
-  it('properly does not reach consensus with two electors', done => {
+  it('properly does not reach consensus with four electors', done => {
     const findConsensus = consensusApi._worker._election.findConsensus;
     const getRecentHistory = consensusApi._worker._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
-    const electors = [{id: peers.alpha}, {id: peers.beta}];
+    const electors = [
+      {id: peers.alpha}, {id: peers.beta},
+      {id: peers.gamma}, {id: peers.delta}];
     const eventTemplate = mockData.events.alpha;
     async.auto({
       event1: callback => helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode}, callback),
       history: ['event1', (results, callback) => getRecentHistory(
-        {ledgerNode}, callback)],
+        {ledgerNode, excludeLocalRegularEvents: true}, callback)],
       consensus: ['history', (results, callback) => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
@@ -175,7 +180,8 @@ describe('Election API findConsensus', () => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback => getRecentHistory(
+            {ledgerNode, excludeLocalRegularEvents: true}, callback),
           consensus: ['history', (results, callback) => {
             findConsensus(
               {electors, ledgerNode, history: results.history},
@@ -184,13 +190,21 @@ describe('Election API findConsensus', () => {
                 should.exist(result);
                 should.exist(result.event);
                 result.event.should.be.an('array');
-                result.event.should.have.length(18);
+                result.event.should.have.length(8);
                 const eventHash = result.event.map(r => r.eventHash);
                 eventHash.should.be.an('array');
-                eventHash.should.have.length(18);
+                eventHash.should.have.length(8);
                 eventHash.should.have.same.members([
                   ...regularEvent.regularHash,
-                  ...regularEvent.mergeHash,
+                  ...regularEvent.mergeHash
+                ]);
+                should.exist(result.consensusProof);
+                result.consensusProof.should.be.an('array');
+                result.consensusProof.should.have.length(10);
+                should.exist(result.consensusProofHash);
+                result.consensusProofHash.should.be.an('array');
+                result.consensusProofHash.should.have.length(10);
+                result.consensusProofHash.should.have.same.members([
                   copyMergeHashes.cpa,
                   copyMergeHashes.cpb,
                   copyMergeHashes.cp1,
@@ -200,25 +214,7 @@ describe('Election API findConsensus', () => {
                   copyMergeHashes.cp5,
                   copyMergeHashes.cp6,
                   copyMergeHashes.cp7,
-                  copyMergeHashes.cp8,
-                ]);
-                should.exist(result.consensusProof);
-                result.consensusProof.should.be.an('array');
-                result.consensusProof.should.have.length(10);
-                should.exist(result.consensusProofHash);
-                result.consensusProofHash.should.be.an('array');
-                result.consensusProofHash.should.have.length(10);
-                result.consensusProofHash.should.have.same.members([
-                  copyMergeHashes.cp7,
-                  copyMergeHashes.cp8,
-                  copyMergeHashes.cp9,
-                  copyMergeHashes.cp10,
-                  copyMergeHashes.cp11,
-                  copyMergeHashes.cp12,
-                  copyMergeHashes.cp13,
-                  copyMergeHashes.cp14,
-                  copyMergeHashes.cp15,
-                  copyMergeHashes.cp16
+                  copyMergeHashes.cp8
                 ]);
                 // proofReport({
                 //   copyMergeHashes,
@@ -244,17 +240,22 @@ describe('Election API findConsensus', () => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback => getRecentHistory(
+            {ledgerNode, excludeLocalRegularEvents: true}, callback),
           consensus: ['history', (results, callback) => {
             findConsensus(
               {electors, ledgerNode, history: results.history},
               (err, result) => {
                 assertNoError(err);
-                result.event.should.have.length(18);
+                result.event.should.have.length(8);
                 const eventHash = result.event.map(r => r.eventHash);
                 eventHash.should.have.same.members([
                   ...regularEvent.regularHash,
-                  ...regularEvent.mergeHash,
+                  ...regularEvent.mergeHash
+                ]);
+                result.consensusProof.should.have.length(10);
+                result.consensusProofHash.should.have.length(10);
+                result.consensusProofHash.should.have.same.members([
                   copyMergeHashes.cpa,
                   copyMergeHashes.cpb,
                   copyMergeHashes.cp1,
@@ -264,21 +265,8 @@ describe('Election API findConsensus', () => {
                   copyMergeHashes.cp5,
                   copyMergeHashes.cp6,
                   copyMergeHashes.cp7,
-                  copyMergeHashes.cp8,
+                  copyMergeHashes.cp8
                 ]);
-                result.consensusProof.should.have.length(8);
-                result.consensusProofHash.should.have.length(8);
-                // FIXME: update assertions
-                // result.consensusProofHash.should.have.same.members([
-                //   copyMergeHashes.cp9,
-                //   copyMergeHashes.cp10,
-                //   copyMergeHashes.cp11,
-                //   copyMergeHashes.cp12,
-                //   copyMergeHashes.cp13,
-                //   copyMergeHashes.cp14,
-                //   copyMergeHashes.cp15,
-                //   copyMergeHashes.cp16
-                // ]);
                 // proofReport({
                 //   copyMergeHashes,
                 //   copyMergeHashesIndex,
@@ -303,17 +291,22 @@ describe('Election API findConsensus', () => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback => getRecentHistory(
+            {ledgerNode, excludeLocalRegularEvents: true}, callback),
           consensus: ['history', (results, callback) => {
             findConsensus(
               {electors, ledgerNode, history: results.history},
               (err, result) => {
                 assertNoError(err);
-                result.event.should.have.length(18);
+                result.event.should.have.length(8);
                 const eventHash = result.event.map(r => r.eventHash);
                 eventHash.should.have.same.members([
                   ...regularEvent.regularHash,
-                  ...regularEvent.mergeHash,
+                  ...regularEvent.mergeHash
+                ]);
+                result.consensusProof.should.have.length(10);
+                result.consensusProofHash.should.have.length(10);
+                result.consensusProofHash.should.have.same.members([
                   copyMergeHashes.cpa,
                   copyMergeHashes.cpb,
                   copyMergeHashes.cp1,
@@ -323,17 +316,8 @@ describe('Election API findConsensus', () => {
                   copyMergeHashes.cp5,
                   copyMergeHashes.cp6,
                   copyMergeHashes.cp7,
-                  copyMergeHashes.cp8,
+                  copyMergeHashes.cp8
                 ]);
-                result.consensusProof.should.have.length(6);
-                result.consensusProofHash.should.have.length(6);
-                // FIXME: update assertions
-                // result.consensusProofHash.should.have.same.members([
-                //   copyMergeHashes.cp7,
-                //   copyMergeHashes.cp8,
-                //   copyMergeHashes.cp9,
-                //   copyMergeHashes.cp10
-                // ]);
                 // proofReport({
                 //   copyMergeHashes,
                 //   copyMergeHashesIndex,
@@ -367,7 +351,8 @@ describe('Election API findConsensus', () => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback => getRecentHistory(
+            {ledgerNode, excludeLocalRegularEvents: true}, callback),
           consensus: ['history', (results, callback) => {
             findConsensus(
               {electors, ledgerNode, history: results.history},
@@ -376,12 +361,23 @@ describe('Election API findConsensus', () => {
                 should.exist(result);
                 should.exist(result.event);
                 result.event.should.be.an('array');
-                result.event.should.have.length(20);
+                result.event.should.have.length(8);
                 const eventHash = result.event.map(r => r.eventHash);
-                eventHash.should.have.length(20);
+                eventHash.should.have.length(8);
                 eventHash.should.have.same.members([
-                  ...regularEvent.regularHash,
-                  ...regularEvent.mergeHash,
+                  regularEvent.alpha.regularHashes[0],
+                  regularEvent.beta.regularHashes[0],
+                  regularEvent.gamma.regularHashes[0],
+                  regularEvent.delta.regularHashes[0],
+                  regularEvent.alpha.mergeHash,
+                  regularEvent.beta.mergeHash,
+                  regularEvent.gamma.mergeHash,
+                  regularEvent.delta.mergeHash
+                  // exclude epsilon (non-elector)
+                ]);
+                result.consensusProof.should.have.length(10);
+                result.consensusProofHash.should.have.length(10);
+                result.consensusProofHash.should.have.same.members([
                   copyMergeHashes.cpa,
                   copyMergeHashes.cpb,
                   copyMergeHashes.cp1,
@@ -391,21 +387,8 @@ describe('Election API findConsensus', () => {
                   copyMergeHashes.cp5,
                   copyMergeHashes.cp6,
                   copyMergeHashes.cp7,
-                  copyMergeHashes.cp8,
+                  copyMergeHashes.cp8
                 ]);
-                result.consensusProof.should.have.length(10);
-                result.consensusProofHash.should.have.length(10);
-                // FIXME: update assertions
-                // result.consensusProofHash.should.have.same.members([
-                //   copyMergeHashes.cp7,
-                //   copyMergeHashes.cp8,
-                //   copyMergeHashes.cp9,
-                //   copyMergeHashes.cp10,
-                //   copyMergeHashes.cp11,
-                //   copyMergeHashes.cp12,
-                //   copyMergeHashes.cp13,
-                //   copyMergeHashes.cp14
-                // ]);
                 // proofReport({
                 //   copyMergeHashes,
                 //   copyMergeHashesIndex,
@@ -432,7 +415,7 @@ describe('Election API findConsensus', () => {
       build: callback => helpers.buildHistory(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
       history: ['build', (results, callback) => getRecentHistory(
-        {ledgerNode}, callback)],
+        {ledgerNode, excludeLocalRegularEvents: true}, callback)],
       event: ['history', (results, callback) => helpers.addEvent(
         {ledgerNode, eventTemplate}, callback)],
       consensus: ['event', (results, callback) => {
@@ -441,11 +424,15 @@ describe('Election API findConsensus', () => {
             const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
               results.build;
             assertNoError(err);
-            result.event.should.have.length(18);
+            result.event.should.have.length(8);
             const eventHash = result.event.map(r => r.eventHash);
             eventHash.should.have.same.members([
               ...regularEvent.regularHash,
-              ...regularEvent.mergeHash,
+              ...regularEvent.mergeHash
+            ]);
+            result.consensusProof.should.have.length(10);
+            result.consensusProofHash.should.have.length(10);
+            result.consensusProofHash.should.have.same.members([
               copyMergeHashes.cpa,
               copyMergeHashes.cpb,
               copyMergeHashes.cp1,
@@ -455,21 +442,7 @@ describe('Election API findConsensus', () => {
               copyMergeHashes.cp5,
               copyMergeHashes.cp6,
               copyMergeHashes.cp7,
-              copyMergeHashes.cp8,
-            ]);
-            result.consensusProof.should.have.length(10);
-            result.consensusProofHash.should.have.length(10);
-            result.consensusProofHash.should.have.same.members([
-              copyMergeHashes.cp7,
-              copyMergeHashes.cp8,
-              copyMergeHashes.cp9,
-              copyMergeHashes.cp10,
-              copyMergeHashes.cp11,
-              copyMergeHashes.cp12,
-              copyMergeHashes.cp13,
-              copyMergeHashes.cp14,
-              copyMergeHashes.cp15,
-              copyMergeHashes.cp16
+              copyMergeHashes.cp8
             ]);
             // proofReport({
             //   copyMergeHashes,
