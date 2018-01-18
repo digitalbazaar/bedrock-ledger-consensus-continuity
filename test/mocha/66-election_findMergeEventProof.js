@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -121,7 +121,7 @@ describe.only('Election API _findMergeEventProof', () => {
           }), callback)]
     }, done);
   });
-  it.only('ledger history alpha', done => {
+  it('ledger history alpha', done => {
     const report = {};
     async.auto({
       build: callback => helpers.buildHistory(
@@ -206,16 +206,13 @@ describe.only('Election API _findMergeEventProof', () => {
             //   report[i] = 'NO PROOF';
             // }
             const allXs = proof.consensus.map(p => p.x.eventHash);
-            allXs.should.have.length(3);
-            allXs.should.have.same.members([
-              build.copyMergeHashes.cp6, build.copyMergeHashes.cp7,
-              build.copyMergeHashes.cp8
-            ]);
+            allXs.should.have.length(4);
+            allXs.should.have.same.members(build.regularEvent.mergeHash);
             const allYs = proof.consensus.map(p => p.y.eventHash);
-            allYs.should.have.length(3);
+            allYs.should.have.length(4);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp14, build.copyMergeHashes.cp15,
-              build.copyMergeHashes.cp16
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
             ]);
             callback();
           }]
@@ -263,15 +260,12 @@ describe.only('Election API _findMergeEventProof', () => {
             // }
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(4);
-            allXs.should.have.same.members([
-              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
-              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
-            ]);
+            allXs.should.have.same.members(build.regularEvent.mergeHash);
             const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(4);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp9, build.copyMergeHashes.cp10,
-              build.copyMergeHashes.cp11, build.copyMergeHashes.cp12
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
             ]);
             callback();
           }]
@@ -327,15 +321,19 @@ describe.only('Election API _findMergeEventProof', () => {
             // }
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(4);
-            allXs.should.have.same.members([
-              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
-              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
-            ]);
+            const mergeHashes = [
+              build.regularEvent.alpha.mergeHash,
+              build.regularEvent.beta.mergeHash,
+              build.regularEvent.gamma.mergeHash,
+              build.regularEvent.delta.mergeHash
+              // exclude epsilon (non-elector)
+            ];
+            allXs.should.have.same.members(mergeHashes);
             const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(4);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14,
-              build.copyMergeHashes.cp15, build.copyMergeHashes.cp16
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
             ]);
             callback();
           }]
@@ -385,15 +383,12 @@ describe.only('Election API _findMergeEventProof', () => {
             // }
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(4);
-            allXs.should.have.same.members([
-              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
-              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
-            ]);
+            allXs.should.have.same.members(build.regularEvent.mergeHash);
             const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(4);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14,
-              build.copyMergeHashes.cp15, build.copyMergeHashes.cp16
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
             ]);
             callback();
           }]
@@ -438,15 +433,12 @@ describe.only('Election API _findMergeEventProof', () => {
             //   copyMergeHashesIndex: build.copyMergeHashesIndex});
             const allXs = proof.consensus.map(p => p.x.eventHash);
             allXs.should.have.length(4);
-            allXs.should.have.same.members([
-              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
-              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
-            ]);
+            allXs.should.have.same.members(build.regularEvent.mergeHash);
             const allYs = proof.consensus.map(p => p.y.eventHash);
             allYs.should.have.length(4);
             allYs.should.have.same.members([
-              build.copyMergeHashes.cp13, build.copyMergeHashes.cp14,
-              build.copyMergeHashes.cp15, build.copyMergeHashes.cp16
+              build.copyMergeHashes.cp5, build.copyMergeHashes.cp6,
+              build.copyMergeHashes.cp7, build.copyMergeHashes.cp8
             ]);
             callback();
           }]

@@ -104,13 +104,13 @@ module.exports = (api, consensusApi, eventTemplate, nodes) => ({
   }, callback)],
   cp15: ['ss4', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.gamma,
+    from: [nodes.beta, nodes.gamma],
     to: nodes.alpha,
     useSnapshot: true
   }, callback)],
   cp16: ['cp12', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.beta,
+    from: [nodes.beta, nodes.gamma],
     to: nodes.delta
   }, callback)],
   cp17: ['cp14', 'cp15', 'cp16', (results, callback) => api.copyAndMerge({
