@@ -30,7 +30,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.only('Multinode Basics', () => {
+describe('Multinode Basics', () => {
   before(done => {
     if(blessedEnabled) {
       screen = blessed.screen({smartCSR: true});
