@@ -16,7 +16,7 @@ let table;
 let tableHead;
 let tableData;
 
-const blessedEnabled = true;
+const blessedEnabled = false;
 const tracerInterval = 10;
 
 // NOTE: the tests in this file are designed to run in series
@@ -30,7 +30,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.only('Multinode Basics', () => {
+describe('Multinode Basics', () => {
   before(done => {
     if(blessedEnabled) {
       screen = blessed.screen({smartCSR: true});
@@ -695,7 +695,8 @@ describe.only('Multinode Basics', () => {
                 nodes, (ledgerNode, iNode, callback) =>
                   consensusApi.events._getLocalBranchHead({
                     eventsCollection: ledgerNode.storage.events.collection,
-                    creator: peers[iNode]
+                    creator: peers[iNode],
+                    ledgerNodeId: ledgerNode.id
                   }, (err, result) => {
                     if(err) {
                       return callback(err);
@@ -794,11 +795,12 @@ describe.only('Multinode Basics', () => {
                       // for the node being reported on, find out what heads it
                       // has for all the other nodes
                       async.eachOfSeries(
-                        nodes, (node, iNode, callback) =>
+                        nodes, (ledgerNode, iNode, callback) =>
                           consensusApi.events._getLocalBranchHead({
                             eventsCollection:
                               ledgerNode.storage.events.collection,
-                            creator: peers[iNode]
+                            creator: peers[iNode],
+                            ledgerNodeId: ledgerNode.id
                           }, (err, result) => {
                             if(err) {
                               return callback(err);
