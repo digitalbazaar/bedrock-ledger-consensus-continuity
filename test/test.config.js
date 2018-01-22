@@ -18,3 +18,6 @@ config['ledger-consensus-continuity'].worker.election.gossipInterval = 0;
 
 // disable caching in test
 config['ledger-consensus-continuity'].gossip.cache.enabled = false;
+
+// lower compression threshold so that compression is used in tests
+config['ledger-consensus-continuity'].gossip.compression.threshold = 5;
