@@ -16,7 +16,7 @@ let table;
 let tableHead;
 let tableData;
 
-const blessedEnabled = false;
+const blessedEnabled = true;
 const tracerInterval = 10;
 
 // NOTE: the tests in this file are designed to run in series
@@ -695,7 +695,7 @@ describe('Multinode Basics', () => {
                 nodes, (ledgerNode, iNode, callback) =>
                   consensusApi.events._getLocalBranchHead({
                     eventsCollection: ledgerNode.storage.events.collection,
-                    creator: peers[iNode],
+                    creatorId: peers[iNode],
                     ledgerNodeId: ledgerNode.id
                   }, (err, result) => {
                     if(err) {
@@ -766,11 +766,11 @@ describe('Multinode Basics', () => {
                           tableData[2].push(
                             (blockTime / 1000).toFixed(3).toString());
                           tableData[3].push(block.event.length.toString());
-                          if(!block.consensusProof) {
+                          if(!block.consensusProofHash) {
                             tableData[4].push('0');
                           } else {
                             tableData[4].push(
-                              block.consensusProof.length.toString());
+                              block.consensusProofHash.length.toString());
                           }
                           callback();
                         }),
@@ -799,7 +799,7 @@ describe('Multinode Basics', () => {
                           consensusApi.events._getLocalBranchHead({
                             eventsCollection:
                               ledgerNode.storage.events.collection,
-                            creator: peers[iNode],
+                            creatorId: peers[iNode],
                             ledgerNodeId: ledgerNode.id
                           }, (err, result) => {
                             if(err) {

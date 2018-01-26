@@ -57,9 +57,16 @@ describe('Election API _findMergeEventProof', () => {
           nodes.alpha = result;
           callback(null, result);
         })],
-      genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
+      creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
+        consensusApi._worker._voters.get(nodes.alpha.id, (err, result) => {
+          callback(null, result.id);
+        });
+      }],
+      genesisMerge: ['creatorId', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
-          eventsCollection: nodes.alpha.storage.events.collection
+          eventsCollection: nodes.alpha.storage.events.collection,
+          creatorId: results.creatorId,
+          ledgerNodeId: nodes.alpha.id
         }, (err, result) => {
           if(err) {
             return callback(err);
