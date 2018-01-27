@@ -52,18 +52,6 @@ describe.skip('Worker - _gossipWith', () => {
           nodes.alpha = result;
           callback();
         })],
-      genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._events._getLocalBranchHead({
-          ledgerNodeId: results.ledgerNode.id,
-          eventsCollection: nodes.alpha.storage.events.collection
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          genesisMergeHash = result;
-          callback();
-        });
-      }],
       genesisBlock: ['ledgerNode', (results, callback) =>
         nodes.alpha.blocks.getGenesis((err, result) => {
           if(err) {
@@ -88,6 +76,17 @@ describe.skip('Worker - _gossipWith', () => {
             peers[i] = result.id;
             callback();
           }), callback)],
+      genesisMerge: ['consensusPlugin', 'getPeer', (results, callback) => {
+        consensusApi._worker._events._getLocalBranchHead({
+          creatorId: peers.alpha, ledgerNode: nodes.alpha
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          genesisMergeHash = result;
+          callback();
+        });
+      }],
     }, done);
   });
   /*
@@ -95,13 +94,14 @@ describe.skip('Worker - _gossipWith', () => {
     ledgerNode beyond the genesis merge event, so the gossip should complete
     without an error.  There is also nothing to be sent.
   */
-  it('completes without an error when nothing to be received or sent', done => {
+  it.only('completes without an error when nothing to be received', done => {
     async.auto({
-      gossipWith: callback => consensusApi._worker._gossipWith(
-        {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
-          assertNoError(err);
-          callback();
-        })
+      gossipWith: callback => consensusApi._worker._gossipWith({
+        callerId: peers.beta, ledgerNode: nodes.beta, peerId: peers.alpha
+      }, err => {
+        assertNoError(err);
+        callback();
+      })
     }, done);
   });
   /*
