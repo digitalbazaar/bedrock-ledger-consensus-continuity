@@ -154,15 +154,16 @@ describe.only('X Block Test', () => {
           return Object.keys(targetBlockHashMap).length ===
             Object.keys(nodes).length;
         }, callback => {
+          const count = 1;
           async.auto({
             alphaAddEvent1: callback => helpers.addEvent(
-              {count: 1, eventTemplate, ledgerNode: nodes.alpha}, callback),
+              {count, eventTemplate, ledgerNode: nodes.alpha}, callback),
             betaAddEvent1: callback => helpers.addEvent(
-              {count: 1, eventTemplate, ledgerNode: nodes.beta}, callback),
+              {count, eventTemplate, ledgerNode: nodes.beta}, callback),
             gammaAddEvent1: callback => helpers.addEvent(
-              {count: 1, eventTemplate, ledgerNode: nodes.gamma}, callback),
+              {count, eventTemplate, ledgerNode: nodes.gamma}, callback),
             deltaAddEvent1: callback => helpers.addEvent(
-              {count: 1, eventTemplate, ledgerNode: nodes.delta}, callback),
+              {count, eventTemplate, ledgerNode: nodes.delta}, callback),
             workCycle1: [
               'alphaAddEvent1', 'betaAddEvent1',
               'gammaAddEvent1', 'deltaAddEvent1',
