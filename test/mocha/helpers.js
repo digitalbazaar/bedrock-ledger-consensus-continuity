@@ -49,8 +49,9 @@ api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
 };
 
 api.addEventAndMerge = (
-  {consensusApi, count = 1, eventTemplate, ledgerNode}, callback) => {
-  if(!(consensusApi && eventTemplate && ledgerNode)) {
+  {consensusApi, count = 1, creatorId, eventTemplate, ledgerNode},
+  callback) => {
+  if(!(consensusApi && creatorId && eventTemplate && ledgerNode)) {
     throw new TypeError(
       '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
   }
@@ -68,7 +69,7 @@ api.addEventAndMerge = (
         callback();
       }),
     history: ['addEvent', (results, callback) =>
-      getRecentHistory({ledgerNode}, callback)],
+      getRecentHistory({creatorId, ledgerNode}, callback)],
     merge: ['history', (results, callback) => mergeBranches(
       {history: results.history, ledgerNode}, (err, result) => {
         if(err) {
@@ -126,19 +127,19 @@ api.addRemoteEvents = ({
     const getHead = consensusApi._worker._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead({
-        ledgerNodeId: ledgerNode.id,
-        eventsCollection: nodes[0].storage.events.collection,
         // unknown creator will yield genesis merge event
-        creatorId
+        creatorId,
+        ledgerNode
       }, (err, result) => {
         if(err) {
           return callback(err);
         }
         // in this example the merge event and the regular event
         // have a common ancestor which is the genesis merge event
-        testMergeEvent.treeHash = result;
-        testRegularEvent.treeHash = result;
-        testRegularEvent.parentHash = [result];
+        testMergeEvent.treeHash = result.eventHash;
+        testMergeEvent.parentHash = [result.eventHash];
+        testRegularEvent.treeHash = result.eventHash;
+        testRegularEvent.parentHash = [result.eventHash];
         callback(null, result);
       }),
       regularEventHash: ['head', (results, callback) =>
@@ -146,7 +147,7 @@ api.addRemoteEvents = ({
           if(err) {
             return callback(err);
           }
-          testMergeEvent.parentHash = [result, results.head];
+          testMergeEvent.parentHash.push(result);
           callback(null, result);
         })],
       sign: ['regularEventHash', (results, callback) => jsigs.sign(

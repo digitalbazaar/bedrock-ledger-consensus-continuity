@@ -6,6 +6,7 @@
 const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
+const cache = require('bedrock-redis');
 const gossipCycle = require('./gossip-cycle');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -17,11 +18,13 @@ describe.skip('Worker - _gossipWith', () => {
   });
 
   let aggregateHistory;
+  let cacheKey;
   let consensusApi;
   let genesisMergeHash;
   let getRecentHistory;
   let mergeBranches;
   let testEventId;
+  let EventWriter;
   const nodeCount = 4;
   // NOTE: alpha is assigned manually
   const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon'];
@@ -31,6 +34,7 @@ describe.skip('Worker - _gossipWith', () => {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
+      flush: callback => cache.client.flushall(callback),
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
@@ -42,6 +46,8 @@ describe.skip('Worker - _gossipWith', () => {
           getRecentHistory = consensusApi._worker._events.getRecentHistory;
           mergeBranches = consensusApi._worker._events.mergeBranches;
           aggregateHistory = consensusApi._worker._events.aggregateHistory;
+          cacheKey = consensusApi._worker._cacheKey;
+          EventWriter = consensusApi._worker.EventWriter;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
@@ -94,10 +100,10 @@ describe.skip('Worker - _gossipWith', () => {
     ledgerNode beyond the genesis merge event, so the gossip should complete
     without an error.  There is also nothing to be sent.
   */
-  it.only('completes without an error when nothing to be received', done => {
+  it('completes without an error when nothing to be received', done => {
     async.auto({
       gossipWith: callback => consensusApi._worker._gossipWith({
-        callerId: peers.beta, ledgerNode: nodes.beta, peerId: peers.alpha
+        ledgerNode: nodes.beta, peerId: peers.alpha
       }, err => {
         assertNoError(err);
         callback();
@@ -106,24 +112,56 @@ describe.skip('Worker - _gossipWith', () => {
   });
   /*
     gossip wih ledgerNode from nodes.beta. There is a regular event and a
-    merge event on ledgerNode to be gossiped.  There is nothing to be sent from
-    nodes.beta.
+    merge event on ledgerNode to be gossiped.
   */
-  it('properly gossips one regular event and one merge event', done => {
+  it.only('properly gossips one regular event and one merge event', done => {
     const eventTemplate = mockData.events.alpha;
     async.auto({
-      addEvent: callback => helpers.addEventAndMerge(
-        {consensusApi, ledgerNode: nodes.alpha, eventTemplate}, callback),
+      addEvent: callback => helpers.addEventAndMerge({
+        consensusApi, creatorId: peers.alpha, eventTemplate,
+        ledgerNode: nodes.alpha
+      }, callback),
       gossipWith: ['addEvent', (results, callback) =>
         consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
-      test: ['gossipWith', (results, callback) => {
-        // the events from ledgerNode should now be present on nodes.beta
+      testCache: ['gossipWith', (results, callback) => {
+        // the events from alpha should now be present in the cache on beta
+        const ledgerNodeId = nodes.beta.id;
+        const regularEventHash = results.addEvent.regularHashes[0];
+        const regularEventKey = cacheKey.event(
+          {eventHash: regularEventHash, ledgerNodeId});
+        const mergeHash = results.addEvent.mergeHash;
+        const mergeHashKey = cacheKey.event(
+          {eventHash: mergeHash, ledgerNodeId});
+        const hashKeys = [regularEventKey, mergeHashKey];
+        // const hashKeys = results.addEvent.allHashes.map(eventHash =>
+        //   cacheKey.event({eventHash, ledgerNodeId}));
+        cache.client.multi()
+          .lrange(cacheKey.eventQueue(ledgerNodeId), 0, 100)
+          .exists(hashKeys)
+          .exec((err, result) => {
+            assertNoError(err);
+            const eventQueue = result[0];
+            eventQueue.should.have.length(2);
+            // ensure that events are in the proper order
+            eventQueue[0].should.equal(regularEventKey);
+            eventQueue[1].should.equal(mergeHashKey);
+            const existsCount = result[1];
+            existsCount.should.equal(2);
+            callback();
+          });
+      }],
+      writer: ['testCache', (results, callback) => {
+        const ew = new EventWriter({ledgerNode: nodes.beta}, callback);
+        ew.start();
+        ew.stop(callback);
+      }],
+      testMongo: ['writer', (results, callback) => {
         nodes.beta.storage.events.exists([
-          Object.keys(results.addEvent.regular)[0],
+          results.addEvent.regularHashes[0],
           results.addEvent.mergeHash
         ], (err, result) => {
           assertNoError(err);
@@ -139,17 +177,22 @@ describe.skip('Worker - _gossipWith', () => {
     merge event from a fictitious node as well. There is nothing to be sent from
     nodes.beta.
   */
-  it('properly gossips two regular events and two merge events', done => {
+  it.only('properly gossips two regular events and two merge events', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
     async.auto({
-      addEvent: callback => nodes.alpha.consensus._events.add(
-        testEvent, nodes.alpha, callback),
-      remoteEvents: callback => helpers.addRemoteEvents(
-        {consensusApi, ledgerNode: nodes.alpha, mockData}, callback),
-      history: ['addEvent', 'remoteEvents', (results, callback) =>
-        getRecentHistory({ledgerNode: nodes.alpha}, callback)],
+      addEvent: callback => nodes.alpha.events.add(testEvent, callback),
+      remoteEvents: ['addEvent', (results, callback) => helpers.addRemoteEvents(
+        {consensusApi, ledgerNode: nodes.alpha, mockData}, callback)],
+      writer: ['remoteEvents', (results, callback) => {
+        const eventWriter = new EventWriter({ledgerNode: nodes.alpha});
+        eventWriter.start();
+        eventWriter.stop(callback);
+      }],
+      history: ['addEvent', 'writer', (results, callback) =>
+        getRecentHistory(
+          {creatorId: peers.alpha, ledgerNode: nodes.alpha}, callback)],
       mergeBranches: ['history', (results, callback) => mergeBranches(
         {history: results.history, ledgerNode: nodes.alpha}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
@@ -158,7 +201,12 @@ describe.skip('Worker - _gossipWith', () => {
             assertNoError(err);
             callback();
           })],
-      test: ['gossipWith', (results, callback) => {
+      writerBeta: ['gossipWith', (results, callback) => {
+        const ew = new EventWriter({ledgerNode: nodes.beta}, callback);
+        ew.start();
+        ew.stop(callback);
+      }],
+      test: ['writerBeta', (results, callback) => {
         // the events from ledgerNode should now be present on nodes.beta
         nodes.beta.storage.events.exists([
           // results.remoteEvents.merge,
