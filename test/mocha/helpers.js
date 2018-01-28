@@ -83,20 +83,22 @@ api.addEventAndMerge = (
   }, err => callback(err, events));
 };
 
-api.addEventMultiNode = ({consensusApi, eventTemplate, nodes}, callback) => {
+api.addEventMultiNode = (
+  {consensusApi, eventTemplate, nodes, peers}, callback) => {
   const rVal = {
     mergeHash: [],
     regularHash: []
   };
   async.eachOf(nodes, (n, i, callback) =>
-    api.addEventAndMerge(
-      {consensusApi, eventTemplate, ledgerNode: n}, (err, result) => {
-        if(err) {
-          return callback(err);
-        }
-        rVal[i] = result;
-        callback();
-      }),
+    api.addEventAndMerge({
+      consensusApi, creatorId: peers[i], eventTemplate, ledgerNode: n
+    }, (err, result) => {
+      if(err) {
+        return callback(err);
+      }
+      rVal[i] = result;
+      callback();
+    }),
   err => {
     if(err) {
       return callback(err);
