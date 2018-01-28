@@ -177,7 +177,7 @@ describe.skip('Worker - _gossipWith', () => {
     merge event from a fictitious node as well. There is nothing to be sent from
     nodes.beta.
   */
-  it.only('properly gossips two regular events and two merge events', done => {
+  it('properly gossips two regular events and two merge events', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
@@ -225,7 +225,7 @@ describe.skip('Worker - _gossipWith', () => {
     beta gossips with alpha, gamma gossips with alpha, beta gossips with gamma.
     Afterwards, all nodes have the same events.
   */
-  it.only('properly gossips among three nodes', done => {
+  it('properly gossips among three nodes', done => {
     const eventTemplate = mockData.events.alpha;
     const testNodes =
       {alpha: nodes.alpha, beta: nodes.beta, gamma: nodes.gamma};
@@ -399,6 +399,7 @@ describe.skip('Worker - _gossipWith', () => {
             eventMap.alpha.should.equal(12);
             eventMap.beta.should.equal(10);
             eventMap.gamma.should.equal(14);
+            helpers.report({nodes, peers});
             callback();
           });
         },
