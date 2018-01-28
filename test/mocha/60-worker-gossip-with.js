@@ -114,7 +114,7 @@ describe.skip('Worker - _gossipWith', () => {
     gossip wih ledgerNode from nodes.beta. There is a regular event and a
     merge event on ledgerNode to be gossiped.
   */
-  it('properly gossips one regular event and one merge event', done => {
+  it.only('properly gossips one regular event and one merge event', done => {
     const eventTemplate = mockData.events.alpha;
     async.auto({
       addEvent: callback => helpers.addEventAndMerge({
@@ -177,7 +177,7 @@ describe.skip('Worker - _gossipWith', () => {
     merge event from a fictitious node as well. There is nothing to be sent from
     nodes.beta.
   */
-  it('properly gossips two regular events and two merge events', done => {
+  it.only('properly gossips two regular events and two merge events', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
@@ -225,7 +225,7 @@ describe.skip('Worker - _gossipWith', () => {
     beta gossips with alpha, gamma gossips with alpha, beta gossips with gamma.
     Afterwards, all nodes have the same events.
   */
-  it('properly gossips among three nodes', done => {
+  it.only('properly gossips among three nodes', done => {
     const eventTemplate = mockData.events.alpha;
     const testNodes =
       {alpha: nodes.alpha, beta: nodes.beta, gamma: nodes.gamma};
@@ -263,10 +263,10 @@ describe.skip('Worker - _gossipWith', () => {
             assertNoError(err);
             result.creatorHeads.heads[peers.alpha].eventHash
               .should.equal(results.addEvent.alpha.mergeHash);
-            helpers.report({nodes, peers});
             // this is head that beta is sending to gamma for itself
             result.creatorHeads.heads[peers.beta].eventHash
               .should.equal(results.addEvent.beta.mergeHash);
+            // beta must send genesisMergeHash as head
             result.creatorHeads.heads[peers.gamma].eventHash
               .should.equal(genesisMergeHash);
             callback();
@@ -399,7 +399,6 @@ describe.skip('Worker - _gossipWith', () => {
             eventMap.alpha.should.equal(12);
             eventMap.beta.should.equal(10);
             eventMap.gamma.should.equal(14);
-            helpers.report({nodes, peers});
             callback();
           });
         },
@@ -410,7 +409,6 @@ describe.skip('Worker - _gossipWith', () => {
             // these are heads beta is sending to gamma
             result.creatorHeads.heads[peers.alpha].eventHash
               .should.equal(generations.alpha[1]);
-            helpers.report({nodes, peers});
             // this is head that beta is sending to gamma for itself
             result.creatorHeads.heads[peers.beta].eventHash
               .should.equal(generations.beta[2]);
