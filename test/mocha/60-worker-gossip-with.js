@@ -114,7 +114,7 @@ describe.skip('Worker - _gossipWith', () => {
     gossip wih ledgerNode from nodes.beta. There is a regular event and a
     merge event on ledgerNode to be gossiped.
   */
-  it.only('properly gossips one regular event and one merge event', done => {
+  it('properly gossips one regular event and one merge event', done => {
     const eventTemplate = mockData.events.alpha;
     async.auto({
       addEvent: callback => helpers.addEventAndMerge({
@@ -154,11 +154,8 @@ describe.skip('Worker - _gossipWith', () => {
             callback();
           });
       }],
-      writer: ['testCache', (results, callback) => {
-        const ew = new EventWriter({ledgerNode: nodes.beta}, callback);
-        ew.start();
-        ew.stop(callback);
-      }],
+      writer: ['testCache', (results, callback) =>
+        _commitCache(nodes.beta, callback)],
       testMongo: ['writer', (results, callback) => {
         nodes.beta.storage.events.exists([
           results.addEvent.regularHashes[0],
@@ -201,11 +198,8 @@ describe.skip('Worker - _gossipWith', () => {
             assertNoError(err);
             callback();
           })],
-      writerBeta: ['gossipWith', (results, callback) => {
-        const ew = new EventWriter({ledgerNode: nodes.beta}, callback);
-        ew.start();
-        ew.stop(callback);
-      }],
+      writerBeta: ['gossipWith', (results, callback) =>
+        _commitCache(nodes.beta, callback)],
       test: ['writerBeta', (results, callback) => {
         // the events from ledgerNode should now be present on nodes.beta
         nodes.beta.storage.events.exists([
@@ -310,7 +304,7 @@ describe.skip('Worker - _gossipWith', () => {
       }]
     }, done);
   });
-  it.skip('properly gossips among three nodes II', done => {
+  it('properly gossips among three nodes II', done => {
     const eventTemplate = mockData.events.alpha;
     const testNodes =
       {alpha: nodes.alpha, beta: nodes.beta, gamma: nodes.gamma};
@@ -368,7 +362,7 @@ describe.skip('Worker - _gossipWith', () => {
         }, (err, result) => {
           assertNoError(err);
           generations.alpha.push(result.mergeHash);
-          helpers.report({nodes, peers});
+          // helpers.report({nodes, peers});
           callback();
         }),
         // gamma to alpha
@@ -399,8 +393,7 @@ describe.skip('Worker - _gossipWith', () => {
             assertNoError(err);
             eventMap.alpha.should.equal(12);
             eventMap.beta.should.equal(10);
-            // FIXME: 10?
-            eventMap.gamma.should.equal(10);
+            eventMap.gamma.should.equal(14);
             callback();
           });
         },
@@ -437,14 +430,10 @@ describe.skip('Worker - _gossipWith', () => {
           });
         }, err => {
           assertNoError(err);
-          // console.log('GENERATIONS', JSON.stringify(generations, null, 2));
-          // console.log('TTTTTTT', eventMap);
           eventMap.alpha.should.equal(14);
-          // FIXME: 14?
-          eventMap.beta.should.equal(12);
-          // FIXME: 14?
-          eventMap.gamma.should.equal(10);
-          helpers.report({nodes, peers});
+          eventMap.beta.should.equal(14);
+          eventMap.gamma.should.equal(14);
+          // helpers.report({nodes, peers});
           callback();
         });
       }],
@@ -550,6 +539,7 @@ describe.skip('Worker - _gossipWith', () => {
   function _commitCache(ledgerNode, callback) {
     const ew = new EventWriter({ledgerNode});
     ew.start();
-    ew.stop(callback);
+    // need a minimal amount of time for write to kick off
+    setTimeout(() => ew.stop(callback), 250);
   }
 });
