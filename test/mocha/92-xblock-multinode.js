@@ -99,7 +99,12 @@ describe.only('X Block Test', () => {
           peers[i] = result.id;
           heads[i] = [];
           callback();
-        }), done));
+        }),
+    err => {
+      // add reporting here
+      // helpers.report({nodes, peers});
+      done(err);
+    }));
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => {
@@ -172,6 +177,8 @@ describe.only('X Block Test', () => {
                 _workerCycle({consensusApi, nodes, series: false}, callback)],
             report: ['workCycle1', (results, callback) => async.forEachOfSeries(
               nodes, (ledgerNode, i, callback) => {
+                console.log('TEST WORKER CYCLE COMPLETE');
+                // helpers.report({nodes, peers});
                 ledgerNode.storage.blocks.getLatestSummary(
                   (err, result) => {
                     assertNoError(err);
