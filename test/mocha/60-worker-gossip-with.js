@@ -78,10 +78,11 @@ describe('Worker - _gossipWith', () => {
       }],
       getPeer: ['createNodes', (results, callback) =>
         async.eachOf(nodes, (ledgerNode, i, callback) =>
-          consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
-            peers[i] = result.id;
-            callback();
-          }), callback)],
+          consensusApi._worker._voters.get(
+            {ledgerNodeId: ledgerNode.id}, (err, result) => {
+              peers[i] = result.id;
+              callback();
+            }), callback)],
       genesisMerge: ['consensusPlugin', 'getPeer', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
           creatorId: peers.alpha, ledgerNode: nodes.alpha

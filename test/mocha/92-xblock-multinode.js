@@ -94,11 +94,12 @@ describe.only('X Block Test', () => {
 
     // populate peers and init heads
     before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
-      consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
-        peers[i] = result.id;
-        heads[i] = [];
-        callback();
-      }), done));
+      consensusApi._worker._voters.get(
+        {ledgerNodeId: ledgerNode.id}, (err, result) => {
+          peers[i] = result.id;
+          heads[i] = [];
+          callback();
+        }), done));
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => {
