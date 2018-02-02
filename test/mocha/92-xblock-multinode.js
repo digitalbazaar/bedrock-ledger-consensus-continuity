@@ -177,8 +177,6 @@ describe.only('X Block Test', () => {
                 _workerCycle({consensusApi, nodes, series: false}, callback)],
             report: ['workCycle1', (results, callback) => async.forEachOfSeries(
               nodes, (ledgerNode, i, callback) => {
-                console.log('TEST WORKER CYCLE COMPLETE');
-                // helpers.report({nodes, peers});
                 ledgerNode.storage.blocks.getLatestSummary(
                   (err, result) => {
                     assertNoError(err);
