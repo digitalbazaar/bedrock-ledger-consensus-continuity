@@ -7,11 +7,12 @@ const async = require('async');
 const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
+const cache = require('bedrock-redis');
 const database = require('bedrock-mongodb');
 const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
-const util = require('util');
+// const util = require('util');
 
 jsigs.use('jsonld', jsonld);
 
@@ -56,8 +57,7 @@ api.addEventAndMerge = (
       '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
   }
   const events = {};
-  const getRecentHistory = consensusApi._worker._events.getRecentHistory;
-  const mergeBranches = consensusApi._worker._events.mergeBranches;
+  const merge = consensusApi._worker._events.merge;
   async.auto({
     addEvent: callback => api.addEvent(
       {count, eventTemplate, ledgerNode}, (err, result) => {
@@ -68,10 +68,8 @@ api.addEventAndMerge = (
         events.regularHashes = Object.keys(result);
         callback();
       }),
-    history: ['addEvent', (results, callback) =>
-      getRecentHistory({creatorId, ledgerNode}, callback)],
-    merge: ['history', (results, callback) => mergeBranches(
-      {history: results.history, ledgerNode}, (err, result) => {
+    merge: ['addEvent', (results, callback) => merge(
+      {creatorId, ledgerNode}, (err, result) => {
         if(err) {
           return callback(err);
         }
@@ -84,14 +82,14 @@ api.addEventAndMerge = (
 };
 
 api.addEventMultiNode = (
-  {consensusApi, eventTemplate, nodes, peers}, callback) => {
+  {consensusApi, eventTemplate, nodes}, callback) => {
   const rVal = {
     mergeHash: [],
     regularHash: []
   };
   async.eachOf(nodes, (n, i, callback) =>
     api.addEventAndMerge({
-      consensusApi, creatorId: peers[i], eventTemplate, ledgerNode: n
+      consensusApi, creatorId: n.creatorId, eventTemplate, ledgerNode: n
     }, (err, result) => {
       if(err) {
         return callback(err);
@@ -188,10 +186,11 @@ api.addRemoteEvents = ({
   });
 };
 
-api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
+api.buildHistory = (
+  {consensusApi, historyId, mockData, nodes, peers}, callback) => {
   const eventTemplate = mockData.events.alpha;
   async.auto(
-    ledgerHistory[historyId](api, consensusApi, eventTemplate, nodes),
+    ledgerHistory[historyId](api, consensusApi, eventTemplate, nodes, peers),
     (err, results) => {
       if(err) {
         return callback(err);
@@ -211,17 +210,15 @@ api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
 
 // from may be a single node or an array of nodes
 api.copyAndMerge = (
-  {consensusApi, from, to, useSnapshot = false}, callback) => {
+  {consensusApi, from, nodes, to, useSnapshot = false}, callback) => {
   const copyFrom = [].concat(from);
-  const getRecentHistory = consensusApi._worker._events.getRecentHistory;
-  const mergeBranches = consensusApi._worker._events.mergeBranches;
+  const merge = consensusApi._worker._events.merge;
   async.auto({
-    copy: callback => async.each(copyFrom, (f, callback) =>
-      api.copyEvents({from: f, to, useSnapshot}, callback), callback),
-    history: ['copy', (results, callback) =>
-      getRecentHistory({ledgerNode: to}, callback)],
-    merge: ['history', (results, callback) =>
-      mergeBranches({history: results.history, ledgerNode: to}, callback)]
+    copy: callback => async.eachSeries(copyFrom, (f, callback) =>
+      api.copyEvents(
+        {from: nodes[f], to: nodes[to], useSnapshot}, callback), callback),
+    merge: ['copy', (results, callback) =>
+      merge({creatorId: nodes[to].creatorId, ledgerNode: nodes[to]}, callback)]
   }, (err, results) => err ? callback(err) : callback(null, results.merge));
 };
 
@@ -261,19 +258,19 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
       // ], callback);
     },
     add: ['events', (results, callback) => {
-      async.eachSeries(results.events, (e, callback) => {
-        to.consensus._events.add(
-          e.event, to, {continuity2017: {peer: true}}, err => {
-          // ignore dup errors
-          if(err && err.name === 'DuplicateError') {
-            return callback();
-          }
-          if(err) {
-            console.log('ERRR', err);
-            console.log('------------EVENT', util.inspect(e.event));
-          }
-          callback();
-        });
+      const {events} = results;
+      async.auto({
+        addEvents: callback => async.eachSeries(
+          events, (e, callback) => to.events.add(
+            e.event, {continuity2017: {peer: true}}, err => {
+            // ignore dup errors
+              if(err && err.name === 'DuplicateError') {
+                return callback();
+              }
+              callback(err);
+            }), callback),
+        write: ['addEvents', (results, callback) =>
+          to.eventWriter.start(callback)]
       }, callback);
     }]
   }, callback);
@@ -324,6 +321,8 @@ api.createIdentity = function(userName) {
   };
   return newIdentity;
 };
+
+api.flushCache = callback => cache.client.flushall(callback);
 
 // collections may be a string or array
 api.removeCollections = function(collections, callback) {

@@ -8,36 +8,42 @@ module.exports = (api, consensusApi, eventTemplate, nodes) => ({
     {consensusApi, eventTemplate, nodes}, callback),
   cpa: ['regularEvent', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.beta,
-    to: nodes.alpha
+    from: 'beta',
+    nodes,
+    to: 'alpha'
   }, callback)],
   cp1: ['cpa', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.alpha,
-    to: nodes.beta
+    from: 'alpha',
+    nodes,
+    to: 'beta'
   }, callback)],
   cpb: ['regularEvent', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.gamma,
-    to: nodes.delta
+    from: 'gamma',
+    nodes,
+    to: 'delta'
   }, callback)],
   cp2: ['cpb', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.delta,
-    to: nodes.gamma
+    from: 'delta',
+    nodes,
+    to: 'gamma'
   }, callback)],
   // snapshot gamma before copy
   ss2: ['cp1', 'cp2', (results, callback) => api.snapshotEvents(
     {ledgerNode: nodes.gamma}, callback)],
   cp3: ['ss2', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.beta, nodes.delta],
-    to: nodes.gamma
+    from: ['beta', 'delta'],
+    nodes,
+    to: 'gamma'
   }, callback)],
   cp4: ['ss2', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.alpha, nodes.gamma],
-    to: nodes.beta,
+    from: ['alpha', 'gamma'],
+    nodes,
+    to: 'beta',
     useSnapshot: true
   }, callback)],
   // snapshot gamma before copy
@@ -45,47 +51,55 @@ module.exports = (api, consensusApi, eventTemplate, nodes) => ({
     {ledgerNode: nodes.gamma}, callback)],
   cp5: ['ss3', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.beta,
-    to: nodes.gamma
+    from: 'beta',
+    nodes,
+    to: 'gamma'
   }, callback)],
   cp6: ['ss3', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.gamma,
-    to: nodes.beta,
+    from: 'gamma',
+    nodes,
+    to: 'beta',
     useSnapshot: true
   }, callback)],
   cp7: ['cp6', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.beta,
-    to: nodes.alpha
+    from: 'beta',
+    nodes,
+    to: 'alpha'
   }, callback)],
   cp8: ['cp5', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.gamma,
-    to: nodes.delta
+    from: 'gamma',
+    nodes,
+    to: 'delta'
   }, callback)],
   cp9: ['cp7', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.alpha,
-    to: nodes.beta
+    from: 'alpha',
+    nodes,
+    to: 'beta'
   }, callback)],
   cp10: ['cp8', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.delta,
-    to: nodes.gamma
+    from: 'delta',
+    nodes,
+    to: 'gamma'
   }, callback)],
   // snapshot gamma before copy
   ss10: ['cp10', (results, callback) => api.snapshotEvents(
     {ledgerNode: nodes.gamma}, callback)],
   cp11: ['cp9', 'ss10', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.beta,
-    to: nodes.gamma
+    from: 'beta',
+    nodes,
+    to: 'gamma'
   }, callback)],
   cp12: ['cp9', 'ss10', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.gamma,
-    to: nodes.beta,
+    from: 'gamma',
+    nodes,
+    to: 'beta',
     useSnapshot: true
   }, callback)],
   // snapshot gamma before copy
@@ -96,35 +110,41 @@ module.exports = (api, consensusApi, eventTemplate, nodes) => ({
     {ledgerNode: nodes.beta}, callback)],
   cp13: ['ss12', 'ss11', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.beta, nodes.gamma],
-    to: nodes.alpha,
+    from: ['beta', 'gamma'],
+    nodes,
+    to: 'alpha',
     useSnapshot: true
   }, callback)],
   cp14: ['ss11', 'ss12', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.beta, nodes.gamma],
-    to: nodes.delta,
+    from: ['beta', 'gamma'],
+    nodes,
+    to: 'delta',
     useSnapshot: true
   }, callback)],
   cp15: ['cp13', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.alpha, nodes.gamma],
-    to: nodes.beta
+    from: ['alpha', 'gamma'],
+    nodes,
+    to: 'beta'
   }, callback)],
   cp16: ['cp14', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.beta, nodes.delta],
-    to: nodes.gamma
+    from: ['beta', 'delta'],
+    nodes,
+    to: 'gamma'
   }, callback)],
   cp17: ['cp16', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.gamma,
-    to: nodes.beta
+    from: 'gamma',
+    nodes,
+    to: 'beta'
   }, callback)],
   cp18: ['cp15', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.beta,
-    to: nodes.gamma
+    from: 'beta',
+    nodes,
+    to: 'gamma'
   }, callback)],
   // snapshot beta before copy
   ss17: ['cp17', (results, callback) => api.snapshotEvents(
@@ -134,13 +154,15 @@ module.exports = (api, consensusApi, eventTemplate, nodes) => ({
     {ledgerNode: nodes.gamma}, callback)],
   cp19: ['ss17', 'ss18', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.beta, nodes.gamma],
-    to: nodes.alpha
+    from: ['beta', 'gamma'],
+    nodes,
+    to: 'alpha'
   }, callback)],
   cp20: ['ss17', 'ss18', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.beta, nodes.gamma],
-    to: nodes.delta
+    from: ['beta', 'gamma'],
+    nodes,
+    to: 'delta'
   }, callback)],
   // snapshot alpha before copy
   ss19: ['cp19', (results, callback) => api.snapshotEvents(
@@ -150,24 +172,28 @@ module.exports = (api, consensusApi, eventTemplate, nodes) => ({
     {ledgerNode: nodes.delta}, callback)],
   cp21: ['ss19', 'ss20', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.alpha, nodes.delta],
-    to: nodes.beta,
+    from: ['alpha', 'delta'],
+    nodes,
+    to: 'beta',
     useSnapshot: true
   }, callback)],
   cp22: ['ss19', 'ss20', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: [nodes.alpha, nodes.delta],
-    to: nodes.gamma,
+    from: ['alpha', 'delta'],
+    nodes,
+    to: 'gamma',
     useSnapshot: true
   }, callback)],
   cp23: ['cp21', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.beta,
-    to: nodes.alpha
+    from: 'beta',
+    nodes,
+    to: 'alpha'
   }, callback)],
   cp24: ['cp22', (results, callback) => api.copyAndMerge({
     consensusApi,
-    from: nodes.gamma,
-    to: nodes.delta
+    from: 'gamma',
+    nodes,
+    to: 'delta'
   }, callback)],
 });

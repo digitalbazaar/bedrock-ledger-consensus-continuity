@@ -4,17 +4,17 @@
 'use strict';
 
 const _ = require('lodash');
+const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
-const async = require('async');
-const uuid = require('uuid/v4');
-const util = require('util');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
+const util = require('util');
+const uuid = require('uuid/v4');
 
 let consensusApi;
 
-describe('Election API _findMergeEventProof', () => {
+describe.only('Election API _findMergeEventProof', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -25,6 +25,7 @@ describe('Election API _findMergeEventProof', () => {
   let getRecentHistory;
   let eventHash;
   let testEventId;
+  let EventWriter;
   const nodes = {};
   const peers = {};
   beforeEach(function(done) {
@@ -34,6 +35,7 @@ describe('Election API _findMergeEventProof', () => {
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
     async.auto({
+      flush: helpers.flushCache,
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
@@ -47,9 +49,10 @@ describe('Election API _findMergeEventProof', () => {
             consensusApi._worker._election._getElectorBranches;
           _findMergeEventProof =
             consensusApi._worker._election._findMergeEventProof;
+          EventWriter = consensusApi._worker.EventWriter;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
+      ledgerNode: ['clean', 'flush', (results, callback) => brLedgerNode.add(
         null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
@@ -58,15 +61,15 @@ describe('Election API _findMergeEventProof', () => {
           callback(null, result);
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(nodes.alpha.id, (err, result) => {
-          callback(null, result.id);
-        });
+        consensusApi._worker._voters.get(
+          {ledgerNodeId: nodes.alpha.id}, (err, result) => {
+            callback(null, result.id);
+          });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
-          eventsCollection: nodes.alpha.storage.events.collection,
           creatorId: results.creatorId,
-          ledgerNodeId: nodes.alpha.id
+          ledgerNode: nodes.alpha
         }, (err, result) => {
           if(err) {
             return callback(err);
@@ -117,22 +120,28 @@ describe('Election API _findMergeEventProof', () => {
       //     callback(null, result);
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
-        async.eachOf(nodes, (n, i, callback) =>
-          consensusApi._worker._voters.get(n.id, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            peers[i] = result.id;
-            helpers.peersReverse[result.id] = i;
-            callback();
-          }), callback)]
+        async.eachOf(nodes, (n, i, callback) => {
+          // attach eventWriter to the node
+          n.eventWriter = new EventWriter(
+            {immediate: true, ledgerNode: nodes[i]});
+          consensusApi._worker._voters.get(
+            {ledgerNodeId: n.id}, (err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              peers[i] = result.id;
+              n.creatorId = result.id;
+              helpers.peersReverse[result.id] = i;
+              callback();
+            });
+        }, callback)]
     }, done);
   });
   it('ledger history alpha', done => {
     const report = {};
     async.auto({
       build: callback => helpers.buildHistory(
-        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
+        {consensusApi, historyId: 'alpha', mockData, nodes, peers}, callback),
       testAll: ['build', (results, callback) => {
         // NOTE: for ledger history alpha, all nodes should have the same view
         const build = results.build;
@@ -289,14 +298,29 @@ describe('Election API _findMergeEventProof', () => {
     const report = {};
     // add node epsilon for this test and remove it afterwards
     async.auto({
-      nodeEpsilon: callback => brLedgerNode.add(
-        null, {genesisBlock}, (err, result) => {
-          if(err) {
-            return done(err);
-          }
-          nodes.epsilon = result;
-          callback();
-        }),
+      nodeEpsilon: callback => async.auto({
+        add: callback => brLedgerNode.add(
+          null, {genesisBlock}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            nodes.epsilon = result;
+            nodes.epsilon.eventWriter = new EventWriter(
+              {immediate: true, ledgerNode: nodes.epsilon});
+            callback();
+          }),
+        creator: ['add', (results, callback) =>
+          consensusApi._worker._voters.get(
+            {ledgerNodeId: nodes.epsilon.id}, (err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              peers.epsilon = result.id;
+              nodes.epsilon.creatorId = result.id;
+              helpers.peersReverse[result.id] = 'epsilon';
+              callback();
+            })]
+      }, callback),
       build: ['nodeEpsilon', (results, callback) => helpers.buildHistory(
         {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
       testAll: ['build', (results, callback) => {
