@@ -13,6 +13,7 @@ const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
 // const util = require('util');
+// const BedrockError = bedrock.util.BedrockError;
 
 jsigs.use('jsonld', jsonld);
 
@@ -186,11 +187,10 @@ api.addRemoteEvents = ({
   });
 };
 
-api.buildHistory = (
-  {consensusApi, historyId, mockData, nodes, peers}, callback) => {
+api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
   const eventTemplate = mockData.events.alpha;
   async.auto(
-    ledgerHistory[historyId](api, consensusApi, eventTemplate, nodes, peers),
+    ledgerHistory[historyId](api, consensusApi, eventTemplate, nodes),
     (err, results) => {
       if(err) {
         return callback(err);
@@ -219,7 +219,9 @@ api.copyAndMerge = (
         {from: nodes[f], to: nodes[to], useSnapshot}, callback), callback),
     merge: ['copy', (results, callback) =>
       merge({creatorId: nodes[to].creatorId, ledgerNode: nodes[to]}, callback)]
-  }, (err, results) => err ? callback(err) : callback(null, results.merge));
+  }, (err, results) => {
+    err ? callback(err) : callback(null, results.merge);
+  });
 };
 
 const snapshot = {};
@@ -235,30 +237,24 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
       collection.find({
         'meta.consensus': {$exists: false}
       }).sort({'$natural': 1}).toArray(callback);
-      // collection.aggregate([
-      //   {$match: {eventHash}},
-      //   {
-      //     $graphLookup: {
-      //       from: collection.s.name,
-      //       startWith: '$eventHash',
-      //       connectFromField: "event.parentHash",
-      //       connectToField: "eventHash",
-      //       as: "_parents",
-      //       restrictSearchWithMatch: {
-      //         eventHash: {$ne: treeHash},
-      //         'meta.consensus': {$exists: false}
-      //       }
-      //     },
-      //   },
-      //   {$unwind: '$_parents'},
-      //   {$replaceRoot: {newRoot: '$_parents'}},
-      //   // the order of events is unpredictable without this sort, and we
-      //   // must ensure that events are added in chronological order
-      //   {$sort: {'meta.created': 1}}
-      // ], callback);
     },
-    add: ['events', (results, callback) => {
-      const {events} = results;
+    diff: ['events', (results, callback) => {
+      const eventHashes = results.events.map(e => e.eventHash);
+      to.storage.events.difference(eventHashes, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        if(result.length === 0) {
+          // return callback(new BedrockError('Nothing to do.', 'AbortError'));
+          return callback();
+        }
+        const diffSet = new Set(result);
+        const events = results.events.filter(e => diffSet.has(e.eventHash));
+        return callback(null, events);
+      });
+    }],
+    add: ['diff', (results, callback) => {
+      const events = results.diff;
       async.auto({
         addEvents: callback => async.eachSeries(
           events, (e, callback) => to.events.add(

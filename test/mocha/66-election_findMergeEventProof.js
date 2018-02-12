@@ -141,7 +141,7 @@ describe.only('Election API _findMergeEventProof', () => {
     const report = {};
     async.auto({
       build: callback => helpers.buildHistory(
-        {consensusApi, historyId: 'alpha', mockData, nodes, peers}, callback),
+        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         // NOTE: for ledger history alpha, all nodes should have the same view
         const build = results.build;
