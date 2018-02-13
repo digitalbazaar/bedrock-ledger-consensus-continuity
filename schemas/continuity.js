@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 const config = require('bedrock').config;
 const constants = config.constants;
@@ -9,6 +9,39 @@ const schemas = require('bedrock-validation').schemas;
 const RFC6920 = {
   type: 'string',
   pattern: '^ni:\/\/\/'
+};
+
+// TODO: add to `bedrock-validation` schemas
+const linkedDataProof = {
+  title: 'Linked Data Signature',
+  description: 'A Linked Data digital signature.',
+  type: 'object',
+  properties: {
+    id: schemas.identifier(),
+    type: {
+      title: 'Linked Data Signature Type',
+      type: 'string',
+      enum: ['Ed25519Signature2018']
+    },
+    creator: schemas.identifier(),
+    created: schemas.w3cDateTime(),
+    jws: {
+      title: 'Digital Signature Value',
+      description: 'The Base64 encoding of the result of the signature ' +
+        'algorithm.',
+      type: 'string'
+    },
+  },
+  // NOTE: id is not required
+  required: ['type', 'creator', 'created', 'jws']
+};
+const linkedDataProofSchema = {
+  title: 'Linked Data Proofs',
+  anyOf: [{
+    type: 'array',
+    items: linkedDataProof,
+    minItems: 1,
+  }, linkedDataProof]
 };
 
 const continuityMergeEvent = {
@@ -23,8 +56,8 @@ const continuityMergeEvent = {
       },
       minItems: 1
     },
-    signature: {
-      anyOf: [schemas.linkedDataSignature()],
+    proof: {
+      anyOf: [linkedDataProofSchema]
     },
     treeHash: {
       type: 'string'
@@ -41,7 +74,7 @@ const continuityMergeEvent = {
       uniqueItems: true
     },
   },
-  required: ['@context', 'parentHash', 'signature', 'treeHash', 'type'],
+  required: ['@context', 'parentHash', /*'proof',*/ 'treeHash', 'type'],
 };
 
 const webLedgerConfigEvent = {

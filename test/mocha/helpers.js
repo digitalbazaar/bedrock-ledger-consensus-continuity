@@ -150,8 +150,8 @@ api.addRemoteEvents = ({
         })],
       sign: ['regularEventHash', (results, callback) => jsigs.sign(
         testMergeEvent, {
-          algorithm: 'LinkedDataSignature2015',
-          privateKeyPem: keyPair.privateKey,
+          algorithm: 'Ed25519Signature2018',
+          privateKeyBase58: keyPair.privateKeyBase58,
           creator: mockData.authorizedSignerUrl
         }, callback)],
       addRegular: ['head', (results, callback) => async.map(
@@ -345,28 +345,6 @@ api.prepareDatabase = function(mockData, callback) {
       insertTestData(mockData, callback);
     }
   ], callback);
-};
-
-/**
- * Get the SubjectPublicKeyInfo base64url-encoded fingerprint for the
- * given public key PEM.
- *
- * @param publicKeyPem the public key PEM to get the fingerprint for.
- *
- * @return the public key's fingerprint.
- */
-api.getPublicKeyFingerprint = publicKeyPem => {
-  const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
-  const fingerprint = forge.pki.getPublicKeyFingerprint(
-    publicKey, {
-      md: forge.md.sha256.create(),
-      type: 'SubjectPublicKeyInfo'
-    });
-  // base64url encode
-  return forge.util.encode64(fingerprint.getBytes())
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
 };
 
 api.snapshotEvents = ({ledgerNode}, callback) => {

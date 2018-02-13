@@ -123,8 +123,8 @@ describe('Consensus Agent - Add Event API', () => {
         })],
       sign: ['regularEventHash', (results, callback) =>
         jsigs.sign(testMergeEvent, {
-          algorithm: 'LinkedDataSignature2015',
-          privateKeyPem: keyPair.privateKey,
+          algorithm: 'Ed25519Signature2018',
+          privateKeyBase58: keyPair.privateKeyBase58,
           creator: mockData.authorizedSignerUrl
         }, callback)],
       eventHash: ['sign', (results, callback) =>
