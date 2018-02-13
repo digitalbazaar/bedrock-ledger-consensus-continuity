@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "async": "^2.4.1",
-    "bedrock": "digitalbazaar/bedrock#jsonld-1.1",
+    "bedrock": "^1.8.0",
     "bedrock-did-client": "digitalbazaar/bedrock-did-client#jsonld-1.1",
     "bedrock-docs": "^2.1.0",
     "bedrock-express": "^2.0.6",
