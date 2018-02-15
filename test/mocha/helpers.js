@@ -8,7 +8,6 @@ const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const database = require('bedrock-mongodb');
-const forge = require('node-forge');
 const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
