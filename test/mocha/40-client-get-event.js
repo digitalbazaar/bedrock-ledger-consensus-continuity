@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe('Consensus Client - getEvent API', () => {
+describe.skip('Consensus Client - getEvent API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -21,10 +21,10 @@ describe('Consensus Client - getEvent API', () => {
   let eventHash;
   let testEventId;
   beforeEach(done => {
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -37,7 +37,7 @@ describe('Consensus Client - getEvent API', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedger.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -50,11 +50,12 @@ describe('Consensus Client - getEvent API', () => {
           callback();
         });
       }],
-      addEvent: ['ledgerNode', (results, callback) => ledgerNode.events.add(
-        testEvent, (err, result) => {
-          eventHash = result.meta.eventHash;
-          callback();
-        })]
+      addEvent: ['ledgerNode', (results, callback) =>
+        ledgerNode.consensus._events.add(
+          testEvent, ledgerNode, (err, result) => {
+            eventHash = result.meta.eventHash;
+            callback();
+          })]
     }, done);
   });
   it('should get an event', done => {
@@ -64,10 +65,10 @@ describe('Consensus Client - getEvent API', () => {
           should.not.exist(err);
           should.exist(result);
           result.should.be.an('object');
-          result.input.should.be.an('array');
-          result.input.should.have.length(1);
-          result.input[0].should.be.an('object');
-          result.input[0].id.should.equal(testEventId);
+          result.operation.should.be.an('array');
+          result.operation.should.have.length(1);
+          result.operation[0].should.be.an('object');
+          result.operation[0].record.id.should.equal(testEventId);
           callback();
         })
     }, done);

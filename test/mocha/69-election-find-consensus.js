@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -27,10 +27,10 @@ describe('Election API findConsensus', () => {
   const peers = {};
   beforeEach(function(done) {
     this.timeout(120000);
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -43,7 +43,7 @@ describe('Election API findConsensus', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }

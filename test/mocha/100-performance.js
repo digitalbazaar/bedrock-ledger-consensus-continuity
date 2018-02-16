@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -23,10 +23,10 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
   let voterId;
   let testEventId;
   before(done => {
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -39,7 +39,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedger.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }

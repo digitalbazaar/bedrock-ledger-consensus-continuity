@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -29,10 +29,10 @@ describe.skip('Consensus Agent - Get History API', () => {
   let eventHash;
   let testEventId;
   beforeEach(done => {
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -48,7 +48,7 @@ describe.skip('Consensus Agent - Get History API', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -66,8 +66,9 @@ describe.skip('Consensus Agent - Get History API', () => {
       }],
       genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
+          ledgerNode: ledgerNode.id,
           eventsCollection: ledgerNode.storage.events.collection,
-          creator: peerId
+          creatorId: peerId
         }, (err, result) => {
           if(err) {
             return callback(err);
@@ -76,8 +77,9 @@ describe.skip('Consensus Agent - Get History API', () => {
           callback();
         });
       }],
-      addEvent: ['ledgerNode', (results, callback) => ledgerNode.events.add(
-        testEvent, (err, result) => {
+      addEvent: ['ledgerNode', (results, callback) =>
+        ledgerNode.consensus._events.add(
+          testEvent, ledgerNode, (err, result) => {
           eventHash = result.meta.eventHash;
           callback();
         })],

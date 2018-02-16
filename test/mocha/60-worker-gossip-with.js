@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -11,7 +11,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe('Worker - _gossipWith', () => {
+describe.skip('Worker - _gossipWith', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -29,7 +29,7 @@ describe('Worker - _gossipWith', () => {
   const peers = {};
   beforeEach(function(done) {
     this.timeout(120000);
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -45,7 +45,7 @@ describe('Worker - _gossipWith', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -54,6 +54,7 @@ describe('Worker - _gossipWith', () => {
         })],
       genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
+          ledgerNodeId: results.ledgerNode.id,
           eventsCollection: nodes.alpha.storage.events.collection
         }, (err, result) => {
           if(err) {
@@ -141,9 +142,10 @@ describe('Worker - _gossipWith', () => {
   it('properly gossips two regular events and two merge events', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
-      addEvent: callback => nodes.alpha.events.add(testEvent, callback),
+      addEvent: callback => nodes.alpha.consensus._events.add(
+        testEvent, nodes.alpha, callback),
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: nodes.alpha, mockData}, callback),
       history: ['addEvent', 'remoteEvents', (results, callback) =>
@@ -180,9 +182,10 @@ describe('Worker - _gossipWith', () => {
     const mergeBranches = consensusApi._worker._events.mergeBranches;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
-      addEvent: callback => nodes.beta.events.add(testEvent, callback),
+      addEvent: callback => nodes.beta.consensus._events.add(
+        testEvent, nodes.beta, callback),
       history: ['addEvent', (results, callback) =>
         getRecentHistory({ledgerNode: nodes.beta}, callback)],
       mergeBranches: ['history', (results, callback) => mergeBranches(
@@ -216,9 +219,10 @@ describe('Worker - _gossipWith', () => {
     const mergeBranches = consensusApi._worker._events.mergeBranches;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
-      addEvent: callback => nodes.beta.events.add(testEvent, callback),
+      addEvent: callback => nodes.beta.consensus._events.add(
+        testEvent, nodes.beta, callback),
       remoteEvents: callback => helpers.addRemoteEvents(
         {consensusApi, ledgerNode: nodes.beta, mockData}, callback),
       history: ['addEvent', 'remoteEvents', (results, callback) =>

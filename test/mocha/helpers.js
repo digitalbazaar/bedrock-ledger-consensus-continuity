@@ -259,7 +259,8 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
     },
     add: ['events', (results, callback) => {
       async.eachSeries(results.events, (e, callback) => {
-        to.events.add(e.event, {continuity2017: {peer: true}}, err => {
+        to.consensus._events.add(
+          e.event, to, {continuity2017: {peer: true}}, err => {
           // ignore dup errors
           if(err && err.name === 'DuplicateError') {
             return callback();

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe('Consensus Client - sendEvent API', () => {
+describe.skip('Consensus Client - sendEvent API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -19,7 +19,7 @@ describe('Consensus Client - sendEvent API', () => {
   let ledgerNode;
   let peerId;
   beforeEach(done => {
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -32,7 +32,7 @@ describe('Consensus Client - sendEvent API', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -50,12 +50,13 @@ describe('Consensus Client - sendEvent API', () => {
   it('should send an event', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     const testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     const getHead = ledgerNode.consensus._worker._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead({
+        ledgerNodeId: ledgerNode.id,
         eventsCollection: ledgerNode.storage.events.collection,
-        creator: peerId
+        creatorId: peerId
       }, (err, result) => {
         testEvent.parentHash = [result];
         testEvent.treeHash = result;
@@ -77,7 +78,7 @@ describe('Consensus Client - sendEvent API', () => {
   it('returns an error when a peer is unreachable.', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     const testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
       hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
       send: ['hash', (results, callback) =>
@@ -96,7 +97,7 @@ describe('Consensus Client - sendEvent API', () => {
   it('returns an error', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     // wipe out the event data to create failure
-    testEvent.input = [];
+    testEvent.operation = [];
     async.auto({
       hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
       send: ['hash', (results, callback) =>

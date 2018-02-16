@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -45,7 +45,7 @@ describe('Multinode Basics', () => {
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     const mockIdentity = mockData.identities.regularUser;
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     before(done => {
       async.auto({
         actor: callback => brIdentity.get(
@@ -55,7 +55,7 @@ describe('Multinode Basics', () => {
         consensusPlugin: callback => brLedgerNode.use(
           'Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => {
-          brLedgerNode.add(null, {configEvent}, (err, ledgerNode) => {
+          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
@@ -160,8 +160,8 @@ describe('Multinode Basics', () => {
         this.timeout(120000);
         console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
         async.auto({
-          betaAddEvent1: callback => nodes.beta.events.add(
-            helpers.createEventBasic({eventTemplate}), callback),
+          betaAddEvent1: callback => nodes.beta.consensus._events.add(
+            helpers.createEventBasic({eventTemplate}), nodes.beta, callback),
           // beta will merge its new regular event
           betaWorker1: ['betaAddEvent1', (results, callback) => {
             console.log('running beta worker 1 ------------');
@@ -221,8 +221,9 @@ describe('Multinode Basics', () => {
               callback();
             })],
           // add a regular event on beta
-          betaAddEvent2: ['test3', (results, callback) => nodes.beta.events.add(
-            helpers.createEventBasic({eventTemplate}), callback)],
+          betaAddEvent2: ['test3', (results, callback) =>
+            nodes.beta.consensus._events.add(
+              helpers.createEventBasic({eventTemplate}), nodes.beta, callback)],
           // this will merge the regular event on beta and create its first
           // block now that alpha has endorsed its previous events
           betaWorker3: ['betaAddEvent2', (results, callback) =>
@@ -489,8 +490,9 @@ describe('Multinode Basics', () => {
           beta: nodes.beta
         };
         async.auto({
-          alphaAddEvent1: callback => testNodes.alpha.events.add(
-            helpers.createEventBasic({eventTemplate}), callback),
+          alphaAddEvent1: callback => testNodes.alpha.consensus._events.add(
+            helpers.createEventBasic({eventTemplate}),
+              testNodes.alpha, callback),
           // beta will merge its new regular event
           workCycle1: ['alphaAddEvent1', (results, callback) => {
             console.log('WORKER CYCLE 1 ---------------------');
@@ -693,7 +695,7 @@ describe('Multinode Basics', () => {
               // get each peers own head
               peerHead: callback => async.eachOfSeries(
                 nodes, (ledgerNode, iNode, callback) =>
-                  consensusApi.events._getLocalBranchHead({
+                  consensusApi._events._getLocalBranchHead({
                     eventsCollection: ledgerNode.storage.events.collection,
                     creatorId: peers[iNode],
                     ledgerNodeId: ledgerNode.id
@@ -796,7 +798,7 @@ describe('Multinode Basics', () => {
                       // has for all the other nodes
                       async.eachOfSeries(
                         nodes, (ledgerNode, iNode, callback) =>
-                          consensusApi.events._getLocalBranchHead({
+                          consensusApi._events._getLocalBranchHead({
                             eventsCollection:
                               ledgerNode.storage.events.collection,
                             creatorId: peers[iNode],
@@ -875,8 +877,8 @@ describe('Multinode Basics', () => {
         this.timeout(120000);
         const eventTemplate = mockData.events.alpha;
         async.auto({
-          addEvent: callback => nodes.beta.events.add(
-            helpers.createEventBasic({eventTemplate}), callback),
+          addEvent: callback => nodes.beta.consensus._events.add(
+            helpers.createEventBasic({eventTemplate}), nodes.beta, callback),
           // this will merge event on peer[1] and transmit to peer[0]
           worker1: ['addEvent', (results, callback) =>
             consensusApi._worker._run(nodes.beta, callback)],
@@ -933,8 +935,9 @@ describe('Multinode Basics', () => {
               callback();
             })],
           // // add another event on beta
-          addEvent2: ['test2', (results, callback) => nodes.beta.events.add(
-            helpers.createEventBasic({eventTemplate}), callback)],
+          addEvent2: ['test2', (results, callback) =>
+            nodes.beta.consensus._events.add(
+              helpers.createEventBasic({eventTemplate}), nodes.beta, callback)],
           // this iteration only transmit that merge event that beta created
           // after the alpha merge event
           worker5: ['addEvent2', (results, callback) =>

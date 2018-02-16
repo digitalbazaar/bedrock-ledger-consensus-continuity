@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -17,7 +17,7 @@ const uuid = require('uuid/v4');
 
 jsigs.use('jsonld', jsonld);
 
-describe('Consensus Agent - Add Event API', () => {
+describe.skip('Consensus Agent - Add Event API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -26,7 +26,7 @@ describe('Consensus Agent - Add Event API', () => {
   let ledgerNode;
   let voterId;
   beforeEach(done => {
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -39,7 +39,7 @@ describe('Consensus Agent - Add Event API', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -57,12 +57,14 @@ describe('Consensus Agent - Add Event API', () => {
   it('should add a regular remote event', done => {
     const testUrl = voterId + '/events';
     const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
-    testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
+    testRegularEvent.operation[0].record.id =
+      `https://example.com/event/${uuid()}`;
     const getHead = consensusApi._worker._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead({
+        ledgerNodeId: ledgerNode.id,
         eventsCollection: ledgerNode.storage.events.collection,
-        creator: voterId
+        creatorId: voterId
       }, (err, result) => {
         if(err) {
           return callback(err);
@@ -93,15 +95,17 @@ describe('Consensus Agent - Add Event API', () => {
   it('should add a remote merge event', done => {
     const testUrl = voterId + '/events';
     const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
-    testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
+    testRegularEvent.operation[0].record.id =
+      `https://example.com/event/${uuid()}`;
     const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
     // use a valid keypair from mocks
     const keyPair = mockData.groups.authorized;
     const getHead = consensusApi._worker._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead({
+        ledgerNodeId: ledgerNode.id,
         eventsCollection: ledgerNode.storage.events.collection,
-        creator: voterId
+        creatorId: voterId
       }, (err, result) => {
         if(err) {
           return callback(err);
@@ -124,13 +128,15 @@ describe('Consensus Agent - Add Event API', () => {
       sign: ['regularEventHash', (results, callback) =>
         jsigs.sign(testMergeEvent, {
           algorithm: 'Ed25519Signature2018',
-          privateKeyBase58: keyPair.privateKeyBase58,
+          privateKeyBase58: keyPair.privateKey,
           creator: mockData.authorizedSignerUrl
         }, callback)],
       eventHash: ['sign', (results, callback) =>
         hasher(results.sign, callback)],
-      addRegular: ['head', (results, callback) => ledgerNode.events.add(
-        testRegularEvent, {continuity2017: {peer: true}}, callback)],
+      addRegular: ['head', (results, callback) =>
+        ledgerNode.consensus._events.add(
+          testRegularEvent, ledgerNode,
+          {continuity2017: {peer: true}}, callback)],
       addEvent: ['addRegular', 'eventHash', (results, callback) =>
         request.post({
           url: testUrl,

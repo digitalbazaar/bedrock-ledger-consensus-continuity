@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -36,7 +36,7 @@ describe.only('X Block Test', () => {
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     const mockIdentity = mockData.identities.regularUser;
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     before(done => {
       async.auto({
         actor: callback => brIdentity.get(
@@ -46,7 +46,7 @@ describe.only('X Block Test', () => {
         consensusPlugin: callback => brLedgerNode.use(
           'Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => {
-          brLedgerNode.add(null, {configEvent}, (err, ledgerNode) => {
+          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
@@ -115,7 +115,8 @@ describe.only('X Block Test', () => {
               const event = eventBlock.block.event[0];
               // TODO: signature is dynamic... needs a better check
               delete event.signature;
-              event.should.deep.equal(configEvent);
+              delete event.proof;
+              event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
               should.exist(eventBlock.meta);
               should.exist(eventBlock.block.consensusProof);
               const consensusProof = eventBlock.block.consensusProof;

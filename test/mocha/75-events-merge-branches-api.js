@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -26,10 +26,10 @@ describe('events.mergeBranches API', () => {
   const peers = {};
   beforeEach(function(done) {
     this.timeout(120000);
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
-    testEvent.input[0].id = testEventId;
+    testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -44,16 +44,23 @@ describe('events.mergeBranches API', () => {
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {configEvent}, (err, result) => {
+        null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
           }
           nodes.alpha = result;
           callback(null, result);
         })],
-      genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
+      creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
+        consensusApi._worker._voters.get(nodes.alpha.id, (err, result) => {
+          callback(null, result.id);
+        });
+      }],
+      genesisMerge: ['creatorId', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
-          eventsCollection: nodes.alpha.storage.events.collection
+          ledgerNodeId: nodes.alpha.id,
+          eventsCollection: nodes.alpha.storage.events.collection,
+          creatorId: results.creatorId
         }, (err, result) => {
           if(err) {
             return callback(err);
