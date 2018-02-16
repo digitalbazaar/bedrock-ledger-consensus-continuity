@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -10,7 +10,6 @@ const brLedgerNode = require('bedrock-ledger-node');
 const expect = global.chai.expect;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-const util = require('util');
 const uuid = require('uuid/v4');
 
 describe('Continuity2017', () => {
@@ -24,7 +23,7 @@ describe('Continuity2017', () => {
   let ledgerNode;
   beforeEach(done => {
     const mockIdentity = mockData.identities.regularUser;
-    const configEvent = mockData.events.config;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -34,7 +33,7 @@ describe('Continuity2017', () => {
         })],
       consensusPlugin: callback => brLedgerNode.use('Continuity2017', callback),
       ledgerNode: ['actor', (results, callback) => brLedgerNode.add(
-        results.actor, {configEvent}, (err, ledgerNode) => {
+        results.actor, {ledgerConfiguration}, (err, ledgerNode) => {
           if(err) {
             return callback(err);
           }
@@ -54,8 +53,9 @@ describe('Continuity2017', () => {
       }],
       genesisMerge: ['creator', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
+          ledgerNodeId: ledgerNode.id,
           eventsCollection: ledgerNode.storage.events.collection,
-          creator: results.creator.id
+          creatorId: results.creator.id
         }, (err, result) => {
           if(err) {
             return callback(err);
@@ -67,24 +67,40 @@ describe('Continuity2017', () => {
     }, done);
   });
 
-  describe('add event API', () => {
+  describe('add operation API', () => {
+    it('should add an operation', done => {
+      const operation = bedrock.util.clone(mockData.operations.alpha);
+      operation.record.id = `https://example.com/event/${uuid()}`;
+      async.auto({
+        addEvent: callback => ledgerNode.operations.add(
+          operation, (err, result) => {
+            assertNoError(err);
+            callback();
+          }),
+      }, done);
+    });
+  }); // end add operation API
+
+  describe('private add event API', () => {
     it('should add a regular local event', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      testEvent.operation[0].record.id = `https://example.com/event/${uuid()}`;
       async.auto({
-        addEvent: callback => ledgerNode.events.add(
-          testEvent, (err, result) => {
+        addEvent: callback => ledgerNode.consensus._events.add(
+          testEvent, ledgerNode, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
             should.exist(event.type);
             event.type.should.equal('WebLedgerEvent');
             should.exist(event.operation);
-            event.operation.should.equal('Create');
-            should.exist(event.input);
-            event.input.should.be.an('array');
-            event.input.length.should.equal(1);
-            event.input.should.deep.equal(testEvent.input);
+            event.operation.should.be.an('array');
+            event.operation.length.should.equal(1);
+            should.exist(event.operation[0].type);
+            event.operation[0].type.should.equal('CreateWebLedgerRecord');
+            should.exist(event.operation[0].record);
+            event.operation[0].record.should.deep.equal(
+              testEvent.operation[0].record);
             should.exist(event.treeHash);
             event.treeHash.should.equal(genesisMergeHash);
             should.exist(result.meta);
@@ -349,9 +365,10 @@ describe('Continuity2017', () => {
     it('history includes one local event before local merge', done => {
       const getRecentHistory = consensusApi._worker._events.getRecentHistory;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      testEvent.operation[0].record.id = `https://example.com/event/${uuid()}`;
       async.auto({
-        addEvent: callback => ledgerNode.events.add(testEvent, callback),
+        addEvent: callback => ledgerNode.consensus._events.add(
+          testEvent, ledgerNode, callback),
         history: ['addEvent', (results, callback) => {
           getRecentHistory({ledgerNode, link: true}, (err, result) => {
             assertNoError(err);
@@ -446,7 +463,7 @@ describe('Continuity2017', () => {
   describe.skip('Event Consensus', () => {
     it('should add an event and achieve consensus', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = `https://example.com/event/${uuid()}`;
+      testEvent.operation[0].record.id = `https://example.com/event/${uuid()}`;
       async.auto({
         addEvent: callback => ledgerNode.events.add(testEvent, callback),
         runWorker: ['addEvent', (results, callback) =>
@@ -461,8 +478,8 @@ describe('Continuity2017', () => {
             eventBlock.block.event.should.be.an('array');
             eventBlock.block.event.should.have.length(1);
             const event = eventBlock.block.event[0];
-            event.input.should.be.an('array');
-            event.input.should.have.length(1);
+            event.operation.should.be.an('array');
+            event.operation.should.have.length(1);
             // TODO: signature is dynamic... needs a better check
             delete event.signature;
             event.should.deep.equal(testEvent);
@@ -474,7 +491,7 @@ describe('Continuity2017', () => {
 
     it('should ensure the blocks round-trip expand/compact properly', done => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
-      testEvent.input[0].id = 'https://example.com/events/EXAMPLE';
+      testEvent.operation[0].record.id = 'https://example.com/events/EXAMPLE';
       async.auto({
         getConfigBlock: callback =>
           ledgerNode.storage.blocks.getLatest((err, result) => {
@@ -504,18 +521,19 @@ describe('Continuity2017', () => {
             should.exist(eventBlock.block);
             const block = eventBlock.block;
             async.auto({
-              compactInput: callback => bedrock.jsonld.compact(
-                block.event[0].input[0], block.event[0].input[0]['@context'],
+              compactRecord: callback => bedrock.jsonld.compact(
+                block.event[0].operation[0],
+                block.event[0].operation[0].record['@context'],
                 (err, compacted) => callback(err, compacted)),
               compactBlock: ['compactInput', (results, callback) =>
                 bedrock.jsonld.compact(
                   block, block['@context'], (err, compacted) => {
                     should.not.exist(err);
-                    // use input compacted with its own context
-                    compacted.event[0].input[0] = results.compactInput;
+                    // use record compacted with its own context
+                    compacted.event[0].operation[0].record =
+                      results.compactRecord;
                     // remove extra @context entries
                     delete block.event[0]['@context'];
-                    delete block.electionResult[0]['@context'];
                     block.should.deep.equal(compacted);
                     callback();
                   })]

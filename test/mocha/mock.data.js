@@ -27,12 +27,18 @@ identities[userName].identity.sysResourceRole.push({
 // identities[userName] = {};
 // identities[userName].identity = helpers.createIdentity(userName);
 
-const events = mock.events = {};
-events.alpha = {
+const ledgerConfiguration = mock.ledgerConfiguration = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
-  type: 'WebLedgerEvent',
-  operation: 'Create',
-  input: [{
+  type: 'WebLedgerConfiguration',
+  ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
+  consensusMethod: 'Continuity2017'
+};
+
+const operations = mock.operations = {};
+operations.alpha = {
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+  type: 'CreateWebLedgerRecord',
+  record: {
     '@context': constants.TEST_CONTEXT_V1_URL,
     id: 'https://example.com/events/123456',
     type: 'Concert',
@@ -45,17 +51,20 @@ events.alpha = {
       priceCurrency: 'USD',
       url: 'https://www.ticketfly.com/purchase/309433'
     }
-  }]
+  }
+};
+
+const events = mock.events = {};
+events.alpha = {
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+  type: 'WebLedgerEvent',
+  operation: [operations.alpha]
 };
 
 events.config = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerConfigurationEvent',
-  ledgerConfiguration: {
-    type: 'WebLedgerConfiguration',
-    ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
-    consensusMethod: 'Continuity2017'
-  }
+  ledgerConfiguration
 };
 
 const mergeEvents = mock.mergeEvents = {};
@@ -75,12 +84,12 @@ mock.authorizedSignerUrl = 'https://example.com/keys/authorized-key-1';
 
 // all mock keys for all groups
 mock.groups = {
-  'authorized': {
+  authorized: {
     publicKey: 'GycSSui454dpYRKiFdsQ5uaE8Gy3ac6dSMPcAoQsk8yq',
     privateKey: '3Mmk4UzTRJTEtxaKk61LxtgUxAa2Dg36jF6VogPtRiKvfpsQWKPCLesK' +
       'SV182RMmvMJKk6QErH3wgdHp8itkSSiF'
   },
-  'unauthorized': { // unauthorized group
+  unauthorized: { // unauthorized group
     publicKey: 'AAD3mt6xZqbJBmMp643irCG7yqCQwVUk4UUK4XGm6ZpW',
     privateKey: '5Y57oBSw5ykt21N3cbHPVDhRPL84xjgfQXN6wnqzWNQbGp5WHhy3XieA' +
       'jzwY9J26Whg1DBv31ktgUnnYuDkWXMTQ'
@@ -132,28 +141,3 @@ jsonld.documentLoader = function(url, callback) {
   // }
   oldLoader(url, callback);
 };
-
-const manifests = mock.manifests = {};
-
-manifests.sinonAlpha = {
-  "id": "ni:///sha-256;pby1SuJ7_xLQTg2uOG8D-MOmPYK_OgThL1ULhgN4y1Q",
-  "type": "Events",
-  "blockHeight": 1,
-  "item": [
-    "ni:///sha-256;d8Kbp42RxDPV9HwqKm_EbeiS4BKSFCkMzOZqzYrOcZc"
-  ]
-};
-
-const sinon = mock.sinon = {};
-
-sinon['/manifests?id=' + encodeURIComponent(manifests.sinonAlpha.id)] =
-  manifests.sinonAlpha;
-
-events.sinonAlpha = bedrock.util.clone(events.alpha);
-// FIXME: does this event need to be signed?
-// served by sinon in 65-election.js
-events.sinonAlpha.input[0].id =
-  'https://example.com/events/2b9dadb8-d786-44ed-b735-1c5a6752d290';
-encodeURIComponent(manifests.sinonAlpha.item[0]);
-sinon['/events?id=' + encodeURIComponent(manifests.sinonAlpha.item[0])] =
-  events.sinonAlpha;

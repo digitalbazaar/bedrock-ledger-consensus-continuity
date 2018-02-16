@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -36,9 +36,9 @@ api.testHasher = brLedgerNode.consensus._hasher;
 api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
   const events = {};
   async.timesSeries(count, (i, callback) => {
-    const testEvent = bedrock.util.clone(eventTemplate);
-    testEvent.input[0].id = `https://example.com/event/${uuid()}`;
-    ledgerNode.events.add(testEvent, (err, result) => {
+    const event = bedrock.util.clone(eventTemplate);
+    event.operation[0].record.id = `https://example.com/event/${uuid()}`;
+    ledgerNode.consensus._events.add(event, ledgerNode, (err, result) => {
       if(err) {
         return callback(err);
       }
@@ -113,11 +113,12 @@ api.addEventMultiNode = ({consensusApi, eventTemplate, nodes}, callback) => {
 api.addRemoteEvents = ({
   consensusApi, count = 1, ledgerNode, mockData
 }, callback) => {
-  const creator = mockData.exampleIdentity;
+  const creatorId = mockData.exampleIdentity;
   async.timesSeries(count, (i, callback) => {
     const nodes = [].concat(ledgerNode);
     const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
-    testRegularEvent.input[0].id = `https://example.com/event/${uuid()}`;
+    testRegularEvent.operation[0].record.id =
+      `https://example.com/event/${uuid()}`;
     const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
     // use a valid keypair from mocks
     const keyPair = mockData.groups.authorized;
@@ -125,9 +126,10 @@ api.addRemoteEvents = ({
     const getHead = consensusApi._worker._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead({
+        ledgerNodeId: ledgerNode.id,
         eventsCollection: nodes[0].storage.events.collection,
         // unknown creator will yield genesis merge event
-        creator
+        creatorId
       }, (err, result) => {
         if(err) {
           return callback(err);
@@ -150,16 +152,18 @@ api.addRemoteEvents = ({
       sign: ['regularEventHash', (results, callback) => jsigs.sign(
         testMergeEvent, {
           algorithm: 'Ed25519Signature2018',
-          privateKeyBase58: keyPair.privateKeyBase58,
+          privateKeyBase58: keyPair.privateKey,
           creator: mockData.authorizedSignerUrl
         }, callback)],
       addRegular: ['head', (results, callback) => async.map(
-        nodes, (node, callback) => node.events.add(
-          testRegularEvent, {continuity2017: {peer: true}}, callback),
+        nodes, (node, callback) => node.consensus._events.add(
+          testRegularEvent, ledgerNode,
+          {continuity2017: {peer: true}}, callback),
         callback)],
       addMerge: ['sign', 'addRegular', (results, callback) => async.map(
-        nodes, (node, callback) => node.events.add(
-          results.sign, {continuity2017: {peer: true}}, callback), callback)],
+        nodes, (node, callback) => node.consensus._events.add(
+          results.sign, ledgerNode,
+          {continuity2017: {peer: true}}, callback), callback)],
     }, (err, results) => {
       if(err) {
         return callback(err);
@@ -296,7 +300,7 @@ api.createEvent = (
 
 api.createEventBasic = ({eventTemplate}) => {
   const event = bedrock.util.clone(eventTemplate);
-  event.input[0].id = 'https://example.com/events/' + uuid();
+  event.operation[0].record.id = 'https://example.com/events/' + uuid();
   return event;
 };
 

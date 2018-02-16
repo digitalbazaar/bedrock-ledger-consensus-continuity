@@ -112,12 +112,9 @@ const webLedgerEvent = {
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
-    input: {
+    operation: {
       type: 'array',
       minItems: 1,
-    },
-    operation: {
-      type: 'string',
     },
     parentHash: {
       type: 'array',
@@ -130,7 +127,7 @@ const webLedgerEvent = {
       enum: ['WebLedgerEvent']
     },
   },
-  required: ['@context', 'input', 'operation', 'parentHash', 'treeHash', 'type']
+  required: ['@context', 'operation', 'parentHash', 'treeHash', 'type']
 };
 
 const webLedgerEvents = {
