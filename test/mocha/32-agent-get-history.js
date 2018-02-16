@@ -276,8 +276,9 @@ function _copyEvents({eventHash, from, to, treeHash}, callback) {
       ], callback);
     },
     add: ['events', (results, callback) => {
-      async.eachSeries(results.events, (e, callback) => to.events.add(
-        e.event, {continuity2017: {peer: true}}, callback), callback);
+      async.eachSeries(results.events, (e, callback) =>
+        to.consensus._events.add(
+          e.event, to, {continuity2017: {peer: true}}, callback), callback);
     }]
   }, callback);
 }

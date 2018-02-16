@@ -465,7 +465,8 @@ describe('Continuity2017', () => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.operation[0].record.id = `https://example.com/event/${uuid()}`;
       async.auto({
-        addEvent: callback => ledgerNode.events.add(testEvent, callback),
+        addEvent: callback => ledgerNode.consensus._events.add(
+          testEvent, ledgerNode, callback),
         runWorker: ['addEvent', (results, callback) =>
           consensusApi._worker._run(ledgerNode, err => {
             callback(err);
@@ -509,7 +510,7 @@ describe('Continuity2017', () => {
               });
           }),
         addEvent: ['getConfigBlock', (results, callback) =>
-          ledgerNode.events.add(testEvent, callback)],
+          ledgerNode.conseneus._events.add(testEvent, ledgerNode, callback)],
         runWorker: ['addEvent', (results, callback) =>
           consensusApi._worker._run(ledgerNode, err => {
             callback(err);
