@@ -30,7 +30,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('Multinode Basics', () => {
+describe.skip('Multinode Basics', () => {
   before(done => {
     if(blessedEnabled) {
       screen = blessed.screen({smartCSR: true});

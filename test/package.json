@@ -16,7 +16,7 @@
     "bedrock-jobs": "^2.0.3",
     "bedrock-key": "^4.0.0",
     "bedrock-ledger-agent": "digitalbazaar/bedrock-ledger-agent#master",
-    "bedrock-ledger-context": "digitalbazaar/bedrock-ledger-context#continuityUpdate",
+    "bedrock-ledger-context": "digitalbazaar/bedrock-ledger-context#master",
     "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#master",
     "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#master",
     "bedrock-mongodb": "^4.0.0",
