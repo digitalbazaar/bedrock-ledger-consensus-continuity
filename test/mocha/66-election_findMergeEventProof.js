@@ -14,7 +14,7 @@ const uuid = require('uuid/v4');
 
 let consensusApi;
 
-describe.only('Election API _findMergeEventProof', () => {
+describe('Election API _findMergeEventProof', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
