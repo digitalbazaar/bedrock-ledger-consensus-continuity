@@ -136,10 +136,7 @@ describe('events.mergeBranches API', () => {
           should.exist(result.event);
           const event = result.event;
           should.exist(event.type);
-          event.type.should.be.an('array');
-          event.type.should.have.length(2);
-          event.type.should.have.same.members(
-            ['WebLedgerEvent', 'ContinuityMergeEvent']);
+          event.type.should.equal('ContinuityMergeEvent');
           should.exist(event.treeHash);
           event.treeHash.should.equal(genesisMergeHash);
           should.exist(event.parentHash);

@@ -57,7 +57,7 @@ operations.alpha = {
 const events = mock.events = {};
 events.alpha = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
-  type: 'WebLedgerEvent',
+  type: 'WebLedgerOperationEvent',
   operation: [operations.alpha]
 };
 
@@ -70,7 +70,7 @@ events.config = {
 const mergeEvents = mock.mergeEvents = {};
 mergeEvents.alpha = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
-  'type': ['WebLedgerEvent', 'ContinuityMergeEvent'],
+  'type': 'ContinuityMergeEvent',
   'treeHash': 'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-XXX',
   'parentHash': [
     'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-AAA',

@@ -124,7 +124,7 @@ describe.skip('Multinode Basics', () => {
               const event = eventBlock.block.event[0];
               // TODO: signature is dynamic... needs a better check
               delete event.signature;
-              event.should.deep.equal(configEvent);
+              event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
               should.exist(eventBlock.meta);
               should.exist(eventBlock.block.consensusProof);
               const consensusProof = eventBlock.block.consensusProof;

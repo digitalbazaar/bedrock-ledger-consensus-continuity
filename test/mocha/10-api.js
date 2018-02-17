@@ -92,7 +92,7 @@ describe('Continuity2017', () => {
             should.exist(result.event);
             const event = result.event;
             should.exist(event.type);
-            event.type.should.equal('WebLedgerEvent');
+            event.type.should.equal('WebLedgerOperationEvent');
             should.exist(event.operation);
             event.operation.should.be.an('array');
             event.operation.length.should.equal(1);

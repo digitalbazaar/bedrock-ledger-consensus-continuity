@@ -63,18 +63,11 @@ const continuityMergeEvent = {
       type: 'string'
     },
     type: {
-      type: 'array',
-      items: {
-        anyOf: [
-          {type: 'string', enum: ['WebLedgerEvent']},
-          {type: 'string', enum: ['ContinuityMergeEvent']},
-        ]
-      },
-      minItems: 2,
-      uniqueItems: true
+      type: 'string',
+      enum: ['ContinuityMergeEvent']
     },
   },
-  required: ['@context', 'parentHash', /*'proof',*/ 'treeHash', 'type'],
+  required: ['@context', 'parentHash', 'proof', 'treeHash', 'type'],
 };
 
 const webLedgerConfigEvent = {
@@ -107,8 +100,8 @@ const webLedgerConfigEvent = {
   }
 };
 
-const webLedgerEvent = {
-  title: 'WebLedgerEvent',
+const webLedgerOperationEvent = {
+  title: 'WebLedgerOperationEvent',
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
@@ -124,7 +117,7 @@ const webLedgerEvent = {
     treeHash: RFC6920,
     type: {
       type: 'string',
-      enum: ['WebLedgerEvent']
+      enum: ['WebLedgerOperationEvent']
     },
   },
   required: ['@context', 'operation', 'parentHash', 'treeHash', 'type']
@@ -133,7 +126,7 @@ const webLedgerEvent = {
 const webLedgerEvents = {
   title: 'Web Ledger Events',
   oneOf: [
-    webLedgerEvent,
+    webLedgerOperationEvent,
     webLedgerConfigEvent,
     continuityMergeEvent
   ]

@@ -214,7 +214,7 @@ describe.skip('Multinode', () => {
                 eventBlock.block.event.should.be.an('array');
                 eventBlock.block.event.should.have.length(2);
                 eventBlock.block.event
-                  .filter(e => e.type === 'WebLedgerEvent')[0]
+                  .filter(e => e.type === 'WebLedgerOperationEvent')[0]
                   .should.deep.equal(testEvent);
                 // const event = eventBlock.block.event[0];
                 // event.operation.should.be.an('array');
