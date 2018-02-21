@@ -40,7 +40,7 @@ api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
   async.timesSeries(count, (i, callback) => {
     const event = bedrock.util.clone(eventTemplate);
     event.operation[0].record.id = `https://example.com/event/${uuid()}`;
-    ledgerNode.consensus._events.add(event, ledgerNode, (err, result) => {
+    ledgerNode.consensus._events.add({event, ledgerNode}, (err, result) => {
       if(err) {
         return callback(err);
       }
@@ -51,9 +51,8 @@ api.addEvent = ({count = 1, eventTemplate, ledgerNode}, callback) => {
 };
 
 api.addEventAndMerge = (
-  {consensusApi, count = 1, creatorId, eventTemplate, ledgerNode},
-  callback) => {
-  if(!(consensusApi && creatorId && eventTemplate && ledgerNode)) {
+  {consensusApi, count = 1, eventTemplate, ledgerNode}, callback) => {
+  if(!(consensusApi && eventTemplate && ledgerNode)) {
     throw new TypeError(
       '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
   }
@@ -70,7 +69,7 @@ api.addEventAndMerge = (
         callback();
       }),
     merge: ['addEvent', (results, callback) => merge(
-      {creatorId, ledgerNode}, (err, result) => {
+      {creatorId: ledgerNode.creatorId, ledgerNode}, (err, result) => {
         if(err) {
           return callback(err);
         }
@@ -158,14 +157,16 @@ api.addRemoteEvents = ({
           creator: mockData.authorizedSignerUrl
         }, callback)],
       addRegular: ['head', (results, callback) => async.map(
-        nodes, (node, callback) => node.consensus._events.add(
-          testRegularEvent, ledgerNode,
-          {continuity2017: {peer: true}}, callback),
+        nodes, (node, callback) => node.consensus._events.add({
+          continuity2017: {peer: true},
+          event: testRegularEvent, ledgerNode,
+        }, callback),
         callback)],
       addMerge: ['sign', 'addRegular', (results, callback) => async.map(
-        nodes, (node, callback) => node.consensus._events.add(
-          results.sign, ledgerNode,
-          {continuity2017: {peer: true}}, callback), callback)],
+        nodes, (node, callback) => node.consensus._events.add({
+          continuity2017: {peer: true},
+          event: results.sign, ledgerNode,
+        }, callback), callback)],
     }, (err, results) => {
       if(err) {
         return callback(err);
@@ -257,14 +258,15 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
       const events = results.diff;
       async.auto({
         addEvents: callback => async.eachSeries(
-          events, (e, callback) => to.events.add(
-            e.event, {continuity2017: {peer: true}}, err => {
-            // ignore dup errors
-              if(err && err.name === 'DuplicateError') {
-                return callback();
-              }
-              callback(err);
-            }), callback),
+          events, (e, callback) => to.events.add({
+            continuity2017: {peer: true}, event: e.event
+          }, err => {
+          // ignore dup errors
+            if(err && err.name === 'DuplicateError') {
+              return callback();
+            }
+            callback(err);
+          }), callback),
         write: ['addEvents', (results, callback) =>
           to.eventWriter.start(callback)]
       }, callback);

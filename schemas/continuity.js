@@ -52,7 +52,7 @@ const continuityMergeEvent = {
     parentHash: {
       type: 'array',
       items: {
-        type: 'string'
+        type: 'number'
       },
       minItems: 1
     },
@@ -60,7 +60,7 @@ const continuityMergeEvent = {
       anyOf: [linkedDataProofSchema]
     },
     treeHash: {
-      type: 'string'
+      type: 'number'
     },
     type: {
       type: 'string',
@@ -111,10 +111,10 @@ const webLedgerOperationEvent = {
     },
     parentHash: {
       type: 'array',
-      items: RFC6920,
+      items: {type: 'number'},
       minItems: 1
     },
-    treeHash: RFC6920,
+    treeHash: {type: 'number'},
     type: {
       type: 'string',
       enum: ['WebLedgerOperationEvent']

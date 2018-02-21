@@ -2,6 +2,7 @@
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 const async = require('async');
+const database = require('bedrock-mongodb');
 const helpers = require('./helpers');
 
 const api = {};
@@ -23,8 +24,9 @@ api.alpha = (
         {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
           assertNoError(err);
           // alpha knows about the merge event added to alpha during this cycle
-          result.peerHistory.creatorHeads[peers.alpha]
-            .should.equal(results.alphaAddEvent1.mergeHash);
+          console.log('result', JSON.stringify(result, null, 2));
+          result.creatorHeads.heads[peers.alpha].eventHash
+            .should.equal(database.hash(results.alphaAddEvent1.mergeHash));
           // one new merge event event available from alpha
           result.peerHistory.history.should.have.length(1);
           result.peerHistory.history.should.have.same.members(
