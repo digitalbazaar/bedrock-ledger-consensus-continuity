@@ -104,7 +104,7 @@ mock.ldDocuments = {
     "id": mock.exampleIdentity,
     "publicKey": [{
       "id": mock.authorizedSignerUrl,
-      "type": "CryptographicKey",
+      "type": "Ed25519VerificationKey2018",
       "owner": mock.exampleIdentity,
       "publicKeyBase58": mock.groups.authorized.publicKey
     }]
@@ -112,7 +112,7 @@ mock.ldDocuments = {
 };
 mock.ldDocuments[mock.authorizedSignerUrl] = {
   "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
-  "type": "CryptographicKey",
+  "type": "Ed25519VerificationKey2018",
   "owner": mock.exampleIdentity,
   "label": "Signing Key 2",
   "id": mock.authorizedSignerUrl,
