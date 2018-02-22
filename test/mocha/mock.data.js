@@ -53,12 +53,30 @@ operations.alpha = {
     }
   }
 };
+operations.beta = {
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+  type: 'CreateWebLedgerRecord',
+  record: {
+    '@context': constants.TEST_CONTEXT_V1_URL,
+    id: 'https://example.com/events/4444',
+    type: 'Concert',
+    name: 'Big Band Concert in Atlanta',
+    startDate: '2017-07-14T21:30',
+    location: 'https://example.org/the-other-venue',
+    offers: {
+      type: 'Offer',
+      price: '13.00',
+      priceCurrency: 'USD',
+      url: 'https://www.ticketfly.com/purchase/309433'
+    }
+  }
+};
 
 const events = mock.events = {};
 events.alpha = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerOperationEvent',
-  operation: [operations.alpha]
+  operation: [operations.alpha, operations.beta]
 };
 
 events.config = {
