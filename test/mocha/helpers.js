@@ -237,10 +237,18 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
       // is evidently missing some events.
       collection.find({
         'meta.consensus': {$exists: false}
-      }).sort({'$natural': 1}).toArray(callback);
+      }, {'meta.eventHash': 1}).sort({'$natural': 1}).toArray(
+        (err, results) => {
+          if(err) {
+            return callback(err);
+          }
+          from.storage.events.getMany({
+            eventHashes: results.map(r => r.meta.eventHash)
+          }).toArray(callback);
+        });
     },
     diff: ['events', (results, callback) => {
-      const eventHashes = results.events.map(e => e.eventHash);
+      const eventHashes = results.events.map(e => e.meta.eventHash);
       to.storage.events.difference(eventHashes, (err, result) => {
         if(err) {
           return callback(err);
@@ -250,7 +258,8 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
           return callback();
         }
         const diffSet = new Set(result);
-        const events = results.events.filter(e => diffSet.has(e.eventHash));
+        const events = results.events
+          .filter(e => diffSet.has(e.meta.eventHash));
         return callback(null, events);
       });
     }],
