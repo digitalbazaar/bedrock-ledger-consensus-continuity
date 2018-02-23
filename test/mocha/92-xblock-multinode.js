@@ -117,7 +117,7 @@ describe.only('X Block Test', () => {
               should.exist(eventBlock.block);
               eventBlock.block.blockHeight.should.equal(0);
               eventBlock.block.event.should.be.an('array');
-              eventBlock.block.event.should.have.length(1);
+              eventBlock.block.event.should.have.length(2);
               const event = eventBlock.block.event[0];
               // TODO: signature is dynamic... needs a better check
               delete event.signature;
