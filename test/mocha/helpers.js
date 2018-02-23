@@ -265,7 +265,7 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
         }
         if(result.length === 0) {
           // return callback(new BedrockError('Nothing to do.', 'AbortError'));
-          return callback();
+          return callback(null, []);
         }
         const diffSet = new Set(result);
         const events = results.events
@@ -380,9 +380,22 @@ api.snapshotEvents = ({ledgerNode}, callback) => {
     if(err) {
       return callback(err);
     }
-    // make snapshot
-    snapshot[collection.s.name] = result;
-    callback(null, result);
+    ledgerNode.storage.events.getMany({
+      eventHashes: result.map(r => r.meta.eventHash)
+    }).toArray((err, results) => {
+      if(err) {
+        return err;
+      }
+      results = results.map(r => {
+        if(r.event.type !== 'WebLedgerOperationEvent') {
+          delete r.event.operation;
+        }
+        return r;
+      });
+      // make snapshot
+      snapshot[collection.s.name] = results;
+      callback(null, results);
+    });
   });
 };
 
