@@ -43,7 +43,7 @@ describe('Continuity2017', () => {
       creator: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         consensusApi = results.consensusPlugin.api;
         ledgerNode = results.ledgerNode;
-        consensusApi._voters.get(ledgerNode.id, (err, result) => {
+        consensusApi._voters.get({ledgerNodeId: ledgerNode.id}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -53,8 +53,7 @@ describe('Continuity2017', () => {
       }],
       genesisMerge: ['creator', (results, callback) => {
         consensusApi._worker._events._getLocalBranchHead({
-          ledgerNodeId: ledgerNode.id,
-          eventsCollection: ledgerNode.storage.events.collection,
+          ledgerNode,
           creatorId: results.creator.id
         }, (err, result) => {
           if(err) {
@@ -73,7 +72,7 @@ describe('Continuity2017', () => {
       operation.record.id = `https://example.com/event/${uuid()}`;
       async.auto({
         addEvent: callback => ledgerNode.operations.add(
-          operation, (err, result) => {
+          {operation}, (err, result) => {
             assertNoError(err);
             callback();
           }),
@@ -87,7 +86,7 @@ describe('Continuity2017', () => {
       testEvent.operation[0].record.id = `https://example.com/event/${uuid()}`;
       async.auto({
         addEvent: callback => ledgerNode.consensus._events.add(
-          testEvent, ledgerNode, (err, result) => {
+          {event: testEvent, ledgerNode}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
