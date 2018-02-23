@@ -148,8 +148,9 @@ describe('Election API _findMergeEventProof', () => {
         // all peers are electors
         const electors = _.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
-          history: callback => getRecentHistory(
-            {ledgerNode, excludeLocalRegularEvents: true}, callback),
+          history: callback => getRecentHistory({
+            creatorId: nodes[i].creatorId,
+            ledgerNode, excludeLocalRegularEvents: true}, callback),
           proof: ['history', (results, callback) => {
             const branches = _getElectorBranches({
               history: results.history,
@@ -197,8 +198,9 @@ describe('Election API _findMergeEventProof', () => {
         // all peers are electors
         const electors = _.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
-          history: callback => getRecentHistory(
-            {ledgerNode, excludeLocalRegularEvents: true}, callback),
+          history: callback => getRecentHistory({
+            creatorId: nodes[i].creatorId,
+            ledgerNode, excludeLocalRegularEvents: true}, callback),
           branches: ['history', (results, callback) => {
             const branches = _getElectorBranches({
               history: results.history,
@@ -250,8 +252,9 @@ describe('Election API _findMergeEventProof', () => {
         // all peers are electors
         const electors = _.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
-          history: callback => getRecentHistory(
-            {ledgerNode, excludeLocalRegularEvents: true}, callback),
+          history: callback => getRecentHistory({
+            creatorId: nodes[i].creatorId,
+            ledgerNode, excludeLocalRegularEvents: true}, callback),
           branches: ['history', (results, callback) => {
             const branches = _getElectorBranches({
               history: results.history,
@@ -329,8 +332,9 @@ describe('Election API _findMergeEventProof', () => {
         // all peers are electors
         const electors = _.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
-          history: callback => getRecentHistory(
-            {ledgerNode, excludeLocalRegularEvents: true}, callback),
+          history: callback => getRecentHistory({
+            creatorId: nodes[i].creatorId,
+            ledgerNode, excludeLocalRegularEvents: true}, callback),
           proof: ['history', (results, callback) => {
             const branches = _getElectorBranches({
               history: results.history,
@@ -391,8 +395,9 @@ describe('Election API _findMergeEventProof', () => {
         // all peers are electors
         const electors = _.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
-          history: callback => getRecentHistory(
-            {ledgerNode, excludeLocalRegularEvents: true}, callback),
+          history: callback => getRecentHistory({
+            creatorId: nodes[i].creatorId,
+            ledgerNode, excludeLocalRegularEvents: true}, callback),
           proof: ['history', (results, callback) => {
             const branches = _getElectorBranches({
               history: results.history,
@@ -445,8 +450,9 @@ describe('Election API _findMergeEventProof', () => {
         // all peers are electors
         const electors = _.values(peers).map(p => ({id: p}));
         async.auto({
-          history: callback => getRecentHistory(
-            {ledgerNode, excludeLocalRegularEvents: true}, callback),
+          history: callback => getRecentHistory({
+            creatorId: nodes.alpha.creatorId,
+            ledgerNode, excludeLocalRegularEvents: true}, callback),
           proof: ['history', (results, callback) => {
             const branches = _getElectorBranches({
               history: results.history,
