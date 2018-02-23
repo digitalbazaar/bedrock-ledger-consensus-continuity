@@ -258,10 +258,10 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
       const events = results.diff;
       async.auto({
         addEvents: callback => async.eachSeries(
-          events, (e, callback) => to.events.add({
-            continuity2017: {peer: true}, event: e.event
+          events, (e, callback) => to.consensus._events.add({
+            continuity2017: {peer: true}, event: e.event, ledgerNode: to
           }, err => {
-          // ignore dup errors
+            // ignore dup errors
             if(err && err.name === 'DuplicateError') {
               return callback();
             }
