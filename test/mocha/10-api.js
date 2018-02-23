@@ -13,7 +13,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
 
-describe.only('Continuity2017', () => {
+describe('Continuity2017', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
