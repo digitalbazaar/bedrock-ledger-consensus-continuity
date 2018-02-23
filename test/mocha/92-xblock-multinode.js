@@ -7,7 +7,7 @@ const _ = require('lodash');
 const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
-
+const cache = require('bedrock-redis');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
@@ -25,7 +25,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.skip('X Block Test', () => {
+describe.only('X Block Test', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -39,12 +39,13 @@ describe.skip('X Block Test', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     before(done => {
       async.auto({
-        actor: callback => brIdentity.get(
+        clean: callback => cache.client.flushall(callback),
+        actor: ['clean', (results, callback) => brIdentity.get(
           null, mockIdentity.identity.id, (err, identity) => {
             callback(err, identity);
-          }),
-        consensusPlugin: callback => brLedgerNode.use(
-          'Continuity2017', callback),
+          })],
+        consensusPlugin: ['clean', (results, callback) => brLedgerNode.use(
+          'Continuity2017', callback)],
         ledgerNode: ['actor', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
