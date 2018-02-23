@@ -72,7 +72,7 @@ describe('Continuity2017', () => {
       operation.record.id = `https://example.com/event/${uuid()}`;
       async.auto({
         addEvent: callback => ledgerNode.operations.add(
-          {operation}, (err, result) => {
+          {operation}, err => {
             assertNoError(err);
             callback();
           }),
