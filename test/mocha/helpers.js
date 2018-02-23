@@ -244,7 +244,17 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
           }
           from.storage.events.getMany({
             eventHashes: results.map(r => r.meta.eventHash)
-          }).toArray(callback);
+          }).toArray((err, results) => {
+            if(err) {
+              return err;
+            }
+            callback(null, results.map(r => {
+              if(r.event.type !== 'WebLedgerOperationEvent') {
+                delete r.event.operation;
+              }
+              return r;
+            }));
+          });
         });
     },
     diff: ['events', (results, callback) => {
