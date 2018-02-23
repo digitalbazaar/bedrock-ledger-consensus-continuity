@@ -84,10 +84,10 @@ describe('Election API _findMergeEventProof', () => {
             return callback(err);
           }
           genesisBlock = result.genesisBlock.block;
-          callback(null, result.genesisBlock.block);
+          callback(null, genesisBlock);
         })],
       nodeBeta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
+        null, {genesisBlock}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -95,7 +95,7 @@ describe('Election API _findMergeEventProof', () => {
           callback(null, result);
         })],
       nodeGamma: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
+        null, {genesisBlock}, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -103,7 +103,7 @@ describe('Election API _findMergeEventProof', () => {
           callback(null, result);
         })],
       nodeDelta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
+        null, {genesisBlock}, (err, result) => {
           if(err) {
             return callback(err);
           }
