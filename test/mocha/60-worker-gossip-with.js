@@ -193,10 +193,11 @@ describe('Worker - _gossipWith', () => {
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
     async.auto({
-      addEvent: callback => nodes.alpha.operations.add(
+      addOperation: callback => nodes.alpha.operations.add(
         {operation: testEvent}, callback),
-      remoteEvents: ['addEvent', (results, callback) => helpers.addRemoteEvents(
-        {consensusApi, ledgerNode: nodes.alpha, mockData}, callback)],
+      remoteEvents: ['addOperation', (results, callback) =>
+        helpers.addRemoteEvents(
+          {consensusApi, ledgerNode: nodes.alpha, mockData}, callback)],
       writer: ['remoteEvents', (results, callback) => {
         const eventWriter = new EventWriter({ledgerNode: nodes.alpha});
         eventWriter.start(callback);
@@ -217,7 +218,8 @@ describe('Worker - _gossipWith', () => {
         nodes.beta.storage.events.exists([
           // results.remoteEvents.merge,
           // results.remoteEvents.regular,
-          results.addEvent.meta.eventHash,
+          // FIXME: this does not exist, need to get event hash elsewhere
+          results.addOperation.meta.eventHash,
           results.mergeBranches.meta.eventHash
         ], (err, result) => {
           assertNoError(err);
@@ -267,12 +269,11 @@ describe('Worker - _gossipWith', () => {
         callback => consensusApi._worker._gossipWith(
           {ledgerNode: nodes.beta, peerId: peers.gamma}, (err, result) => {
             assertNoError(err);
-            console.log('333333333', result.creatorHeads);
             result.creatorHeads.heads[peers.alpha].eventHash
-              .should.equal(database.hash(results.addEvent.alpha.mergeHash));
+              .should.equal(results.addEvent.alpha.mergeHash);
             // this is head that beta is sending to gamma for itself
             result.creatorHeads.heads[peers.beta].eventHash
-              .should.equal(database.hash(results.addEvent.beta.mergeHash));
+              .should.equal(results.addEvent.beta.mergeHash);
             // beta must send genesisMergeHash as head
             result.creatorHeads.heads[peers.gamma].eventHash
               .should.equal(genesisMergeHash);
@@ -307,8 +308,8 @@ describe('Worker - _gossipWith', () => {
         // all nodes should have the same events
         async.eachSeries(testNodes, (node, callback) =>
           node.storage.events.exists([
-            ...results.addEvent.mergeHash.map(h => database.hash(h)),
-            ...results.addEvent.regularHash.map(h => database.hash(h))
+            ...results.addEvent.mergeHash,
+            ...results.addEvent.regularHash
           ], (err, result) => {
             assertNoError(err);
             result.should.be.true;
@@ -416,12 +417,12 @@ describe('Worker - _gossipWith', () => {
             assertNoError(err);
             // these are heads beta is sending to gamma
             result.creatorHeads.heads[peers.alpha].eventHash
-              .should.equal(database.hash(generations.alpha[1]));
+              .should.equal(generations.alpha[1]);
             // this is head that beta is sending to gamma for itself
             result.creatorHeads.heads[peers.beta].eventHash
-              .should.equal(database.hash(generations.beta[2]));
+              .should.equal(generations.beta[2]);
             result.creatorHeads.heads[peers.gamma].eventHash
-              .should.equal(database.hash(generations.gamma[1]));
+              .should.equal(generations.gamma[1]);
             callback();
           }),
         callback => _commitCache(nodes.beta, callback),

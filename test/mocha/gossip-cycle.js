@@ -26,7 +26,7 @@ api.alpha = (
           // alpha knows about the merge event added to alpha during this cycle
           console.log('result', JSON.stringify(result, null, 2));
           result.creatorHeads.heads[peers.alpha].eventHash
-            .should.equal(database.hash(results.alphaAddEvent1.mergeHash));
+            .should.equal(results.alphaAddEvent1.mergeHash);
           // one new merge event event available from alpha
           result.peerHistory.history.should.have.length(1);
           result.peerHistory.history.should.have.same.members(
