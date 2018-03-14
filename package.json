@@ -21,7 +21,7 @@
     "async": "^2.4.0",
     "body-parser": "^1.18.2",
     "bs58": "^4.0.1",
-    "ed25519": "0.0.4",
+    "chloride": "digitalbazaar/chloride#genericHash",
     "jsonld-signatures": "^2.1.2",
     "lodash": "^4.17.4",
     "multer": "^1.3.0",
