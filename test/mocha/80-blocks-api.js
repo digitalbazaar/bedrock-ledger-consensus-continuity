@@ -127,7 +127,7 @@ describe('blocks API', () => {
     }, done);
   });
 
-  describe('repairCache API', () => {
+  describe('blocks.repairCache API', () => {
     // add the genesis merge event to the cache
     beforeEach(done => {
       const hashes = [genesisMergeHash.eventHash];
