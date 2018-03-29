@@ -1,6 +1,8 @@
-/*
+/*!
  * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
+'use strict';
+
 const config = require('bedrock').config;
 const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
