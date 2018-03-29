@@ -5,12 +5,6 @@ const config = require('bedrock').config;
 const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
 
-// FIXME: rudamentary implementation
-const RFC6920 = {
-  type: 'string',
-  pattern: '^ni:\/\/\/'
-};
-
 // TODO: add to `bedrock-validation` schemas
 const linkedDataProof = {
   title: 'Linked Data Signature',
@@ -105,7 +99,7 @@ const webLedgerOperationEvent = {
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
-    operation: {
+    operationHash: {
       type: 'array',
       minItems: 1,
     },
@@ -120,7 +114,7 @@ const webLedgerOperationEvent = {
       enum: ['WebLedgerOperationEvent']
     },
   },
-  required: ['@context', 'operation', 'parentHash', 'treeHash', 'type']
+  required: ['@context', 'operationHash', 'parentHash', 'treeHash', 'type']
 };
 
 const webLedgerEvents = {

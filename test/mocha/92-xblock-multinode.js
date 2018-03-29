@@ -14,7 +14,7 @@ const mockData = require('./mock.data');
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-const eventTemplate = mockData.events.alpha;
+const opTemplate = mockData.operations.alpha;
 
 // NOTE: alpha is assigned manually
 // NOTE: all these may not be used
@@ -163,17 +163,16 @@ describe.only('X Block Test', () => {
         }, callback => {
           const count = 1;
           async.auto({
-            alphaAddEvent1: callback => helpers.addEvent(
-              {count, eventTemplate, ledgerNode: nodes.alpha}, callback),
-            betaAddEvent1: callback => helpers.addEvent(
-              {count, eventTemplate, ledgerNode: nodes.beta}, callback),
-            gammaAddEvent1: callback => helpers.addEvent(
-              {count, eventTemplate, ledgerNode: nodes.gamma}, callback),
-            deltaAddEvent1: callback => helpers.addEvent(
-              {count, eventTemplate, ledgerNode: nodes.delta}, callback),
+            alphaAddOp: callback => helpers.addOperation(
+              {count, ledgerNode: nodes.alpha, opTemplate}, callback),
+            betaAddOp: callback => helpers.addOperation(
+              {count, ledgerNode: nodes.beta, opTemplate}, callback),
+            gammaAddOp: callback => helpers.addOperation(
+              {count, ledgerNode: nodes.gamma, opTemplate}, callback),
+            deltaAddOp: callback => helpers.addOperation(
+              {count, ledgerNode: nodes.delta, opTemplate}, callback),
             workCycle1: [
-              'alphaAddEvent1', 'betaAddEvent1',
-              'gammaAddEvent1', 'deltaAddEvent1',
+              'alphaAddOp', 'betaAddOp', 'gammaAddOp', 'deltaAddOp',
               (results, callback) =>
                 _workerCycle({consensusApi, nodes, series: false}, callback)],
             report: ['workCycle1', (results, callback) => async.forEachOfSeries(

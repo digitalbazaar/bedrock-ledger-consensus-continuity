@@ -109,6 +109,23 @@ api.addEventMultiNode = (
   });
 };
 
+api.addOperation = ({count = 1, opTemplate, ledgerNode}, callback) => {
+  const operations = {};
+  async.timesSeries(count, (i, callback) => {
+    const operation = bedrock.util.clone(opTemplate);
+    operation.record.id = `https://example.com/event/${uuid()}`;
+    operation.record.creator = ledgerNode.id;
+    ledgerNode.consensus.operations.add(
+      {operation, ledgerNode}, (err, result) => {
+        if(err) {
+          return callback(err);
+        }
+        operations[result.opHash] = operation;
+        callback();
+      });
+  }, err => callback(err, operations));
+};
+
 // add a merge event and regular event as if it came in through gossip
 // NOTE: the events are rooted with the genesis merge event
 api.addRemoteEvents = ({
