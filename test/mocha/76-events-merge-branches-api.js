@@ -4,12 +4,12 @@
 'use strict';
 
 const async = require('async');
-const bedrock = require('bedrock');
+// const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-const util = require('util');
-const uuid = require('uuid/v4');
+// const util = require('util');
+// const uuid = require('uuid/v4');
 
 let consensusApi;
 
@@ -17,20 +17,16 @@ describe('events.mergeBranches API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
-  let getRecentHistory;
-  let mergeBranches;
+  let merge;
   let genesisMergeHash;
-  let eventHash;
-  let testEventId;
+  let EventWriter;
   const nodes = {};
   const peers = {};
   beforeEach(function(done) {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEventId = 'https://example.com/events/' + uuid();
-    testEvent.operation[0].record.id = testEventId;
     async.auto({
+      flush: helpers.flushCache,
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
@@ -39,11 +35,11 @@ describe('events.mergeBranches API', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          getRecentHistory = consensusApi._worker._events.getRecentHistory;
-          mergeBranches = consensusApi._worker._events.mergeBranches;
+          merge = consensusApi._worker._events.merge;
+          EventWriter = consensusApi._worker.EventWriter;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
+      ledgerNode: ['clean', 'flush', (results, callback) => brLedgerNode.add(
         null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
@@ -52,22 +48,22 @@ describe('events.mergeBranches API', () => {
           callback(null, result);
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(nodes.alpha.id, (err, result) => {
+        const {id: ledgerNodeId} = nodes.alpha;
+        consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
           callback(null, result.id);
         });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
-        consensusApi._worker._events._getLocalBranchHead({
-          ledgerNodeId: nodes.alpha.id,
-          eventsCollection: nodes.alpha.storage.events.collection,
-          creatorId: results.creatorId
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          genesisMergeHash = result;
-          callback();
-        });
+        const ledgerNode = nodes.alpha;
+        const {creatorId} = results;
+        consensusApi._worker._events._getLocalBranchHead(
+          {creatorId, ledgerNode}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            genesisMergeHash = result.eventHash;
+            callback();
+          });
       }],
       genesisBlock: ['ledgerNode', (results, callback) =>
         nodes.alpha.blocks.getGenesis((err, result) => {
@@ -110,27 +106,33 @@ describe('events.mergeBranches API', () => {
       //     callback(null, result);
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
-        async.eachOf(nodes, (n, i, callback) =>
-          consensusApi._worker._voters.get(n.id, (err, result) => {
+        async.eachOf(nodes, (ledgerNode, i, callback) => {
+          const {id: ledgerNodeId} = ledgerNode;
+          // attach eventWriter to the node
+          ledgerNode.eventWriter = new EventWriter(
+            {immediate: true, ledgerNode});
+          consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
             }
+            ledgerNode.creatorId = result.id;
             peers[i] = result.id;
             callback();
-          }), callback)]
+          });
+        }, callback)]
     }, done);
   });
 
   it('collects one local event', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     const ledgerNode = nodes.alpha;
+    const {creatorId} = ledgerNode;
     async.auto({
       addEvent: callback => helpers.addEvent(
-        {ledgerNode, eventTemplate}, callback),
-      history: ['addEvent', (results, callback) =>
-        getRecentHistory({ledgerNode}, callback)],
-      mergeBranches: ['history', (results, callback) => {
-        mergeBranches({ledgerNode, history: results.history}, (err, result) => {
+        {ledgerNode, eventTemplate, opTemplate}, callback),
+      mergeBranches: ['addEvent', (results, callback) => {
+        merge({creatorId, ledgerNode}, (err, result) => {
           assertNoError(err);
           const eventHash = Object.keys(results.addEvent)[0];
           should.exist(result.event);
@@ -165,19 +167,17 @@ describe('events.mergeBranches API', () => {
   it('returns `null` if no events since last merge', done => {
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
+    const opTemplate = mockData.operations.alpha;
+    const {creatorId} = ledgerNode;
     async.auto({
       addEvent: callback => helpers.addEvent(
-        {ledgerNode, eventTemplate}, callback),
-      history1: ['addEvent', (results, callback) =>
-        getRecentHistory({ledgerNode}, callback)],
-      mergeBranches1: ['history1', (results, callback) =>
-        mergeBranches({history: results.history1, ledgerNode}, callback)],
-      history2: ['mergeBranches1', (results, callback) =>
-        getRecentHistory({ledgerNode}, callback)],
-      mergeBranches2: ['history2', (results, callback) => mergeBranches(
-        {history: results.history2, ledgerNode}, (err, result) => {
+        {ledgerNode, eventTemplate, opTemplate}, callback),
+      mergeBranches1: ['addEvent', (results, callback) =>
+        merge({creatorId, ledgerNode}, callback)],
+      mergeBranches2: ['mergeBranches1', (results, callback) => merge(
+        {creatorId, ledgerNode}, (err, result) => {
           assertNoError();
-          should.equal(result, null);
+          should.equal(result, undefined);
           callback();
         })]
     }, done);
@@ -185,13 +185,13 @@ describe('events.mergeBranches API', () => {
   it('collects five local events', done => {
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
+    const opTemplate = mockData.operations.alpha;
+    const {creatorId} = ledgerNode;
     async.auto({
       addEvent: callback => helpers.addEvent(
-        {eventTemplate, count: 5, ledgerNode}, callback),
-      history: ['addEvent', (results, callback) =>
-        getRecentHistory({ledgerNode}, callback)],
-      mergeBranches: ['history', (results, callback) => {
-        mergeBranches({history: results.history, ledgerNode}, (err, result) => {
+        {eventTemplate, count: 5, ledgerNode, opTemplate}, callback),
+      mergeBranches: ['addEvent', (results, callback) => {
+        merge({creatorId, ledgerNode}, (err, result) => {
           assertNoError(err);
           should.exist(result.event);
           const event = result.event;
@@ -210,12 +210,14 @@ describe('events.mergeBranches API', () => {
   });
   it('collects one remote merge event', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       eventBeta: callback => helpers.addEventAndMerge(
-        {consensusApi, ledgerNode: nodes.beta, eventTemplate}, callback),
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+        callback),
       mergeBranches: ['eventBeta', (results, callback) => {
         helpers.copyAndMerge(
-          {consensusApi, from: nodes.beta, to: nodes.alpha}, (err, result) => {
+          {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
@@ -237,15 +239,18 @@ describe('events.mergeBranches API', () => {
   // the second beta merge event hash should be included in parentHash
   it('collects one remote merge events', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       betaEvent1: callback => helpers.addEventAndMerge(
-        {consensusApi, ledgerNode: nodes.beta, eventTemplate}, callback),
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+        callback),
       betaEvent2: ['betaEvent1', (results, callback) =>
         helpers.addEventAndMerge(
-          {consensusApi, ledgerNode: nodes.beta, eventTemplate}, callback)],
+          {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+          callback)],
       mergeBranches: ['betaEvent2', (results, callback) => {
         helpers.copyAndMerge(
-          {consensusApi, from: nodes.beta, to: nodes.alpha}, (err, result) => {
+          {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
@@ -264,17 +269,21 @@ describe('events.mergeBranches API', () => {
   });
   it('collects one remote merge events and eight local events', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       alphaEvent: callback => helpers.addEvent(
-        {eventTemplate, count: 8, ledgerNode: nodes.alpha}, callback),
+        {eventTemplate, count: 8, ledgerNode: nodes.alpha, opTemplate},
+        callback),
       betaEvent1: callback => helpers.addEventAndMerge(
-        {consensusApi, ledgerNode: nodes.beta, eventTemplate}, callback),
+        {consensusApi, ledgerNode: nodes.beta, eventTemplate, opTemplate},
+        callback),
       betaEvent2: ['betaEvent1', (results, callback) =>
         helpers.addEventAndMerge(
-          {consensusApi, ledgerNode: nodes.beta, eventTemplate}, callback)],
+          {consensusApi, ledgerNode: nodes.beta, eventTemplate, opTemplate},
+          callback)],
       mergeBranches: ['alphaEvent', 'betaEvent2', (results, callback) => {
         helpers.copyAndMerge(
-          {consensusApi, from: nodes.beta, to: nodes.alpha}, (err, result) => {
+          {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
             const event = result.event;
@@ -295,10 +304,12 @@ describe('events.mergeBranches API', () => {
   it('Second merge event has the proper treeHash', done => {
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       event1: callback => {
         helpers.addEventAndMerge(
-          {consensusApi, eventTemplate, ledgerNode}, (err, result) => {
+          {consensusApi, eventTemplate, ledgerNode, opTemplate},
+          (err, result) => {
             assertNoError(err);
             const mergeEvent = result.merge;
             mergeEvent.event.treeHash.should.equal(genesisMergeHash);
@@ -307,7 +318,8 @@ describe('events.mergeBranches API', () => {
       },
       event2: ['event1', (results, callback) => {
         helpers.addEventAndMerge(
-          {consensusApi, eventTemplate, ledgerNode}, (err, result) => {
+          {consensusApi, eventTemplate, ledgerNode, opTemplate},
+          (err, result) => {
             assertNoError(err);
             const mergeEvent = result.merge;
             mergeEvent.event.treeHash.should.equal(
@@ -320,13 +332,15 @@ describe('events.mergeBranches API', () => {
   // beta -> gamma -> alpha
   it('alpha properly merges events from beta and gamma', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       eventBeta: callback => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback),
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+        callback),
       eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.beta, to: nodes.gamma}, callback)],
+        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
       eventAlpha: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.gamma, to: nodes.alpha}, (err, result) => {
+        {consensusApi, from: 'gamma', nodes, to: 'alpha'}, (err, result) => {
           assertNoError(err);
           const gammaMergeHash = results.eventGamma.meta.eventHash;
           const parentHash = result.event.parentHash;
@@ -340,15 +354,17 @@ describe('events.mergeBranches API', () => {
   });
   it('alpha properly merges events from beta and gamma II', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       eventBeta: callback => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback),
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+        callback),
       eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.beta, to: nodes.gamma}, callback)],
+        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
       eventBeta2: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.gamma, to: nodes.beta}, callback)],
+        {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
       eventAlpha: ['eventBeta2', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.beta, to: nodes.alpha}, (err, result) => {
+        {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
           assertNoError(err);
           const betaMergeHash2 = results.eventBeta2.meta.eventHash;
           const parentHash = result.event.parentHash;
@@ -362,21 +378,24 @@ describe('events.mergeBranches API', () => {
   });
   it('alpha properly merges events from beta and gamma III', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       eventBeta: callback => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback),
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+        callback),
       eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.beta, to: nodes.gamma}, callback)],
+        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
       // beta has only merge event from gamma
       eventBeta2: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.gamma, to: nodes.beta}, callback)],
+        {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
       // add new regular event to gamma
       eventGamma2: ['eventGamma', (results, callback) =>
         helpers.addEventAndMerge(
-          {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback)],
+          {consensusApi, eventTemplate, ledgerNode: nodes.gamma, opTemplate},
+          callback)],
       eventAlpha: ['eventBeta2', 'eventGamma2', (results, callback) =>
         helpers.copyAndMerge(
-          {consensusApi, from: [nodes.beta, nodes.gamma], to: nodes.alpha},
+          {consensusApi, from: ['beta', 'gamma'], nodes, to: 'alpha'},
           (err, result) => {
             assertNoError(err);
             const betaMergeHash2 = results.eventBeta2.meta.eventHash;
@@ -393,23 +412,27 @@ describe('events.mergeBranches API', () => {
   // same as III and adds a regular event to alpha before final merge there
   it('alpha properly merges events from beta and gamma IV', done => {
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     async.auto({
       eventBeta: callback => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback),
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+        callback),
       eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.beta, to: nodes.gamma}, callback)],
+        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
       // beta has only merge event from gamma
       eventBeta2: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: nodes.gamma, to: nodes.beta}, callback)],
+        {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
       // add new regular event to gamma
       eventGamma2: ['eventGamma', (results, callback) =>
         helpers.addEventAndMerge(
-          {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback)],
+          {consensusApi, eventTemplate, ledgerNode: nodes.gamma, opTemplate},
+          callback)],
       eventAlpha: callback => helpers.addEvent(
-        {eventTemplate, count: 3, ledgerNode: nodes.alpha}, callback),
+        {eventTemplate, count: 3, ledgerNode: nodes.alpha, opTemplate},
+        callback),
       eventAlpha2: ['eventAlpha', 'eventBeta2', 'eventGamma2',
         (results, callback) => helpers.copyAndMerge(
-          {consensusApi, from: [nodes.beta, nodes.gamma], to: nodes.alpha},
+          {consensusApi, from: ['beta', 'gamma'], nodes, to: 'alpha'},
           (err, result) => {
             assertNoError(err);
             const alphaHashes = Object.keys(results.eventAlpha);

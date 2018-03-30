@@ -7,6 +7,8 @@ const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
+const {config} = bedrock;
+const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -21,19 +23,14 @@ describe('blocks API', () => {
   });
   let repairCache;
   let _cacheKey;
-  let getRecentHistory;
-  let mergeBranches;
   let genesisMergeHash;
-  let testEventId;
   const nodes = {};
   const peers = {};
   beforeEach(function(done) {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEventId = 'https://example.com/events/' + uuid();
-    testEvent.operation[0].record.id = testEventId;
     async.auto({
+      flush: helpers.flushCache,
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
@@ -42,13 +39,11 @@ describe('blocks API', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          getRecentHistory = consensusApi._worker._events.getRecentHistory;
-          mergeBranches = consensusApi._worker._events.mergeBranches;
           _cacheKey = consensusApi._cacheKey;
           repairCache = consensusApi._blocks.repairCache;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
+      ledgerNode: ['clean', 'flush', (results, callback) => brLedgerNode.add(
         null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);
@@ -180,21 +175,31 @@ describe('blocks API', () => {
       const ledgerNode = nodes.alpha;
       async.auto({
         events: callback => async.times(5, (i, callback) => {
-          const event = bedrock.util.clone(mockData.events.alpha);
-          event.operation[0].record.id = `https://example.com/event/${uuid()}`;
-          event.operation[1].record.id = `https://example.com/event/${uuid()}`;
+          const treeHash = uuid();
+          const parentHashes = [uuid(), uuid()];
+          const event = {
+            '@context': config.constants.WEB_LEDGER_CONTEXT_V1_URL,
+            type: 'ContinuityMergeEvent',
+            parentHash: [treeHash, ...parentHashes],
+            treeHash,
+          };
           async.auto({
             eventHash: callback => hasher(event, callback),
             store: ['eventHash', (results, callback) => {
               const {eventHash} = results;
               const meta = {
                 blockHeight: 500,
+                blockOrder: i,
                 continuity2017: {
                   type: 'm'
                 },
                 eventHash
               };
-              ledgerNode.storage.events.add({event, meta}, callback);
+              const eventRecord = {
+                eventHash: database.hash(eventHash), event, meta
+              };
+              ledgerNode.storage.events.collection.insert(
+                eventRecord, callback);
             }]
           }, callback);
         }, callback),

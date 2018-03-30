@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 const async = require('async');
-const database = require('bedrock-mongodb');
+// const database = require('bedrock-mongodb');
 const helpers = require('./helpers');
 
 const api = {};
@@ -10,38 +10,33 @@ module.exports = api;
 
 // add events on alpha and beta, gossip from beta to alpha
 api.alpha = (
-  {consensusApi, eventTemplate, nodes, peers, previousResult}, callback) => {
+  {consensusApi, eventTemplate, nodes, opTemplate, peers, previousResult},
+  callback) => {
   async.auto({
     betaAddEvent1: callback => helpers.addEventAndMerge(
-      {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback),
+      {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+      callback),
     // add event on beta
     alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
       helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback)],
+        {consensusApi, eventTemplate, ledgerNode: nodes.alpha, opTemplate},
+        callback)],
     // beta gossips with alpha
     betaGossip1: ['alphaAddEvent1', (results, callback) =>
       consensusApi._worker._gossipWith(
         {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
           assertNoError(err);
           // alpha knows about the merge event added to alpha during this cycle
-          console.log('result', JSON.stringify(result, null, 2));
-          result.creatorHeads.heads[peers.alpha].eventHash
+          result.history.creatorHeads[peers.alpha].eventHash
             .should.equal(results.alphaAddEvent1.mergeHash);
-          // one new merge event event available from alpha
-          result.peerHistory.history.should.have.length(1);
-          result.peerHistory.history.should.have.same.members(
-            [results.alphaAddEvent1.mergeHash]);
-          // beta wants to send the regular and merge event added this cycle
-          result.partitionHistory.history.should.have.length(2);
-          result.partitionHistory.history.should.have.same.members([
-            ...results.betaAddEvent1.allHashes
-          ]);
-          if(previousResult) {
-            // alpha only knowas about beta merge event added and gossiped
-            // last cycle
-            result.peerHistory.creatorHeads[peers.beta]
-              .should.equal(previousResult.betaAddEvent1.mergeHash);
-          }
+          // one new merge event and one regular event available from alpha
+          // the important detail here is that only the events added in this
+          // cycle are returned because beta given alpha the head that it
+          // received during the last cycle
+          result.history.history.should.have.length(2);
+          result.history.history.should.have.same.members(
+            results.alphaAddEvent1.allHashes);
+          result.history.truncated.should.be.false;
           callback();
         })],
   }, callback);

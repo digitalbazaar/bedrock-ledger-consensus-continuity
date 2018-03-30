@@ -2,10 +2,10 @@
  * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
  */
 
-module.exports = (api, consensusApi, eventTemplate, nodes) => ({
+module.exports = ({api, consensusApi, eventTemplate, nodes, opTemplate}) => ({
   // add a regular event and merge on every node
   regularEvent: callback => api.addEventMultiNode(
-    {consensusApi, eventTemplate, nodes}, callback),
+    {consensusApi, eventTemplate, nodes, opTemplate}, callback),
   cpa: ['regularEvent', (results, callback) => api.copyAndMerge({
     consensusApi,
     from: 'beta',

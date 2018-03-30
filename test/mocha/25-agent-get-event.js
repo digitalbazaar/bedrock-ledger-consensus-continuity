@@ -4,29 +4,27 @@
 'use strict';
 
 const async = require('async');
-const bedrock = require('bedrock');
+// const bedrock = require('bedrock');
 const brLedger = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
-const uuid = require('uuid/v4');
+// const uuid = require('uuid/v4');
 
-describe.skip('Consensus Agent - Get Event API', () => {
+describe('Consensus Agent - Get Event API', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
 
   let consensusApi;
-  let ledgerNode;
-  let voterId;
   let eventHash;
-  let testEventId;
+  let ledgerNode;
+  let ledgerNodeId;
+  let operationId;
+  let voterId;
   beforeEach(done => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEventId = 'https://example.com/events/' + uuid();
-    testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -44,20 +42,29 @@ describe.skip('Consensus Agent - Get Event API', () => {
             return callback(err);
           }
           ledgerNode = result;
+          ledgerNodeId = ledgerNode.id;
           callback();
         })],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+        consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
           voterId = result.id;
+          ledgerNode.creatorId = result.id;
           callback();
         });
       }],
-      addEvent: ['ledgerNode', (results, callback) =>
-        ledgerNode.consensus._events.add(
-          testEvent, ledgerNode, (err, result) => {
-          eventHash = result.meta.eventHash;
-          callback();
-        })]
+      addEvent: ['getVoter', (results, callback) => {
+        const eventTemplate = mockData.events.alpha;
+        const opTemplate = mockData.operations.alpha;
+        helpers.addEvent(
+          {eventTemplate, ledgerNode, opTemplate}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            eventHash = Object.keys(result)[0];
+            operationId = result[eventHash].operations[0].operation.record.id;
+            callback();
+          });
+      }]
     }, done);
   });
   it('should get an event', done => {
@@ -71,7 +78,7 @@ describe.skip('Consensus Agent - Get Event API', () => {
         result.operation.should.be.an('array');
         result.operation.should.have.length(1);
         should.exist(result.operation[0].record);
-        result.operation[0].record.id.should.equal(testEventId);
+        result.operation[0].record.id.should.equal(operationId);
         callback();
       })
     }, done);

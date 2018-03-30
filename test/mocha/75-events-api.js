@@ -4,7 +4,7 @@
 'use strict';
 
 const async = require('async');
-const bedrock = require('bedrock');
+// const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const expect = global.chai.expect;
@@ -12,7 +12,7 @@ const expect = global.chai.expect;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 // const util = require('util');
-const uuid = require('uuid/v4');
+// const uuid = require('uuid/v4');
 
 let consensusApi;
 
@@ -22,18 +22,11 @@ describe('events API', () => {
   });
   let repairCache;
   let _cacheKey;
-  let getRecentHistory;
-  let mergeBranches;
-  let genesisMergeHash;
-  let testEventId;
   const nodes = {};
   const peers = {};
   beforeEach(function(done) {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    const testEvent = bedrock.util.clone(mockData.events.alpha);
-    testEventId = 'https://example.com/events/' + uuid();
-    testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
@@ -43,8 +36,6 @@ describe('events API', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          getRecentHistory = consensusApi._worker._events.getRecentHistory;
-          mergeBranches = consensusApi._worker._events.mergeBranches;
           _cacheKey = consensusApi._cacheKey;
           repairCache = consensusApi._events.repairCache;
           callback();
@@ -62,18 +53,6 @@ describe('events API', () => {
           {ledgerNodeId: nodes.alpha.id}, (err, result) => {
             callback(null, result.id);
           });
-      }],
-      genesisMerge: ['creatorId', (results, callback) => {
-        consensusApi._worker._events._getLocalBranchHead({
-          creatorId: results.creatorId,
-          ledgerNode: nodes.alpha,
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          genesisMergeHash = result;
-          callback();
-        });
       }],
       genesisBlock: ['ledgerNode', (results, callback) =>
         nodes.alpha.blocks.getGenesis((err, result) => {
@@ -133,9 +112,10 @@ describe('events API', () => {
     it('behaves properly when run after a successful merge', done => {
       const ledgerNode = nodes.alpha;
       const eventTemplate = mockData.events.alpha;
+      const opTemplate = mockData.operations.alpha;
       async.auto({
         merge: callback => helpers.addEventAndMerge(
-          {consensusApi, eventTemplate, ledgerNode}, callback),
+          {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
         repair: ['merge', (results, callback) => {
           const {mergeHash: eventHash} = results.merge;
           repairCache({eventHash, ledgerNode}, (err, result) => {
@@ -156,9 +136,10 @@ describe('events API', () => {
       const ledgerNodeId = ledgerNode.id;
       const childlessKey = _cacheKey.childless(ledgerNodeId);
       const eventTemplate = mockData.events.alpha;
+      const opTemplate = mockData.operations.alpha;
       async.auto({
         merge: callback => helpers.addEventAndMerge(
-          {consensusApi, eventTemplate, ledgerNode}, callback),
+          {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
         // recreate conditions that would exist if mongodb write had succeeded
         // but cache update had failed
         rebuildCache: ['merge', (results, callback) => {
@@ -202,9 +183,11 @@ describe('events API', () => {
       const ledgerNodeId = ledgerNode.id;
       const childlessKey = _cacheKey.childless(ledgerNodeId);
       const eventTemplate = mockData.events.alpha;
+      const opTemplate = mockData.operations.alpha;
       async.auto({
         merge: callback => helpers.addEventAndMerge(
-          {consensusApi, count: 5, eventTemplate, ledgerNode}, callback),
+          {consensusApi, count: 5, eventTemplate, ledgerNode, opTemplate},
+          callback),
         // recreate conditions that would exist if mongodb write had succeeded
         // but cache update had failed
         rebuildCache: ['merge', (results, callback) => {

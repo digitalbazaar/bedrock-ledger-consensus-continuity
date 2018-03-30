@@ -76,7 +76,7 @@ const events = mock.events = {};
 events.alpha = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerOperationEvent',
-  operation: [operations.alpha, operations.beta]
+  // operation: [operations.alpha, operations.beta]
 };
 
 events.config = {
