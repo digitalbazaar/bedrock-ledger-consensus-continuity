@@ -102,19 +102,19 @@ describe('Continuity2017', () => {
             testEvent.treeHash = headHash;
             callback();
           }),
-        opHash: callback => hasher(operation, (err, opHash) => {
+        operationHash: callback => hasher(operation, (err, opHash) => {
           if(err) {
             return callback(err);
           }
           testEvent.operationHash = [opHash];
           callback(null, opHash);
         }),
-        eventHash: ['head', 'opHash', (results, callback) => hasher(
+        eventHash: ['head', 'operationHash', (results, callback) => hasher(
           testEvent, callback)],
         operation: ['eventHash', (results, callback) => {
-          const {eventHash, opHash} = results;
+          const {eventHash, operationHash} = results;
           const operations = [{
-            meta: {opHash},
+            meta: {operationHash},
             operation,
           }];
           ledgerNode.consensus.operations.write(

@@ -56,19 +56,19 @@ api.addEvent = (
           testEvent.treeHash = headHash;
           callback();
         }),
-      opHash: callback => hasher(operation, (err, opHash) => {
+      operationHash: callback => hasher(operation, (err, opHash) => {
         if(err) {
           return callback(err);
         }
         testEvent.operationHash = [opHash];
         callback(null, opHash);
       }),
-      eventHash: ['head', 'opHash', (results, callback) => hasher(
+      eventHash: ['head', 'operationHash', (results, callback) => hasher(
         testEvent, callback)],
       operation: ['eventHash', (results, callback) => {
-        const {eventHash, opHash} = results;
+        const {eventHash, operationHash} = results;
         operations = [{
-          meta: {opHash},
+          meta: {operationHash},
           operation,
         }];
         ledgerNode.consensus.operations.write(
@@ -165,7 +165,7 @@ api.addOperation = ({count = 1, opTemplate, ledgerNode}, callback) => {
         if(err) {
           return callback(err);
         }
-        operations[result.opHash] = operation;
+        operations[result.operationHash] = operation;
         callback();
       });
   }, err => callback(err, operations));
