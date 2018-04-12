@@ -204,7 +204,7 @@ module.exports = ({api, consensusApi, eventTemplate, nodes, opTemplate}) => ({
     nodes,
     to: 'beta'
   }, callback)],
-  cp28: ['cp25', (results, callback) => api.copyAndMerge({
+  cp28: ['cp25', 'cp27', (results, callback) => api.copyAndMerge({
     consensusApi,
     from: 'beta',
     nodes,
