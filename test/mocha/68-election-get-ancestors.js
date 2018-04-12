@@ -3,7 +3,7 @@
  */
 'use strict';
 
-// const _ = require('lodash');
+const _ = require('lodash');
 // const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
@@ -205,10 +205,10 @@ describe('Election API _getAncestors', () => {
             results.cp1.meta.eventHash,
             results.cp2.meta.eventHash
           ],
-          parentHashes: [
+          parentHashes: _.uniq([
             ...results.cp1.event.parentHash,
             ...results.cp2.event.parentHash,
-          ]
+          ])
         };
         getAncestors({hashes, ledgerNode}, (err, result) => {
           assertNoError(err);
