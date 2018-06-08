@@ -44,7 +44,13 @@ api.addEvent = (
   async.timesSeries(count, (i, callback) => {
     const testEvent = bedrock.util.clone(eventTemplate);
     const operation = bedrock.util.clone(opTemplate);
-    operation.record.id = `https://example.com/event/${uuid()}`;
+    const testRecordId = `https://example.com/event/${uuid()}`;
+    if(operation.type === 'CreateWebLedgerRecord') {
+      operation.record.id = testRecordId;
+    }
+    if(operation.type === 'UpdateWebLedgerRecord') {
+      operation.recordPatch.target = testRecordId;
+    }
     async.auto({
       head: callback => ledgerNode.consensus._events._getLocalBranchHead(
         {creatorId, ledgerNode}, (err, result) => {
@@ -68,6 +74,7 @@ api.addEvent = (
       operation: ['eventHash', (results, callback) => {
         const {eventHash, operationHash} = results;
         operations = [{
+          recordId: ledgerNode.storage.driver.hash(testRecordId),
           meta: {operationHash},
           operation,
         }];
