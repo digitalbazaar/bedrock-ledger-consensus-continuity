@@ -38,7 +38,7 @@ describe('X Block Test', () => {
     const mockIdentity = mockData.identities.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
     before(function(done) {
-      this.timeout(120000);
+      this.timeout(180000);
       async.auto({
         clean: callback => cache.client.flushall(callback),
         actor: ['clean', (results, callback) => brIdentity.get(
@@ -79,7 +79,7 @@ describe('X Block Test', () => {
 
     // add N - 1 more private nodes
     before(function(done) {
-      this.timeout(120000);
+      this.timeout(180000);
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
