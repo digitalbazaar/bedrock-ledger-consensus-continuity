@@ -37,7 +37,8 @@ describe('X Block Test', () => {
     let consensusApi;
     const mockIdentity = mockData.identities.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    before(done => {
+    before(function(done) {
+      this.timeout(120000);
       async.auto({
         clean: callback => cache.client.flushall(callback),
         actor: ['clean', (results, callback) => brIdentity.get(
