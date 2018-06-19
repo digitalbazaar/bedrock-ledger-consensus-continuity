@@ -142,79 +142,197 @@ describe('X Block Test', () => {
         }, done);
       });
     });
-    /*
-      going into this test, there are two node, peer[0] which is the genesisNode
-      and peer[1].
-      1. add regular event on peer[1]
-      2. run worker on peer[1]
-     */
-    const targetBlockHeight = 50;
-    describe(`${targetBlockHeight} Blocks`, () => {
-      // 1. add new regular event on each node
-      // 2. run worker on all nodes
-      // 3. report blockheight and event counts
 
+    /*
+     * 1. add new unique operations/records on nodes alpha, beta, gamma, delta
+     * 2. run worker on *all* nodes
+     * 3. repeat 1 and 2 until target block height is reached on all nodes
+     * 4. ensure that blockHash for the target block height is identical on all
+     * 5. settle the network, see notes on _settleNetwork
+     * 6. ensure that the final blockHeight and blockHash is identical on all
+     * 7. attempt to retrieve all records added in 1 from the `records` API
+     */
+
+    const targetBlockHeight = 50;
+
+    describe(`${targetBlockHeight} Blocks`, () => {
       it('makes many more blocks', function(done) {
         this.timeout(0);
-
-        const targetBlockHashMap = {};
-        async.until(() => {
-          return Object.keys(targetBlockHashMap).length ===
-            Object.keys(nodes).length;
-        }, callback => {
-          const count = 1;
-          async.auto({
-            alphaAddOp: callback => helpers.addOperation(
-              {count, ledgerNode: nodes.alpha, opTemplate}, callback),
-            betaAddOp: callback => helpers.addOperation(
-              {count, ledgerNode: nodes.beta, opTemplate}, callback),
-            gammaAddOp: callback => helpers.addOperation(
-              {count, ledgerNode: nodes.gamma, opTemplate}, callback),
-            deltaAddOp: callback => helpers.addOperation(
-              {count, ledgerNode: nodes.delta, opTemplate}, callback),
-            workCycle1: [
-              'alphaAddOp', 'betaAddOp', 'gammaAddOp', 'deltaAddOp',
-              (results, callback) =>
-                _workerCycle({consensusApi, nodes, series: false}, callback)],
-            report: ['workCycle1', (results, callback) => async.forEachOfSeries(
-              nodes, (ledgerNode, i, callback) => {
-                ledgerNode.storage.blocks.getLatestSummary(
-                  (err, result) => {
-                    assertNoError(err);
-                    const block = result.eventBlock.block;
-                    if(block.blockHeight >= targetBlockHeight) {
-                      return ledgerNode.storage.blocks.getByHeight(
-                        targetBlockHeight, (err, result) => {
-                          if(err) {
-                            return callback(err);
-                          }
-                          targetBlockHashMap[i] = result.meta.blockHash;
-                          callback();
-                        });
-                    }
-                    callback();
-                  });
-              }, callback)]
-          }, err => {
-            if(err) {
-              return callback(err);
-            }
-            callback();
-          });
+        async.auto({
+          nBlocks: callback => _nBlocks(
+            {consensusApi, targetBlockHeight}, (err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              console.log(
+                'targetBlockHashMap',
+                JSON.stringify(result, null, 2));
+              _.values(result.targetBlockHashMap)
+                .every(h => h === result.targetBlockHashMap.alpha)
+                .should.be.true;
+              callback(null, result);
+            }),
+          settle: ['nBlocks', (results, callback) => _settleNetwork(
+            {consensusApi}, callback)],
+          blockSummary: ['settle', (results, callback) =>
+            _latestBlockSummary((err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              const summaries = {};
+              Object.keys(result).forEach(k => {
+                summaries[k] = {
+                  blockCollection: nodes[k].storage.blocks.collection.s.name,
+                  blockHeight: result[k].eventBlock.block.blockHeight,
+                  blockHash: result[k].eventBlock.meta.blockHash,
+                  previousBlockHash: result[k].eventBlock.block
+                    .previousBlockHash,
+                };
+              });
+              console.log('Finishing block summaries:', JSON.stringify(
+                summaries, null, 2));
+              _.values(summaries).forEach(b => {
+                b.blockHeight.should.equal(summaries.alpha.blockHeight);
+                b.blockHash.should.equal(summaries.alpha.blockHash);
+              });
+              callback();
+            })],
+          state: ['blockSummary', (results, callback) => {
+            const allRecordIds = [].concat(..._.values(
+              results.nBlocks.recordIds));
+            console.log(`Total operation count: ${allRecordIds.length}`);
+            async.eachSeries(allRecordIds, (recordId, callback) => {
+              nodes.alpha.records.get({recordId}, err => {
+                // just need to ensure that there is no NotFoundError
+                assertNoError(err);
+                callback();
+              });
+            }, callback);
+          }]
         }, err => {
-          if(err) {
-            return done(err);
-          }
-          console.log(
-            'targetBlockHashMap', JSON.stringify(targetBlockHashMap, null, 2));
-          _.values(targetBlockHashMap)
-            .every(h => h === targetBlockHashMap.alpha).should.be.true;
-          done(err);
+          assertNoError(err);
+          done();
         });
       });
     }); // end one block
   });
 });
+
+function _addOperations({count}, callback) {
+  async.auto({
+    alpha: callback => helpers.addOperation(
+      {count, ledgerNode: nodes.alpha, opTemplate}, callback),
+    beta: callback => helpers.addOperation(
+      {count, ledgerNode: nodes.beta, opTemplate}, callback),
+    gamma: callback => helpers.addOperation(
+      {count, ledgerNode: nodes.gamma, opTemplate}, callback),
+    delta: callback => helpers.addOperation(
+      {count, ledgerNode: nodes.delta, opTemplate}, callback),
+  }, callback);
+}
+
+function _latestBlockSummary(callback) {
+  const blocks = {};
+  async.eachOf(nodes, (ledgerNode, nodeName, callback) => {
+    ledgerNode.storage.blocks.getLatestSummary((err, result) => {
+      blocks[nodeName] = result;
+      callback();
+    });
+  }, err => callback(err, blocks));
+}
+
+function _nBlocks({consensusApi, targetBlockHeight}, callback) {
+  const recordIds = {alpha: [], beta: [], gamma: [], delta: []};
+  const targetBlockHashMap = {};
+  async.until(() => {
+    return Object.keys(targetBlockHashMap).length ===
+      Object.keys(nodes).length;
+  }, callback => {
+    const count = 1;
+    async.auto({
+      operations: callback => _addOperations({count}, callback),
+      workCycle: ['operations', (results, callback) => {
+        // record the IDs for the records that were just added
+        for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
+          for(const opHash of Object.keys(results.operations[n])) {
+            recordIds[n].push(results.operations[n][opHash].record.id);
+          }
+        }
+        _workerCycle({consensusApi, nodes, series: false}, callback);
+      }],
+      report: ['workCycle', (results, callback) => async.forEachOfSeries(
+        nodes, (ledgerNode, i, callback) => {
+          ledgerNode.storage.blocks.getLatestSummary((err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            const {block} = result.eventBlock;
+            if(block.blockHeight >= targetBlockHeight) {
+              return ledgerNode.storage.blocks.getByHeight(
+                targetBlockHeight, (err, result) => {
+                  if(err) {
+                    return callback(err);
+                  }
+                  targetBlockHashMap[i] = result.meta.blockHash;
+                  callback();
+                });
+            }
+            callback();
+          });
+        }, callback)]
+    }, err => {
+      if(err) {
+        return callback(err);
+      }
+      callback();
+    });
+  }, err => {
+    if(err) {
+      return callback(err);
+    }
+    callback(null, {recordIds, targetBlockHashMap});
+  });
+}
+
+/*
+ * execute the worker cycle until there are no non-consensus
+ * events of type `WebLedgerOperationEvent` and all non-consensus events of type
+ * `ContinuityMergeEvent` have propagated to all nodes. It is expected that
+ * there will be non-consensus events of type `ContinuityMergeEvent` on a
+ * settled network.
+ */
+function _settleNetwork({consensusApi}, callback) {
+  async.doWhilst(callback => {
+    async.auto({
+      workCycle: callback => _workerCycle(
+        {consensusApi, nodes, series: false}, callback),
+      operationEvents: ['workCycle', (results, callback) => {
+        async.every(nodes, (ledgerNode, callback) => {
+          ledgerNode.storage.events.getCount({
+            consensus: false, type: 'WebLedgerOperationEvent'
+          }, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            callback(null, result === 0);
+          });
+        }, callback);
+      }],
+      mergeEvents: ['operationEvents', (results, callback) => {
+        async.map(nodes, (ledgerNode, callback) => {
+          ledgerNode.storage.events.getCount({
+            consensus: false, type: 'ContinuityMergeEvent'
+          }, callback);
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          callback(null, result.every(c => c === result[0]));
+        });
+      }]
+    }, callback);
+  }, results => !(results.operationEvents && results.mergeEvents), callback);
+}
 
 function _workerCycle({consensusApi, nodes, series = false}, callback) {
   const func = series ? async.eachSeries : async.each;
