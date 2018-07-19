@@ -30,7 +30,7 @@ describe('events.mergeBranches API', () => {
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        brLedgerNode.use('Continuity2017', (err, result) => {
+        helpers.use('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }

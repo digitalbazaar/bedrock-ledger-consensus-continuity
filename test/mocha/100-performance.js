@@ -5,7 +5,7 @@
 
 const async = require('async');
 const bedrock = require('bedrock');
-const brLedger = require('bedrock-ledger-node');
+const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const uuid = require('uuid/v4');
@@ -31,14 +31,14 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        brLedger.use('Continuity2017', (err, result) => {
+        helpers.use('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
           consensusApi = result.api;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedger.add(
+      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
         null, {ledgerConfiguration}, (err, result) => {
           if(err) {
             return callback(err);

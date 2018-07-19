@@ -5,7 +5,7 @@
 
 const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
-const brLedger = require('bedrock-ledger-node');
+const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
 const uuid = require('uuid/v4');
 
@@ -36,9 +36,9 @@ describe.skip('Multinode', () => {
           null, mockIdentity.identity.id, (err, identity) => {
             callback(err, identity);
           })],
-        consensusPlugin: callback => brLedger.use('Continuity2017', callback),
+        consensusPlugin: callback => helpers.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => {
-          brLedger.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
+          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
             }
@@ -73,7 +73,7 @@ describe.skip('Multinode', () => {
       this.timeout(120000);
       peers.push(genesisLedgerNode);
       async.times(nodes - 1, (i, callback) => {
-        brLedger.add(null, {
+        brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
         }, (err, ledgerNode) => {
@@ -364,7 +364,7 @@ describe.skip('Multinode', () => {
     });
     describe.skip('Catch-up', () => {
       let catchUpNode;
-      before(done => brLedger.add(null, {
+      before(done => brLedgerNode.add(null, {
         genesisBlock: genesisRecord.block,
         owner: mockIdentity.identity.id
       }, (err, ledgerNode) => {

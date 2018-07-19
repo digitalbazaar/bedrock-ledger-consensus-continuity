@@ -52,8 +52,7 @@ describe.skip('Multinode Basics', () => {
           null, mockIdentity.identity.id, (err, identity) => {
             callback(err, identity);
           }),
-        consensusPlugin: callback => brLedgerNode.use(
-          'Continuity2017', callback),
+        consensusPlugin: callback => helpers.use('Continuity2017', callback),
         ledgerNode: ['actor', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {

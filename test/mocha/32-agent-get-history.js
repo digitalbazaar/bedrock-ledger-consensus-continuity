@@ -37,7 +37,7 @@ describe.skip('Consensus Agent - Get History API', () => {
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        brLedgerNode.use('Continuity2017', (err, result) => {
+        helpers.use('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -80,9 +80,9 @@ describe.skip('Consensus Agent - Get History API', () => {
       addEvent: ['ledgerNode', (results, callback) =>
         ledgerNode.consensus._events.add(
           testEvent, ledgerNode, (err, result) => {
-          eventHash = result.meta.eventHash;
-          callback();
-        })],
+            eventHash = result.meta.eventHash;
+            callback();
+          })],
       genesisBlock: ['ledgerNode', (results, callback) =>
         ledgerNode.blocks.getGenesis((err, result) => {
           if(err) {

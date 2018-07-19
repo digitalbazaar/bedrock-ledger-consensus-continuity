@@ -472,6 +472,16 @@ api.snapshotEvents = ({ledgerNode}, callback) => {
   });
 };
 
+api.use = (plugin, callback) => {
+  let p;
+  try {
+    p = brLedgerNode.use(plugin);
+  } catch(e) {
+    return callback(e);
+  }
+  callback(null, p);
+};
+
 // Insert identities and public keys used for testing into database
 function insertTestData(mockData, callback) {
   async.forEachOf(mockData.identities, (identity, key, callback) => {

@@ -45,7 +45,7 @@ describe('X Block Test', () => {
           null, mockIdentity.identity.id, (err, identity) => {
             callback(err, identity);
           })],
-        consensusPlugin: ['clean', (results, callback) => brLedgerNode.use(
+        consensusPlugin: ['clean', (results, callback) => helpers.use(
           'Continuity2017', callback)],
         ledgerNode: ['actor', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
