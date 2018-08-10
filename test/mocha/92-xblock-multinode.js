@@ -314,6 +314,7 @@ function _settleNetwork({consensusApi}, callback) {
             if(err) {
               return callback(err);
             }
+            // all nodes should have zero non-consensus regular events
             callback(null, result === 0);
           });
         }, callback);
@@ -327,11 +328,25 @@ function _settleNetwork({consensusApi}, callback) {
           if(err) {
             return callback(err);
           }
+          // all nodes should have an equal number of non-consensus merge events
           callback(null, result.every(c => c === result[0]));
+        });
+      }],
+      blocks: ['mergeEvents', (results, callback) => {
+        async.map(nodes, (ledgerNode, callback) => {
+          ledgerNode.storage.blocks.getLatestSummary(callback);
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          const blockHeights = result.map(s => s.eventBlock.block.blockHeight);
+          // all nodes should have the same latest blockHeight
+          callback(null, blockHeights.every(b => b === blockHeights[0]));
         });
       }]
     }, callback);
-  }, results => !(results.operationEvents && results.mergeEvents), callback);
+  }, results => !(results.operationEvents && results.mergeEvents
+    && results.blocks), callback);
 }
 
 function _workerCycle({consensusApi, nodes, series = false}, callback) {
