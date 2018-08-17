@@ -161,7 +161,7 @@ api.addEventMultiNode = (
 };
 
 // this helper is for test that execute the consensus worker
-api.addOperation = ({count = 1, opTemplate, ledgerNode}, callback) => {
+api.addOperation = ({count = 1, ledgerNode, opTemplate}, callback) => {
   const operations = {};
   async.timesSeries(count, (i, callback) => {
     const operation = bedrock.util.clone(opTemplate);
@@ -176,6 +176,11 @@ api.addOperation = ({count = 1, opTemplate, ledgerNode}, callback) => {
         callback();
       });
   }, err => callback(err, operations));
+};
+
+api.addOperations = ({count, nodes, opTemplate}, callback) => {
+  async.mapSeries(nodes, (ledgerNode, callback) => api.addOperation(
+    {count, ledgerNode, opTemplate}, callback), callback);
 };
 
 // add a merge event and regular event as if it came in through gossip
@@ -441,6 +446,88 @@ api.prepareDatabase = function(mockData, callback) {
       insertTestData(mockData, callback);
     }
   ], callback);
+};
+
+api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
+  const func = series ? async.eachSeries : async.each;
+  func(nodes, (ledgerNode, callback) =>
+    consensusApi._worker._run(ledgerNode, callback), callback);
+};
+
+/*
+ * execute the worker cycle until there are no non-consensus
+ * events of type `WebLedgerOperationEvent` or `WebLedgerConfigurationEvent`
+ * and the blockHeight on all nodes are the same. It is expected that
+ * there will be various numbers of non-consensus events of type
+ * `ContinuityMergeEvent` on a settled network.
+ */
+api.settleNetwork = ({consensusApi, nodes, series = false}, callback) => {
+  async.doWhilst(callback => {
+    async.auto({
+      workCycle: callback => api.runWorkerCycle(
+        {consensusApi, nodes, series}, callback),
+      operationEvents: ['workCycle', (results, callback) => {
+        async.map(nodes, (ledgerNode, callback) => {
+          ledgerNode.storage.events.getCount({
+            consensus: false, type: 'WebLedgerOperationEvent'
+          }, callback);
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          // all nodes should have zero non-consensus regular events
+          callback(null, result.every(c => c === 0));
+        });
+      }],
+      configEvents: ['operationEvents', (results, callback) => {
+        async.map(nodes, (ledgerNode, callback) => {
+          ledgerNode.storage.events.getCount({
+            consensus: false, type: 'WebLedgerConfigurationEvent'
+          }, callback);
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          // all nodes should have zero non-consensus configuration events
+          callback(null, result.every(c => c === 0));
+        });
+      }],
+      // there are normal cases where the number of merge events on each node
+      // will not be equal. If there are no outstanding operation/configuration
+      // events, some merge events from other nodes may be left unmerged
+      // which results in those merge events not being gossiped across the
+      // entire network since they do not lend to acheiving consensus.
+      /*
+      mergeEvents: ['configEvents', (results, callback) => {
+        async.map(nodes, (ledgerNode, callback) => {
+          ledgerNode.storage.events.getCount({
+            consensus: false, type: 'ContinuityMergeEvent'
+          }, callback);
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          // all nodes should have an equal number of non-consensus merge events
+          callback(null, result.every(c => c === result[0]));
+        });
+      }],
+      */
+      blocks: ['configEvents', (results, callback) => {
+        async.map(nodes, (ledgerNode, callback) => {
+          ledgerNode.storage.blocks.getLatestSummary(callback);
+        }, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          const blockHeights = result.map(s => s.eventBlock.block.blockHeight);
+          // all nodes should have the same latest blockHeight
+          callback(null, blockHeights.every(b => b === blockHeights[0]));
+        });
+      }]
+    }, callback);
+  }, results => {
+    return !(results.operationEvents && results.configEvents && results.blocks);
+  }, callback);
 };
 
 api.snapshotEvents = ({ledgerNode}, callback) => {
