@@ -3,31 +3,32 @@
  */
 'use strict';
 
+const _ = require('lodash');
 const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
-const uuid = require('uuid/v4');
-
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
-describe.skip('Multinode', () => {
+// the total number of nodes on the ledger may be adjusted here
+const nodeCount = 10;
+
+describe('Multinode', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
 
-  describe('Consensus with 10 Nodes', () => {
-    const nodes = 10;
+  describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     let genesisLedgerNode;
     const mockIdentity = mockData.identities.regularUser;
-    const ledgerConfiguration = mockData.ledgerConfiguration;
+    const {ledgerConfiguration} = mockData;
     before(done => {
       async.auto({
         clean: callback =>
@@ -72,7 +73,7 @@ describe.skip('Multinode', () => {
     before(function(done) {
       this.timeout(120000);
       peers.push(genesisLedgerNode);
-      async.times(nodes - 1, (i, callback) => {
+      async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
@@ -95,11 +96,14 @@ describe.skip('Multinode', () => {
             should.exist(eventBlock.block);
             eventBlock.block.blockHeight.should.equal(0);
             eventBlock.block.event.should.be.an('array');
-            eventBlock.block.event.should.have.length(1);
+            // genesis config and genesis merge events
+            eventBlock.block.event.should.have.length(2);
             const event = eventBlock.block.event[0];
             // TODO: signature is dynamic... needs a better check
             delete event.signature;
-            event.should.deep.equal(configEvent);
+            event.type.should.equal('WebLedgerConfigurationEvent');
+            const {ledgerConfiguration} = mockData;
+            event.ledgerConfiguration.should.eql(ledgerConfiguration);
             should.exist(eventBlock.meta);
             should.exist(eventBlock.block.consensusProof);
             const consensusProof = eventBlock.block.consensusProof;
@@ -114,57 +118,24 @@ describe.skip('Multinode', () => {
           blockHashes.every(h => h === blockHashes[0]).should.be.true;
           callback();
         }]
-      }, done));
+      }, err => {
+        assertNoError(err);
+        done();
+      }));
     });
 
     describe('Block 1', () => {
-      let recommendedElectorsBlock1;
-      before(done => {
-        async.map(peers, (ledgerNode, callback) => {
-          consensusApi._voters.get(ledgerNode.id, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            callback(null, {id: result.id});
-          });
-        }, (err, result) => {
-          if(err) {
-            return done(err);
-          }
-          recommendedElectorsBlock1 = result;
-          done();
-        });
-      });
-
-      it('should add an event and achieve consensus', function(done) {
-        this.timeout(120000);
-        const testEvent = bedrock.util.clone(mockData.events.alpha);
-        testEvent.operation[0].record.id =
-          'https://example.com/events/' + uuid();
-        // instruct consenses on which electors to use for Block 2
-        // these recommended electors will be included in Block 1
-        // consensusApi._election._recommendElectors =
-        //   (ledgerNode, voter, electors, manifest, callback) => {
-        //     callback(null, recommendedElectorsBlock1);
-        //   };
-
-        // FIXME: this method probably won't work with new algo
-        // FIXME: if overrides like this are implemented it is essential that
-        // the override get restored in `after`
-
-        // consensusApi._election.getBlockElectors =
-        //   (ledgerNode, blockHeight, callback) =>
-        //     callback(null, [
-        //       recommendedElectorsBlock1[0],
-        //       // recommendedElectorsBlock1[1]
-        //     ]);
+      // add a single op to genesis node, genesis node will be sole elector
+      it('should add an operation and achieve consensus', function(done) {
+        this.timeout(30000);
+        const opTemplate = mockData.operations.alpha;
         async.auto({
-          addEvent: callback => genesisLedgerNode.consensus._events.add(
-            testEvent, genesisLedgerNode, callback),
-          runWorkers: ['addEvent', (results, callback) => async.each(
-            peers, (ledgerNode, callback) =>
-              consensusApi._worker._run(ledgerNode, callback), callback)],
-          getLatest: ['runWorkers', (results, callback) =>
+          addOperation: callback => helpers.addOperation(
+            {ledgerNode: genesisLedgerNode, opTemplate}, callback),
+          settleNetwork: ['addOperation', (results, callback) =>
+            helpers.settleNetwork(
+              {consensusApi, nodes: peers, series: false}, callback)],
+          getLatest: ['settleNetwork', (results, callback) =>
             async.map(peers, (ledgerNode, callback) =>
               ledgerNode.storage.blocks.getLatest((err, result) => {
                 assertNoError(err);
@@ -174,257 +145,143 @@ describe.skip('Multinode', () => {
                 eventBlock.block.event.should.be.an('array');
                 // a regular event and a merge event
                 eventBlock.block.event.should.have.length(2);
-                // console.log('TWOEVENTS', eventBlock.block.event);
-                // const event = eventBlock.block.event[0];
-                // event.operation.should.be.an('array');
-                // event.operation.should.have.length(1);
-                // // TODO: signature is dynamic... needs a better check
-                // delete event.signature;
-                // event.should.deep.equal(testEvent);
-                // should.exist(eventBlock.meta);
                 callback(null, eventBlock.meta.blockHash);
               }), callback)],
           testHash: ['getLatest', (results, callback) => {
             const blockHashes = results.getLatest;
+            // the blockHash on every node should be the same
             blockHashes.every(h => h === blockHashes[0]).should.be.true;
             callback();
           }]
         }, done);
       });
     }); // end block 1
-    describe('Block 2', () => {
-      it('should add an event and achieve consensus', function(done) {
-        this.timeout(120000);
-        const testEvent = bedrock.util.clone(mockData.events.alpha);
-        testEvent.operation[0].record.id =
-          'https://example.com/events/' + uuid();
+    describe('Operations', () => {
+      // add an operation on all peers, settle and ensure that all records are
+      // available via the records API
+      it('add an operation on all nodes and achieve consensus', function(done) {
+        this.timeout(210000);
+        const opTemplate = mockData.operations.alpha;
         async.auto({
-          addEvent: callback => genesisLedgerNode.consensus._events.add(
-            testEvent, genesisLedgerNode, callback),
-          runWorkers: ['addEvent', (results, callback) => async.each(
-            peers, (ledgerNode, callback) =>
-              consensusApi._worker._run(ledgerNode, callback), callback)],
-          getLatest: ['runWorkers', (results, callback) =>
-            async.map(peers, (ledgerNode, callback) =>
-              ledgerNode.storage.blocks.getLatest((err, result) => {
+          addOperation: callback => helpers.addOperations(
+            {nodes: peers, opTemplate}, callback),
+          settleNetwork: ['addOperation', (results, callback) =>
+            helpers.settleNetwork(
+              {consensusApi, nodes: peers, series: false}, callback)],
+          test: ['settleNetwork', (results, callback) => {
+            const recordIds = _extractRecordIds(results.addOperation);
+            async.eachSeries(peers, (ledgerNode, callback) =>
+              async.every(recordIds, (recordId, callback) =>
+                ledgerNode.records.get({recordId}, (err, result) => {
+                  result.should.be.an('object');
+                  if(err) {
+                    if(err.name === 'NotFoundError') {
+                      return callback(null, false);
+                    }
+                    return callback(err);
+                  }
+                  callback(null, true);
+                }),
+              (err, result) => {
                 assertNoError(err);
-                const eventBlock = result.eventBlock;
-                should.exist(eventBlock.block);
-                eventBlock.block.blockHeight.should.equal(2);
-                eventBlock.block.event.should.be.an('array');
-                eventBlock.block.event.should.have.length(2);
-                eventBlock.block.event
-                  .filter(e => e.type === 'WebLedgerOperationEvent')[0]
-                  .should.deep.equal(testEvent);
-                // const event = eventBlock.block.event[0];
-                // event.operation.should.be.an('array');
-                // event.operation.should.have.length(1);
-                // // TODO: signature is dynamic... needs a better check
-                // delete event.signature;
-                // event.should.deep.equal(testEvent);
-                // should.exist(eventBlock.meta);
-                callback(null, eventBlock.meta.blockHash);
-              }), callback)],
-          testHash: ['getLatest', (results, callback) => {
-            const blockHashes = results.getLatest;
-            blockHashes.every(h => h === blockHashes[0]).should.be.true;
-            callback();
-          }]
-        }, done);
-      });
-    });
-    describe.skip('Block 3', () => {
-      it('should achieve consensus with only 7 nodes', function(done) {
-        this.timeout(120000);
-        const testEvent = bedrock.util.clone(mockData.events.alpha);
-        testEvent.operation[0].record.id =
-          'https://example.com/events/' + uuid();
-        const twoThirdsMajority = peers.slice(
-          0, _twoThirdsMajority(peers.length));
-        twoThirdsMajority.length.should.equal(_twoThirdsMajority(peers.length));
-        async.auto({
-          addEvent: callback => genesisLedgerNode.consensus._events.add(
-            testEvent, genesisLedgerNode, callback),
-          runWorkers: ['addEvent', (results, callback) => async.each(
-            twoThirdsMajority, (ledgerNode, callback) =>
-              consensusApi._worker._run(ledgerNode, callback), callback)],
-          getLatest: ['runWorkers', (results, callback) =>
-            async.map(twoThirdsMajority, (ledgerNode, callback) =>
-              ledgerNode.storage.blocks.getLatest((err, result) => {
-                assertNoError(err);
-                const eventBlock = result.eventBlock;
-                should.exist(eventBlock.block);
-                eventBlock.block.blockHeight.should.equal(3);
-                eventBlock.block.event.should.be.an('array');
-                eventBlock.block.event.should.have.length(1);
-                const event = eventBlock.block.event[0];
-                event.operation.should.be.an('array');
-                event.operation.should.have.length(1);
-                // TODO: signature is dynamic... needs a better check
-                delete event.proof;
-                delete event.signature;
-                event.should.deep.equal(testEvent);
-                should.exist(eventBlock.meta);
-                callback(null, eventBlock.meta.blockHash);
-              }), callback)],
-          testHash: ['getLatest', (results, callback) => {
-            const blockHashes = results.getLatest;
-            blockHashes.every(h => h === blockHashes[0]).should.be.true;
-            callback();
-          }]
-        }, done);
-      });
-    });
-    describe.skip('Block 4', () => {
-      it('should achieve consensus with 10 nodes again', function(done) {
-        this.timeout(120000);
-        const testEvent = bedrock.util.clone(mockData.events.alpha);
-        testEvent.operation[0].record.id =
-          'https://example.com/events/' + uuid();
-        const trailingPeers = peers.slice(
-          _twoThirdsMajority(peers.length));
-        trailingPeers.length.should.equal(
-          peers.length - _twoThirdsMajority(peers.length));
-        async.auto({
-          addEvent: callback => genesisLedgerNode.consensus._events.add(
-            testEvent, genesisLedgerNode, callback),
-          syncTrailingPeers: callback => async.each(
-            trailingPeers, (ledgerNode, callback) =>
-              consensusApi._worker._run(ledgerNode, callback), callback),
-          runWorkers: ['addEvent', 'syncTrailingPeers', (results, callback) =>
-            async.each(peers, (ledgerNode, callback) =>
-              consensusApi._worker._run(ledgerNode, callback), callback)],
-          getLatest: ['runWorkers', (results, callback) =>
-            async.map(peers, (ledgerNode, callback) =>
-              ledgerNode.storage.blocks.getLatest((err, result) => {
-                assertNoError(err);
-                const eventBlock = result.eventBlock;
-                should.exist(eventBlock.block);
-                eventBlock.block.blockHeight.should.equal(4);
-                eventBlock.block.event.should.be.an('array');
-                eventBlock.block.event.should.have.length(1);
-                const event = eventBlock.block.event[0];
-                event.operation.should.be.an('array');
-                event.operation.should.have.length(1);
-                // TODO: signature is dynamic... needs a better check
-                delete event.proof;
-                delete event.signature;
-                event.should.deep.equal(testEvent);
-                should.exist(eventBlock.meta);
-                callback(null, eventBlock.meta.blockHash);
-              }), callback)],
-          testHash: ['getLatest', (results, callback) => {
-            const blockHashes = results.getLatest;
-            blockHashes.every(h => h === blockHashes[0]).should.be.true;
-            callback();
-          }]
-        }, done);
-      });
-    });
-    describe.skip('Block 5 - staggered worker kick-off', () => {
-      it('achieves consensus when an event is added at each node',
-        function(done) {
-          this.timeout(120000);
-          const testEvents = [];
-          for(let i = 0; i < peers.length; ++i) {
-            const testEvent = bedrock.util.clone(mockData.events.alpha);
-            testEvent.operation[0].record.id =
-              'https://example.com/events/' + uuid();
-            testEvents.push(testEvent);
-          }
-          let delay = 0;
-          async.auto({
-            addEvents: callback =>
-              async.eachOf(peers, (ledgerNode, index, callback) =>
-                ledgerNode.consensus._events.add(
-                  testEvents[index], ledgerNode, callback), callback),
-            runWorkers: ['addEvents', (results, callback) =>
-              async.each(peers, (ledgerNode, callback) => {
-                setTimeout(() => consensusApi._worker._run(
-                  ledgerNode, callback), delay += 250);
-              }, callback)],
-            getLatest: ['runWorkers', (results, callback) =>
-              async.map(peers, (ledgerNode, callback) =>
-                ledgerNode.storage.blocks.getLatest((err, result) => {
-                  assertNoError(err);
-                  const eventBlock = result.eventBlock;
-                  should.exist(eventBlock.block);
-                  eventBlock.block.blockHeight.should.equal(5);
-                  eventBlock.block.event.should.be.an('array');
-                  eventBlock.block.event.should.have.length.at.least(1);
-                  callback(null, eventBlock.meta.blockHash);
-                }), callback)],
-            testHash: ['getLatest', (results, callback) => {
-              const blockHashes = results.getLatest;
-              blockHashes.every(h => h === blockHashes[0]).should.be.true;
-              callback();
-            }]
-          }, done);
+                result.should.be.true;
+                callback();
+              }), callback);
+          }],
+        }, err => {
+          assertNoError(err);
+          done();
         });
-    });
-    describe.skip('Catch-up', () => {
-      let catchUpNode;
-      before(done => brLedgerNode.add(null, {
-        genesisBlock: genesisRecord.block,
-        owner: mockIdentity.identity.id
-      }, (err, ledgerNode) => {
-        if(err) {
-          return done(err);
-        }
-        catchUpNode = ledgerNode;
-        done();
-      }));
-
+      });
+    }); // end Operations
+    describe('Ledger Configuration', () => {
+      // add a config event on the genesis node, settle the network, ensure
+      // that new config is in effect on all nodes
+      it('should add a config event and achieve consensus', function(done) {
+        this.timeout(210000);
+        const ledgerConfiguration = bedrock.util.clone(
+          mockData.ledgerConfiguration);
+        // FIXME: remove
+        ledgerConfiguration.ledger =
+          'urn:uuid:ca539f07-7013-490a-b730-cd81c5745edb';
+        ledgerConfiguration.operationValidator = [{
+          type: 'SignatureValidator2017',
+          validatorFilter: [{
+            type: 'ValidatorFilterByType',
+            validatorFilterByType: ['CreateWebLedgerRecord']
+          }],
+          approvedSigner: ['urn:uuid:99bfc16e-fc92-4e65-8ecf-343f413766cc'],
+          minimumSignaturesRequired: 1
+        }];
+        async.auto({
+          changeConfig: callback => genesisLedgerNode.config.change(
+            {ledgerConfiguration}, callback),
+          settleNetwork: ['changeConfig', (results, callback) =>
+            helpers.settleNetwork(
+              {consensusApi, nodes: peers, series: false}, callback)],
+          test: ['settleNetwork', (results, callback) => {
+            async.map(peers, (ledgerNode, callback) =>
+              ledgerNode.config.get(callback),
+            (err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              for(const c of result) {
+                c.should.eql(ledgerConfiguration);
+              }
+              callback();
+            });
+          }],
+        }, err => {
+          assertNoError(err);
+          done();
+        });
+      });
+    }); // end Ledger Configuration
+    describe('Catch-up', () => {
       it('a new node is able to catch up', function(done) {
         this.timeout(120000);
-        async.series([
-          callback => consensusApi._worker._run(catchUpNode, callback),
-          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
-            assertNoError(err);
-            result.eventBlock.block.blockHeight.should.equal(1);
-            result.eventBlock.block.event.should.be.an('array');
-            result.eventBlock.block.event.should.have.length(1);
+        async.auto({
+          addNode: callback => brLedgerNode.add(null, {
+            genesisBlock: genesisRecord.block,
+            owner: mockIdentity.identity.id
+          }, (err, ledgerNode) => {
+            if(err) {
+              return callback(err);
+            }
+            peers.push(ledgerNode);
             callback();
           }),
-          callback => consensusApi._worker._run(catchUpNode, callback),
-          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
-            assertNoError(err);
-            result.eventBlock.block.blockHeight.should.equal(2);
-            result.eventBlock.block.event.should.be.an('array');
-            result.eventBlock.block.event.should.have.length(1);
-            callback();
-          }),
-          callback => consensusApi._worker._run(catchUpNode, callback),
-          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
-            assertNoError(err);
-            result.eventBlock.block.blockHeight.should.equal(3);
-            result.eventBlock.block.event.should.be.an('array');
-            result.eventBlock.block.event.should.have.length(1);
-            callback();
-          }),
-          callback => consensusApi._worker._run(catchUpNode, callback),
-          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
-            assertNoError(err);
-            result.eventBlock.block.blockHeight.should.equal(4);
-            result.eventBlock.block.event.should.be.an('array');
-            result.eventBlock.block.event.should.have.length(1);
-            callback();
-          }),
-          callback => consensusApi._worker._run(catchUpNode, callback),
-          callback => catchUpNode.storage.blocks.getLatest((err, result) => {
-            assertNoError(err);
-            result.eventBlock.block.blockHeight.should.equal(5);
-            result.eventBlock.block.event.should.be.an('array');
-            result.eventBlock.block.event.should.have.length.at.least(1);
-            callback();
-          }),
-        ], done);
+          settleNetwork: ['addNode', (results, callback) =>
+            helpers.settleNetwork(
+              {consensusApi, nodes: peers, series: false}, callback)],
+          test: ['settleNetwork', (results, callback) => {
+            async.map(peers, (ledgerNode, callback) =>
+              ledgerNode.config.get(callback),
+            (err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              for(const c of result) {
+                c.should.eql(result[0]);
+              }
+              callback();
+            });
+          }],
+        }, err => {
+          assertNoError(err);
+          done();
+        });
       });
     });
   });
 });
 
-function _twoThirdsMajority(count) {
-  // special case when electors < 3 -- every elector must agree.
-  return (count < 3) ? count : Math.floor(count / 3) * 2 + 1;
+function _extractRecordIds(operations) {
+  return _.flatten(operations.map(o => _.values(o))).map(o => o.record.id);
 }
+
+// function _twoThirdsMajority(count) {
+//   // special case when electors < 3 -- every elector must agree.
+//   return (count < 3) ? count : Math.floor(count / 3) * 2 + 1;
+// }
