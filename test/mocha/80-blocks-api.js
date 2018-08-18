@@ -196,7 +196,7 @@ describe('blocks API', () => {
                 eventHash
               };
               const eventRecord = {
-                eventHash: database.hash(eventHash), event, meta
+                event, meta
               };
               ledgerNode.storage.events.collection.insert(
                 eventRecord, callback);
