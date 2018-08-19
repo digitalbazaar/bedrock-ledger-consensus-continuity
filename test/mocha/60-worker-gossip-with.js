@@ -128,7 +128,7 @@ describe('Worker - _gossipWith', () => {
     gossip wih ledgerNode from nodes.beta. There is a regular event and a
     merge event on ledgerNode to be gossiped.
   */
-  it.only('properly gossips one regular event and one merge event', done => {
+  it('properly gossips one regular event and one merge event', done => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
