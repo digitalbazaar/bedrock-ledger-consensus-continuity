@@ -135,11 +135,9 @@ api.addEventMultiNode = (
     mergeHash: [],
     regularHash: []
   };
-  async.eachOf(nodes, (ledgerNode, i, callback) => {
-    const creatorId = ledgerNode;
+  async.eachOfSeries(nodes, (ledgerNode, i, callback) => {
     api.addEventAndMerge({
-      consensusApi, creatorId, eventTemplate, ledgerNode,
-      opTemplate
+      consensusApi, eventTemplate, ledgerNode, opTemplate
     }, (err, result) => {
       if(err) {
         return callback(err);
