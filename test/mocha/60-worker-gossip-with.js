@@ -125,7 +125,7 @@ describe('Worker - _gossipWith', () => {
     }, done);
   });
   /*
-    gossip wih ledgerNode from nodes.beta. There is a regular event and a
+    gossip with ledgerNode from nodes.beta. There is a regular event and a
     merge event on ledgerNode to be gossiped.
   */
   it('properly gossips one regular event and one merge event', done => {

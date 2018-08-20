@@ -124,17 +124,14 @@ describe('Election API _getAncestors', () => {
         }, callback)]
     }, done);
   });
-  it('gets no events', done => {
+  it('gets no events', async () => {
     // the genesisMerge already has consensus
     const getAncestors = consensusApi._worker._election._getAncestors;
     const hashes = {mergeEventHashes: [], parentHashes: [genesisMerge]};
-    getAncestors({ledgerNode: nodes.alpha, hashes}, (err, result) => {
-      assertNoError(err);
-      should.exist(result);
-      result.should.be.an('array');
-      result.should.have.length(0);
-      done();
-    });
+    const result = await getAncestors({ledgerNode: nodes.alpha, hashes});
+    should.exist(result);
+    result.should.be.an('array');
+    result.should.have.length(0);
   });
   it('gets two events', done => {
     const getAncestors = consensusApi._worker._election._getAncestors;
@@ -144,18 +141,19 @@ describe('Election API _getAncestors', () => {
     async.auto({
       event1: callback => helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
-      test: ['event1', (results, callback) => {
+      test: ['event1', async results => {
         const hashes = {
           mergeEventHashes: [results.event1.mergeHash],
           parentHashes: results.event1.merge.event.parentHash
         };
-        getAncestors({hashes, ledgerNode}, (err, result) => {
-          assertNoError(err);
+        try {
+          const result = await getAncestors({hashes, ledgerNode});
           should.exist(result);
           result.should.be.an('array');
           result.should.have.length(2);
-          callback();
-        });
+        } catch(e) {
+          assertNoError(e);
+        }
       }]
     }, done);
   });
@@ -169,7 +167,7 @@ describe('Election API _getAncestors', () => {
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
       event2: ['event1', (results, callback) => helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback)],
-      test: ['event2', (results, callback) => {
+      test: ['event2', async results => {
         const hashes = {
           mergeEventHashes: [results.event2.mergeHash],
           parentHashes: [
@@ -177,13 +175,14 @@ describe('Election API _getAncestors', () => {
             ...results.event2.merge.event.parentHash
           ]
         };
-        getAncestors({hashes, ledgerNode}, (err, result) => {
-          assertNoError(err);
+        try {
+          const result = await getAncestors({hashes, ledgerNode});
           should.exist(result);
           result.should.be.an('array');
           result.should.have.length(4);
-          callback();
-        });
+        } catch(e) {
+          assertNoError(e);
+        }
       }]
     }, done);
   });
@@ -199,7 +198,7 @@ describe('Election API _getAncestors', () => {
         consensusApi, from: 'alpha', nodes, to: 'beta'}, callback)],
       cp2: ['cp1', (results, callback) => helpers.copyAndMerge({
         consensusApi, from: 'beta', nodes, to: 'alpha'}, callback)],
-      test: ['cp2', (results, callback) => {
+      test: ['cp2', async results => {
         const hashes = {
           mergeEventHashes: [
             results.cp1.meta.eventHash,
@@ -210,13 +209,14 @@ describe('Election API _getAncestors', () => {
             ...results.cp2.event.parentHash,
           ])
         };
-        getAncestors({hashes, ledgerNode}, (err, result) => {
-          assertNoError(err);
+        try {
+          const result = await getAncestors({hashes, ledgerNode});
           should.exist(result);
           result.should.be.an('array');
           result.should.have.length(4);
-          callback();
-        });
+        } catch(e) {
+          assertNoError(e);
+        }
       }]
     }, done);
   });
@@ -240,20 +240,23 @@ describe('Election API _getAncestors', () => {
         from: nodes.beta,
         to: nodes.alpha
       }, callback)],
-      test: ['cp2', (results, callback) => getAncestors({
-        ledgerNode,
-        eventHash: [results.cp1.meta.eventHash, results.cp2.meta.eventHash]
-      }, (err, result) => {
-        assertNoError(err);
-        should.exist(result);
-        result.should.be.an('array');
-        result.should.have.length(4);
-        result.forEach(e => {
-          e.event.should.be.an('array');
-          e.event.should.have.length(1);
-        });
-        callback();
-      })]
+      test: ['cp2', async results => {
+        try {
+          const result = await getAncestors({
+            ledgerNode,
+            eventHash: [results.cp1.meta.eventHash, results.cp2.meta.eventHash]
+          });
+          should.exist(result);
+          result.should.be.an('array');
+          result.should.have.length(4);
+          result.forEach(e => {
+            e.event.should.be.an('array');
+            e.event.should.have.length(1);
+          });
+        } catch(e) {
+          assertNoError(e);
+        }
+      }]
     }, done);
   });
 });

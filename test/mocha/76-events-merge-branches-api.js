@@ -177,7 +177,7 @@ describe('events.mergeBranches API', () => {
       mergeBranches2: ['mergeBranches1', (results, callback) => merge(
         {creatorId, ledgerNode}, (err, result) => {
           assertNoError();
-          should.equal(result, undefined);
+          should.equal(result, null);
           callback();
         })]
     }, done);

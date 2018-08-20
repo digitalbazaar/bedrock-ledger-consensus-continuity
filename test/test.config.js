@@ -1,7 +1,7 @@
 /*!
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
-const config = require('bedrock').config;
+const {config} = require('bedrock');
 const path = require('path');
 
 config.mocha.tests.push(path.join(__dirname, 'mocha'));
@@ -18,6 +18,3 @@ config['ledger-consensus-continuity'].worker.election.gossipInterval = 0;
 
 // disable caching in test
 config['ledger-consensus-continuity'].gossip.cache.enabled = false;
-
-// lower compression threshold so that compression is used in tests
-config['ledger-consensus-continuity'].gossip.compression.threshold = 5;

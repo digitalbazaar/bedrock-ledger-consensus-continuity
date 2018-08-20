@@ -172,7 +172,7 @@ api.addOperation = ({count = 1, opTemplate, ledgerNode}, callback) => {
         if(err) {
           return callback(err);
         }
-        operations[result.operationHash] = operation;
+        operations[result.meta.operationHash] = operation;
         callback();
       });
   }, err => callback(err, operations));
