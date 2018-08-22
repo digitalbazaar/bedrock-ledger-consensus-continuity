@@ -40,7 +40,7 @@ describe.skip('Consensus Client - sendEvent API', () => {
           callback();
         })],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+        consensusApi._voters.get(ledgerNode.id, (err, result) => {
           peerId = result.id;
           callback();
         });
@@ -51,7 +51,7 @@ describe.skip('Consensus Client - sendEvent API', () => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     const testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
-    const getHead = ledgerNode.consensus._worker._events._getLocalBranchHead;
+    const getHead = ledgerNode.consensus._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead({
         ledgerNodeId: ledgerNode.id,
@@ -65,7 +65,7 @@ describe.skip('Consensus Client - sendEvent API', () => {
       hash: ['head', (results, callback) =>
         helpers.testHasher(testEvent, callback)],
       send: ['hash', (results, callback) =>
-        consensusApi._worker._client.sendEvent(
+        consensusApi._client.sendEvent(
           {eventHash: results.hash, event: testEvent, peerId},
           (err, result) => {
             assertNoError(err);
@@ -82,7 +82,7 @@ describe.skip('Consensus Client - sendEvent API', () => {
     async.auto({
       hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
       send: ['hash', (results, callback) =>
-        consensusApi._worker._client.sendEvent({
+        consensusApi._client.sendEvent({
           eventHash: results.hash,
           event: testEvent,
           peerId: 'https://' + uuid() + '.com'
@@ -101,7 +101,7 @@ describe.skip('Consensus Client - sendEvent API', () => {
     async.auto({
       hash: callback => brLedgerNode.consensus._hasher(testEvent, callback),
       send: ['hash', (results, callback) =>
-        consensusApi._worker._client.sendEvent({
+        consensusApi._client.sendEvent({
           eventHash: results.hash,
           event: testEvent,
           peerId

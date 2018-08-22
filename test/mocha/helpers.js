@@ -105,7 +105,7 @@ api.addEventAndMerge = ({
       '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
   }
   const events = {};
-  const merge = consensusApi._worker._events.merge;
+  const merge = consensusApi._events.merge;
   async.auto({
     addEvent: callback => api.addEvent(
       {count, eventTemplate, ledgerNode, opTemplate}, (err, result) => {
@@ -196,7 +196,7 @@ api.addRemoteEvents = ({
     // use a valid keypair from mocks
     const keyPair = mockData.groups.authorized;
     // NOTE: using the local branch head for treeHash of the remote merge event
-    const getHead = consensusApi._worker._events._getLocalBranchHead;
+    const getHead = consensusApi._events._getLocalBranchHead;
     async.auto({
       head: callback => getHead({
         // unknown creator will yield genesis merge event
@@ -287,7 +287,7 @@ api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
 api.copyAndMerge = (
   {consensusApi, from, nodes, to, useSnapshot = false}, callback) => {
   const copyFrom = [].concat(from);
-  const merge = consensusApi._worker._events.merge;
+  const merge = consensusApi._events.merge;
   async.auto({
     copy: callback => async.eachSeries(copyFrom, (f, callback) =>
       api.copyEvents(

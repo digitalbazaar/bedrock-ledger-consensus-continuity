@@ -102,7 +102,7 @@ describe.skip('Multinode Basics', () => {
 
     // populate peers and init heads
     before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
-      consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+      consensusApi._voters.get(ledgerNode.id, (err, result) => {
         peers[i] = result.id;
         heads[i] = [];
         callback();

@@ -49,7 +49,7 @@ describe('Election API findConsensus', () => {
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         const {id: ledgerNodeId} = nodes.alpha;
-        consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+        consensusApi._voters.get({ledgerNodeId}, (err, result) => {
           callback(null, result.id);
         });
       }],
@@ -100,7 +100,7 @@ describe('Election API findConsensus', () => {
           // attach eventWriter to the node
           ledgerNode.eventWriter = new EventWriter(
             {immediate: true, ledgerNode});
-          consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+          consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
             }
@@ -114,8 +114,8 @@ describe('Election API findConsensus', () => {
   });
   it('single node consensus', done => {
     // the genesisMerge already has consensus
-    const findConsensus = consensusApi._worker._election.findConsensus;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const findConsensus = consensusApi._election.findConsensus;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
     const electors = [{id: peers.alpha}];
@@ -144,8 +144,8 @@ describe('Election API findConsensus', () => {
     }, done);
   });
   it('properly does not reach consensus with four electors', done => {
-    const findConsensus = consensusApi._worker._election.findConsensus;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const findConsensus = consensusApi._election.findConsensus;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
     const electors = [
@@ -170,8 +170,8 @@ describe('Election API findConsensus', () => {
   });
   it('ledger history alpha', function(done) {
     this.timeout(120000);
-    const findConsensus = consensusApi._worker._election.findConsensus;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const findConsensus = consensusApi._election.findConsensus;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
     const electors = _.values(peers).map(p => ({id: p}));
     async.auto({
       build: callback => helpers.buildHistory(
@@ -226,8 +226,8 @@ describe('Election API findConsensus', () => {
   });
   it('ledger history beta', function(done) {
     this.timeout(120000);
-    const findConsensus = consensusApi._worker._election.findConsensus;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const findConsensus = consensusApi._election.findConsensus;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
     const electors = _.values(peers).map(p => ({id: p}));
     async.auto({
       build: callback => helpers.buildHistory(
@@ -277,8 +277,8 @@ describe('Election API findConsensus', () => {
   });
   it('ledger history gamma', function(done) {
     this.timeout(120000);
-    const findConsensus = consensusApi._worker._election.findConsensus;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const findConsensus = consensusApi._election.findConsensus;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
     const electors = _.values(peers).map(p => ({id: p}));
     async.auto({
       build: callback => helpers.buildHistory(
@@ -328,8 +328,8 @@ describe('Election API findConsensus', () => {
   });
   it('ledger history delta', function(done) {
     this.timeout(120000);
-    const findConsensus = consensusApi._worker._election.findConsensus;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const findConsensus = consensusApi._election.findConsensus;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
     const electors = _.values(peers).map(p => ({id: p}));
     async.auto({
       // add node epsilon for this test and remove it afterwards
@@ -348,7 +348,7 @@ describe('Election API findConsensus', () => {
           // attach eventWriter to the node
           ledgerNode.eventWriter = new EventWriter(
             {immediate: true, ledgerNode});
-          consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+          consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
             }
@@ -417,8 +417,8 @@ describe('Election API findConsensus', () => {
     }, done);
   });
   it('add regular event with no merge before findConsensus', done => {
-    const findConsensus = consensusApi._worker._election.findConsensus;
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+    const findConsensus = consensusApi._election.findConsensus;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
     const ledgerNode = nodes.alpha;
     const electors = _.values(peers).map(p => ({id: p}));
     const eventTemplate = mockData.events.alpha;

@@ -50,7 +50,7 @@ describe('Election API _getAncestors', () => {
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         const ledgerNode = nodes.alpha;
         const {id: ledgerNodeId} = ledgerNode;
-        consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+        consensusApi._voters.get({ledgerNodeId}, (err, result) => {
           ledgerNode.creatorId = result.id;
           callback(null, result.id);
         });
@@ -58,7 +58,7 @@ describe('Election API _getAncestors', () => {
       genesisMerge: ['creatorId', (results, callback) => {
         const ledgerNode = nodes.alpha;
         const {creatorId} = ledgerNode;
-        consensusApi._worker._events._getLocalBranchHead(
+        consensusApi._events._getLocalBranchHead(
           {creatorId, ledgerNode}, (err, result) => {
             if(err) {
               return callback(err);
@@ -113,7 +113,7 @@ describe('Election API _getAncestors', () => {
           // attach eventWriter to the node
           ledgerNode.eventWriter = new EventWriter(
             {immediate: true, ledgerNode});
-          consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+          consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
             }
@@ -126,7 +126,7 @@ describe('Election API _getAncestors', () => {
   });
   it('gets no events', async () => {
     // the genesisMerge already has consensus
-    const getAncestors = consensusApi._worker._election._getAncestors;
+    const getAncestors = consensusApi._election._getAncestors;
     const hashes = {mergeEventHashes: [], parentHashes: [genesisMerge]};
     const result = await getAncestors({ledgerNode: nodes.alpha, hashes});
     should.exist(result);
@@ -134,7 +134,7 @@ describe('Election API _getAncestors', () => {
     result.should.have.length(0);
   });
   it('gets two events', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
+    const getAncestors = consensusApi._election._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -158,7 +158,7 @@ describe('Election API _getAncestors', () => {
     }, done);
   });
   it('gets four events', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
+    const getAncestors = consensusApi._election._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -187,7 +187,7 @@ describe('Election API _getAncestors', () => {
     }, done);
   });
   it('gets 4 events involving 2 nodes', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
+    const getAncestors = consensusApi._election._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -224,7 +224,7 @@ describe('Election API _getAncestors', () => {
   // FIXME: this test likely needs to be removed, the returned data structure
   // no longer matches the assertions
   it.skip('gets 4 events without duplicates', done => {
-    const getAncestors = consensusApi._worker._election._getAncestors;
+    const getAncestors = consensusApi._election._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     async.auto({
