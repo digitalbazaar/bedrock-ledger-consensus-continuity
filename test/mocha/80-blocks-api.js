@@ -39,7 +39,7 @@ describe('blocks API', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          _cacheKey = consensusApi._cacheKey;
+          _cacheKey = consensusApi._cache.cacheKey;
           repairCache = consensusApi._blocks.repairCache;
           callback();
         }),
@@ -52,13 +52,13 @@ describe('blocks API', () => {
           callback(null, result);
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(
+        consensusApi._voters.get(
           {ledgerNodeId: nodes.alpha.id}, (err, result) => {
             callback(null, result.id);
           });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
-        consensusApi._worker._events._getLocalBranchHead({
+        consensusApi._events._getLocalBranchHead({
           creatorId: results.creatorId,
           ledgerNode: nodes.alpha,
         }, (err, result) => {
@@ -111,7 +111,7 @@ describe('blocks API', () => {
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
         async.eachOf(nodes, (n, i, callback) =>
-          consensusApi._worker._voters.get(
+          consensusApi._voters.get(
             {ledgerNodeId: n.id}, (err, result) => {
               if(err) {
                 return callback(err);

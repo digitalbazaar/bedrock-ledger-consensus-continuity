@@ -36,7 +36,7 @@ describe('events API', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          _cacheKey = consensusApi._cacheKey;
+          _cacheKey = consensusApi._cache.cacheKey;
           repairCache = consensusApi._events.repairCache;
           callback();
         }),
@@ -49,7 +49,7 @@ describe('events API', () => {
           callback(null, result);
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(
+        consensusApi._voters.get(
           {ledgerNodeId: nodes.alpha.id}, (err, result) => {
             callback(null, result.id);
           });
@@ -96,7 +96,7 @@ describe('events API', () => {
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
         async.eachOf(nodes, (n, i, callback) =>
-          consensusApi._worker._voters.get(
+          consensusApi._voters.get(
             {ledgerNodeId: n.id}, (err, result) => {
               if(err) {
                 return callback(err);

@@ -38,11 +38,9 @@ describe('Election API _findMergeEventProof', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          getRecentHistory = consensusApi._worker._events.getRecentHistory;
-          _getElectorBranches =
-            consensusApi._worker._election._getElectorBranches;
-          _findMergeEventProof =
-            consensusApi._worker._election._findMergeEventProof;
+          getRecentHistory = consensusApi._events.getRecentHistory;
+          _getElectorBranches = consensusApi._election._getElectorBranches;
+          _findMergeEventProof = consensusApi._election._findMergeEventProof;
           EventWriter = consensusApi._worker.EventWriter;
           callback();
         }),
@@ -55,13 +53,13 @@ describe('Election API _findMergeEventProof', () => {
           callback(null, result);
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(
+        consensusApi._voters.get(
           {ledgerNodeId: nodes.alpha.id}, (err, result) => {
             callback(null, result.id);
           });
       }],
       // genesisMerge: ['creatorId', (results, callback) => {
-      //   consensusApi._worker._events._getLocalBranchHead({
+      //   consensusApi._events._getLocalBranchHead({
       //     creatorId: results.creatorId,
       //     ledgerNode: nodes.alpha
       //   }, (err, result) => {
@@ -119,16 +117,15 @@ describe('Election API _findMergeEventProof', () => {
           // attach eventWriter to the node
           ledgerNode.eventWriter = new EventWriter(
             {immediate: true, ledgerNode});
-          consensusApi._worker._voters.get(
-            {ledgerNodeId}, (err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              peers[i] = result.id;
-              ledgerNode.creatorId = result.id;
-              helpers.peersReverse[result.id] = i;
-              callback();
-            });
+          consensusApi._voters.get({ledgerNodeId}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            peers[i] = result.id;
+            ledgerNode.creatorId = result.id;
+            helpers.peersReverse[result.id] = i;
+            callback();
+          });
         }, callback)]
     }, done);
   });
@@ -308,7 +305,7 @@ describe('Election API _findMergeEventProof', () => {
             callback();
           }),
         creator: ['add', (results, callback) =>
-          consensusApi._worker._voters.get(
+          consensusApi._voters.get(
             {ledgerNodeId: nodes.epsilon.id}, (err, result) => {
               if(err) {
                 return callback(err);
