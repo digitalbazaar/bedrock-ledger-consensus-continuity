@@ -25,7 +25,7 @@
     "bedrock-mongodb": "^5.0.0",
     "bedrock-passport": "^3.3.0",
     "bedrock-permission": "^2.4.3",
-    "bedrock-redis": "^3.2.0",
+    "bedrock-redis": "^3.4.0",
     "bedrock-rest": "^2.1.0",
     "bedrock-server": "^2.2.0",
     "bedrock-test": "^2.0.0",
