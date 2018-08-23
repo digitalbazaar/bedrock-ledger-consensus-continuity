@@ -29,7 +29,6 @@
     "multicodec": "^0.2.7",
     "p-limit": "^2.0.0",
     "p-queue": "^2.4.2",
-    "p-retry": "^2.0.0",
     "request": "^2.81.0",
     "request-promise-native": "^1.0.5",
     "uuid": "^3.1.0",
