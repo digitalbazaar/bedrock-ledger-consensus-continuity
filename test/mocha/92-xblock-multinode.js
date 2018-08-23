@@ -172,8 +172,8 @@ describe('X Block Test', () => {
                 .should.be.true;
               callback(null, result);
             }),
-          settle: ['nBlocks', (results, callback) => _settleNetwork(
-            {consensusApi}, callback)],
+          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
+            {consensusApi, nodes}, callback)],
           blockSummary: ['settle', (results, callback) =>
             _latestBlockSummary((err, result) => {
               if(err) {
@@ -258,7 +258,7 @@ function _nBlocks({consensusApi, targetBlockHeight}, callback) {
             recordIds[n].push(results.operations[n][opHash].record.id);
           }
         }
-        _workerCycle({consensusApi, nodes, series: false}, callback);
+        helpers.runWorkerCycle({consensusApi, nodes, series: false}, callback);
       }],
       report: ['workCycle', (results, callback) => async.forEachOfSeries(
         nodes, (ledgerNode, i, callback) => {
@@ -292,65 +292,4 @@ function _nBlocks({consensusApi, targetBlockHeight}, callback) {
     }
     callback(null, {recordIds, targetBlockHashMap});
   });
-}
-
-/*
- * execute the worker cycle until there are no non-consensus
- * events of type `WebLedgerOperationEvent` and all non-consensus events of type
- * `ContinuityMergeEvent` have propagated to all nodes. It is expected that
- * there will be non-consensus events of type `ContinuityMergeEvent` on a
- * settled network.
- */
-function _settleNetwork({consensusApi}, callback) {
-  async.doWhilst(callback => {
-    async.auto({
-      workCycle: callback => _workerCycle(
-        {consensusApi, nodes, series: false}, callback),
-      operationEvents: ['workCycle', (results, callback) => {
-        async.every(nodes, (ledgerNode, callback) => {
-          ledgerNode.storage.events.getCount({
-            consensus: false, type: 'WebLedgerOperationEvent'
-          }, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            // all nodes should have zero non-consensus regular events
-            callback(null, result === 0);
-          });
-        }, callback);
-      }],
-      mergeEvents: ['operationEvents', (results, callback) => {
-        async.map(nodes, (ledgerNode, callback) => {
-          ledgerNode.storage.events.getCount({
-            consensus: false, type: 'ContinuityMergeEvent'
-          }, callback);
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          // all nodes should have an equal number of non-consensus merge events
-          callback(null, result.every(c => c === result[0]));
-        });
-      }],
-      blocks: ['mergeEvents', (results, callback) => {
-        async.map(nodes, (ledgerNode, callback) => {
-          ledgerNode.storage.blocks.getLatestSummary(callback);
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          const blockHeights = result.map(s => s.eventBlock.block.blockHeight);
-          // all nodes should have the same latest blockHeight
-          callback(null, blockHeights.every(b => b === blockHeights[0]));
-        });
-      }]
-    }, callback);
-  }, results => !(results.operationEvents && results.mergeEvents
-    && results.blocks), callback);
-}
-
-function _workerCycle({consensusApi, nodes, series = false}, callback) {
-  const func = series ? async.eachSeries : async.each;
-  func(nodes, (ledgerNode, callback) =>
-    consensusApi._worker._run(ledgerNode, callback), callback);
 }
