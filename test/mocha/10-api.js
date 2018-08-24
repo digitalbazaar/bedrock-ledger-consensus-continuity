@@ -197,7 +197,7 @@ describe('Continuity2017', () => {
   // FIXME: this API chaanged and tests need to be updated accordingly
   describe('getRecentHistory API', () => {
     it('history includes one local event and one local merge event', done => {
-      const getRecentHistory = consensusApi._events.getRecentHistory;
+      const {getRecentHistory} = consensusApi._events;
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
