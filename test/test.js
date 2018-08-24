@@ -2,7 +2,6 @@
  * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 const bedrock = require('bedrock');
-const brDidClient = require('bedrock-did-client');
 require('bedrock-ledger-consensus-continuity');
 require('bedrock-ledger-storage-mongodb');
 
@@ -12,6 +11,7 @@ bedrock.events.on('bedrock.init', () => {
 
   const oldLoader = jsonld.documentLoader;
 
+  // load mock documents
   jsonld.documentLoader = function(url, callback) {
     if(Object.keys(mockData.ldDocuments).includes(url)) {
       return callback(null, {
@@ -22,9 +22,6 @@ bedrock.events.on('bedrock.init', () => {
     }
     oldLoader(url, callback);
   };
-  // override jsonld.documentLoader in brDidClient so this document loader
-  // can be used for did: and https: URLs
-  brDidClient.jsonld.documentLoader = jsonld.documentLoader;
 });
 
 require('bedrock-test');
