@@ -36,7 +36,6 @@
   },
   "peerDependencies": {
     "bedrock": "^1.8.0",
-    "bedrock-did-client": "^1.1.0",
     "bedrock-ledger-context": "^1.0.0",
     "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#multihash",
     "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#multihash",
