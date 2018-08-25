@@ -57,7 +57,7 @@ describe('Continuity2017', () => {
           });
       }],
       genesisMerge: ['creator', (results, callback) => {
-        consensusApi._worker._events._getLocalBranchHead({
+        consensusApi._events._getLocalBranchHead({
           ledgerNode,
           creatorId: results.creator.id
         }, (err, result) => {
@@ -197,7 +197,7 @@ describe('Continuity2017', () => {
   // FIXME: this API chaanged and tests need to be updated accordingly
   describe('getRecentHistory API', () => {
     it('history includes one local event and one local merge event', done => {
-      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const {getRecentHistory} = consensusApi._events;
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
@@ -232,7 +232,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it('history includes 4 local events and one local merge event', done => {
-      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const getRecentHistory = consensusApi._events.getRecentHistory;
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
@@ -268,9 +268,8 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('history includes 1 remote merge and one local merge event', done => {
-      const mergeBranches = consensusApi._worker._events.mergeBranches;
-      const getRecentHistory =
-        consensusApi._worker._events.getRecentHistory;
+      const mergeBranches = consensusApi._events.mergeBranches;
+      const getRecentHistory = consensusApi._events.getRecentHistory;
       async.auto({
         remoteEvent: callback => helpers.addRemoteEvents(
           {consensusApi, ledgerNode, mockData}, callback),
@@ -324,8 +323,8 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('contains two remote merge and one local merge event', done => {
-      const mergeBranches = consensusApi._worker._events.mergeBranches;
-      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const mergeBranches = consensusApi._events.mergeBranches;
+      const getRecentHistory = consensusApi._events.getRecentHistory;
       async.auto({
         // 2 remote merge events from the same creator chained together
         remoteEvent: callback => helpers.addRemoteEvents(
@@ -372,7 +371,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('contains two remote merge events before a local merge', done => {
-      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const getRecentHistory = consensusApi._events.getRecentHistory;
       async.auto({
         // 2 remote merge events from the same creator chained together
         remoteEvent: callback => helpers.addRemoteEvents(
@@ -404,7 +403,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('history includes one local event before local merge', done => {
-      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const getRecentHistory = consensusApi._events.getRecentHistory;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.operation[0].record.id = `https://example.com/event/${uuid()}`;
       async.auto({
@@ -428,7 +427,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('history includes 4 local events before a local merge', done => {
-      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const getRecentHistory = consensusApi._events.getRecentHistory;
       const eventTemplate = mockData.events.alpha;
       async.auto({
         addEvent: callback => helpers.addEvent(
@@ -455,7 +454,7 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('includes 4 LEs and 2 RMEs before local merge', done => {
-      const getRecentHistory = consensusApi._worker._events.getRecentHistory;
+      const getRecentHistory = consensusApi._events.getRecentHistory;
       const eventTemplate = mockData.events.alpha;
       async.auto({
         addEvent: callback => helpers.addEvent(

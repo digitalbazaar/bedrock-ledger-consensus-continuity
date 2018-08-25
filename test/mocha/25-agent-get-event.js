@@ -46,7 +46,7 @@ describe('Consensus Agent - Get Event API', () => {
           callback();
         })],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+        consensusApi._voters.get({ledgerNodeId}, (err, result) => {
           voterId = result.id;
           ledgerNode.creatorId = result.id;
           callback();

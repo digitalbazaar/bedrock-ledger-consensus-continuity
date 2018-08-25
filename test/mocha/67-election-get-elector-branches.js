@@ -44,12 +44,12 @@ describe.skip('Election API _getElectorBranches', () => {
           callback(null, result);
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(nodes.alpha.id, (err, result) => {
+        consensusApi._voters.get(nodes.alpha.id, (err, result) => {
           callback(null, result.id);
         });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
-        consensusApi._worker._events._getLocalBranchHead({
+        consensusApi._events._getLocalBranchHead({
           ledgerNodeId: nodes.alpha.id,
           eventsCollection: nodes.alpha.storage.events.collection,
           creatorId: results.creatorId
@@ -103,7 +103,7 @@ describe.skip('Election API _getElectorBranches', () => {
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
         async.eachOf(nodes, (n, i, callback) =>
-          consensusApi._worker._voters.get(n.id, (err, result) => {
+          consensusApi._voters.get(n.id, (err, result) => {
             if(err) {
               return callback(err);
             }
@@ -119,11 +119,9 @@ describe.skip('Election API _getElectorBranches', () => {
       console.log(
         `${nodeLabel}: ${nodes[nodeLabel].storage.events.collection.s.name}`);
     });
-    const getRecentHistory = consensusApi._worker._events.getRecentHistory;
-    const _getElectorBranches =
-      consensusApi._worker._election._getElectorBranches;
-    const _findMergeEventProof =
-      consensusApi._worker._election._findMergeEventProof;
+    const getRecentHistory = consensusApi._events.getRecentHistory;
+    const _getElectorBranches = consensusApi._election._getElectorBranches;
+    const _findMergeEventProof = consensusApi._election._findMergeEventProof;
     const eventTemplate = mockData.events.alpha;
     async.auto({
       // add a regular event and merge on every node

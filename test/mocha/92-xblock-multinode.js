@@ -96,7 +96,7 @@ describe('X Block Test', () => {
 
     // populate peers and init heads
     before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
-      consensusApi._worker._voters.get(
+      consensusApi._voters.get(
         {ledgerNodeId: ledgerNode.id}, (err, result) => {
           peers[i] = result.id;
           heads[i] = [];

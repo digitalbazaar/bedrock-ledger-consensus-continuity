@@ -42,9 +42,9 @@ describe.skip('Consensus Agent - Get History API', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          getHistory = consensusApi._worker._client.getHistory;
-          getRecentHistory = consensusApi._worker._events.getRecentHistory;
-          mergeBranches = consensusApi._worker._events.mergeBranches;
+          getHistory = consensusApi._client.getHistory;
+          getRecentHistory = consensusApi._events.getRecentHistory;
+          mergeBranches = consensusApi._events.mergeBranches;
           callback();
         }),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
@@ -56,7 +56,7 @@ describe.skip('Consensus Agent - Get History API', () => {
           callback(null, result);
         })],
       creator: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+        consensusApi._voters.get(ledgerNode.id, (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -65,7 +65,7 @@ describe.skip('Consensus Agent - Get History API', () => {
         });
       }],
       genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._events._getLocalBranchHead({
+        consensusApi._events._getLocalBranchHead({
           ledgerNode: ledgerNode.id,
           eventsCollection: ledgerNode.storage.events.collection,
           creatorId: peerId
@@ -170,7 +170,7 @@ describe.skip('Consensus Agent - Get History API', () => {
        two remote merge events
   */
   it('returns a local merge and two remote merge event ', done => {
-    const getHistory = consensusApi._worker._client.getHistory;
+    const getHistory = consensusApi._client.getHistory;
     async.auto({
       remoteEvents: callback => async.times(2, (i, callback) =>
         helpers.addRemoteEvents(

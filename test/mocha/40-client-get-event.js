@@ -45,7 +45,7 @@ describe.skip('Consensus Client - getEvent API', () => {
           callback();
         })],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+        consensusApi._voters.get(ledgerNode.id, (err, result) => {
           peerId = result.id;
           callback();
         });
@@ -60,7 +60,7 @@ describe.skip('Consensus Client - getEvent API', () => {
   });
   it('should get an event', done => {
     async.auto({
-      get: callback => consensusApi._worker._client.getEvent(
+      get: callback => consensusApi._client.getEvent(
         {eventHash, peerId}, (err, result) => {
           should.not.exist(err);
           should.exist(result);
@@ -75,7 +75,7 @@ describe.skip('Consensus Client - getEvent API', () => {
   });
   it('returns an error on an unknown event', done => {
     async.auto({
-      get: callback => consensusApi._worker._client.getEvent(
+      get: callback => consensusApi._client.getEvent(
         {eventHash: uuid(), peerId}, (err, result) => {
           should.exist(err);
           should.not.exist(result);

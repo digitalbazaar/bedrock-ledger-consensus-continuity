@@ -35,7 +35,7 @@ describe('events.mergeBranches API', () => {
             return callback(err);
           }
           consensusApi = result.api;
-          merge = consensusApi._worker._events.merge;
+          merge = consensusApi._events.merge;
           EventWriter = consensusApi._worker.EventWriter;
           callback();
         }),
@@ -49,14 +49,14 @@ describe('events.mergeBranches API', () => {
         })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         const {id: ledgerNodeId} = nodes.alpha;
-        consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+        consensusApi._voters.get({ledgerNodeId}, (err, result) => {
           callback(null, result.id);
         });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
         const ledgerNode = nodes.alpha;
         const {creatorId} = results;
-        consensusApi._worker._events._getLocalBranchHead(
+        consensusApi._events._getLocalBranchHead(
           {creatorId, ledgerNode}, (err, result) => {
             if(err) {
               return callback(err);
@@ -111,7 +111,7 @@ describe('events.mergeBranches API', () => {
           // attach eventWriter to the node
           ledgerNode.eventWriter = new EventWriter(
             {immediate: true, ledgerNode});
-          consensusApi._worker._voters.get({ledgerNodeId}, (err, result) => {
+          consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
             }

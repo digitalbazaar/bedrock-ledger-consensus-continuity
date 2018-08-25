@@ -47,7 +47,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
           callback();
         })],
       getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._worker._voters.get(ledgerNode.id, (err, result) => {
+        consensusApi._voters.get(ledgerNode.id, (err, result) => {
           voterId = result.id;
           callback();
         });
@@ -74,7 +74,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
     it(`gets block status ${opNum} times`, function(done) {
       this.timeout(120000);
       runPasses({
-        func: consensusApi._worker._client.getBlockStatus,
+        func: consensusApi._client.getBlockStatus,
         blockHeight: 1,
         voterId,
         opNum,
