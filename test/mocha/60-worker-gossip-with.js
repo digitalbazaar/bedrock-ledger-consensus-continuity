@@ -81,7 +81,7 @@ describe('Worker - _gossipWith', () => {
               callback();
             }), callback)],
       genesisMerge: ['consensusPlugin', 'getPeer', (results, callback) => {
-        consensusApi._events._getLocalBranchHead({
+        consensusApi._events.getHead({
           creatorId: peers.alpha, ledgerNode: nodes.alpha
         }, (err, result) => {
           if(err) {

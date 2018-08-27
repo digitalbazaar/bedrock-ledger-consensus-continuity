@@ -56,14 +56,13 @@ describe('events.mergeBranches API', () => {
       genesisMerge: ['creatorId', (results, callback) => {
         const ledgerNode = nodes.alpha;
         const {creatorId} = results;
-        consensusApi._events._getLocalBranchHead(
-          {creatorId, ledgerNode}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            genesisMergeHash = result.eventHash;
-            callback();
-          });
+        consensusApi._events.getHead({creatorId, ledgerNode}, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          genesisMergeHash = result.eventHash;
+          callback();
+        });
       }],
       genesisBlock: ['ledgerNode', (results, callback) =>
         nodes.alpha.blocks.getGenesis((err, result) => {

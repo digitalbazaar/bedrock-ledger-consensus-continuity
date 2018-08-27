@@ -59,7 +59,7 @@ describe('Election API _findMergeEventProof', () => {
           });
       }],
       // genesisMerge: ['creatorId', (results, callback) => {
-      //   consensusApi._events._getLocalBranchHead({
+      //   consensusApi._events.getHead({
       //     creatorId: results.creatorId,
       //     ledgerNode: nodes.alpha
       //   }, (err, result) => {

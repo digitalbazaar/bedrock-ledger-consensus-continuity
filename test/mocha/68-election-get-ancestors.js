@@ -58,14 +58,13 @@ describe('Election API _getAncestors', () => {
       genesisMerge: ['creatorId', (results, callback) => {
         const ledgerNode = nodes.alpha;
         const {creatorId} = ledgerNode;
-        consensusApi._events._getLocalBranchHead(
-          {creatorId, ledgerNode}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            genesisMerge = result.eventHash;
-            callback();
-          });
+        consensusApi._events.getHead({creatorId, ledgerNode}, (err, result) => {
+          if(err) {
+            return callback(err);
+          }
+          genesisMerge = result.eventHash;
+          callback();
+        });
       }],
       genesisBlock: ['ledgerNode', (results, callback) =>
         nodes.alpha.blocks.getGenesis((err, result) => {

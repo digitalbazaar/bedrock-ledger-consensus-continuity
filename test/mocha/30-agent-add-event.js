@@ -59,7 +59,7 @@ describe.skip('Consensus Agent - Add Event API', () => {
     const testRegularEvent = bedrock.util.clone(mockData.events.alpha);
     testRegularEvent.operation[0].record.id =
       `https://example.com/event/${uuid()}`;
-    const getHead = consensusApi._events._getLocalBranchHead;
+    const {getHead} = consensusApi._events;
     async.auto({
       head: callback => getHead({
         ledgerNodeId: ledgerNode.id,
@@ -100,7 +100,7 @@ describe.skip('Consensus Agent - Add Event API', () => {
     const testMergeEvent = bedrock.util.clone(mockData.mergeEvents.alpha);
     // use a valid keypair from mocks
     const keyPair = mockData.groups.authorized;
-    const getHead = consensusApi._events._getLocalBranchHead;
+    const {getHead} = consensusApi._events;
     async.auto({
       head: callback => getHead({
         ledgerNodeId: ledgerNode.id,

@@ -49,10 +49,9 @@ describe.skip('Election API _getElectorBranches', () => {
         });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
-        consensusApi._events._getLocalBranchHead({
-          ledgerNodeId: nodes.alpha.id,
-          eventsCollection: nodes.alpha.storage.events.collection,
-          creatorId: results.creatorId
+        consensusApi._events.getHead({
+          creatorId: results.creatorId,
+          ledgerNode: nodes.alpha
         }, (err, result) => {
           if(err) {
             return callback(err);

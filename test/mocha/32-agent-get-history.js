@@ -65,10 +65,9 @@ describe.skip('Consensus Agent - Get History API', () => {
         });
       }],
       genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._events._getLocalBranchHead({
-          ledgerNode: ledgerNode.id,
-          eventsCollection: ledgerNode.storage.events.collection,
-          creatorId: peerId
+        consensusApi._events.getHead({
+          creatorId: peerId,
+          ledgerNode
         }, (err, result) => {
           if(err) {
             return callback(err);

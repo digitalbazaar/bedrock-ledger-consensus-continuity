@@ -57,9 +57,9 @@ describe('Continuity2017', () => {
           });
       }],
       genesisMerge: ['creator', (results, callback) => {
-        consensusApi._events._getLocalBranchHead({
+        consensusApi._events.getHead({
+          creatorId: results.creator.id,
           ledgerNode,
-          creatorId: results.creator.id
         }, (err, result) => {
           if(err) {
             return callback(err);
@@ -92,7 +92,7 @@ describe('Continuity2017', () => {
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       const {creatorId} = ledgerNode;
       async.auto({
-        head: callback => ledgerNode.consensus._events._getLocalBranchHead(
+        head: callback => ledgerNode.consensus._events.getHead(
           {creatorId, ledgerNode}, (err, result) => {
             if(err) {
               return callback(err);

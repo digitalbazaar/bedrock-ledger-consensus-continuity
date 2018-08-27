@@ -51,12 +51,11 @@ describe.skip('Consensus Client - sendEvent API', () => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     const testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
-    const getHead = ledgerNode.consensus._events._getLocalBranchHead;
+    const {getHead} = ledgerNode.consensus._events;
     async.auto({
       head: callback => getHead({
-        ledgerNodeId: ledgerNode.id,
-        eventsCollection: ledgerNode.storage.events.collection,
-        creatorId: peerId
+        creatorId: peerId,
+        ledgerNode
       }, (err, result) => {
         testEvent.parentHash = [result];
         testEvent.treeHash = result;
