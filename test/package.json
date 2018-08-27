@@ -32,7 +32,6 @@
     "bedrock-views": "^5.1.0",
     "blessed": "^0.1.81",
     "body-parser": "^1.18.2",
-    "did-io": "digitalbazaar/did-io#jsonld-1.1",
     "grunt": "^1.0.1",
     "jsonld-signatures": "^2.1.2",
     "lodash": "^4.17.4",
