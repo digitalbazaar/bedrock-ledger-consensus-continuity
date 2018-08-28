@@ -785,7 +785,7 @@ describe.skip('Multinode Basics', () => {
                         }),
                     consensus: callback =>
                       ledgerNode.storage.events.collection.find({
-                        'meta.consensus': {$exists: true}
+                        'meta.consensus': true
                       }).count((err, result) => {
                         assertNoError(err);
                         tableData[6].push(result.toString());

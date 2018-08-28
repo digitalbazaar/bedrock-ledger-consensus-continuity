@@ -310,7 +310,7 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
       // FIXME: use a more efficient query, the commented aggregate function
       // is evidently missing some events.
       collection.find({
-        'meta.consensus': {$exists: false}
+        'meta.consensus': false
       }, {'meta.eventHash': 1}).sort({'$natural': 1}).toArray(
         (err, results) => {
           if(err) {
@@ -533,7 +533,7 @@ api.snapshotEvents = ({ledgerNode}, callback) => {
   // FIXME: use a more efficient query, the commented aggregate function
   // is evidently missing some events.
   collection.find({
-    'meta.consensus': {$exists: false}
+    'meta.consensus': false
   }).sort({'$natural': 1}).toArray((err, result) => {
     if(err) {
       return callback(err);
