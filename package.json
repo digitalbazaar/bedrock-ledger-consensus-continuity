@@ -35,10 +35,11 @@
     "workerpool": "^2.3.0"
   },
   "peerDependencies": {
-    "bedrock": "^1.8.0",
+    "bedrock": "^1.12.0",
+    "bedrock-ledger-consensus-storage": "digitalbazaar/bedrock-ledger-consensus-continuity-storage#implementation",
     "bedrock-ledger-context": "^1.0.0",
-    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#multihash",
-    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#multihash",
+    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#master",
+    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#master",
     "bedrock-mongodb": "^5.0.0",
     "bedrock-permission": "^2.3.2",
     "bedrock-redis": "^3.4.0",
