@@ -20,7 +20,7 @@
     "bedrock-ledger-consensus-continuity": "file:..",
     "bedrock-ledger-consensus-storage": "digitalbazaar/bedrock-ledger-consensus-continuity-storage#implementation",
     "bedrock-ledger-context": "^1.0.0",
-    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#consensusStorage",
+    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#master",
     "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#deleteExists",
     "bedrock-mongodb": "^5.0.0",
     "bedrock-passport": "^3.3.0",
