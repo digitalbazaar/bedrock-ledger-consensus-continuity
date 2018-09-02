@@ -123,7 +123,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that no events were removed
-            updateCache.should.eql([0, 'OK', 0, 'OK', 0]);
+            updateCache.should.eql([0, 'OK', 'OK', 0, 'OK', 0]);
             callback();
           });
         }]
@@ -162,7 +162,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([1, 'OK', 1, 'OK', 0]);
+            updateCache.should.eql([1, 'OK', 'OK', 1, 'OK', 0]);
             callback();
           });
         }],
@@ -210,7 +210,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([5, 'OK', 1, 'OK', 0]);
+            updateCache.should.eql([5, 'OK', 'OK', 1, 'OK', 0]);
             callback();
           });
         }],
