@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2017 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 const async = require('async');
-// const database = require('bedrock-mongodb');
+const {callbackify} = require('bedrock').util;
 const helpers = require('./helpers');
 
 const api = {};
@@ -10,8 +10,9 @@ module.exports = api;
 
 // add events on alpha and beta, gossip from beta to alpha
 api.alpha = (
-  {consensusApi, eventTemplate, nodes, opTemplate, peers, previousResult},
+  {consensusApi, eventTemplate, nodes, opTemplate, peers},
   callback) => {
+  const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
     betaAddEvent1: callback => helpers.addEventAndMerge(
       {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
@@ -23,11 +24,11 @@ api.alpha = (
         callback)],
     // beta gossips with alpha
     betaGossip1: ['alphaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
+      gossipWith(
+        {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
           assertNoError(err);
           // alpha knows about the merge event added to alpha during this cycle
-          result.history.creatorHeads[peers.alpha].eventHash
+          result.history.creatorHeads[peers.alpha.creatorId].eventHash
             .should.equal(results.alphaAddEvent1.mergeHash);
           // one new merge event and one regular event available from alpha
           // the important detail here is that only the events added in this
@@ -43,80 +44,83 @@ api.alpha = (
 }; // end alpha
 
 // add events on alpha and beta, gossip from beta to alpha
-api.beta = (
-  {consensusApi, eventTemplate, nodes, peers, previousResult}, callback) => {
+api.beta = ({
+  consensusApi, eventTemplate, nodes, opTemplate, peers, previousResult
+}, callback) => {
+  const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
     gammaAddEvent1: callback => helpers.addEventAndMerge(
-      {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback),
+      {consensusApi, eventTemplate, ledgerNode: nodes.gamma, opTemplate},
+      callback),
+    commitCache1: ['gammaAddEvent1', (results, callback) =>
+      _commitCache(nodes.gamma, callback)],
     // gamma gossips with beta
-    gammaGossip1: ['gammaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.gamma, peerId: peers.beta}, callback)],
+    gammaGossip1: ['commitCache1', (results, callback) =>
+      gossipWith(
+        {ledgerNode: nodes.gamma, peer: peers.beta}, callback)],
     // beta adds and event and merges which includes events from gamma
-    betaAddEvent1: ['gammaGossip1', (results, callback) =>
-      helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback)],
-    // add event on beta
-    alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
-      helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback)],
-    // beta gossips with alpha
-    betaGossip1: ['alphaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
-          assertNoError(err);
-          // console.log('ALPHA', peers.alpha);
-          // console.log('AAAAAA', nodes.alpha.storage.events.collection.s.name);
-          // alpha knows about the merge event added to alpha during this cycle
-          result.peerHistory.creatorHeads[peers.alpha]
-            .should.equal(results.alphaAddEvent1.mergeHash);
-          // one new merge event event available from alpha
-          result.peerHistory.history.should.have.length(1);
-          result.peerHistory.history.should.have.same.members(
-            [results.alphaAddEvent1.mergeHash]);
-
-          if(previousResult) {
-            // alpha only knowas about beta merge event added and gossiped
-            // last cycle
-            result.peerHistory.creatorHeads[peers.beta]
-              .should.equal(previousResult.betaAddEvent1.mergeHash);
-            result.peerHistory.creatorHeads[peers.gamma]
-              .should.equal(previousResult.gammaAddEvent1.mergeHash);
-            // console.log('YYYYYYYYY', JSON.stringify(previousResult.gammaAddEvent1.allHashes, null, 2));
-          }
-
-          // beta wants to send the regular and merge event added this cycle
-          // console.log('XXXXXXXXX', JSON.stringify(result.partitionHistory.history, null, 2));
-          // console.log('BETA', peers.beta);
-          result.partitionHistory.history.should.have.length(4);
-          // NOTE: checking for exact order of these events
-          result.partitionHistory.history.should.deep.equal([
-            results.gammaAddEvent1.regularHashes[0],
-            results.gammaAddEvent1.mergeHash,
-            results.betaAddEvent1.regularHashes[0],
-            results.betaAddEvent1.mergeHash
-          ]);
-
-          callback();
-        })],
+    // betaAddEvent1: ['gammaGossip1', (results, callback) =>
+    //   helpers.addEventAndMerge(
+    //     {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+    //     callback)],
+    // // add event on beta
+    // alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
+    //   helpers.addEventAndMerge(
+    //     {consensusApi, eventTemplate, ledgerNode: nodes.alpha, opTemplate},
+    //     callback)],
+    // // beta gossips with alpha
+    // betaGossip1: ['alphaAddEvent1', (results, callback) =>
+    //   gossipWith(
+    //     {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
+    //       assertNoError(err);
+    //       // alpha knows about the merge event added to alpha during this cycle
+    //       result.peerHistory.creatorHeads[peers.alpha.creatorId]
+    //         .should.equal(results.alphaAddEvent1.mergeHash);
+    //       // one new merge event event available from alpha
+    //       result.peerHistory.history.should.have.length(1);
+    //       result.peerHistory.history.should.have.same.members(
+    //         [results.alphaAddEvent1.mergeHash]);
+    //
+    //       if(previousResult) {
+    //         // alpha only knowas about beta merge event added and gossiped
+    //         // last cycle
+    //         result.peerHistory.creatorHeads[peers.beta.creatorId]
+    //           .should.equal(previousResult.betaAddEvent1.mergeHash);
+    //         result.peerHistory.creatorHeads[peers.gamma.creatorId]
+    //           .should.equal(previousResult.gammaAddEvent1.mergeHash);
+    //       }
+    //
+    //       // beta wants to send the regular and merge event added this cycle
+    //       result.partitionHistory.history.should.have.length(4);
+    //       // NOTE: checking for exact order of these events
+    //       result.partitionHistory.history.should.deep.equal([
+    //         results.gammaAddEvent1.regularHashes[0],
+    //         results.gammaAddEvent1.mergeHash,
+    //         results.betaAddEvent1.regularHashes[0],
+    //         results.betaAddEvent1.mergeHash
+    //       ]);
+    //
+    //       callback();
+    //     })],
   }, callback);
 }; // end beta
 
 api.gamma = (
   {consensusApi, eventTemplate, nodes, peers, previousResult}, callback) => {
+  const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
     deltaAddEvent1: callback => helpers.addEventAndMerge(
       {consensusApi, eventTemplate, ledgerNode: nodes.delta}, callback),
     deltaGossip1: ['deltaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.delta, peerId: peers.gamma}, callback)],
+      gossipWith(
+        {ledgerNode: nodes.delta, peer: peers.gamma}, callback)],
     gammaAddEvent1: ['deltaGossip1', (results, callback) =>
       helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback)],
     // gamma gossips with beta
     gammaGossip1: ['gammaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.gamma, peerId: peers.beta}, callback)],
+      gossipWith(
+        {ledgerNode: nodes.gamma, peer: peers.beta}, callback)],
     // beta adds and event and merges which includes events from gamma
     betaAddEvent1: ['gammaGossip1', (results, callback) =>
       helpers.addEventAndMerge(
@@ -127,8 +131,8 @@ api.gamma = (
         {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback)],
     // beta gossips with alpha
     betaGossip1: ['alphaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
+      gossipWith(
+        {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
           assertNoError(err);
           result.peerHistory.creatorHeads[peers.alpha]
             .should.equal(results.alphaAddEvent1.mergeHash);
@@ -159,8 +163,8 @@ api.gamma = (
           callback();
         })],
     betaGossip2: ['betaGossip1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
+      gossipWith(
+        {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
           assertNoError(err);
           result.peerHistory.creatorHeads[peers.alpha]
             .should.equal(results.alphaAddEvent1.mergeHash);
@@ -179,26 +183,24 @@ api.gamma = (
 
 api.delta = (
   {consensusApi, eventTemplate, nodes, peers, previousResult}, callback) => {
+  const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
     deltaAddEvent1: callback => helpers.addEventAndMerge(
       {consensusApi, eventTemplate, ledgerNode: nodes.delta}, callback),
     deltaGossip1: ['deltaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.delta, peerId: peers.gamma}, callback)],
+      gossipWith({ledgerNode: nodes.delta, peer: peers.gamma}, callback)],
     gammaAddEvent1: ['deltaGossip1', (results, callback) =>
       helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback)],
     // gamma gossips with beta
     gammaGossip1: ['gammaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.gamma, peerId: peers.beta}, callback)],
+      gossipWith({ledgerNode: nodes.gamma, peer: peers.beta}, callback)],
     // beta adds and event and merges which includes events from gamma
     betaAddEvent1: ['gammaGossip1', (results, callback) =>
       helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback)],
     betaGossip1: ['betaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.beta, peerId: peers.delta}, callback)],
+      gossipWith({ledgerNode: nodes.beta, peer: peers.delta}, callback)],
     deltaAddEvent2: ['betaGossip1', (results, callback) =>
       helpers.addEventAndMerge(
         {consensusApi, eventTemplate, ledgerNode: nodes.delta}, callback)],
@@ -207,8 +209,8 @@ api.delta = (
         {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback)],
     // beta gossips with alpha
     deltaGossip2: ['alphaAddEvent1', (results, callback) =>
-      consensusApi._gossip.gossipWith(
-        {ledgerNode: nodes.delta, peerId: peers.alpha}, (err, result) => {
+      gossipWith(
+        {ledgerNode: nodes.delta, peer: peers.alpha}, (err, result) => {
           assertNoError(err);
           result.peerHistory.creatorHeads[peers.alpha]
             .should.equal(results.alphaAddEvent1.mergeHash);
@@ -241,8 +243,8 @@ api.delta = (
           callback();
         })],
     // betaGossip2: ['betaGossip1', (results, callback) =>
-    //   consensusApi._gossip.gossipWith(
-    //     {ledgerNode: nodes.beta, peerId: peers.alpha}, (err, result) => {
+    //   gossipWith(
+    //     {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
     //       assertNoError(err);
     //       result.peerHistory.creatorHeads[peers.alpha]
     //         .should.equal(results.alphaAddEvent1.mergeHash);
@@ -258,3 +260,9 @@ api.delta = (
     //     })],
   }, callback);
 }; // end delta
+
+function _commitCache(ledgerNode, callback) {
+  // ledgerNode.eventWriter is in immediate mode and stops itself
+  // as soon as the event queue is cleared
+  ledgerNode.eventWriter.start(callback);
+}

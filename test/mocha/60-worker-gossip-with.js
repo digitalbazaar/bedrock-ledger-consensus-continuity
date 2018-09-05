@@ -6,8 +6,8 @@
 const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
+const {callbackify} = bedrock.util;
 const cache = require('bedrock-redis');
-// const database = require('bedrock-mongodb');
 const gossipCycle = require('./gossip-cycle');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -21,9 +21,11 @@ describe('Worker - _gossipWith', () => {
   let cacheKey;
   let consensusApi;
   let genesisMergeHash;
+  let gossipWith;
   let merge;
   let testEventId;
   let EventWriter;
+  let GossipPeer;
   const nodeCount = 4;
   // NOTE: alpha is assigned manually
   const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon'];
@@ -44,7 +46,9 @@ describe('Worker - _gossipWith', () => {
           consensusApi = result.api;
           merge = consensusApi._events.merge;
           cacheKey = consensusApi._cache.cacheKey;
+          gossipWith = callbackify(consensusApi._gossip.gossipWith);
           EventWriter = consensusApi._worker.EventWriter;
+          GossipPeer = consensusApi._gossip.GossipPeer;
           callback();
         }),
       ledgerNode: ['clean', 'flush', (results, callback) => brLedgerNode.add(
@@ -73,16 +77,20 @@ describe('Worker - _gossipWith', () => {
           callback();
         }), callback);
       }],
-      getPeer: ['createNodes', (results, callback) =>
+      getPeer: ['consensusPlugin', 'createNodes', (results, callback) =>
         async.eachOf(nodes, (ledgerNode, i, callback) =>
           consensusApi._voters.get(
             {ledgerNodeId: ledgerNode.id}, (err, result) => {
-              peers[i] = result.id;
+              peers[i] = new GossipPeer({
+                creatorId: result.id,
+                ledgerNodeId: ledgerNode.id
+              });
               callback();
             }), callback)],
       genesisMerge: ['consensusPlugin', 'getPeer', (results, callback) => {
+        const {creatorId} = peers.alpha;
         consensusApi._events.getHead({
-          creatorId: peers.alpha, ledgerNode: nodes.alpha
+          creatorId, ledgerNode: nodes.alpha
         }, (err, result) => {
           if(err) {
             return callback(err);
@@ -101,7 +109,10 @@ describe('Worker - _gossipWith', () => {
             if(err) {
               return callback(err);
             }
-            peers[i] = result.id;
+            peers[i] = new GossipPeer({
+              creatorId: result.id,
+              ledgerNodeId
+            });
             ledgerNode.creatorId = result.id;
             helpers.peersReverse[result.id] = i;
             callback();
@@ -116,8 +127,8 @@ describe('Worker - _gossipWith', () => {
   */
   it('completes without an error when nothing to be received', done => {
     async.auto({
-      gossipWith: callback => consensusApi._gossip.gossipWith({
-        ledgerNode: nodes.beta, peerId: peers.alpha
+      gossipWith: callback => gossipWith({
+        ledgerNode: nodes.beta, peer: peers.alpha
       }, err => {
         assertNoError(err);
         callback();
@@ -137,8 +148,8 @@ describe('Worker - _gossipWith', () => {
         ledgerNode: nodes.alpha, opTemplate
       }, callback),
       gossipWith: ['addEvent', (results, callback) =>
-        consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
+        gossipWith(
+          {ledgerNode: nodes.beta, peer: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
@@ -207,8 +218,8 @@ describe('Worker - _gossipWith', () => {
       mergeBranches: ['writer', (results, callback) => merge(
         {creatorId: peers.alpha, ledgerNode: nodes.alpha}, callback)],
       gossipWith: ['mergeBranches', (results, callback) =>
-        consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
+        gossipWith(
+          {ledgerNode: nodes.beta, peer: peers.alpha}, err => {
             assertNoError(err);
             callback();
           })],
@@ -247,51 +258,51 @@ describe('Worker - _gossipWith', () => {
           _commitCache(ledgerNode, callback), callback)],
       gossipWith: ['writeAll1', (results, callback) => async.series([
         // beta to alpha
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.beta, peer: peers.alpha}, err => {
             assertNoError(err);
             callback();
           }),
         callback => _commitCache(nodes.beta, callback),
         // gamma to alpha
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.gamma, peerId: peers.alpha}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.gamma, peer: peers.alpha}, err => {
             assertNoError(err);
             callback();
           }),
         callback => _commitCache(nodes.gamma, callback),
         // gamma to beta
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.gamma, peerId: peers.beta}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.gamma, peer: peers.beta}, err => {
             assertNoError(err);
             callback();
           }),
         callback => _commitCache(nodes.gamma, callback),
         // beta to gamma
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.beta, peerId: peers.gamma}, (err, result) => {
+        callback => gossipWith(
+          {ledgerNode: nodes.beta, peer: peers.gamma}, (err, result) => {
             assertNoError(err);
-            result.creatorHeads.heads[peers.alpha].eventHash
+            result.creatorHeads.heads[peers.alpha.creatorId].eventHash
               .should.equal(results.addEvent.alpha.mergeHash);
             // this is head that beta is sending to gamma for itself
-            result.creatorHeads.heads[peers.beta].eventHash
+            result.creatorHeads.heads[peers.beta.creatorId].eventHash
               .should.equal(results.addEvent.beta.mergeHash);
             // beta must send genesisMergeHash as head
-            result.creatorHeads.heads[peers.gamma].eventHash
+            result.creatorHeads.heads[peers.gamma.creatorId].eventHash
               .should.equal(genesisMergeHash);
             callback();
           }),
         callback => _commitCache(nodes.beta, callback),
         // alpha to beta
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.alpha, peerId: peers.beta}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.alpha, peer: peers.beta}, err => {
             assertNoError(err);
             callback();
           }),
         callback => _commitCache(nodes.alpha, callback),
         // alpha to gamma
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.alpha, peerId: peers.gamma}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.alpha, peer: peers.gamma}, err => {
             assertNoError(err);
             callback();
           }),
@@ -345,15 +356,15 @@ describe('Worker - _gossipWith', () => {
           _commitCache(ledgerNode, callback), callback)],
       gossipWith: ['writeAll1', (results, callback) => async.series([
         // beta to alpha
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.beta, peerId: peers.alpha}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.beta, peer: peers.alpha}, err => {
             assertNoError(err);
             callback();
           }),
         callback => _commitCache(nodes.beta, callback),
         // beta to gamma
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.beta, peerId: peers.gamma}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.beta, peer: peers.gamma}, err => {
             assertNoError(err);
             callback();
           }),
@@ -367,8 +378,8 @@ describe('Worker - _gossipWith', () => {
           callback();
         }),
         // alpha to beta
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.alpha, peerId: peers.beta}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.alpha, peer: peers.beta}, err => {
             assertNoError(err);
             callback();
           }),
@@ -383,8 +394,8 @@ describe('Worker - _gossipWith', () => {
           callback();
         }),
         // gamma to alpha
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.gamma, peerId: peers.alpha}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.gamma, peer: peers.alpha}, err => {
             assertNoError(err);
             callback();
           }),
@@ -415,23 +426,23 @@ describe('Worker - _gossipWith', () => {
           });
         },
         // beta to gamma (fails here)
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.beta, peerId: peers.gamma}, (err, result) => {
+        callback => gossipWith(
+          {ledgerNode: nodes.beta, peer: peers.gamma}, (err, result) => {
             assertNoError(err);
             // these are heads beta is sending to gamma
-            result.creatorHeads.heads[peers.alpha].eventHash
+            result.creatorHeads.heads[peers.alpha.creatorId].eventHash
               .should.equal(generations.alpha[1]);
             // this is head that beta is sending to gamma for itself
-            result.creatorHeads.heads[peers.beta].eventHash
+            result.creatorHeads.heads[peers.beta.creatorId].eventHash
               .should.equal(generations.beta[2]);
-            result.creatorHeads.heads[peers.gamma].eventHash
+            result.creatorHeads.heads[peers.gamma.creatorId].eventHash
               .should.equal(generations.gamma[1]);
             callback();
           }),
         callback => _commitCache(nodes.beta, callback),
         // alpha to gamma
-        callback => consensusApi._gossip.gossipWith(
-          {ledgerNode: nodes.alpha, peerId: peers.gamma}, err => {
+        callback => gossipWith(
+          {ledgerNode: nodes.alpha, peer: peers.gamma}, err => {
             assertNoError(err);
             callback();
           }),
@@ -475,7 +486,7 @@ describe('Worker - _gossipWith', () => {
     let previousResult;
     async.timesSeries(100, (i, callback) => {
       gossipCycle.alpha(
-        {consensusApi, eventTemplate, nodes, peers, previousResult, opTemplate},
+        {consensusApi, eventTemplate, nodes, opTemplate, peers, previousResult},
         (err, result) => {
           if(err) {
             return callback(err);
@@ -493,10 +504,11 @@ describe('Worker - _gossipWith', () => {
   it.skip('performs gossip cycle beta 100 times', function(done) {
     this.timeout(120000);
     const eventTemplate = mockData.events.alpha;
+    const opTemplate = mockData.operations.alpha;
     let previousResult;
     async.timesSeries(100, (i, callback) => {
       gossipCycle.beta(
-        {consensusApi, eventTemplate, nodes, peers, previousResult},
+        {consensusApi, eventTemplate, nodes, opTemplate, peers, previousResult},
         (err, result) => {
           if(err) {
             return callback(err);
