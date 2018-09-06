@@ -438,8 +438,15 @@ api.prepareDatabase = function(mockData, callback) {
 
 api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
   const func = series ? async.eachSeries : async.each;
-  func(nodes, (ledgerNode, callback) =>
-    consensusApi._worker._run(ledgerNode, callback), callback);
+  func(nodes.filter(n => !n.stop), (ledgerNode, callback) =>
+    consensusApi._worker._run(ledgerNode, err => {
+      // if a config change is detected, do not run worker on that node again
+      if(err && err.name === 'LedgerConfigurationChangeError') {
+        ledgerNode.stop = true;
+        return callback();
+      }
+      callback(err);
+    }), callback);
 };
 
 /*

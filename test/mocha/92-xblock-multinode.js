@@ -173,7 +173,7 @@ describe('X Block Test', () => {
               callback(null, result);
             }),
           settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes}, callback)],
+            {consensusApi, nodes: _.values(nodes)}, callback)],
           blockSummary: ['settle', (results, callback) =>
             _latestBlockSummary((err, result) => {
               if(err) {
@@ -258,7 +258,10 @@ function _nBlocks({consensusApi, targetBlockHeight}, callback) {
             recordIds[n].push(results.operations[n][opHash].record.id);
           }
         }
-        helpers.runWorkerCycle({consensusApi, nodes, series: false}, callback);
+        // in this test `nodes` is an object that needs to be converted to
+        // an array for the helper
+        helpers.runWorkerCycle(
+          {consensusApi, nodes: _.values(nodes), series: false}, callback);
       }],
       report: ['workCycle', (results, callback) => async.forEachOfSeries(
         nodes, (ledgerNode, i, callback) => {

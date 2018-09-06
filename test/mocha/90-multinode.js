@@ -201,18 +201,7 @@ describe('Multinode', () => {
         this.timeout(210000);
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
-        // FIXME: remove
-        ledgerConfiguration.ledger =
-          'urn:uuid:ca539f07-7013-490a-b730-cd81c5745edb';
-        ledgerConfiguration.operationValidator = [{
-          type: 'SignatureValidator2017',
-          validatorFilter: [{
-            type: 'ValidatorFilterByType',
-            validatorFilterByType: ['CreateWebLedgerRecord']
-          }],
-          approvedSigner: ['urn:uuid:99bfc16e-fc92-4e65-8ecf-343f413766cc'],
-          minimumSignaturesRequired: 1
-        }];
+        ledgerConfiguration.consensusMethod = 'Continuity9000';
         async.auto({
           changeConfig: callback => genesisLedgerNode.config.change(
             {ledgerConfiguration}, callback),
@@ -272,6 +261,16 @@ describe('Multinode', () => {
           assertNoError(err);
           done();
         });
+      });
+    });
+    describe('Reinitialize Nodes', () => {
+      // the nodes should load with a new consensus method
+      it('nodes should have new consensus method', async () => {
+        const nodeIds = peers.map(n => n.id);
+        for(const ledgerNodeId of nodeIds) {
+          const ledgerNode = await brLedgerNode.get(null, ledgerNodeId);
+          ledgerNode.consensus.consensusMethod.should.equal('Continuity9000');
+        }
       });
     });
   });
