@@ -59,49 +59,49 @@ api.beta = ({
       gossipWith(
         {ledgerNode: nodes.gamma, peer: peers.beta}, callback)],
     // beta adds and event and merges which includes events from gamma
-    // betaAddEvent1: ['gammaGossip1', (results, callback) =>
-    //   helpers.addEventAndMerge(
-    //     {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
-    //     callback)],
-    // // add event on beta
-    // alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
-    //   helpers.addEventAndMerge(
-    //     {consensusApi, eventTemplate, ledgerNode: nodes.alpha, opTemplate},
-    //     callback)],
-    // // beta gossips with alpha
-    // betaGossip1: ['alphaAddEvent1', (results, callback) =>
-    //   gossipWith(
-    //     {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
-    //       assertNoError(err);
-    //       // alpha knows about the merge event added to alpha during this cycle
-    //       result.peerHistory.creatorHeads[peers.alpha.creatorId]
-    //         .should.equal(results.alphaAddEvent1.mergeHash);
-    //       // one new merge event event available from alpha
-    //       result.peerHistory.history.should.have.length(1);
-    //       result.peerHistory.history.should.have.same.members(
-    //         [results.alphaAddEvent1.mergeHash]);
-    //
-    //       if(previousResult) {
-    //         // alpha only knowas about beta merge event added and gossiped
-    //         // last cycle
-    //         result.peerHistory.creatorHeads[peers.beta.creatorId]
-    //           .should.equal(previousResult.betaAddEvent1.mergeHash);
-    //         result.peerHistory.creatorHeads[peers.gamma.creatorId]
-    //           .should.equal(previousResult.gammaAddEvent1.mergeHash);
-    //       }
-    //
-    //       // beta wants to send the regular and merge event added this cycle
-    //       result.partitionHistory.history.should.have.length(4);
-    //       // NOTE: checking for exact order of these events
-    //       result.partitionHistory.history.should.deep.equal([
-    //         results.gammaAddEvent1.regularHashes[0],
-    //         results.gammaAddEvent1.mergeHash,
-    //         results.betaAddEvent1.regularHashes[0],
-    //         results.betaAddEvent1.mergeHash
-    //       ]);
-    //
-    //       callback();
-    //     })],
+    betaAddEvent1: ['gammaGossip1', (results, callback) =>
+      helpers.addEventAndMerge(
+        {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+        callback)],
+    // add event on beta
+    alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
+      helpers.addEventAndMerge(
+        {consensusApi, eventTemplate, ledgerNode: nodes.alpha, opTemplate},
+        callback)],
+    // beta gossips with alpha
+    betaGossip1: ['alphaAddEvent1', (results, callback) =>
+      gossipWith(
+        {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
+          assertNoError(err);
+          // alpha knows about the merge event added to alpha during this cycle
+          result.peerHistory.creatorHeads[peers.alpha.creatorId]
+            .should.equal(results.alphaAddEvent1.mergeHash);
+          // one new merge event event available from alpha
+          result.peerHistory.history.should.have.length(1);
+          result.peerHistory.history.should.have.same.members(
+            [results.alphaAddEvent1.mergeHash]);
+
+          if(previousResult) {
+            // alpha only knowas about beta merge event added and gossiped
+            // last cycle
+            result.peerHistory.creatorHeads[peers.beta.creatorId]
+              .should.equal(previousResult.betaAddEvent1.mergeHash);
+            result.peerHistory.creatorHeads[peers.gamma.creatorId]
+              .should.equal(previousResult.gammaAddEvent1.mergeHash);
+          }
+
+          // beta wants to send the regular and merge event added this cycle
+          result.partitionHistory.history.should.have.length(4);
+          // NOTE: checking for exact order of these events
+          result.partitionHistory.history.should.deep.equal([
+            results.gammaAddEvent1.regularHashes[0],
+            results.gammaAddEvent1.mergeHash,
+            results.betaAddEvent1.regularHashes[0],
+            results.betaAddEvent1.mergeHash
+          ]);
+
+          callback();
+        })],
   }, callback);
 }; // end beta
 
