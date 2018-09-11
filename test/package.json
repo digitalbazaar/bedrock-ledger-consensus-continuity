@@ -18,7 +18,7 @@
     "bedrock-key": "^4.0.0",
     "bedrock-ledger-agent": "digitalbazaar/bedrock-ledger-agent#master",
     "bedrock-ledger-consensus-continuity": "file:..",
-    "bedrock-ledger-consensus-storage": "^1.0.0",
+    "bedrock-ledger-consensus-continuity-storage": "^1.0.0",
     "bedrock-ledger-context": "^1.0.0",
     "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#master",
     "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#master",
