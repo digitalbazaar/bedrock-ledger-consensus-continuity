@@ -7,41 +7,9 @@ const config = require('bedrock').config;
 const constants = config.constants;
 const schemas = require('bedrock-validation').schemas;
 
-// TODO: add to `bedrock-validation` schemas
-const linkedDataProof = {
-  title: 'Linked Data Signature',
-  description: 'A Linked Data digital signature.',
-  type: 'object',
-  properties: {
-    id: schemas.identifier(),
-    type: {
-      title: 'Linked Data Signature Type',
-      type: 'string',
-      enum: ['Ed25519Signature2018']
-    },
-    creator: schemas.identifier(),
-    created: schemas.w3cDateTime(),
-    jws: {
-      title: 'Digital Signature Value',
-      description: 'The Base64 encoding of the result of the signature ' +
-        'algorithm.',
-      type: 'string'
-    },
-  },
-  // NOTE: id is not required
-  required: ['type', 'creator', 'created', 'jws']
-};
-const linkedDataProofSchema = {
-  title: 'Linked Data Proofs',
-  anyOf: [{
-    type: 'array',
-    items: linkedDataProof,
-    minItems: 1,
-  }, linkedDataProof]
-};
-
 const continuityMergeEvent = {
   title: 'ContinuityMergeEvent',
+  required: ['@context', 'parentHash', 'proof', 'treeHash', 'type'],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
@@ -52,9 +20,7 @@ const continuityMergeEvent = {
       },
       minItems: 1
     },
-    proof: {
-      anyOf: [linkedDataProofSchema]
-    },
+    proof: schemas.linkedDataSignature2018(),
     treeHash: {
       type: 'string'
     },
@@ -62,12 +28,13 @@ const continuityMergeEvent = {
       type: 'string',
       enum: ['ContinuityMergeEvent']
     },
-  },
-  required: ['@context', 'parentHash', 'proof', 'treeHash', 'type'],
+  }
 };
 
 const webLedgerConfigEvent = {
   title: 'WebLedgerConfigurationEvent',
+  // signature is not required
+  required: ['@context', 'ledgerConfiguration', 'type'],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
@@ -90,14 +57,13 @@ const webLedgerConfigEvent = {
         }
       },
     },
-    signature: {
-      anyOf: [schemas.linkedDataSignature()],
-    }
+    signature: schemas.linkedDataSignature2018()
   }
 };
 
 const webLedgerOperationEvent = {
   title: 'WebLedgerOperationEvent',
+  required: ['@context', 'operationHash', 'parentHash', 'treeHash', 'type'],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
@@ -115,8 +81,7 @@ const webLedgerOperationEvent = {
       type: 'string',
       enum: ['WebLedgerOperationEvent']
     },
-  },
-  required: ['@context', 'operationHash', 'parentHash', 'treeHash', 'type']
+  }
 };
 
 const webLedgerEvents = {
@@ -129,8 +94,9 @@ const webLedgerEvents = {
 };
 
 const event = {
-  type: 'object',
   title: 'Continuity Event',
+  required: ['callerId', 'event', 'eventHash', 'mergeHash'],
+  type: 'object',
   properties: {
     callerId: {
       type: 'string'
@@ -145,8 +111,7 @@ const event = {
       type: 'string'
     },
   },
-  required: ['callerId', 'event', 'eventHash', 'mergeHash']
 };
 
-module.exports.event = () => (event);
-module.exports.webLedgerEvents = () => (webLedgerEvents);
+module.exports.event = () => event;
+module.exports.webLedgerEvents = () => webLedgerEvents;
