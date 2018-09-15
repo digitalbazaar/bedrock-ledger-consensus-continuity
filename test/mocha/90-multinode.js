@@ -279,8 +279,3 @@ describe('Multinode', () => {
 function _extractRecordIds(operations) {
   return _.flatten(operations.map(o => _.values(o))).map(o => o.record.id);
 }
-
-// function _twoThirdsMajority(count) {
-//   // special case when electors < 3 -- every elector must agree.
-//   return (count < 3) ? count : Math.floor(count / 3) * 2 + 1;
-// }
