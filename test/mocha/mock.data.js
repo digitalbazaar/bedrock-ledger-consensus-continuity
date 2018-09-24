@@ -22,16 +22,14 @@ identities[userName].identity.sysResourceRole.push({
   generateResource: 'id'
 });
 
-// // identity with no permissions
-// userName = 'noPermission';
-// identities[userName] = {};
-// identities[userName].identity = helpers.createIdentity(userName);
-
 const ledgerConfiguration = mock.ledgerConfiguration = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'WebLedgerConfiguration',
   ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
-  consensusMethod: 'Continuity2017'
+  consensusMethod: 'Continuity2017',
+  electorSelectionMethod: {
+    type: 'MostRecentParticipants',
+  },
 };
 
 const operations = mock.operations = {};
