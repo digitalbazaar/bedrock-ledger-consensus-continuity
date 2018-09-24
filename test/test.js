@@ -4,6 +4,8 @@
 const bedrock = require('bedrock');
 require('bedrock-ledger-consensus-continuity');
 require('bedrock-ledger-consensus-continuity-es-most-recent-participants');
+require('bedrock-ledger-consensus-continuity-es-most-recent-participants-' +
+  'with-recovery');
 require('bedrock-ledger-storage-mongodb');
 
 // initialize a mock alternate consensus method used in testing

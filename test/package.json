@@ -18,6 +18,7 @@
     "bedrock-ledger-agent": "^2.0.0",
     "bedrock-ledger-consensus-continuity": "file:..",
     "bedrock-ledger-consensus-continuity-es-most-recent-participants": "digitalbazaar/bedrock-ledger-consensus-continuity-es-most-recent-participants#implementation",
+    "bedrock-ledger-consensus-continuity-es-most-recent-participants-with-recovery": "digitalbazaar/bedrock-ledger-consensus-continuity-es-most-recent-participants-with-recovery#implementation",
     "bedrock-ledger-consensus-continuity-storage": "^1.0.0",
     "bedrock-ledger-context": "^2.0.0",
     "bedrock-ledger-node": "^2.0.0",
