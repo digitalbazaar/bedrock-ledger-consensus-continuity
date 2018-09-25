@@ -151,6 +151,14 @@ describe.only('Recovery mode simulation', () => {
      * 5. settle the network, see notes on _settleNetwork
      * 6. ensure that the final blockHeight and blockHash is identical on all
      * 7. attempt to retrieve all records added in 1 from the `records` API
+     *
+     * Test recovery mode:
+     * 8. Reduce `nodes` from seven to four nodes: alpha, beta, gamma, delta
+     * 9. add new unique operations/records on nodes alpha, beta, gamma, delta
+     * 10. run worker on all remaining nodes
+     * 11. repeat 9 and 10 until target block height is reached on all nodes
+     *     it is anticipated that the network should go into recovery mode
+     *     under these conditions.
      */
 
     let targetBlockHeight = 20;
