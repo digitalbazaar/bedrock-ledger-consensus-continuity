@@ -161,7 +161,7 @@ describe.only('Recovery mode simulation', () => {
      *     under these conditions.
      */
 
-    let targetBlockHeight = 15;
+    const targetBlockHeight = 15;
     let startingRecoveryBlockHeight;
     describe(`${targetBlockHeight} Blocks`, () => {
       it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
@@ -225,9 +225,9 @@ describe.only('Recovery mode simulation', () => {
       });
     }); // end one block
 
-    const recoveryBlocks = 100;
-    targetBlockHeight += recoveryBlocks;
-    describe(`${recoveryBlocks} Recovery Blocks`, () => {
+    const recoveryBlocks = 15;
+    const newTargetBlockHeight = targetBlockHeight + recoveryBlocks;
+    describe.skip(`${recoveryBlocks} Recovery Blocks`, () => {
       it(`makes ${recoveryBlocks} blocks with four nodes`, function(done) {
         this.timeout(0);
 
@@ -261,7 +261,8 @@ describe.only('Recovery mode simulation', () => {
               });
           },
           nBlocks: ['cullNodes', (results, callback) => _nBlocks(
-            {consensusApi, targetBlockHeight}, (err, result) => {
+            {consensusApi, targetBlockHeight: newTargetBlockHeight},
+            (err, result) => {
               if(err) {
                 return callback(err);
               }
