@@ -225,7 +225,7 @@ describe.only('Recovery mode simulation', () => {
       });
     }); // end one block
 
-    const recoveryBlocks = 30;
+    const recoveryBlocks = 100;
     targetBlockHeight += recoveryBlocks;
     describe(`${recoveryBlocks} Recovery Blocks`, () => {
       it(`makes ${recoveryBlocks} blocks with four nodes`, function(done) {
