@@ -337,6 +337,7 @@ function _nBlocks({consensusApi, targetBlockHeight}, callback) {
         }
         // in this test `nodes` is an object that needs to be converted to
         // an array for the helper
+        console.log(`+++RUN WORKERCYCLE ON ${Object.keys(nodes).length} NODES`);
         helpers.runWorkerCycle(
           {consensusApi, nodes: _.values(nodes), series: false}, callback);
       }],
