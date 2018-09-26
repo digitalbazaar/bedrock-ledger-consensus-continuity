@@ -161,8 +161,8 @@ describe.only('Recovery mode simulation', () => {
      *     under these conditions.
      */
 
-    let targetBlockHeight = 20;
-
+    let targetBlockHeight = 15;
+    let startingRecoveryBlockHeight;
     describe(`${targetBlockHeight} Blocks`, () => {
       it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
         this.timeout(0);
@@ -203,6 +203,7 @@ describe.only('Recovery mode simulation', () => {
                 b.blockHeight.should.equal(summaries.alpha.blockHeight);
                 b.blockHash.should.equal(summaries.alpha.blockHash);
               });
+              startingRecoveryBlockHeight = summaries.alpha.blockHeight + 1;
               callback();
             })],
           state: ['blockSummary', (results, callback) => {
@@ -224,68 +225,92 @@ describe.only('Recovery mode simulation', () => {
       });
     }); // end one block
 
-    const recoveryBlocks = 20;
+    const recoveryBlocks = 30;
     targetBlockHeight += recoveryBlocks;
     describe(`${recoveryBlocks} Recovery Blocks`, () => {
       it(`makes ${recoveryBlocks} blocks with four nodes`, function(done) {
         this.timeout(0);
 
-        // remove 3 out of 7 nodes
-        delete nodes.epsilon;
-        delete nodes.zeta;
-        delete nodes.eta;
-
         async.auto({
-          nBlocks: callback => _nBlocks(
+          // determine which nodes are the `recoveryElectors` and remove some
+          // that are *not* in that list
+          cullNodes: callback => {
+            const ledgerNode = nodes.alpha;
+            ledgerNode.consensus._election.getBlockElectors(
+              {ledgerNode, blockHeight: startingRecoveryBlockHeight},
+              (err, result) => {
+                if(err) {
+                  return callback(err);
+                }
+                const recoverySet = new Set(
+                  result.recoveryElectors.map(e => e.id));
+
+                let toDelete = 3;
+                for(const n of Object.keys(nodes)) {
+                  if(toDelete === 0) {
+                    break;
+                  }
+                  if(recoverySet.has(nodes[n].id)) {
+                    // do not delete any recovery electors
+                    return;
+                  }
+                  delete nodes[n];
+                  toDelete--;
+                }
+                callback();
+              });
+          },
+          nBlocks: ['cullNodes', (results, callback) => _nBlocks(
             {consensusApi, targetBlockHeight}, (err, result) => {
               if(err) {
                 return callback(err);
               }
               console.log(
-                'targetBlockHashMap',
-                JSON.stringify(result, null, 2));
+                'targetBlockHashMap', JSON.stringify(result, null, 2));
+              const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
               _.values(result.targetBlockHashMap)
-                .every(h => h === result.targetBlockHashMap.alpha)
+                .every(h => h === result.targetBlockHashMap[firstNodeLabel])
                 .should.be.true;
+
               callback(null, result);
-            }),
-          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
             })],
-          state: ['blockSummary', (results, callback) => {
-            const allRecordIds = [].concat(..._.values(
-              results.nBlocks.recordIds));
-            console.log(`Total operation count: ${allRecordIds.length}`);
-            async.eachSeries(allRecordIds, (recordId, callback) => {
-              nodes.alpha.records.get({recordId}, err => {
-                // just need to ensure that there is no NotFoundError
-                assertNoError(err);
-                callback();
-              });
-            }, callback);
-          }]
+          // settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
+          //   {consensusApi, nodes: _.values(nodes)}, callback)],
+          // blockSummary: ['settle', (results, callback) =>
+          //   _latestBlockSummary((err, result) => {
+          //     if(err) {
+          //       return callback(err);
+          //     }
+          //     const summaries = {};
+          //     Object.keys(result).forEach(k => {
+          //       summaries[k] = {
+          //         blockCollection: nodes[k].storage.blocks.collection.s.name,
+          //         blockHeight: result[k].eventBlock.block.blockHeight,
+          //         blockHash: result[k].eventBlock.meta.blockHash,
+          //         previousBlockHash: result[k].eventBlock.block
+          //           .previousBlockHash,
+          //       };
+          //     });
+          //     console.log('Finishing block summaries:', JSON.stringify(
+          //       summaries, null, 2));
+          //     _.values(summaries).forEach(b => {
+          //       b.blockHeight.should.equal(summaries.alpha.blockHeight);
+          //       b.blockHash.should.equal(summaries.alpha.blockHash);
+          //     });
+          //     callback();
+          //   })],
+          // state: ['blockSummary', (results, callback) => {
+          //   const allRecordIds = [].concat(..._.values(
+          //     results.nBlocks.recordIds));
+          //   console.log(`Total operation count: ${allRecordIds.length}`);
+          //   async.eachSeries(allRecordIds, (recordId, callback) => {
+          //     nodes.alpha.records.get({recordId}, err => {
+          //       // just need to ensure that there is no NotFoundError
+          //       assertNoError(err);
+          //       callback();
+          //     });
+          //   }, callback);
+          // }]
         }, err => {
           assertNoError(err);
           done();
@@ -296,16 +321,21 @@ describe.only('Recovery mode simulation', () => {
 });
 
 function _addOperations({count}, callback) {
-  async.auto({
-    alpha: callback => helpers.addOperation(
-      {count, ledgerNode: nodes.alpha, opTemplate}, callback),
-    beta: callback => helpers.addOperation(
-      {count, ledgerNode: nodes.beta, opTemplate}, callback),
-    gamma: callback => helpers.addOperation(
-      {count, ledgerNode: nodes.gamma, opTemplate}, callback),
-    delta: callback => helpers.addOperation(
-      {count, ledgerNode: nodes.delta, opTemplate}, callback),
-  }, callback);
+  const results = {};
+  async.eachOf(nodes, (ledgerNode, key, callback) =>
+    helpers.addOperation({count, ledgerNode, opTemplate}, (err, result) => {
+      if(err) {
+        return callback(err);
+      }
+      results[key] = result;
+      callback();
+    }),
+  err => {
+    if(err) {
+      return callback(err);
+    }
+    callback(null, results);
+  });
 }
 
 function _latestBlockSummary(callback) {
@@ -319,7 +349,7 @@ function _latestBlockSummary(callback) {
 }
 
 function _nBlocks({consensusApi, targetBlockHeight}, callback) {
-  const recordIds = {alpha: [], beta: [], gamma: [], delta: []};
+  const recordIds = {};
   const targetBlockHashMap = {};
   async.until(() => {
     return Object.keys(targetBlockHashMap).length ===
@@ -330,7 +360,8 @@ function _nBlocks({consensusApi, targetBlockHeight}, callback) {
       operations: callback => _addOperations({count}, callback),
       workCycle: ['operations', (results, callback) => {
         // record the IDs for the records that were just added
-        for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
+        for(const n of Object.keys(nodes)) {
+          recordIds[n] = [];
           for(const opHash of Object.keys(results.operations[n])) {
             recordIds[n].push(results.operations[n][opHash].record.id);
           }
