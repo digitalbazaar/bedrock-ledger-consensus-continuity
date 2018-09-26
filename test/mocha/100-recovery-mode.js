@@ -29,6 +29,19 @@ describe.only('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
+  before(() => {
+    const electorSelectionApi = brLedgerNode.use(
+      'MostRecentParticipantsWithRecovery');
+    electorSelectionApi.api._computeRecoveryElectors = ({electors, f}) => {
+      const activePeers = new Set();
+      for(const n of Object.keys(nodes)) {
+        activePeers.add(peers[n]);
+      }
+      return electors.filter(e => activePeers.has(e.id)).slice(0, f + 1);
+    };
+    // the return value here gets multiplied by 10
+    electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 2;
+  });
 
   const nodeCount = 7;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
