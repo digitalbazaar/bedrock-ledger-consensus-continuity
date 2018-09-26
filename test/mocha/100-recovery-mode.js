@@ -244,36 +244,13 @@ describe.only('Recovery mode simulation', () => {
       it(`makes ${recoveryBlocks} blocks with four nodes`, function(done) {
         this.timeout(0);
 
-        async.auto({
-          // determine which nodes are the `recoveryElectors` and remove some
-          // that are *not* in that list
-          cullNodes: callback => {
-            const ledgerNode = nodes.alpha;
-            ledgerNode.consensus._election.getBlockElectors(
-              {ledgerNode, blockHeight: startingRecoveryBlockHeight},
-              (err, result) => {
-                if(err) {
-                  return callback(err);
-                }
-                const recoverySet = new Set(
-                  result.recoveryElectors.map(e => e.id));
+        // remove 3 out of 7 nodes
+        delete nodes.epsilon;
+        delete nodes.zeta;
+        delete nodes.eta;
 
-                let toDelete = 3;
-                for(const n of Object.keys(nodes)) {
-                  if(toDelete === 0) {
-                    break;
-                  }
-                  if(recoverySet.has(nodes[n].id)) {
-                    // do not delete any recovery electors
-                    return;
-                  }
-                  delete nodes[n];
-                  toDelete--;
-                }
-                callback();
-              });
-          },
-          nBlocks: ['cullNodes', (results, callback) => _nBlocks(
+        async.auto({
+          nBlocks: callback => _nBlocks(
             {consensusApi, targetBlockHeight: newTargetBlockHeight},
             (err, result) => {
               if(err) {
@@ -287,7 +264,7 @@ describe.only('Recovery mode simulation', () => {
                 .should.be.true;
 
               callback(null, result);
-            })],
+            }),
           // settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
           //   {consensusApi, nodes: _.values(nodes)}, callback)],
           // blockSummary: ['settle', (results, callback) =>
