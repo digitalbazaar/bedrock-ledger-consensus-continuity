@@ -161,7 +161,7 @@ describe.only('Recovery mode simulation', () => {
      *     under these conditions.
      */
 
-    const targetBlockHeight = 15;
+    const targetBlockHeight = 5;
     let startingRecoveryBlockHeight;
     describe(`${targetBlockHeight} Blocks`, () => {
       it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
