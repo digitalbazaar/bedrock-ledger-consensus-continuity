@@ -265,43 +265,43 @@ describe.only('Recovery mode simulation', () => {
 
               callback(null, result);
             }),
-          // settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-          //   {consensusApi, nodes: _.values(nodes)}, callback)],
-          // blockSummary: ['settle', (results, callback) =>
-          //   _latestBlockSummary((err, result) => {
-          //     if(err) {
-          //       return callback(err);
-          //     }
-          //     const summaries = {};
-          //     Object.keys(result).forEach(k => {
-          //       summaries[k] = {
-          //         blockCollection: nodes[k].storage.blocks.collection.s.name,
-          //         blockHeight: result[k].eventBlock.block.blockHeight,
-          //         blockHash: result[k].eventBlock.meta.blockHash,
-          //         previousBlockHash: result[k].eventBlock.block
-          //           .previousBlockHash,
-          //       };
-          //     });
-          //     console.log('Finishing block summaries:', JSON.stringify(
-          //       summaries, null, 2));
-          //     _.values(summaries).forEach(b => {
-          //       b.blockHeight.should.equal(summaries.alpha.blockHeight);
-          //       b.blockHash.should.equal(summaries.alpha.blockHash);
-          //     });
-          //     callback();
-          //   })],
-          // state: ['blockSummary', (results, callback) => {
-          //   const allRecordIds = [].concat(..._.values(
-          //     results.nBlocks.recordIds));
-          //   console.log(`Total operation count: ${allRecordIds.length}`);
-          //   async.eachSeries(allRecordIds, (recordId, callback) => {
-          //     nodes.alpha.records.get({recordId}, err => {
-          //       // just need to ensure that there is no NotFoundError
-          //       assertNoError(err);
-          //       callback();
-          //     });
-          //   }, callback);
-          // }]
+          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
+            {consensusApi, nodes: _.values(nodes)}, callback)],
+          blockSummary: ['settle', (results, callback) =>
+            _latestBlockSummary((err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              const summaries = {};
+              Object.keys(result).forEach(k => {
+                summaries[k] = {
+                  blockCollection: nodes[k].storage.blocks.collection.s.name,
+                  blockHeight: result[k].eventBlock.block.blockHeight,
+                  blockHash: result[k].eventBlock.meta.blockHash,
+                  previousBlockHash: result[k].eventBlock.block
+                    .previousBlockHash,
+                };
+              });
+              console.log('Finishing block summaries:', JSON.stringify(
+                summaries, null, 2));
+              _.values(summaries).forEach(b => {
+                b.blockHeight.should.equal(summaries.alpha.blockHeight);
+                b.blockHash.should.equal(summaries.alpha.blockHash);
+              });
+              callback();
+            })],
+          state: ['blockSummary', (results, callback) => {
+            const allRecordIds = [].concat(..._.values(
+              results.nBlocks.recordIds));
+            console.log(`Total operation count: ${allRecordIds.length}`);
+            async.eachSeries(allRecordIds, (recordId, callback) => {
+              nodes.alpha.records.get({recordId}, err => {
+                // just need to ensure that there is no NotFoundError
+                assertNoError(err);
+                callback();
+              });
+            }, callback);
+          }]
         }, err => {
           assertNoError(err);
           done();
