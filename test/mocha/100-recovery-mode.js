@@ -36,6 +36,7 @@ describe.only('Recovery mode simulation', () => {
       'MostRecentParticipantsWithRecovery');
     electorSelectionApi.api._computePotentialRecoveryElectors =
       ({electors, f}) => {
+        console.log('YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY');
         const activePeers = new Set();
         for(const n of Object.keys(nodes)) {
           activePeers.add(peers[n]);
