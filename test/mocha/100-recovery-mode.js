@@ -36,7 +36,6 @@ describe.only('Recovery mode simulation', () => {
       'MostRecentParticipantsWithRecovery');
     electorSelectionApi.api._computeRecoveryElectors =
       ({electors, f}) => {
-        console.log('YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY');
         const activePeers = new Set();
         for(const n of Object.keys(nodes)) {
           activePeers.add(peers[n]);
@@ -44,7 +43,9 @@ describe.only('Recovery mode simulation', () => {
         if(electors.length === 1) {
           return [];
         }
-        return electors.filter(e => activePeers.has(e.id)).slice(0, f + 1);
+        const recoveryElectors = electors.filter(e => activePeers.has(e.id))
+          .slice(0, f + 1);
+        return recoveryElectors.length < f + 1 ? [] : recoveryElectors;
       };
     // the return value here gets multiplied by 10
     electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 2;
