@@ -41,6 +41,9 @@ describe.only('Recovery mode simulation', () => {
         for(const n of Object.keys(nodes)) {
           activePeers.add(peers[n]);
         }
+        if(electors.length === 1) {
+          return [];
+        }
         return electors.filter(e => activePeers.has(e.id)).slice(0, f + 1);
       };
     // the return value here gets multiplied by 10
