@@ -34,7 +34,7 @@ describe.only('Recovery mode simulation', () => {
   before(() => {
     const electorSelectionApi = brLedgerNode.use(
       'MostRecentParticipantsWithRecovery');
-    electorSelectionApi.api._computePotentialRecoveryElectors =
+    electorSelectionApi.api._computeRecoveryElectors =
       ({electors, f}) => {
         console.log('YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY');
         const activePeers = new Set();
