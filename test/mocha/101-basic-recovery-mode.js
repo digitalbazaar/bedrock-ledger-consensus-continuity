@@ -60,7 +60,7 @@ describe.only('Recovery mode simulation', () => {
     electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 2;
   });
 
-  const nodeCount = 4;
+  const nodeCount = 7;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // get consensus plugin and create genesis ledger node
@@ -194,8 +194,11 @@ describe.only('Recovery mode simulation', () => {
         // representation in `peers` and therefore, consensus is being told
         // that there is a set of four electors in the _computeElectors
         // override above.
-        delete nodes.gamma;
+        // delete nodes.gamma;
         delete nodes.delta;
+        delete nodes.epsilon;
+        delete nodes.zeta;
+        delete nodes.eta;
 
         async.auto({
           nBlocks: callback => _nBlocks(
