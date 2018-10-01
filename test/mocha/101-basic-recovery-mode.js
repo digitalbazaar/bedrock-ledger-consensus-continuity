@@ -25,7 +25,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('Recovery mode simulation', () => {
+describe.only('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -34,6 +34,15 @@ describe('Recovery mode simulation', () => {
   before(() => {
     const electorSelectionApi = brLedgerNode.use(
       'MostRecentParticipantsWithRecovery');
+
+    electorSelectionApi.api._computeElectors = async () => {
+      const electors = [];
+      for(const p of Object.keys(peers)) {
+        electors.push({id: peers[p], weight: 1});
+      }
+      return electors;
+    };
+
     electorSelectionApi.api._computeRecoveryElectors =
       ({electors, f}) => {
         const activePeers = new Set();
@@ -51,7 +60,7 @@ describe('Recovery mode simulation', () => {
     electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 2;
   });
 
-  const nodeCount = 7;
+  const nodeCount = 4;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // get consensus plugin and create genesis ledger node
@@ -165,31 +174,33 @@ describe('Recovery mode simulation', () => {
     });
 
     /*
-     * 1. add new unique operations/records on nodes alpha, beta, gamma, delta
-     * 2. run worker on *all* nodes
-     * 3. repeat 1 and 2 until target block height is reached on all nodes
+     * 1. remove nodes: gamma, delta
+     * 1. add new unique operations/records on nodes alpha, beta
+     * 2. run worker on nodes: alpha, beta
+     * 3. repeat 2 until target block height is reached on alpha and beta
+          NOTE: only adding an operation on the first work cycle
      * 4. ensure that blockHash for the target block height is identical on all
      * 5. settle the network, see notes on _settleNetwork
      * 6. ensure that the final blockHeight and blockHash is identical on all
      * 7. attempt to retrieve all records added in 1 from the `records` API
-     *
-     * Test recovery mode:
-     * 8. Reduce `nodes` from seven to four nodes: alpha, beta, gamma, delta
-     * 9. add new unique operations/records on nodes alpha, beta, gamma, delta
-     * 10. run worker on all remaining nodes
-     * 11. repeat 9 and 10 until target block height is reached on all nodes
-     *     it is anticipated that the network should go into recovery mode
-     *     under these conditions.
      */
 
-    const targetBlockHeight = 5;
-    let startingRecoveryBlockHeight;
+    const targetBlockHeight = 1;
     describe(`${targetBlockHeight} Blocks`, () => {
       it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
         this.timeout(0);
+
+        // delete two out of the four nodes, however we are not removing their
+        // representation in `peers` and therefore, consensus is being told
+        // that there is a set of four electors in the _computeElectors
+        // override above.
+        delete nodes.gamma;
+        delete nodes.delta;
+
         async.auto({
           nBlocks: callback => _nBlocks(
-            {consensusApi, targetBlockHeight}, (err, result) => {
+            {consensusApi, operationOnWorkCycle: 'first', targetBlockHeight},
+            (err, result) => {
               if(err) {
                 return callback(err);
               }
@@ -199,78 +210,6 @@ describe('Recovery mode simulation', () => {
               _.values(result.targetBlockHashMap)
                 .every(h => h === result.targetBlockHashMap.alpha)
                 .should.be.true;
-              callback(null, result);
-            }),
-          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              startingRecoveryBlockHeight = summaries.alpha.blockHeight + 1;
-              callback();
-            })],
-          state: ['blockSummary', (results, callback) => {
-            const allRecordIds = [].concat(..._.values(
-              results.nBlocks.recordIds));
-            console.log(`Total operation count: ${allRecordIds.length}`);
-            async.eachSeries(allRecordIds, (recordId, callback) => {
-              nodes.alpha.records.get({recordId}, err => {
-                // just need to ensure that there is no NotFoundError
-                assertNoError(err);
-                callback();
-              });
-            }, callback);
-          }]
-        }, err => {
-          assertNoError(err);
-          done();
-        });
-      });
-    }); // end one block
-
-    const recoveryBlocks = 15;
-    const newTargetBlockHeight = targetBlockHeight + recoveryBlocks;
-    describe(`${recoveryBlocks} Recovery Blocks`, () => {
-      it(`makes ${recoveryBlocks} blocks with four nodes`, function(done) {
-        this.timeout(0);
-
-        // remove 3 out of 7 nodes
-        delete nodes.epsilon;
-        delete nodes.zeta;
-        delete nodes.eta;
-
-        async.auto({
-          nBlocks: callback => _nBlocks(
-            {consensusApi, targetBlockHeight: newTargetBlockHeight},
-            (err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              console.log(
-                'targetBlockHashMap', JSON.stringify(result, null, 2));
-              const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
-              _.values(result.targetBlockHashMap)
-                .every(h => h === result.targetBlockHashMap[firstNodeLabel])
-                .should.be.true;
-
               callback(null, result);
             }),
           settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
@@ -347,22 +286,36 @@ function _latestBlockSummary(callback) {
   }, err => callback(err, blocks));
 }
 
-function _nBlocks({consensusApi, targetBlockHeight}, callback) {
+function _nBlocks(
+  {consensusApi, operationOnWorkCycle = 'all', targetBlockHeight}, callback) {
   const recordIds = {};
   const targetBlockHashMap = {};
+  let workCycle = 0;
   async.until(() => {
     return Object.keys(targetBlockHashMap).length ===
       Object.keys(nodes).length;
   }, callback => {
     const count = 1;
+    workCycle++;
+    let addOperation = true;
+    if(operationOnWorkCycle === 'first' && workCycle > 1) {
+      addOperation = false;
+    }
     async.auto({
-      operations: callback => _addOperations({count}, callback),
+      operations: callback => {
+        if(!addOperation) {
+          return callback();
+        }
+        _addOperations({count}, callback);
+      },
       workCycle: ['operations', (results, callback) => {
         // record the IDs for the records that were just added
-        for(const n of Object.keys(nodes)) {
-          recordIds[n] = [];
-          for(const opHash of Object.keys(results.operations[n])) {
-            recordIds[n].push(results.operations[n][opHash].record.id);
+        if(addOperation) {
+          for(const n of Object.keys(nodes)) {
+            recordIds[n] = [];
+            for(const opHash of Object.keys(results.operations[n])) {
+              recordIds[n].push(results.operations[n][opHash].record.id);
+            }
           }
         }
         // in this test `nodes` is an object that needs to be converted to
