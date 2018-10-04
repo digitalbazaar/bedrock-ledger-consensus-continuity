@@ -25,7 +25,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('Recovery mode simulation', () => {
+describe.only('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -34,17 +34,42 @@ describe('Recovery mode simulation', () => {
   before(() => {
     const electorSelectionApi = brLedgerNode.use(
       'MostRecentParticipantsWithRecovery');
+
+    electorSelectionApi.api._computeElectors = async () => {
+      const electors = [];
+      for(const p of Object.keys(nodes)) {
+        electors.push({id: peers[p]});
+      }
+      console.log(`${Date.now()} _COMPUTEELECTORS`, electors.length);
+      return electors;
+    };
+
     electorSelectionApi.api._computeRecoveryElectors =
       ({electors, f}) => {
-        const activePeers = new Set();
+        // const activePeers = new Set();
+        let recoveryElectors = [];
         for(const n of Object.keys(nodes)) {
-          activePeers.add(peers[n]);
+          // activePeers.add(peers[n]);
+          recoveryElectors.push({id: peers[n]});
         }
+
         if(electors.length === 1) {
           return [];
         }
-        const recoveryElectors = electors.filter(e => activePeers.has(e.id))
-          .slice(0, f + 1);
+
+        // NOTE: computing recovery electors based on `electors` does not work
+        // because the elector selection algorithm may have chosen multiple
+        // electors that are no longer active. This results in the intersection
+        // of activePeers and electors being < f + 1 which results in [] being
+        // incorrectly returned.
+        // Below is an example of what *not* to do
+        // const recoveryElectors = electors.filter(e => activePeers.has(e.id))
+        //   .slice(0, f + 1);
+
+        recoveryElectors = recoveryElectors
+          .sort((a, b) => a.id.localeCompare(b.id)).slice(0, f + 1);
+        console.log(`${Date.now()} _COMPUTERECOVERYELECTORS, f`,
+          Object.keys(nodes), recoveryElectors, f);
         return recoveryElectors.length < f + 1 ? [] : recoveryElectors;
       };
     // the return value here gets multiplied by 10
@@ -131,6 +156,13 @@ describe('Recovery mode simulation', () => {
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => {
+
+        for(const n of Object.keys(nodes)) {
+          console.log(`----- ${n} ----`);
+          console.log(`Storage ${nodes[n].storage.events.collection.s.name}`);
+          console.log(`PeerId ${peers[n]}`);
+        }
+
         const blockHashes = [];
         async.auto({
           getLatest: callback => async.each(nodes, (ledgerNode, callback) =>
@@ -183,24 +215,25 @@ describe('Recovery mode simulation', () => {
      */
 
     const targetBlockHeight = 5;
-    let startingRecoveryBlockHeight;
     describe(`${targetBlockHeight} Blocks`, () => {
       it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
         this.timeout(0);
         async.auto({
-          nBlocks: callback => _nBlocks(
-            {consensusApi, targetBlockHeight}, (err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              console.log(
-                'targetBlockHashMap',
-                JSON.stringify(result, null, 2));
-              _.values(result.targetBlockHashMap)
-                .every(h => h === result.targetBlockHashMap.alpha)
-                .should.be.true;
-              callback(null, result);
-            }),
+          nBlocks: callback => helpers.nBlocks({
+            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
+            targetBlockHeight
+          }, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            console.log(
+              'targetBlockHashMap',
+              JSON.stringify(result, null, 2));
+            _.values(result.targetBlockHashMap)
+              .every(h => h === result.targetBlockHashMap.alpha)
+              .should.be.true;
+            callback(null, result);
+          }),
           settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
             {consensusApi, nodes: _.values(nodes)}, callback)],
           blockSummary: ['settle', (results, callback) =>
@@ -224,7 +257,6 @@ describe('Recovery mode simulation', () => {
                 b.blockHeight.should.equal(summaries.alpha.blockHeight);
                 b.blockHash.should.equal(summaries.alpha.blockHash);
               });
-              startingRecoveryBlockHeight = summaries.alpha.blockHeight + 1;
               callback();
             })],
           state: ['blockSummary', (results, callback) => {
@@ -246,7 +278,7 @@ describe('Recovery mode simulation', () => {
       });
     }); // end one block
 
-    const recoveryBlocks = 15;
+    const recoveryBlocks = 10;
     const newTargetBlockHeight = targetBlockHeight + recoveryBlocks;
     describe(`${recoveryBlocks} Recovery Blocks`, () => {
       it(`makes ${recoveryBlocks} blocks with four nodes`, function(done) {
@@ -258,21 +290,22 @@ describe('Recovery mode simulation', () => {
         delete nodes.eta;
 
         async.auto({
-          nBlocks: callback => _nBlocks(
-            {consensusApi, targetBlockHeight: newTargetBlockHeight},
-            (err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              console.log(
-                'targetBlockHashMap', JSON.stringify(result, null, 2));
-              const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
-              _.values(result.targetBlockHashMap)
-                .every(h => h === result.targetBlockHashMap[firstNodeLabel])
-                .should.be.true;
+          nBlocks: callback => helpers.nBlocks({
+            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'first',
+            targetBlockHeight: newTargetBlockHeight
+          }, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            console.log(
+              'targetBlockHashMap', JSON.stringify(result, null, 2));
+            const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
+            _.values(result.targetBlockHashMap)
+              .every(h => h === result.targetBlockHashMap[firstNodeLabel])
+              .should.be.true;
 
-              callback(null, result);
-            }),
+            callback(null, result);
+          }),
           settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
             {consensusApi, nodes: _.values(nodes)}, callback)],
           blockSummary: ['settle', (results, callback) =>
@@ -319,24 +352,6 @@ describe('Recovery mode simulation', () => {
   });
 });
 
-function _addOperations({count}, callback) {
-  const results = {};
-  async.eachOf(nodes, (ledgerNode, key, callback) =>
-    helpers.addOperation({count, ledgerNode, opTemplate}, (err, result) => {
-      if(err) {
-        return callback(err);
-      }
-      results[key] = result;
-      callback();
-    }),
-  err => {
-    if(err) {
-      return callback(err);
-    }
-    callback(null, results);
-  });
-}
-
 function _latestBlockSummary(callback) {
   const blocks = {};
   async.eachOf(nodes, (ledgerNode, nodeName, callback) => {
@@ -345,62 +360,4 @@ function _latestBlockSummary(callback) {
       callback();
     });
   }, err => callback(err, blocks));
-}
-
-function _nBlocks({consensusApi, targetBlockHeight}, callback) {
-  const recordIds = {};
-  const targetBlockHashMap = {};
-  async.until(() => {
-    return Object.keys(targetBlockHashMap).length ===
-      Object.keys(nodes).length;
-  }, callback => {
-    const count = 1;
-    async.auto({
-      operations: callback => _addOperations({count}, callback),
-      workCycle: ['operations', (results, callback) => {
-        // record the IDs for the records that were just added
-        for(const n of Object.keys(nodes)) {
-          recordIds[n] = [];
-          for(const opHash of Object.keys(results.operations[n])) {
-            recordIds[n].push(results.operations[n][opHash].record.id);
-          }
-        }
-        // in this test `nodes` is an object that needs to be converted to
-        // an array for the helper
-        console.log(`+++RUN WORKERCYCLE ON ${Object.keys(nodes).length} NODES`);
-        helpers.runWorkerCycle(
-          {consensusApi, nodes: _.values(nodes), series: false}, callback);
-      }],
-      report: ['workCycle', (results, callback) => async.forEachOfSeries(
-        nodes, (ledgerNode, i, callback) => {
-          ledgerNode.storage.blocks.getLatestSummary((err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            const {block} = result.eventBlock;
-            if(block.blockHeight >= targetBlockHeight) {
-              return ledgerNode.storage.blocks.getByHeight(
-                targetBlockHeight, (err, result) => {
-                  if(err) {
-                    return callback(err);
-                  }
-                  targetBlockHashMap[i] = result.meta.blockHash;
-                  callback();
-                });
-            }
-            callback();
-          });
-        }, callback)]
-    }, err => {
-      if(err) {
-        return callback(err);
-      }
-      callback();
-    });
-  }, err => {
-    if(err) {
-      return callback(err);
-    }
-    callback(null, {recordIds, targetBlockHashMap});
-  });
 }

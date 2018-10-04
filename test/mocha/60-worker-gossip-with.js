@@ -191,7 +191,50 @@ describe('Worker - _gossipWith', () => {
           result.should.be.true;
           callback();
         });
-      }]
+      }],
+      testChildless: ['testMongo', (results, callback) => {
+        const ledgerNodeId = nodes.beta.id;
+        const childlessKey = cacheKey.childless(ledgerNodeId);
+        cache.client.smembers(childlessKey, (err, result) => {
+          assertNoError(err);
+          result.should.be.an('array');
+          result.should.have.length(1);
+          result[0].should.equal(results.addEvent.mergeHash);
+          callback();
+        });
+      }],
+      gossipWith2: ['testChildless', (results, callback) => {
+        gossipWith(
+          {ledgerNode: nodes.gamma, peer: peers.beta}, err => {
+            assertNoError(err);
+            callback();
+          });
+      }],
+      testCache2: ['gossipWith2', (results, callback) => {
+        // the events from alpha should now be present in the cache on gamma
+        const {id: ledgerNodeId} = nodes.gamma;
+        const regularEventHash = results.addEvent.regularHashes[0];
+        const regularEventKey = cacheKey.event(
+          {eventHash: regularEventHash, ledgerNodeId});
+        const mergeHash = results.addEvent.mergeHash;
+        const mergeHashKey = cacheKey.event(
+          {eventHash: mergeHash, ledgerNodeId});
+        const hashKeys = [regularEventKey, mergeHashKey];
+        cache.client.multi()
+          .lrange(cacheKey.eventQueue(ledgerNodeId), 0, 100)
+          .exists(hashKeys)
+          .exec((err, result) => {
+            assertNoError(err);
+            const eventQueue = result[0];
+            eventQueue.should.have.length(2);
+            // ensure that events are in the proper order
+            eventQueue[0].should.equal(regularEventKey);
+            eventQueue[1].should.equal(mergeHashKey);
+            const existsCount = result[1];
+            existsCount.should.equal(2);
+            callback();
+          });
+      }],
     }, done);
   });
   /*

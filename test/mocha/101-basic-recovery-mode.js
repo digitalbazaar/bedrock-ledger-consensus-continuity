@@ -25,7 +25,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.only('Recovery mode simulation', () => {
+describe('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -200,21 +200,28 @@ describe.only('Recovery mode simulation', () => {
         delete nodes.zeta;
         delete nodes.eta;
 
+        for(const n of Object.keys(nodes)) {
+          console.log(`----- ${n} ----`);
+          console.log(`Storage ${nodes[n].storage.events.collection.s.name}`);
+          console.log(`PeerId ${peers[n]}`);
+        }
+
         async.auto({
-          nBlocks: callback => _nBlocks(
-            {consensusApi, operationOnWorkCycle: 'first', targetBlockHeight},
-            (err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              console.log(
-                'targetBlockHashMap',
-                JSON.stringify(result, null, 2));
-              _.values(result.targetBlockHashMap)
-                .every(h => h === result.targetBlockHashMap.alpha)
-                .should.be.true;
-              callback(null, result);
-            }),
+          nBlocks: callback => helpers.nBlocks({
+            consensusApi, nodes, operationOnWorkCycle: 'first', opTemplate,
+            targetBlockHeight
+          }, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            console.log(
+              'targetBlockHashMap',
+              JSON.stringify(result, null, 2));
+            _.values(result.targetBlockHashMap)
+              .every(h => h === result.targetBlockHashMap.alpha)
+              .should.be.true;
+            callback(null, result);
+          }),
           settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
             {consensusApi, nodes: _.values(nodes)}, callback)],
           blockSummary: ['settle', (results, callback) =>
@@ -261,24 +268,6 @@ describe.only('Recovery mode simulation', () => {
   });
 });
 
-function _addOperations({count}, callback) {
-  const results = {};
-  async.eachOf(nodes, (ledgerNode, key, callback) =>
-    helpers.addOperation({count, ledgerNode, opTemplate}, (err, result) => {
-      if(err) {
-        return callback(err);
-      }
-      results[key] = result;
-      callback();
-    }),
-  err => {
-    if(err) {
-      return callback(err);
-    }
-    callback(null, results);
-  });
-}
-
 function _latestBlockSummary(callback) {
   const blocks = {};
   async.eachOf(nodes, (ledgerNode, nodeName, callback) => {
@@ -287,76 +276,4 @@ function _latestBlockSummary(callback) {
       callback();
     });
   }, err => callback(err, blocks));
-}
-
-function _nBlocks(
-  {consensusApi, operationOnWorkCycle = 'all', targetBlockHeight}, callback) {
-  const recordIds = {};
-  const targetBlockHashMap = {};
-  let workCycle = 0;
-  async.until(() => {
-    return Object.keys(targetBlockHashMap).length ===
-      Object.keys(nodes).length;
-  }, callback => {
-    const count = 1;
-    workCycle++;
-    let addOperation = true;
-    if(operationOnWorkCycle === 'first' && workCycle > 1) {
-      addOperation = false;
-    }
-    async.auto({
-      operations: callback => {
-        if(!addOperation) {
-          return callback();
-        }
-        _addOperations({count}, callback);
-      },
-      workCycle: ['operations', (results, callback) => {
-        // record the IDs for the records that were just added
-        if(addOperation) {
-          for(const n of Object.keys(nodes)) {
-            recordIds[n] = [];
-            for(const opHash of Object.keys(results.operations[n])) {
-              recordIds[n].push(results.operations[n][opHash].record.id);
-            }
-          }
-        }
-        // in this test `nodes` is an object that needs to be converted to
-        // an array for the helper
-        console.log(`+++RUN WORKERCYCLE ON ${Object.keys(nodes).length} NODES`);
-        helpers.runWorkerCycle(
-          {consensusApi, nodes: _.values(nodes), series: false}, callback);
-      }],
-      report: ['workCycle', (results, callback) => async.forEachOfSeries(
-        nodes, (ledgerNode, i, callback) => {
-          ledgerNode.storage.blocks.getLatestSummary((err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            const {block} = result.eventBlock;
-            if(block.blockHeight >= targetBlockHeight) {
-              return ledgerNode.storage.blocks.getByHeight(
-                targetBlockHeight, (err, result) => {
-                  if(err) {
-                    return callback(err);
-                  }
-                  targetBlockHashMap[i] = result.meta.blockHash;
-                  callback();
-                });
-            }
-            callback();
-          });
-        }, callback)]
-    }, err => {
-      if(err) {
-        return callback(err);
-      }
-      callback();
-    });
-  }, err => {
-    if(err) {
-      return callback(err);
-    }
-    callback(null, {recordIds, targetBlockHashMap});
-  });
 }

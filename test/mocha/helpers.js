@@ -3,6 +3,7 @@
  */
 'use strict';
 
+const _ = require('lodash');
 const async = require('async');
 const bedrock = require('bedrock');
 const brIdentity = require('bedrock-identity');
@@ -179,6 +180,25 @@ api.addOperation = ({count = 1, ledgerNode, opTemplate}, callback) => {
 api.addOperations = ({count, nodes, opTemplate}, callback) => {
   async.mapSeries(nodes, (ledgerNode, callback) => api.addOperation(
     {count, ledgerNode, opTemplate}, callback), callback);
+};
+
+// returns a different data structure than `api.addOpartions`
+api.addOperations2 = ({count, nodes, opTemplate}, callback) => {
+  const results = {};
+  async.eachOf(nodes, (ledgerNode, key, callback) =>
+    api.addOperation({count, ledgerNode, opTemplate}, (err, result) => {
+      if(err) {
+        return callback(err);
+      }
+      results[key] = result;
+      callback();
+    }),
+  err => {
+    if(err) {
+      return callback(err);
+    }
+    callback(null, results);
+  });
 };
 
 // add a merge event and regular event as if it came in through gossip
@@ -406,6 +426,80 @@ api.createIdentity = function(userName) {
 };
 
 api.flushCache = callback => cache.client.flushall(callback);
+
+api.nBlocks = ({
+  consensusApi, nodes, operationOnWorkCycle = 'all', opTemplate,
+  targetBlockHeight
+}, callback) => {
+  const recordIds = {};
+  const targetBlockHashMap = {};
+  let workCycle = 0;
+  async.until(() => {
+    return Object.keys(targetBlockHashMap).length ===
+      Object.keys(nodes).length;
+  }, callback => {
+    const count = 1;
+    workCycle++;
+    let addOperation = true;
+    if(operationOnWorkCycle === 'first' && workCycle > 1) {
+      addOperation = false;
+    }
+    async.auto({
+      operations: callback => {
+        if(!addOperation) {
+          return callback();
+        }
+        api.addOperations2({count, nodes, opTemplate}, callback);
+      },
+      workCycle: ['operations', (results, callback) => {
+        // record the IDs for the records that were just added
+        if(addOperation) {
+          for(const n of Object.keys(nodes)) {
+            recordIds[n] = [];
+            for(const opHash of Object.keys(results.operations[n])) {
+              recordIds[n].push(results.operations[n][opHash].record.id);
+            }
+          }
+        }
+        // in this test `nodes` is an object that needs to be converted to
+        // an array for the helper
+        console.log(`+++RUN WORKERCYCLE ON ${Object.keys(nodes).length} NODES`);
+        api.runWorkerCycle(
+          {consensusApi, nodes: _.values(nodes), series: false}, callback);
+      }],
+      report: ['workCycle', (results, callback) => async.forEachOfSeries(
+        nodes, (ledgerNode, i, callback) => {
+          ledgerNode.storage.blocks.getLatestSummary((err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            const {block} = result.eventBlock;
+            if(block.blockHeight >= targetBlockHeight) {
+              return ledgerNode.storage.blocks.getByHeight(
+                targetBlockHeight, (err, result) => {
+                  if(err) {
+                    return callback(err);
+                  }
+                  targetBlockHashMap[i] = result.meta.blockHash;
+                  callback();
+                });
+            }
+            callback();
+          });
+        }, callback)]
+    }, err => {
+      if(err) {
+        return callback(err);
+      }
+      callback();
+    });
+  }, err => {
+    if(err) {
+      return callback(err);
+    }
+    callback(null, {recordIds, targetBlockHashMap});
+  });
+};
 
 // collections may be a string or array
 api.removeCollections = function(collections, callback) {
