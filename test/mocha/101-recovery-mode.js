@@ -37,7 +37,7 @@ describe.only('Recovery mode simulation', () => {
       'MostRecentParticipantsWithRecovery');
 
     let savedElectors;
-    electorSelectionApi.api._computeElectors = async ({blockHeight}) => {
+    electorSelectionApi.api._computeElectors = async () => {
       // electors only need to be computed once
       if(savedElectors) {
         return savedElectors;
@@ -50,27 +50,32 @@ describe.only('Recovery mode simulation', () => {
       return electors;
     };
 
+    // always return alpha as the sole elector
+    electorSelectionApi.api._computeElectorsForRecoveryMode = () => {
+      return [{id: peers.alpha}];
+    };
+
     // since the recoveryElectors in this test are based on `nodes` which
     // changes throughout the tests as nodes are removed and added, the
     // value computed at each blockHeight is stored for the benefit of nodes
     // that must catch up as they are re-enabled.
-    const recoveryElectorsByBlockHeight = new Map();
+    // const recoveryElectorsByBlockHeight = new Map();
     electorSelectionApi.api._computeRecoveryElectors =
       ({blockHeight, electors, f}) => {
         // const activePeers = new Set();
         let recoveryElectors = [];
-        for(const n of Object.keys(nodes)) {
+        for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
           // activePeers.add(peers[n]);
           recoveryElectors.push({id: peers[n]});
         }
 
-        let r = recoveryElectorsByBlockHeight.get(blockHeight);
-        if(r) {
-          return r;
-        }
+        // let r = recoveryElectorsByBlockHeight.get(blockHeight);
+        // if(r) {
+        //   return r;
+        // }
 
         if(electors.length === 1) {
-          recoveryElectorsByBlockHeight.set(blockHeight, []);
+          // recoveryElectorsByBlockHeight.set(blockHeight, []);
           return [];
         }
 
@@ -83,12 +88,13 @@ describe.only('Recovery mode simulation', () => {
         // const recoveryElectors = electors.filter(e => activePeers.has(e.id))
         //   .slice(0, f + 1);
 
-        recoveryElectors = recoveryElectors
-          .sort((a, b) => a.id.localeCompare(b.id)).slice(0, f + 1);
-        console.log(`${Date.now()} _COMPUTERECOVERYELECTORS, f`,
-          Object.keys(nodes), recoveryElectors, f);
-        r = recoveryElectors.length < f + 1 ? [] : recoveryElectors;
-        recoveryElectorsByBlockHeight.set(blockHeight, r);
+        // recoveryElectors = recoveryElectors
+        //   .sort((a, b) => a.id.localeCompare(b.id)).slice(0, f + 1);
+
+        recoveryElectors = recoveryElectors.slice(0, f + 1);
+
+        const r = recoveryElectors.length < f + 1 ? [] : recoveryElectors;
+        // recoveryElectorsByBlockHeight.set(blockHeight, r);
         return r;
       };
     // the return value here gets multiplied by 10
@@ -475,7 +481,7 @@ describe.only('Recovery mode simulation', () => {
     let stageFourBlockHeight;
     describe(`${regularBlocksSevenNodes} Regular Blocks`, () => {
       it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, function(done) {
-        this.timeout(180000);
+        this.timeout(300000);
 
         const newTargetBlockHeight = stageThreeBlockHeight +
           regularBlocksSevenNodes;

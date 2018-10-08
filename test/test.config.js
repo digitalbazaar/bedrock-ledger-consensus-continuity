@@ -26,3 +26,5 @@ config['ledger-consensus-continuity'].gossip.cache.enabled = false;
 
 // reduce debounce in the event-writer
 config['ledger-consensus-continuity'].writer.debounce = 50;
+
+config.mocha.options.bail = true;
