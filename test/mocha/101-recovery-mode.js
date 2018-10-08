@@ -22,10 +22,11 @@ const nodeLabels = [
   'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota'
 ];
 const nodes = {};
+const disabledNodes = {};
 const peers = {};
 const heads = {};
 
-describe('Recovery mode simulation', () => {
+describe.only('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -37,7 +38,7 @@ describe('Recovery mode simulation', () => {
 
     electorSelectionApi.api._computeElectors = async () => {
       const electors = [];
-      for(const p of Object.keys(nodes)) {
+      for(const p of Object.keys(peers)) {
         electors.push({id: peers[p]});
       }
       console.log(`${Date.now()} _COMPUTEELECTORS`, electors.length);
@@ -215,6 +216,7 @@ describe('Recovery mode simulation', () => {
      */
 
     const targetBlockHeight = 5;
+    let stageOneBlockHeight;
     describe(`${targetBlockHeight} Blocks`, () => {
       it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
         this.timeout(0);
@@ -242,6 +244,8 @@ describe('Recovery mode simulation', () => {
                 return callback(err);
               }
               const summaries = {};
+              stageOneBlockHeight = result[Object.keys(result)[0]].eventBlock
+                .block.blockHeight;
               Object.keys(result).forEach(k => {
                 summaries[k] = {
                   blockCollection: nodes[k].storage.blocks.collection.s.name,
@@ -278,20 +282,95 @@ describe('Recovery mode simulation', () => {
       });
     }); // end one block
 
-    const recoveryBlocks = 10;
-    const newTargetBlockHeight = targetBlockHeight + recoveryBlocks;
-    describe(`${recoveryBlocks} Recovery Blocks`, () => {
-      it(`makes ${recoveryBlocks} blocks with four nodes`, function(done) {
+    const recoveryBlocksFourNodes = 10;
+    let stageTwoBlockHeight;
+    describe(`${recoveryBlocksFourNodes} Recovery Blocks`, () => {
+      it(`makes ${recoveryBlocksFourNodes} blocks w/4 nodes`, function(done) {
         this.timeout(0);
 
+        const newTargetBlockHeight = stageOneBlockHeight +
+          recoveryBlocksFourNodes;
+
         // remove 3 out of 7 nodes
-        delete nodes.epsilon;
-        delete nodes.zeta;
-        delete nodes.eta;
+        _disableNodes(['epsilon', 'zeta', 'eta']);
 
         async.auto({
           nBlocks: callback => helpers.nBlocks({
-            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'first',
+            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
+            targetBlockHeight: newTargetBlockHeight
+          }, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            console.log(
+              'targetBlockHashMap', JSON.stringify(result, null, 2));
+            const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
+            _.values(result.targetBlockHashMap)
+              .every(h => h === result.targetBlockHashMap[firstNodeLabel])
+              .should.be.true;
+
+            callback(null, result);
+          }),
+          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
+            {consensusApi, nodes: _.values(nodes)}, callback)],
+          blockSummary: ['settle', (results, callback) =>
+            _latestBlockSummary((err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              stageTwoBlockHeight = result[Object.keys(result)[0]].eventBlock
+                .block.blockHeight;
+              const summaries = {};
+              Object.keys(result).forEach(k => {
+                summaries[k] = {
+                  blockCollection: nodes[k].storage.blocks.collection.s.name,
+                  blockHeight: result[k].eventBlock.block.blockHeight,
+                  blockHash: result[k].eventBlock.meta.blockHash,
+                  previousBlockHash: result[k].eventBlock.block
+                    .previousBlockHash,
+                };
+              });
+              console.log('Finishing block summaries:', JSON.stringify(
+                summaries, null, 2));
+              _.values(summaries).forEach(b => {
+                b.blockHeight.should.equal(summaries.alpha.blockHeight);
+                b.blockHash.should.equal(summaries.alpha.blockHash);
+              });
+              callback();
+            })],
+          state: ['blockSummary', (results, callback) => {
+            const allRecordIds = [].concat(..._.values(
+              results.nBlocks.recordIds));
+            console.log(`Total operation count: ${allRecordIds.length}`);
+            async.eachSeries(allRecordIds, (recordId, callback) => {
+              nodes.alpha.records.get({recordId}, err => {
+                // just need to ensure that there is no NotFoundError
+                assertNoError(err);
+                callback();
+              });
+            }, callback);
+          }]
+        }, err => {
+          assertNoError(err);
+          done();
+        });
+      });
+    }); // end recovery blocks four nodes
+
+    const recoveryBlocksThreeNodes = 10;
+    describe(`${recoveryBlocksThreeNodes} Recovery Blocks`, () => {
+      it(`makes ${recoveryBlocksThreeNodes} blocks w/3 nodes`, function(done) {
+        this.timeout(0);
+
+        const newTargetBlockHeight = stageTwoBlockHeight +
+          recoveryBlocksThreeNodes;
+
+        // remove 1 out of the remaining 4 nodes
+        _disableNodes(['delta']);
+
+        async.auto({
+          nBlocks: callback => helpers.nBlocks({
+            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
             targetBlockHeight: newTargetBlockHeight
           }, (err, result) => {
             if(err) {
@@ -348,9 +427,16 @@ describe('Recovery mode simulation', () => {
           done();
         });
       });
-    }); // end one block
+    }); // end recovery blocks four nodes
   });
 });
+
+function _disableNodes(nodeLabels) {
+  for(const node of nodeLabels) {
+    disabledNodes[node] = nodes[node];
+    delete nodes[node];
+  }
+}
 
 function _latestBlockSummary(callback) {
   const blocks = {};

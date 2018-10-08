@@ -455,7 +455,9 @@ api.nBlocks = ({
         // record the IDs for the records that were just added
         if(addOperation) {
           for(const n of Object.keys(nodes)) {
-            recordIds[n] = [];
+            if(!recordIds[n]) {
+              recordIds[n] = [];
+            }
             for(const opHash of Object.keys(results.operations[n])) {
               recordIds[n].push(results.operations[n][opHash].record.id);
             }
