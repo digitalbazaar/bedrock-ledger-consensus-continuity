@@ -477,15 +477,9 @@ describe.only('Recovery mode simulation', () => {
       });
     }); // end recovery blocks three nodes
 
-    const regularBlocksSevenNodes = 10;
     let stageFourBlockHeight;
-    describe(`${regularBlocksSevenNodes} Regular Blocks`, () => {
-      it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, function(done) {
-        this.timeout(0);
-
-        const newTargetBlockHeight = stageThreeBlockHeight +
-          regularBlocksSevenNodes;
-
+    describe('Enable formerly disable nodes', () => {
+      it('let disabled nodes catch up', done => {
         // enable all previously disabled nodes, back to seven nodes
         _enableNodes(['delta', 'epsilon', 'zeta', 'eta']);
 
@@ -494,47 +488,6 @@ describe.only('Recovery mode simulation', () => {
           settle: callback => helpers.settleNetwork(
             {consensusApi, nodes: _.values(nodes)}, callback),
           blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
-            })],
-          nBlocks: ['blockSummary', (results, callback) => helpers.nBlocks({
-            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
-            targetBlockHeight: newTargetBlockHeight
-          }, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            console.log(
-              'targetBlockHashMap', JSON.stringify(result, null, 2));
-            const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
-            _.values(result.targetBlockHashMap)
-              .every(h => h === result.targetBlockHashMap[firstNodeLabel])
-              .should.be.true;
-
-            callback(null, result);
-          })],
-          settle2: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary2: ['settle2', (results, callback) =>
             _latestBlockSummary((err, result) => {
               if(err) {
                 return callback(err);
@@ -559,7 +512,67 @@ describe.only('Recovery mode simulation', () => {
               });
               callback();
             })],
-          state: ['blockSummary2', (results, callback) => {
+        }, err => {
+          assertNoError(err);
+          done();
+        });
+      });
+    });
+
+    const regularBlocksSevenNodes = 10;
+    let stageFiveBlockHeight;
+    describe(`${regularBlocksSevenNodes} Regular Blocks`, () => {
+      it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, function(done) {
+        this.timeout(0);
+
+        const newTargetBlockHeight = stageFourBlockHeight +
+          regularBlocksSevenNodes;
+
+        async.auto({
+          nBlocks: callback => helpers.nBlocks({
+            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
+            targetBlockHeight: newTargetBlockHeight
+          }, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            console.log(
+              'targetBlockHashMap', JSON.stringify(result, null, 2));
+            const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
+            _.values(result.targetBlockHashMap)
+              .every(h => h === result.targetBlockHashMap[firstNodeLabel])
+              .should.be.true;
+
+            callback(null, result);
+          }),
+          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
+            {consensusApi, nodes: _.values(nodes)}, callback)],
+          blockSummary: ['settle', (results, callback) =>
+            _latestBlockSummary((err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              stageFiveBlockHeight = result[Object.keys(result)[0]].eventBlock
+                .block.blockHeight;
+              const summaries = {};
+              Object.keys(result).forEach(k => {
+                summaries[k] = {
+                  blockCollection: nodes[k].storage.blocks.collection.s.name,
+                  blockHeight: result[k].eventBlock.block.blockHeight,
+                  blockHash: result[k].eventBlock.meta.blockHash,
+                  previousBlockHash: result[k].eventBlock.block
+                    .previousBlockHash,
+                };
+              });
+              console.log('Finishing block summaries:', JSON.stringify(
+                summaries, null, 2));
+              _.values(summaries).forEach(b => {
+                b.blockHeight.should.equal(summaries.alpha.blockHeight);
+                b.blockHash.should.equal(summaries.alpha.blockHash);
+              });
+              callback();
+            })],
+          state: ['blockSummary', (results, callback) => {
             const allRecordIds = [].concat(..._.values(
               results.nBlocks.recordIds));
             console.log(`Total operation count: ${allRecordIds.length}`);
@@ -575,7 +588,7 @@ describe.only('Recovery mode simulation', () => {
             const ledgerNode = nodes.alpha;
             const {getParticipants} = ledgerNode.consensus._blocks;
             getParticipants(
-              {blockHeight: stageFourBlockHeight, ledgerNode},
+              {blockHeight: stageFiveBlockHeight, ledgerNode},
               (err, result) => {
                 assertNoError(err);
                 // proof on the last block created should involve all 7 nodes
