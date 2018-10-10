@@ -19,7 +19,7 @@ config['ledger-consensus-continuity'].worker.election.gossipInterval = 0;
 // decrease delay for gossiping with the same peer
 config['ledger-consensus-continuity'].gossip.coolDownPeriod = 250;
 
-config['ledger-consensus-continuity'].gossip.maxDepth = 1;
+config['ledger-consensus-continuity'].gossip.maxDepth = 6;
 
 // disable caching in test
 config['ledger-consensus-continuity'].gossip.cache.enabled = false;
