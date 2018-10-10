@@ -480,7 +480,7 @@ describe.only('Recovery mode simulation', () => {
     let stageFourBlockHeight;
     describe('Enable formerly disable nodes', () => {
       it('let disabled nodes catch up', function(done) {
-        this.timeout(60000);
+        this.timeout(180000);
 
         // enable all previously disabled nodes, back to seven nodes
         _enableNodes(['delta', 'epsilon', 'zeta', 'eta']);
