@@ -487,8 +487,9 @@ describe.only('Recovery mode simulation', () => {
 
         async.auto({
           // let the previously disabled nodes catch up
-          settle: callback => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback),
+          countEvents: callback => _countEvents(callback),
+          settle: ['countEvents', (results, callback) => helpers.settleNetwork(
+            {consensusApi, nodes: _.values(nodes)}, callback)],
           blockSummary: ['settle', (results, callback) =>
             _latestBlockSummary((err, result) => {
               if(err) {
@@ -514,6 +515,8 @@ describe.only('Recovery mode simulation', () => {
               });
               callback();
             })],
+          countEvents2: ['blockSummary', (results, callback) =>
+            _countEvents(callback)]
         }, err => {
           assertNoError(err);
           done();
@@ -523,7 +526,7 @@ describe.only('Recovery mode simulation', () => {
 
     const regularBlocksSevenNodes = 10;
     let stageFiveBlockHeight;
-    describe(`${regularBlocksSevenNodes} Regular Blocks`, () => {
+    describe.skip(`${regularBlocksSevenNodes} Regular Blocks`, () => {
       it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, function(done) {
         this.timeout(180000);
 
@@ -608,6 +611,20 @@ describe.only('Recovery mode simulation', () => {
     }); // end regular blocks seven nodes
   });
 });
+
+function _countEvents(callback) {
+  nodes.alpha.storage.events.collection.aggregate([
+    {$match: {'meta.continuity2017.type': 'm'}},
+    {$group: {
+      _id: '$meta.continuity2017.creator',
+      total: {$sum: 1}
+    }}
+  ]).toArray((err, result) => {
+    assertNoError(err);
+    console.log('EVENTS', JSON.stringify(result, null, 2));
+    callback();
+  });
+}
 
 function _disableNodes(nodeLabels) {
   for(const node of nodeLabels) {
