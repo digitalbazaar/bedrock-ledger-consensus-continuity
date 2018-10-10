@@ -525,7 +525,7 @@ describe.only('Recovery mode simulation', () => {
     let stageFiveBlockHeight;
     describe(`${regularBlocksSevenNodes} Regular Blocks`, () => {
       it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, function(done) {
-        this.timeout(0);
+        this.timeout(180000);
 
         const newTargetBlockHeight = stageFourBlockHeight +
           regularBlocksSevenNodes;
