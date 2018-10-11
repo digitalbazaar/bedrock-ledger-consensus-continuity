@@ -35,7 +35,8 @@
   },
   "peerDependencies": {
     "bedrock": "^1.12.0",
-    "bedrock-express": "^2.1.0",    
+    "bedrock-docs": "^3.0.0",    
+    "bedrock-express": "^2.1.0",
     "bedrock-ledger-consensus-continuity-storage": "^2.0.0",
     "bedrock-ledger-context": "^2.0.0",
     "bedrock-ledger-node": "^2.0.0",
