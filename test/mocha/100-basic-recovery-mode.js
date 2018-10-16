@@ -25,7 +25,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('Recovery mode simulation', () => {
+describe.only('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -35,25 +35,35 @@ describe('Recovery mode simulation', () => {
     const electorSelectionApi = brLedgerNode.use(
       'MostRecentParticipantsWithRecovery');
 
+    // always return alpha as the sole elector
+    electorSelectionApi.api._computeElectorsForRecoveryMode = () => {
+      return [{id: peers.alpha}];
+    };
+
+    let savedElectors;
     electorSelectionApi.api._computeElectors = async () => {
+      // electors only need to be computed once
+      if(savedElectors) {
+        return savedElectors;
+      }
       const electors = [];
       for(const p of Object.keys(peers)) {
-        electors.push({id: peers[p], weight: 1});
+        electors.push({id: peers[p]});
       }
+      savedElectors = electors;
       return electors;
     };
 
     electorSelectionApi.api._computeRecoveryElectors =
       ({electors, f}) => {
-        const activePeers = new Set();
-        for(const n of Object.keys(nodes)) {
-          activePeers.add(peers[n]);
+        let recoveryElectors = [];
+        for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
+          recoveryElectors.push({id: peers[n]});
         }
         if(electors.length === 1) {
           return [];
         }
-        const recoveryElectors = electors.filter(e => activePeers.has(e.id))
-          .slice(0, f + 1);
+        recoveryElectors = recoveryElectors.slice(0, f + 1);
         return recoveryElectors.length < f + 1 ? [] : recoveryElectors;
       };
     // the return value here gets multiplied by 10
