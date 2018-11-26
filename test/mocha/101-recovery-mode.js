@@ -26,7 +26,7 @@ const disabledNodes = {};
 const peers = {};
 const heads = {};
 
-describe.only('Recovery mode simulation', () => {
+describe.skip('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
