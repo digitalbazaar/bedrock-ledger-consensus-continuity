@@ -39,13 +39,13 @@
     "bedrock-express": "^2.1.0",
     "bedrock-ledger-consensus-continuity-storage": "^2.0.0",
     "bedrock-ledger-context": "^2.0.0",
-    "bedrock-ledger-node": "^3.0.0",
+    "bedrock-ledger-node": "^4.0.0",
     "bedrock-ledger-storage-mongodb": "^1.0.0",
     "bedrock-mongodb": "^5.0.0",
     "bedrock-permission": "^2.5.3",
     "bedrock-redis": "^3.4.0",
     "bedrock-rest": "^2.1.2",
-    "bedrock-validation": "^3.1.0"
+    "bedrock-validation": "^4.0.0"
   },
   "engines": {
     "node": ">=8"

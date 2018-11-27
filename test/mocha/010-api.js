@@ -68,7 +68,10 @@ describe('Continuity2017', () => {
           callback();
         });
       }],
-    }, done);
+    }, err => {
+      assertNoError(err);
+      done();
+    });
   });
 
   describe('add operation API', () => {
