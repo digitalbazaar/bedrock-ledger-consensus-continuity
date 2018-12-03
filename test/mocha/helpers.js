@@ -14,6 +14,7 @@ const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
+const {promisify} = require('util');
 // const util = require('util');
 // const BedrockError = bedrock.util.BedrockError;
 
@@ -37,12 +38,13 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 // test hashing function
 api.testHasher = brLedgerNode.consensus._hasher;
 
-api.addEvent = (
-  {count = 1, eventTemplate, ledgerNode, opTemplate}, callback) => {
+api.addEvent = async ({
+  count = 1, eventTemplate, ledgerNode, opTemplate
+}) => {
   const events = {};
   const {creatorId} = ledgerNode;
   let operations;
-  async.timesSeries(count, (i, callback) => {
+  for(let i = 0; i < count; ++i) {
     const testEvent = bedrock.util.clone(eventTemplate);
     testEvent.basisBlockHeight = 1;
     const operation = bedrock.util.clone(opTemplate);
@@ -53,114 +55,81 @@ api.addEvent = (
     if(operation.type === 'UpdateWebLedgerRecord') {
       operation.recordPatch.target = testRecordId;
     }
-    async.auto({
-      head: callback => ledgerNode.consensus._events.getHead(
-        {creatorId, ledgerNode}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          const {eventHash: headHash} = result;
-          testEvent.parentHash = [headHash];
-          testEvent.treeHash = headHash;
-          callback();
-        }),
-      operationHash: callback => hasher(operation, (err, opHash) => {
-        if(err) {
-          return callback(err);
-        }
-        testEvent.operationHash = [opHash];
-        callback(null, opHash);
-      }),
-      eventHash: ['head', 'operationHash', (results, callback) => hasher(
-        testEvent, callback)],
-      operation: ['eventHash', (results, callback) => {
-        const {eventHash, operationHash} = results;
-        operations = [{
-          meta: {
-            basisBlockHeight: 1,
-            operationHash,
-            recordId: ledgerNode.storage.driver.hash(testRecordId),
-          },
-          operation,
-        }];
-        ledgerNode.consensus.operations.write(
-          {eventHash, ledgerNode, operations}, callback);
-      }],
-      event: ['operation', (results, callback) => {
-        const {eventHash} = results;
-        ledgerNode.consensus._events.add(
-          {event: testEvent, eventHash, ledgerNode}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            result.operations = operations;
-            events[result.meta.eventHash] = result;
-            callback();
-          });
-      }]
-    }, callback);
-  }, err => callback(err, events));
+    const head = await ledgerNode.consensus._events.getHead({
+      creatorId, ledgerNode
+    });
+    const {eventHash: headHash} = head;
+    testEvent.parentHash = [headHash];
+    testEvent.treeHash = headHash;
+
+    testEvent.operationHash = [await hasher(operation)];
+
+    const eventHash = await hasher(testEvent);
+    operations = [{
+      meta: {
+        basisBlockHeight: 1,
+        operationHash: testEvent.operationHash,
+        recordId: ledgerNode.storage.driver.hash(testRecordId)
+      },
+      operation,
+    }];
+    await ledgerNode.consensus.operations.write({
+      eventHash, ledgerNode, operations
+    });
+
+    const _add = await ledgerNode.consensus._events.add({
+      event: testEvent, eventHash, ledgerNode
+    });
+
+    _add.operations = operations;
+    events[_add.meta.eventHash] = _add;
+  }
+
+  return events;
 };
 
-api.addEventAndMerge = ({
+api.addEventAndMerge = async ({
   consensusApi, count = 1, eventTemplate, ledgerNode, opTemplate
-}, callback) => {
+}) => {
   if(!(consensusApi && eventTemplate && ledgerNode)) {
     throw new TypeError(
       '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
   }
   const events = {};
   const merge = consensusApi._events.merge;
-  async.auto({
-    addEvent: callback => api.addEvent(
-      {count, eventTemplate, ledgerNode, opTemplate}, (err, result) => {
-        if(err) {
-          return callback(err);
-        }
-        events.regular = result;
-        events.regularHashes = Object.keys(result);
-        callback();
-      }),
-    merge: ['addEvent', (results, callback) => merge(
-      {creatorId: ledgerNode.creatorId, ledgerNode}, (err, result) => {
-        if(err) {
-          return callback(err);
-        }
-        events.merge = result;
-        events.mergeHash = result.meta.eventHash;
-        events.allHashes = [events.mergeHash, ...events.regularHashes];
-        callback();
-      })]
-  }, err => callback(err, events));
+
+  events.regular = await api.addEvent({
+    count, eventTemplate, ledgerNode, opTemplate
+  });
+  events.regularHashes = Object.keys(events.regular);
+
+  events.merge = await merge({
+    creatorId: ledgerNode.creatorId, ledgerNode
+  });
+  events.mergeHash = events.merge.meta.eventHash;
+  events.allHashes = [events.mergeHash, ...events.regularHashes];
+
+  return events;
 };
 
-api.addEventMultiNode = (
-  {consensusApi, eventTemplate, nodes, opTemplate}, callback) => {
+api.addEventMultiNode = async ({
+  consensusApi, eventTemplate, nodes, opTemplate
+}) => {
   const rVal = {
     mergeHash: [],
     regularHash: []
   };
-  async.eachOfSeries(nodes, (ledgerNode, i, callback) => {
-    api.addEventAndMerge({
+  for(const name of Object.keys(nodes)) {
+    const ledgerNode = nodes[name];
+    rVal[name] = await api.addEventAndMerge({
       consensusApi, eventTemplate, ledgerNode, opTemplate
-    }, (err, result) => {
-      if(err) {
-        return callback(err);
-      }
-      rVal[i] = result;
-      callback();
     });
-  },
-  err => {
-    if(err) {
-      return callback(err);
-    }
-    Object.keys(nodes).forEach(k => {
-      rVal.regularHash.push(Object.keys(rVal[k].regular)[0]);
-      rVal.mergeHash.push(rVal[k].merge.meta.eventHash);
-    });
-    callback(null, rVal);
+  }
+  Object.keys(nodes).forEach(k => {
+    rVal.regularHash.push(Object.keys(rVal[k].regular)[0]);
+    rVal.mergeHash.push(rVal[k].merge.meta.eventHash);
   });
+  return rVal;
 };
 
 // this helper is for test that execute the consensus worker
@@ -284,103 +253,94 @@ api.addRemoteEvents = ({
   });
 };
 
-api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
+api.buildHistory = async ({consensusApi, historyId, mockData, nodes}) => {
   const eventTemplate = mockData.events.alpha;
   const opTemplate = mockData.operations.alpha;
-  async.auto(
-    ledgerHistory[historyId]({
-      api, consensusApi, eventTemplate, nodes, opTemplate
-    }), (err, results) => {
-      if(err) {
-        return callback(err);
-      }
-      const copyMergeHashes = {};
-      const copyMergeHashesIndex = {};
-      Object.keys(results).forEach(key => {
-        if(key.startsWith('cp')) {
-          copyMergeHashes[key] = results[key].meta.eventHash;
-          copyMergeHashesIndex[results[key].meta.eventHash] = key;
-        }
-      });
-      const regularEvent = results.regularEvent;
-      callback(null, {copyMergeHashes, copyMergeHashesIndex, regularEvent});
-    });
+  const built = await ledgerHistory[historyId]({
+    api, consensusApi, eventTemplate, nodes, opTemplate
+  });
+  const copyMergeHashes = {};
+  const copyMergeHashesIndex = {};
+  Object.keys(built).forEach(key => {
+    if(key.startsWith('cp')) {
+      copyMergeHashes[key] = built[key].meta.eventHash;
+      copyMergeHashesIndex[built[key].meta.eventHash] = key;
+    }
+  });
+  const regularEvent = built.regularEvent;
+  return {copyMergeHashes, copyMergeHashesIndex, regularEvent};
 };
 
 // from may be a single node or an array of nodes
-api.copyAndMerge = (
-  {consensusApi, from, nodes, to, useSnapshot = false}, callback) => {
+api.copyAndMerge =
+  async ({consensusApi, from, nodes, to, useSnapshot = false}) => {
   const copyFrom = [].concat(from);
   const merge = consensusApi._events.merge;
-  async.auto({
-    copy: callback => async.eachSeries(copyFrom, (f, callback) =>
-      api.copyEvents(
-        {from: nodes[f], to: nodes[to], useSnapshot}, callback), callback),
-    merge: ['copy', (results, callback) =>
-      merge({creatorId: nodes[to].creatorId, ledgerNode: nodes[to]}, callback)]
-  }, (err, results) => {
-    err ? callback(err) : callback(null, results.merge);
-  });
+  // copy
+  for(const f of copyFrom) {
+    await api.copyEvents({from: nodes[f], to: nodes[to], useSnapshot});
+  }
+  // merge
+  return merge({creatorId: nodes[to].creatorId, ledgerNode: nodes[to]});
 };
 
 const snapshot = {};
-api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
-  async.auto({
-    events: callback => {
-      const collection = from.storage.events.collection;
-      if(useSnapshot && snapshot[collection.s.name]) {
-        return callback(null, snapshot[collection.s.name]);
-      }
-      // FIXME: use a more efficient query, the commented aggregate function
-      // is evidently missing some events.
-      collection.find({
-        'meta.consensus': false
-      }, {'meta.eventHash': 1}).sort({'$natural': 1}).toArray(
-        (err, results) => {
-          if(err) {
-            return callback(err);
-          }
-          from.storage.events.getMany({
-            eventHashes: results.map(r => r.meta.eventHash)
-          }).toArray(callback);
-        });
-    },
-    diff: ['events', (results, callback) => {
-      const eventHashes = results.events.map(e => e.meta.eventHash);
-      to.storage.events.difference(eventHashes, (err, result) => {
-        if(err) {
-          return callback(err);
-        }
-        if(result.length === 0) {
-          // return callback(new BedrockError('Nothing to do.', 'AbortError'));
-          return callback(null, []);
-        }
-        const diffSet = new Set(result);
-        const events = results.events
-          .filter(e => diffSet.has(e.meta.eventHash));
-        return callback(null, events);
+api.copyEvents = async ({from, to, useSnapshot = false}) => {
+  // events
+  const collection = from.storage.events.collection;
+  let events;
+  if(useSnapshot && snapshot[collection.s.name]) {
+    events = snapshot[collection.s.name];
+  } else {
+    // FIXME: use a more efficient query, the commented aggregate function
+    // is evidently missing some events.
+    const results = await collection.find({
+      'meta.consensus': false
+    }, {'meta.eventHash': 1}).sort({'$natural': 1}).toArray();
+    events = await from.storage.events.getMany({
+      eventHashes: results.map(r => r.meta.eventHash)
+    }).toArray();
+  }
+  // diff
+  let diff;
+  const eventHashes = events.map(e => e.meta.eventHash);
+  const _diff = await to.storage.events.difference(eventHashes);
+  if(_diff.length === 0) {
+    // throw new BedrockError('Nothing to do.', 'AbortError');
+    diff = [];
+  } else {
+    const diffSet = new Set(_diff);
+    diff = events.filter(e => diffSet.has(e.meta.eventHash));
+  }
+  // add
+  const needed = diff.map(r => r.meta.eventHash);
+  for(const e of diff) {
+    try {
+      await to.consensus._events.add({
+        continuity2017: {peer: true}, event: e.event, ledgerNode: to, needed
       });
-    }],
-    add: ['diff', (results, callback) => {
-      const events = results.diff;
-      const needed = events.map(r => r.meta.eventHash);
-      async.auto({
-        addEvents: callback => async.eachSeries(
-          events, (e, callback) => to.consensus._events.add({
-            continuity2017: {peer: true}, event: e.event, ledgerNode: to,
-            needed
-          }, err => {
-            // ignore dup errors
-            if(err && err.name === 'DuplicateError') {
-              return callback();
-            }
-            callback(err);
-          }), callback),
-        write: ['addEvents', (results, callback) =>
-          to.eventWriter.start(callback)]
-      }, callback);
-    }]
-  }, callback);
+    } catch(err) {
+      // ignore dup errors
+      if(!(err && err.name === 'DuplicateError')) {
+        throw err;
+      }
+    }
+  }
+  // write
+  let wResolve;
+  let wReject;
+  const p = new Promise((resolve, reject) => {
+    wResolve = resolve;
+    wReject = reject;
+  });
+  to.eventWriter.start(err => {
+    if(err) {
+      wReject(err);
+      return;
+    }
+    wResolve();
+  });
+  return p;
 };
 
 api.createEvent = (
@@ -429,7 +389,7 @@ api.createIdentity = function(userName) {
   return newIdentity;
 };
 
-api.flushCache = callback => cache.client.flushall(callback);
+api.flushCache = () => cache.client.flushall();
 
 api.nBlocks = ({
   consensusApi, nodes, operationOnWorkCycle = 'all', opTemplate,
@@ -507,32 +467,23 @@ api.nBlocks = ({
 };
 
 // collections may be a string or array
-api.removeCollections = function(collections, callback) {
+api.removeCollections = async collections => {
   const collectionNames = [].concat(collections);
-  database.openCollections(collectionNames, () => {
-    async.each(collectionNames, function(collectionName, callback) {
-      if(!database.collections[collectionName]) {
-        return callback();
-      }
-      database.collections[collectionName].remove({}, callback);
-    }, function(err) {
-      callback(err);
-    });
-  });
+  await promisify(database.openCollections)(collectionNames);
+  return Promise.all(collectionNames.map(async collectionName => {
+    if(!database.collections[collectionName]) {
+      return;
+    }
+    return database.collections[collectionName].remove({});
+  }));
 };
 
-api.prepareDatabase = function(mockData, callback) {
-  async.series([
-    callback => {
-      api.removeCollections([
-        'identity', 'eventLog', 'ledger', 'ledgerNode', 'continuity2017_key',
-        'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
-      ], callback);
-    },
-    callback => {
-      insertTestData(mockData, callback);
-    }
-  ], callback);
+api.prepareDatabase = async mockData => {
+  await api.removeCollections([
+    'identity', 'eventLog', 'ledger', 'ledgerNode', 'continuity2017_key',
+    'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
+  ]);
+  return insertTestData(mockData);
 };
 
 api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
@@ -624,56 +575,43 @@ api.settleNetwork = ({consensusApi, nodes, series = false}, callback) => {
   }, callback);
 };
 
-api.snapshotEvents = ({ledgerNode}, callback) => {
+api.snapshotEvents = async ({ledgerNode}) => {
   const collection = ledgerNode.storage.events.collection;
   // FIXME: use a more efficient query, the commented aggregate function
   // is evidently missing some events.
-  collection.find({
+  const r1 = await collection.find({
     'meta.consensus': false
-  }).sort({'$natural': 1}).toArray((err, result) => {
-    if(err) {
-      return callback(err);
+  }).sort({'$natural': 1}).toArray();
+
+  const r2 = await ledgerNode.storage.events.getMany({
+    eventHashes: r1.map(r => r.meta.eventHash)
+  }).toArray();
+
+  const r3 = r2.map(r => {
+    if(r.event.type !== 'WebLedgerOperationEvent') {
+      delete r.event.operation;
     }
-    ledgerNode.storage.events.getMany({
-      eventHashes: result.map(r => r.meta.eventHash)
-    }).toArray((err, results) => {
-      if(err) {
-        return err;
-      }
-      results = results.map(r => {
-        if(r.event.type !== 'WebLedgerOperationEvent') {
-          delete r.event.operation;
-        }
-        return r;
-      });
-      // make snapshot
-      snapshot[collection.s.name] = results;
-      callback(null, results);
-    });
+    return r;
   });
+
+  // make snapshot
+  snapshot[collection.s.name] = r3;
+
+  return r3;
 };
 
-api.use = (plugin, callback) => {
-  let p;
-  try {
-    p = brLedgerNode.use(plugin);
-  } catch(e) {
-    return callback(e);
-  }
-  callback(null, p);
-};
+api.use = plugin => brLedgerNode.use(plugin);
 
 // Insert identities and public keys used for testing into database
-function insertTestData(mockData, callback) {
-  async.forEachOf(mockData.identities, (identity, key, callback) => {
-    brIdentity.insert(null, identity.identity, callback);
-  }, err => {
-    if(err) {
+async function insertTestData(mockData) {
+  return Promise.all(Object.values(mockData.identities).map(async identity => {
+    try {
+      await brIdentity.insert({actor: null, identity: identity.identity});
+    } catch(err) {
       if(!database.isDuplicateError(err)) {
         // duplicate error means test data is already loaded
-        return callback(err);
+        throw err;
       }
     }
-    callback();
-  }, callback);
+  }));
 }
