@@ -63,10 +63,15 @@ const webLedgerConfigEvent = {
 
 const webLedgerOperationEvent = {
   title: 'WebLedgerOperationEvent',
+  additionalProperties: false,
   required: ['@context', 'operationHash', 'parentHash', 'treeHash', 'type'],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    basisBlockHeight: {
+      type: 'integer',
+      minimum: 0,
+    },
     operationHash: {
       type: 'array',
       minItems: 1,

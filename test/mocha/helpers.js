@@ -44,6 +44,7 @@ api.addEvent = (
   let operations;
   async.timesSeries(count, (i, callback) => {
     const testEvent = bedrock.util.clone(eventTemplate);
+    testEvent.basisBlockHeight = 1;
     const operation = bedrock.util.clone(opTemplate);
     const testRecordId = `https://example.com/event/${uuid()}`;
     if(operation.type === 'CreateWebLedgerRecord') {
@@ -75,8 +76,11 @@ api.addEvent = (
       operation: ['eventHash', (results, callback) => {
         const {eventHash, operationHash} = results;
         operations = [{
-          recordId: ledgerNode.storage.driver.hash(testRecordId),
-          meta: {operationHash},
+          meta: {
+            basisBlockHeight: 1,
+            operationHash,
+            recordId: ledgerNode.storage.driver.hash(testRecordId),
+          },
           operation,
         }];
         ledgerNode.consensus.operations.write(
@@ -166,7 +170,7 @@ api.addOperation = ({count = 1, ledgerNode, opTemplate}, callback) => {
     const operation = bedrock.util.clone(opTemplate);
     operation.record.id = `https://example.com/event/${uuid()}`;
     operation.record.creator = ledgerNode.id;
-    ledgerNode.consensus.operations.add(
+    ledgerNode.operations.add(
       {operation, ledgerNode}, (err, result) => {
         if(err) {
           return callback(err);
