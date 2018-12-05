@@ -2,8 +2,9 @@
  * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
  */
 
-module.exports = async (
-  {api, consensusApi, eventTemplate, nodes, opTemplate}) => {
+module.exports = async ({
+  api, consensusApi, eventTemplate, nodes, opTemplate
+}) => {
   const results = {};
 
   function _check({name, deps}) {
