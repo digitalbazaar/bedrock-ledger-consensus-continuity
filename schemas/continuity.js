@@ -3,12 +3,14 @@
  */
 'use strict';
 
-const config = require('bedrock').config;
-const constants = config.constants;
-const schemas = require('bedrock-validation').schemas;
+const bedrock = require('bedrock');
+const {config} = bedrock;
+const {constants} = config;
+const {schemas} = require('bedrock-validation');
 
 const continuityMergeEvent = {
   title: 'ContinuityMergeEvent',
+  additionalProperties: false,
   required: ['@context', 'parentHash', 'proof', 'treeHash', 'type'],
   type: 'object',
   properties: {
@@ -31,13 +33,24 @@ const continuityMergeEvent = {
   }
 };
 
-const webLedgerConfigEvent = {
-  title: 'WebLedgerConfigurationEvent',
+// the genesis merge event does not include `treeHash`
+const continuityGenesisMergeEvent = bedrock.util.clone(continuityMergeEvent);
+continuityGenesisMergeEvent.title = 'Genesis ContinuityMergeEvent';
+continuityGenesisMergeEvent.required = continuityMergeEvent.required.filter(
+  p => p !== 'treeHash');
+delete continuityGenesisMergeEvent.properties.treeHash;
+
+const webLedgerConfigurationEvent = {
+  title: 'Continuity WebLedgerConfigurationEvent',
+  additionalProperties: false,
   // signature is not required
-  required: ['@context', 'ledgerConfiguration', 'type'],
+  required: ['@context', 'creator', 'ledgerConfiguration', 'type'],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    creator: {
+      type: 'string'
+    },
     type: {
       type: 'string',
       enum: ['WebLedgerConfigurationEvent']
@@ -62,7 +75,7 @@ const webLedgerConfigEvent = {
 };
 
 const webLedgerOperationEvent = {
-  title: 'WebLedgerOperationEvent',
+  title: 'Continuity WebLedgerOperationEvent',
   additionalProperties: false,
   required: ['@context', 'operationHash', 'parentHash', 'treeHash', 'type'],
   type: 'object',
@@ -93,7 +106,7 @@ const webLedgerEvents = {
   title: 'Web Ledger Events',
   oneOf: [
     webLedgerOperationEvent,
-    webLedgerConfigEvent,
+    webLedgerConfigurationEvent,
     continuityMergeEvent
   ]
 };
@@ -119,4 +132,6 @@ const event = {
 };
 
 module.exports.event = () => event;
+module.exports.continuityGenesisMergeEvent = () => continuityGenesisMergeEvent;
 module.exports.webLedgerEvents = () => webLedgerEvents;
+module.exports.webLedgerConfigurationEvent = () => webLedgerConfigurationEvent;

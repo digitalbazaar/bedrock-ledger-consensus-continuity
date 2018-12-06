@@ -25,7 +25,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('X Block Test', () => {
+describe.only('X Block Test', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -85,9 +85,7 @@ describe('X Block Test', () => {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
         }, (err, ledgerNode) => {
-          if(err) {
-            return callback(err);
-          }
+          assertNoError(err);
           nodes[nodeLabels[i]] = ledgerNode;
           callback();
         });
