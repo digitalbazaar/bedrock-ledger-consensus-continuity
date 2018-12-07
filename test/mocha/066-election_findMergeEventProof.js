@@ -7,10 +7,12 @@ const _ = require('lodash');
 const async = require('async');
 // const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
+const fs = require('fs');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 // const util = require('util');
 // const uuid = require('uuid/v4');
+const vizHelpers = require('../viz/viz-helpers');
 
 let consensusApi;
 
@@ -72,8 +74,9 @@ describe.only('Election API _findMergeEventProof', () => {
   });
   it('ledger history alpha', async () => {
     const report = {};
+    const historyId = 'alpha';
     const build = await helpers.buildHistory({
-      consensusApi, historyId: 'alpha', mockData, nodes
+      consensusApi, historyId, mockData, nodes
     });
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are electors
@@ -102,6 +105,10 @@ describe.only('Election API _findMergeEventProof', () => {
       // } catch(e) {
       //   report[name] = 'NO PROOF';
       // }
+      saveVisualizationData({
+        tag: 'lh', historyId, nodeId: name, build, history, branches, proof,
+        nodes
+      });
       const allXs = proof.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
@@ -116,8 +123,9 @@ describe.only('Election API _findMergeEventProof', () => {
   });
   it('ledger history beta', async () => {
     const report = {};
+    const historyId = 'beta';
     const build = await helpers.buildHistory({
-      consensusApi, historyId: 'beta', mockData, nodes
+      consensusApi, historyId, mockData, nodes
     });
     // all peers are electors
     const electors = _.values(peers).map(p => ({id: p}));
@@ -145,6 +153,10 @@ describe.only('Election API _findMergeEventProof', () => {
       // } catch(e) {
       //   report[name] = 'NO PROOF';
       // }
+      saveVisualizationData({
+        tag: 'lh', historyId, nodeId: name, build, history, branches, proof,
+        nodes
+      });
       const allXs = proof.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
@@ -159,8 +171,9 @@ describe.only('Election API _findMergeEventProof', () => {
   });
   it('ledger history gamma', async () => {
     const report = {};
+    const historyId = 'gamma';
     const build = await helpers.buildHistory({
-      consensusApi, historyId: 'gamma', mockData, nodes
+      consensusApi, historyId, mockData, nodes
     });
     // all peers are electors
     const electors = _.values(peers).map(p => ({id: p}));
@@ -188,6 +201,10 @@ describe.only('Election API _findMergeEventProof', () => {
       // } catch(e) {
       //   report[name] = 'NO PROOF';
       // }
+      saveVisualizationData({
+        tag: 'lh', historyId, nodeId: name, build, history, branches, proof,
+        nodes
+      });
       const allXs = proof.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
@@ -203,6 +220,7 @@ describe.only('Election API _findMergeEventProof', () => {
   // involves 4 elector nodes and one non-elector
   it('ledger history delta produces same as alpha result', async () => {
     const report = {};
+    const historyId = 'delta';
     // add node epsilon for this test and remove it afterwards
     nodes.epsilon = await brLedgerNode.add(null, {genesisBlock});
     nodes.epsilon.eventWriter = new EventWriter({
@@ -216,7 +234,7 @@ describe.only('Election API _findMergeEventProof', () => {
     helpers.peersReverse[voter.id] = 'epsilon';
 
     const build = await helpers.buildHistory({
-      consensusApi, historyId: 'delta', mockData, nodes
+      consensusApi, historyId, mockData, nodes
     });
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are electors
@@ -245,6 +263,10 @@ describe.only('Election API _findMergeEventProof', () => {
       // } catch(e) {
       //   report[name] = 'NO PROOF';
       // }
+      saveVisualizationData({
+        tag: 'lh', historyId, nodeId: name, build, history, branches, proof,
+        nodes
+      });
       const allXs = proof.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       const mergeHashes = [
@@ -271,8 +293,9 @@ describe.only('Election API _findMergeEventProof', () => {
   // FIXME: enable test
   it('ledger history epsilon', async () => {
     const report = {};
+    const historyId = 'epsilon';
     const build = await helpers.buildHistory({
-      consensusApi, historyId: 'epsilon', mockData, nodes
+      consensusApi, historyId, mockData, nodes
     });
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are electors
@@ -301,6 +324,10 @@ describe.only('Election API _findMergeEventProof', () => {
       // } catch(e) {
       //   report[name] = 'NO PROOF';
       // }
+      saveVisualizationData({
+        tag: 'lh', historyId, nodeId: name, build, history, branches, proof,
+        nodes
+      });
       const allXs = proof.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
@@ -315,11 +342,12 @@ describe.only('Election API _findMergeEventProof', () => {
   });
   // add regular event on alpha before running findMergeEventProof on alpha
   it('add regular local event before getting proof', async () => {
+    const historyId = 'alpha';
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     const build = await helpers.buildHistory({
-      consensusApi, historyId: 'alpha', mockData, nodes
+      consensusApi, historyId, mockData, nodes
     });
     await helpers.addEvent({ledgerNode, eventTemplate, opTemplate});
     // NOTE: for ledger history alpha, all nodes should have the same view
@@ -343,6 +371,10 @@ describe.only('Election API _findMergeEventProof', () => {
     //   proof,
     //   copyMergeHashes: build.copyMergeHashes,
     //   copyMergeHashesIndex: build.copyMergeHashesIndex});
+    saveVisualizationData({
+      tag: 'rle', historyId, nodeId: 'alpha', build, history, branches, proof,
+      nodes
+    });
     const allXs = proof.consensus.map(p => p.x.eventHash);
     allXs.should.have.length(4);
     allXs.should.have.same.members(build.regularEvent.mergeHash);
@@ -370,4 +402,29 @@ function proofReport({proof, copyMergeHashes, copyMergeHashesIndex}) {
   console.log('REPORTED Ys', yIndex);
   console.log('REPORTED yCandidates', yCandidateIndex);
   return {xIndex, yIndex, yCandidateIndex};
+}
+
+function saveVisualizationData({
+  tag, historyId, nodeId, build, history, branches, proof, nodes
+}) {
+  const filename = `./data/${tag}-${historyId}-${nodeId}.json`;
+  console.log(`[viz] wrote: ${filename}`);
+
+  const data = vizHelpers.visualizationData({
+    nodeId, build, history, branches, proof, nodes
+  });
+
+  /*
+  console.log('BUILD', build);
+  console.log('HISTORY', history);
+  console.log('BRANCHES', branches);
+  console.log('PROOF', proof);
+  console.log('X', allXs);
+  console.log('Y', allYs);
+  console.log('YCandidates', yCandidates);
+  */
+
+  fs.writeFileSync(filename, JSON.stringify(data, null, 2));
+
+  //debugger;
 }

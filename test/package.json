@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "redis-cli flushall && node --preserve-symlinks test test",
-    "watch": "grunt watch"
+    "watch": "grunt watch",
+    "viz": "./viz/node_modules/.bin/http-server ."
   },
   "dependencies": {
     "async": "^2.4.1",
