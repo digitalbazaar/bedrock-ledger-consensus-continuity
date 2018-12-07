@@ -3,15 +3,10 @@
  */
 'use strict';
 
-const _ = require('lodash');
-const async = require('async');
-// const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const fs = require('fs');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-// const util = require('util');
-// const uuid = require('uuid/v4');
 const vizHelpers = require('../viz/viz-helpers');
 
 let consensusApi;
@@ -80,7 +75,7 @@ describe.only('Election API _findMergeEventProof', () => {
     });
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are electors
-    const electors = _.values(peers).map(p => ({id: p}));
+    const electors = Object.values(peers).map(p => ({id: p}));
     for(const name of Object.keys(nodes)) {
       const ledgerNode = nodes[name];
       const history = await getRecentHistory({
@@ -128,7 +123,7 @@ describe.only('Election API _findMergeEventProof', () => {
       consensusApi, historyId, mockData, nodes
     });
     // all peers are electors
-    const electors = _.values(peers).map(p => ({id: p}));
+    const electors = Object.values(peers).map(p => ({id: p}));
     for(const name of Object.keys(nodes)) {
       const ledgerNode = nodes[name];
       const history = await getRecentHistory({
@@ -176,7 +171,7 @@ describe.only('Election API _findMergeEventProof', () => {
       consensusApi, historyId, mockData, nodes
     });
     // all peers are electors
-    const electors = _.values(peers).map(p => ({id: p}));
+    const electors = Object.values(peers).map(p => ({id: p}));
     for(const name of Object.keys(nodes)) {
       const ledgerNode = nodes[name];
       const history = await getRecentHistory({
@@ -238,7 +233,7 @@ describe.only('Election API _findMergeEventProof', () => {
     });
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are electors
-    const electors = _.values(peers).map(p => ({id: p}));
+    const electors = Object.values(peers).map(p => ({id: p}));
     for(const name of Object.keys(nodes)) {
       const ledgerNode = nodes[name];
       const history = await getRecentHistory({
@@ -290,7 +285,6 @@ describe.only('Election API _findMergeEventProof', () => {
 
     // console.log('FINAL REPORT', JSON.stringify(report, null, 2));
   });
-  // FIXME: enable test
   it('ledger history epsilon', async () => {
     const report = {};
     const historyId = 'epsilon';
@@ -299,7 +293,7 @@ describe.only('Election API _findMergeEventProof', () => {
     });
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are electors
-    const electors = _.values(peers).map(p => ({id: p}));
+    const electors = Object.values(peers).map(p => ({id: p}));
     for(const name of Object.keys(nodes)) {
       const ledgerNode = nodes[name];
       const history = await getRecentHistory({
@@ -352,7 +346,7 @@ describe.only('Election API _findMergeEventProof', () => {
     await helpers.addEvent({ledgerNode, eventTemplate, opTemplate});
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are electors
-    const electors = _.values(peers).map(p => ({id: p}));
+    const electors = Object.values(peers).map(p => ({id: p}));
     const history = await getRecentHistory({
       creatorId: nodes.alpha.creatorId,
       ledgerNode, excludeLocalRegularEvents: true
