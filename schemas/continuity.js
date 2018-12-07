@@ -77,7 +77,7 @@ const webLedgerConfigurationEvent = {
 const webLedgerOperationEvent = {
   title: 'Continuity WebLedgerOperationEvent',
   additionalProperties: false,
-  required: ['@context', 'operationHash', 'parentHash', 'treeHash', 'type'],
+  required: ['@context', 'operation', 'parentHash', 'treeHash', 'type'],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
@@ -85,7 +85,7 @@ const webLedgerOperationEvent = {
       type: 'integer',
       minimum: 0,
     },
-    operationHash: {
+    operation: {
       type: 'array',
       minItems: 1,
     },
@@ -101,6 +101,36 @@ const webLedgerOperationEvent = {
     },
   }
 };
+
+// saving this schema which is for an operation event with hashes
+
+// const webLedgerOperationEvent = {
+//   title: 'Continuity WebLedgerOperationEvent',
+//   additionalProperties: false,
+//   required: ['@context', 'operationHash', 'parentHash', 'treeHash', 'type'],
+//   type: 'object',
+//   properties: {
+//     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+//     basisBlockHeight: {
+//       type: 'integer',
+//       minimum: 0,
+//     },
+//     operationHash: {
+//       type: 'array',
+//       minItems: 1,
+//     },
+//     parentHash: {
+//       type: 'array',
+//       items: {type: 'string'},
+//       minItems: 1
+//     },
+//     treeHash: {type: 'string'},
+//     type: {
+//       type: 'string',
+//       enum: ['WebLedgerOperationEvent']
+//     },
+//   }
+// };
 
 const webLedgerEvents = {
   title: 'Web Ledger Events',
