@@ -19,7 +19,7 @@
     "bedrock-ledger-consensus-continuity": "file:..",
     "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^1.0.0",
     "bedrock-ledger-consensus-continuity-es-most-recent-participants-with-recovery": "^1.0.0",
-    "bedrock-ledger-consensus-continuity-storage": "^2.0.0",
+    "bedrock-ledger-consensus-continuity-storage": "digitalbazaar/bedrock-ledger-consensus-continuity-storage#fixStartHash",
     "bedrock-ledger-context": "^6.0.0",
     "bedrock-ledger-node": "^4.1.0",
     "bedrock-ledger-storage-mongodb": "^1.1.0",

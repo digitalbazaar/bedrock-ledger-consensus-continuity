@@ -97,6 +97,7 @@ describe.only('X Block Test', () => {
       consensusApi._voters.get(
         {ledgerNodeId: ledgerNode.id}, (err, result) => {
           peers[i] = result.id;
+          ledgerNode._peerId = result.id;
           heads[i] = [];
           callback();
         }),

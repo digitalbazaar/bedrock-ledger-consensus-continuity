@@ -168,6 +168,8 @@ api.addOperation = ({count = 1, ledgerNode, opTemplate}, callback) => {
   const operations = {};
   async.timesSeries(count, (i, callback) => {
     const operation = bedrock.util.clone(opTemplate);
+    // _peerId added for convenience in test framework
+    operation.creator = ledgerNode._peerId;
     operation.record.id = `https://example.com/event/${uuid()}`;
     operation.record.creator = ledgerNode.id;
     ledgerNode.operations.add(
