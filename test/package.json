@@ -22,7 +22,7 @@
     "bedrock-ledger-consensus-continuity-storage": "digitalbazaar/bedrock-ledger-consensus-continuity-storage#fixStartHash",
     "bedrock-ledger-context": "^6.0.0",
     "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#validateConfiguration",
-    "bedrock-ledger-storage-mongodb": "^1.1.0",
+    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#eventCreator",
     "bedrock-mongodb": "^5.0.0",
     "bedrock-passport": "^3.3.0",
     "bedrock-permission": "^2.5.3",
