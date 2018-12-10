@@ -47,6 +47,7 @@ api.addEvent = (
     testEvent.basisBlockHeight = 1;
     const operation = bedrock.util.clone(opTemplate);
     const testRecordId = `https://example.com/event/${uuid()}`;
+    operation.creator = ledgerNode.creatorId;
     if(operation.type === 'CreateWebLedgerRecord') {
       operation.record.id = testRecordId;
     }
