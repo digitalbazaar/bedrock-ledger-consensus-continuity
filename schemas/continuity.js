@@ -20,7 +20,8 @@ const continuityMergeEvent = {
       items: {
         type: 'string'
       },
-      minItems: 1
+      minItems: 2
+      // maxItems: TODO: set maxItems
     },
     proof: schemas.linkedDataSignature2018(),
     treeHash: {
@@ -38,6 +39,8 @@ const continuityGenesisMergeEvent = bedrock.util.clone(continuityMergeEvent);
 continuityGenesisMergeEvent.title = 'Genesis ContinuityMergeEvent';
 continuityGenesisMergeEvent.required = continuityMergeEvent.required.filter(
   p => p !== 'treeHash');
+continuityGenesisMergeEvent.properties.parentHash.minItems = 1;
+continuityGenesisMergeEvent.properties.parentHash.maxItems = 1;
 delete continuityGenesisMergeEvent.properties.treeHash;
 
 const webLedgerConfigurationEvent = {
@@ -92,7 +95,8 @@ const webLedgerOperationEvent = {
     parentHash: {
       type: 'array',
       items: {type: 'string'},
-      minItems: 1
+      minItems: 1,
+      maxItems: 1
     },
     treeHash: {type: 'string'},
     type: {
