@@ -47,7 +47,8 @@ const webLedgerConfigurationEvent = {
   title: 'Continuity WebLedgerConfigurationEvent',
   additionalProperties: false,
   // signature is not required
-  required: ['@context', 'creator', 'ledgerConfiguration', 'type'],
+  required: ['@context', 'basisBlockHeight', 'creator', 'ledgerConfiguration',
+    'parentHash', 'treeHash', 'type'],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
@@ -61,6 +62,10 @@ const webLedgerConfigurationEvent = {
     ledgerConfiguration: {
       type: 'object',
       properties: {
+        basisBlockHeight: {
+          type: 'integer',
+          minimum: 0,
+        },
         type: {
           type: 'string',
           enum: ['WebLedgerConfiguration']
@@ -70,12 +75,31 @@ const webLedgerConfigurationEvent = {
         },
         consensusMethod: {
           type: 'string',
-        }
+        },
+        parentHash: {
+          type: 'array',
+          items: {
+            type: 'string'
+          },
+          minItems: 1,
+          maxItems: 1
+        },
+        proof: schemas.linkedDataSignature2018(),
+        treeHash: {
+          type: 'string'
+        },
       },
     },
     signature: schemas.linkedDataSignature2018()
   }
 };
+
+const genesisConfigurationEvent = bedrock.util.clone(
+  webLedgerConfigurationEvent);
+genesisConfigurationEvent.required = genesisConfigurationEvent.required.filter(
+  p => !['basisBlockHeight', 'parentHash', 'treeHash'].includes(p));
+delete genesisConfigurationEvent.properties.parentHash;
+delete genesisConfigurationEvent.properties.treeHash;
 
 const webLedgerOperationEvent = {
   title: 'Continuity WebLedgerOperationEvent',
@@ -167,5 +191,6 @@ const event = {
 
 module.exports.event = () => event;
 module.exports.continuityGenesisMergeEvent = () => continuityGenesisMergeEvent;
+module.exports.genesisConfigurationEvent = () => genesisConfigurationEvent;
 module.exports.webLedgerEvents = () => webLedgerEvents;
 module.exports.webLedgerConfigurationEvent = () => webLedgerConfigurationEvent;
