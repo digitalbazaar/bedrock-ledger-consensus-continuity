@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 // DO NOT use `it.only`
 
 // the total number of nodes on the ledger may be adjusted here
-const nodeCount = 10;
+const nodeCount = 2;
 
 describe('Multinode', () => {
   before(done => {
@@ -86,6 +86,19 @@ describe('Multinode', () => {
         });
       }, done);
     });
+
+    // populate peers ids
+    before(done => async.eachOf(peers, (ledgerNode, i, callback) =>
+      consensusApi._voters.get(
+        {ledgerNodeId: ledgerNode.id}, (err, result) => {
+          assertNoError(err);
+          ledgerNode._peerId = result.id;
+          callback();
+        }),
+    err => {
+      assertNoError(err);
+      done();
+    }));
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => async.auto({

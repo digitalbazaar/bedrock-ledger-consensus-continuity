@@ -52,6 +52,10 @@ const webLedgerConfigurationEvent = {
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    basisBlockHeight: {
+      type: 'integer',
+      minimum: 0,
+    },
     creator: {
       type: 'string'
     },
@@ -62,10 +66,6 @@ const webLedgerConfigurationEvent = {
     ledgerConfiguration: {
       type: 'object',
       properties: {
-        basisBlockHeight: {
-          type: 'integer',
-          minimum: 0,
-        },
         type: {
           type: 'string',
           enum: ['WebLedgerConfiguration']
@@ -76,21 +76,21 @@ const webLedgerConfigurationEvent = {
         consensusMethod: {
           type: 'string',
         },
-        parentHash: {
-          type: 'array',
-          items: {
-            type: 'string'
-          },
-          minItems: 1,
-          maxItems: 1
-        },
         proof: schemas.linkedDataSignature2018(),
-        treeHash: {
-          type: 'string'
-        },
       },
     },
-    signature: schemas.linkedDataSignature2018()
+    parentHash: {
+      type: 'array',
+      items: {
+        type: 'string'
+      },
+      minItems: 1,
+      maxItems: 1
+    },
+    signature: schemas.linkedDataSignature2018(),
+    treeHash: {
+      type: 'string'
+    },
   }
 };
 
