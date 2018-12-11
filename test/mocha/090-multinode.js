@@ -15,7 +15,7 @@ const mockData = require('./mock.data');
 // DO NOT use `it.only`
 
 // the total number of nodes on the ledger may be adjusted here
-const nodeCount = 2;
+const nodeCount = 10;
 
 describe('Multinode', () => {
   before(done => {
