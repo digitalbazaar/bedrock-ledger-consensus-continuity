@@ -39,7 +39,7 @@
     "bedrock-ledger-consensus-continuity-storage": "^2.1.0",
     "bedrock-ledger-context": "^6.0.0",
     "bedrock-ledger-node": "^5.0.0",
-    "bedrock-ledger-storage-mongodb": "^1.1.0",
+    "bedrock-ledger-storage-mongodb": "^1.2.0",
     "bedrock-mongodb": "^5.0.0",
     "bedrock-permission": "^2.5.3",
     "bedrock-redis": "^3.4.0",
