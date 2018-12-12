@@ -6,10 +6,11 @@
 const bedrock = require('bedrock');
 const {config} = bedrock;
 const {constants} = config;
+const _continuityConstants = require('../lib/continuityConstants');
 const {schemas} = require('bedrock-validation');
 
 const continuityMergeEvent = {
-  title: 'ContinuityMergeEvent',
+  title: 'Continuity2017 ContinuityMergeEvent',
   additionalProperties: false,
   required: ['@context', 'parentHash', 'proof', 'treeHash', 'type'],
   type: 'object',
@@ -20,8 +21,8 @@ const continuityMergeEvent = {
       items: {
         type: 'string'
       },
-      minItems: 2
-      // maxItems: TODO: set maxItems
+      minItems: 2,
+      maxItems: _continuityConstants.mergeEvents.maxEvents
     },
     proof: schemas.linkedDataSignature2018(),
     treeHash: {
@@ -36,7 +37,8 @@ const continuityMergeEvent = {
 
 // the genesis merge event does not include `treeHash`
 const continuityGenesisMergeEvent = bedrock.util.clone(continuityMergeEvent);
-continuityGenesisMergeEvent.title = 'Genesis ContinuityMergeEvent';
+continuityGenesisMergeEvent.title =
+  'Continuity2017 Genesis ContinuityMergeEvent';
 continuityGenesisMergeEvent.required = continuityMergeEvent.required.filter(
   p => p !== 'treeHash');
 continuityGenesisMergeEvent.properties.parentHash.minItems = 1;
@@ -44,7 +46,7 @@ continuityGenesisMergeEvent.properties.parentHash.maxItems = 1;
 delete continuityGenesisMergeEvent.properties.treeHash;
 
 const webLedgerConfigurationEvent = {
-  title: 'Continuity WebLedgerConfigurationEvent',
+  title: 'Continuity2017 WebLedgerConfigurationEvent',
   additionalProperties: false,
   // signature is not required
   required: ['@context', 'basisBlockHeight', 'creator', 'ledgerConfiguration',
@@ -102,7 +104,7 @@ delete genesisConfigurationEvent.properties.parentHash;
 delete genesisConfigurationEvent.properties.treeHash;
 
 const webLedgerOperationEvent = {
-  title: 'Continuity WebLedgerOperationEvent',
+  title: 'Continuity2017 WebLedgerOperationEvent',
   additionalProperties: false,
   required: ['@context', 'operation', 'parentHash', 'treeHash', 'type'],
   type: 'object',
@@ -115,6 +117,7 @@ const webLedgerOperationEvent = {
     operation: {
       type: 'array',
       minItems: 1,
+      maxItems: _continuityConstants.events.maxOperations,
     },
     parentHash: {
       type: 'array',
@@ -140,7 +143,7 @@ const webLedgerEvents = {
 };
 
 const event = {
-  title: 'Continuity Event',
+  title: 'Continuity2017 Event',
   required: ['callerId', 'event', 'eventHash', 'mergeHash'],
   type: 'object',
   properties: {
