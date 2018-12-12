@@ -25,7 +25,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.skip('Recovery mode simulation', () => {
+describe('Recovery mode simulation', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -138,14 +138,15 @@ describe.skip('Recovery mode simulation', () => {
     before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
       consensusApi._voters.get(
         {ledgerNodeId: ledgerNode.id}, (err, result) => {
+          assertNoError(err);
           peers[i] = result.id;
+          ledgerNode._peerId = result.id;
           heads[i] = [];
           callback();
         }),
     err => {
-      // add reporting here
-      // helpers.report({nodes, peers});
-      done(err);
+      assertNoError(err);
+      done();
     }));
 
     describe('Check Genesis Block', () => {

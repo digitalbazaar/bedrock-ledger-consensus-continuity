@@ -98,14 +98,15 @@ describe('X Block Test using elector selector with recovery', () => {
     before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
       consensusApi._voters.get(
         {ledgerNodeId: ledgerNode.id}, (err, result) => {
+          assertNoError(err);
           peers[i] = result.id;
+          ledgerNode._peerId = result.id;
           heads[i] = [];
           callback();
         }),
     err => {
-      // add reporting here
-      // helpers.report({nodes, peers});
-      done(err);
+      assertNoError(err);
+      done();
     }));
 
     describe('Check Genesis Block', () => {
