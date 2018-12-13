@@ -366,7 +366,6 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
     }],
     add: ['diff', (results, callback) => {
       const events = results.diff;
-      // const needed = events.map(r => r.meta.eventHash);
       async.auto({
         addEvents: callback => async.eachSeries(
           events, (e, callback) => to.consensus._events._addTestEvent({
