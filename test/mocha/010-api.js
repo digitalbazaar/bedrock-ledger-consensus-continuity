@@ -78,6 +78,7 @@ describe('Continuity2017', () => {
     it('should add an operation', done => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
+      operation.creator = ledgerNode.creatorId;
       async.auto({
         addOp: callback => ledgerNode.operations.add(
           {operation}, err => {
