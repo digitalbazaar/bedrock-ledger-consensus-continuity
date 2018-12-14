@@ -57,9 +57,7 @@ describe.only('X Block Test', () => {
           });
         }]
       }, (err, results) => {
-        if(err) {
-          return done(err);
-        }
+        assertNoError(err);
         consensusApi = results.consensusPlugin.api;
         done();
       });
@@ -67,11 +65,10 @@ describe.only('X Block Test', () => {
 
     // get genesis record (block + meta)
     let genesisRecord;
-    before(done => {
+    before(function(done) {
+      this.timeout(180000);
       nodes.alpha.blocks.getGenesis((err, result) => {
-        if(err) {
-          return done(err);
-        }
+        assertNoError(err);
         genesisRecord = result.genesisBlock;
         done();
       });
@@ -89,23 +86,29 @@ describe.only('X Block Test', () => {
           nodes[nodeLabels[i]] = ledgerNode;
           callback();
         });
-      }, done);
+      }, err => {
+        assertNoError(err);
+        done();
+      });
     });
 
     // populate peers and init heads
-    before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
-      consensusApi._voters.get(
-        {ledgerNodeId: ledgerNode.id}, (err, result) => {
-          assertNoError(err);
-          peers[i] = result.id;
-          ledgerNode._peerId = result.id;
-          heads[i] = [];
-          callback();
-        }),
-    err => {
-      assertNoError(err);
-      done();
-    }));
+    before(function(done) {
+      this.timeout(180000);
+      async.eachOf(nodes, (ledgerNode, i, callback) =>
+        consensusApi._voters.get(
+          {ledgerNodeId: ledgerNode.id}, (err, result) => {
+            assertNoError(err);
+            peers[i] = result.id;
+            ledgerNode._peerId = result.id;
+            heads[i] = [];
+            callback();
+          }),
+      err => {
+        assertNoError(err);
+        done();
+      });
+    });
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => {
