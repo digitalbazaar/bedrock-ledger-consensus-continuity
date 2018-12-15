@@ -11,6 +11,8 @@ const cache = require('bedrock-redis');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
+const TEST_TIMEOUT = 300000;
+
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
 
@@ -26,7 +28,8 @@ const peers = {};
 const heads = {};
 
 describe.only('X Block Test', () => {
-  before(done => {
+  before(function(done) {
+    this.timeout(TEST_TIMEOUT);
     helpers.prepareDatabase(mockData, done);
   });
 
@@ -38,7 +41,7 @@ describe.only('X Block Test', () => {
     const mockIdentity = mockData.identities.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
     before(function(done) {
-      this.timeout(180000);
+      this.timeout(TEST_TIMEOUT);
       async.auto({
         clean: callback => cache.client.flushall(callback),
         actor: ['clean', (results, callback) => brIdentity.get(
@@ -66,7 +69,7 @@ describe.only('X Block Test', () => {
     // get genesis record (block + meta)
     let genesisRecord;
     before(function(done) {
-      this.timeout(180000);
+      this.timeout(TEST_TIMEOUT);
       nodes.alpha.blocks.getGenesis((err, result) => {
         assertNoError(err);
         genesisRecord = result.genesisBlock;
@@ -76,7 +79,7 @@ describe.only('X Block Test', () => {
 
     // add N - 1 more private nodes
     before(function(done) {
-      this.timeout(180000);
+      this.timeout(TEST_TIMEOUT);
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
@@ -94,7 +97,7 @@ describe.only('X Block Test', () => {
 
     // populate peers and init heads
     before(function(done) {
-      this.timeout(180000);
+      this.timeout(TEST_TIMEOUT);
       async.eachOf(nodes, (ledgerNode, i, callback) =>
         consensusApi._voters.get(
           {ledgerNodeId: ledgerNode.id}, (err, result) => {
