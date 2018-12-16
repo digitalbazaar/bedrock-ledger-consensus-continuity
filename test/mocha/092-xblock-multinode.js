@@ -27,7 +27,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe.only('X Block Test', () => {
+describe('X Block Test', () => {
   before(function(done) {
     this.timeout(TEST_TIMEOUT);
     helpers.prepareDatabase(mockData, done);

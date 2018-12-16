@@ -16,6 +16,8 @@ const mockData = require('./mock.data');
 
 const opTemplate = mockData.operations.alpha;
 
+const TEST_TIMEOUT = 300000;
+
 // NOTE: alpha is assigned manually
 // NOTE: all these may not be used
 const nodeLabels = [
@@ -26,8 +28,9 @@ const disabledNodes = {};
 const peers = {};
 const heads = {};
 
-describe.skip('Recovery mode simulation', () => {
-  before(done => {
+describe.only('Recovery mode simulation', () => {
+  before(function(done) {
+    this.timeout(TEST_TIMEOUT);
     helpers.prepareDatabase(mockData, done);
   });
 
@@ -109,7 +112,7 @@ describe.skip('Recovery mode simulation', () => {
     const mockIdentity = mockData.identities.regularUser;
     const ledgerConfiguration = mockData.ledgerConfigurationRecovery;
     before(function(done) {
-      this.timeout(180000);
+      this.timeout(TEST_TIMEOUT);
       async.auto({
         clean: callback => cache.client.flushall(callback),
         actor: ['clean', (results, callback) => brIdentity.get(
@@ -150,7 +153,7 @@ describe.skip('Recovery mode simulation', () => {
 
     // add N - 1 more private nodes
     before(function(done) {
-      this.timeout(180000);
+      this.timeout(TEST_TIMEOUT);
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
@@ -265,7 +268,7 @@ describe.skip('Recovery mode simulation', () => {
     let stageOneBlockHeight;
     describe(`${targetBlockHeight} Blocks`, () => {
       it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
-        this.timeout(180000);
+        this.timeout(TEST_TIMEOUT);
         async.auto({
           nBlocks: callback => helpers.nBlocks({
             consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
@@ -332,7 +335,7 @@ describe.skip('Recovery mode simulation', () => {
     let stageTwoBlockHeight;
     describe(`${recoveryBlocksFourNodes} Recovery Blocks`, () => {
       it(`makes ${recoveryBlocksFourNodes} blocks w/4 nodes`, function(done) {
-        this.timeout(180000);
+        this.timeout(TEST_TIMEOUT);
 
         const newTargetBlockHeight = stageOneBlockHeight +
           recoveryBlocksFourNodes;
@@ -407,7 +410,7 @@ describe.skip('Recovery mode simulation', () => {
     let stageThreeBlockHeight;
     describe(`${recoveryBlocksThreeNodes} Recovery Blocks`, () => {
       it(`makes ${recoveryBlocksThreeNodes} blocks w/3 nodes`, function(done) {
-        this.timeout(180000);
+        this.timeout(TEST_TIMEOUT);
 
         const newTargetBlockHeight = stageTwoBlockHeight +
           recoveryBlocksThreeNodes;
@@ -481,7 +484,7 @@ describe.skip('Recovery mode simulation', () => {
     let stageFourBlockHeight;
     describe('Enable formerly disable nodes', () => {
       it('let disabled nodes catch up', function(done) {
-        this.timeout(180000);
+        this.timeout(TEST_TIMEOUT);
 
         // enable all previously disabled nodes, back to seven nodes
         _enableNodes(['delta', 'epsilon', 'zeta', 'eta']);
@@ -529,7 +532,7 @@ describe.skip('Recovery mode simulation', () => {
     let stageFiveBlockHeight;
     describe(`${regularBlocksSevenNodes} Regular Blocks`, () => {
       it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, function(done) {
-        this.timeout(180000);
+        this.timeout(TEST_TIMEOUT);
 
         const newTargetBlockHeight = stageFourBlockHeight +
           regularBlocksSevenNodes;
