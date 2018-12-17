@@ -16,7 +16,7 @@ const mockData = require('./mock.data');
 
 const opTemplate = mockData.operations.alpha;
 
-const TEST_TIMEOUT = 300000;
+const TEST_TIMEOUT = 600000;
 
 // NOTE: alpha is assigned manually
 // NOTE: all these may not be used
