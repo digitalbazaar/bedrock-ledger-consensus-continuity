@@ -28,7 +28,7 @@ const disabledNodes = {};
 const peers = {};
 const heads = {};
 
-describe.only('Recovery mode simulation', () => {
+describe('Recovery mode simulation', () => {
   before(function(done) {
     this.timeout(TEST_TIMEOUT);
     helpers.prepareDatabase(mockData, done);
