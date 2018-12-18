@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/digitalbazaar/bedrock-ledger-consensus-continuity",
   "dependencies": {
-    "async": "^2.4.0",
     "axios": "^0.18.0",
     "body-parser": "^1.18.2",
     "bs58": "^4.0.1",
@@ -27,7 +26,6 @@
     "multicodec": "^0.2.7",
     "ndjson": "^1.5.0",
     "p-limit": "^2.0.0",
-    "request": "^2.81.0",
     "sodium-native": "^2.2.3",
     "uuid": "^3.1.0",
     "workerpool": "^2.3.0"
