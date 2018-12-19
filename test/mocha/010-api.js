@@ -75,17 +75,95 @@ describe('Continuity2017', () => {
   });
 
   describe('add operation API', () => {
-    it('should add an operation', done => {
+    it('should add an operation', async () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
       operation.creator = ledgerNode.creatorId;
-      async.auto({
-        addOp: callback => ledgerNode.operations.add(
-          {operation}, err => {
-            assertNoError(err);
-            callback();
-          }),
-      }, done);
+      let error;
+      try {
+        await ledgerNode.operations.add({operation});
+      } catch(e) {
+        error = e;
+      }
+      assertNoError(error);
+    });
+    it('DuplicateError on a duplicate operation in cache', async () => {
+      const operation = bedrock.util.clone(mockData.operations.alpha);
+      operation.record.id = `https://example.com/event/${uuid()}`;
+      operation.creator = ledgerNode.creatorId;
+      let error;
+      try {
+        await ledgerNode.operations.add({operation});
+      } catch(e) {
+        error = e;
+      }
+      // first operation succeeds
+      assertNoError(error);
+      try {
+        await ledgerNode.operations.add({operation});
+      } catch(e) {
+        error = e;
+      }
+      // duplicate operation should fail
+      should.exist(error);
+      error.name.should.equal('DuplicateError');
+      should.exist(error.details.duplicateLocation);
+      error.details.duplicateLocation.should.equal('cache');
+    });
+    it('DuplicateError on a duplicate operation in db', async () => {
+      const operation = bedrock.util.clone(mockData.operations.alpha);
+      operation.record.id = `https://example.com/event/${uuid()}`;
+      operation.creator = ledgerNode.creatorId;
+      let error;
+      try {
+        await ledgerNode.operations.add({operation});
+      } catch(e) {
+        error = e;
+      }
+      // first operation succeeds
+      await ledgerNode.consensus._events.create({ledgerNode});
+      assertNoError(error);
+      try {
+        await ledgerNode.operations.add({operation});
+      } catch(e) {
+        error = e;
+      }
+      // duplicate operation should fail
+      should.exist(error);
+      error.name.should.equal('DuplicateError');
+      should.exist(error.details.duplicateLocation);
+      error.details.duplicateLocation.should.equal('db');
+    });
+    it('ValidationError on operation without creator', async () => {
+      const operation = bedrock.util.clone(mockData.operations.alpha);
+      operation.record.id = `https://example.com/event/${uuid()}`;
+      // missing operation.creator
+      let error;
+      try {
+        await ledgerNode.operations.add({operation});
+      } catch(e) {
+        error = e;
+      }
+      should.exist(error);
+      error.name.should.equal('ValidationError');
+      error.details.errors[0].message.should.equal(
+        `should have required property 'creator'`);
+    });
+    it('ValidationError an operation with incorrect creator', async () => {
+      const operation = bedrock.util.clone(mockData.operations.alpha);
+      operation.record.id = `https://example.com/event/${uuid()}`;
+      operation.creator = 'SomeInvalidCreatorId';
+      let error;
+      try {
+        await ledgerNode.operations.add({operation});
+      } catch(e) {
+        error = e;
+      }
+      should.exist(error);
+      error.name.should.equal('ValidationError');
+      error.details.errors[0].message.should.equal(
+        'should be equal to one of the allowed values');
+      error.details.errors[0].details.path.should.equal('.creator');
     });
   }); // end add operation API
 
@@ -271,7 +349,7 @@ describe('Continuity2017', () => {
         }]
       }, done);
     });
-    it.skip('history includes 1 remote merge and one local merge event', done => {
+    it.skip('history includes 1 remote merge and 1 local merge event', done => {
       const mergeBranches = consensusApi._events.mergeBranches;
       const getRecentHistory = consensusApi._events.getRecentHistory;
       async.auto({

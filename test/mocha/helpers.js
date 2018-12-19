@@ -14,8 +14,7 @@ const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
 const uuid = require('uuid/v4');
-// const util = require('util');
-// const BedrockError = bedrock.util.BedrockError;
+const {promisify} = require('util');
 
 jsigs.use('jsonld', jsonld);
 
@@ -308,6 +307,13 @@ api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
       const regularEvent = results.regularEvent;
       callback(null, {copyMergeHashes, copyMergeHashesIndex, regularEvent});
     });
+};
+
+api.commitOperationCache = async ({ledgerNode}) => {
+  const {EventWriter} = ledgerNode.consensus._worker;
+  const eventWriter = new EventWriter({immediate: true, ledgerNode});
+  const start = promisify(eventWriter.start).bind(eventWriter);
+  await start();
 };
 
 // from may be a single node or an array of nodes

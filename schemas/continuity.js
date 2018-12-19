@@ -162,8 +162,24 @@ const event = {
   },
 };
 
+// all the other properties of operations have been validated at the ledgerNode
+// layer
+const localOperation = {
+  title: 'Continuity Local Operation Schema',
+  type: 'object',
+  required: ['creator'],
+  properties: {
+    creator: {
+      type: 'string',
+      // this will be filled in at runtime
+      enum: [],
+    }
+  }
+};
+
 module.exports.event = () => event;
 module.exports.continuityGenesisMergeEvent = () => continuityGenesisMergeEvent;
 module.exports.genesisConfigurationEvent = () => genesisConfigurationEvent;
+module.exports.localOperation = () => localOperation;
 module.exports.webLedgerEvents = () => webLedgerEvents;
 module.exports.webLedgerConfigurationEvent = () => webLedgerConfigurationEvent;
