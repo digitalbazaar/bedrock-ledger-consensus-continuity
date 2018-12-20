@@ -309,13 +309,6 @@ api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
     });
 };
 
-api.commitOperationCache = async ({ledgerNode}) => {
-  const {EventWriter} = ledgerNode.consensus._worker;
-  const eventWriter = new EventWriter({immediate: true, ledgerNode});
-  const start = promisify(eventWriter.start).bind(eventWriter);
-  await start();
-};
-
 // from may be a single node or an array of nodes
 api.copyAndMerge = (
   {consensusApi, from, nodes, to, useSnapshot = false}, callback) => {
