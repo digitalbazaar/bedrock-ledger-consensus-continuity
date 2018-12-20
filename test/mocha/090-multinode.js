@@ -47,9 +47,7 @@ describe('Multinode', () => {
           });
         }]
       }, (err, results) => {
-        if(err) {
-          return done(err);
-        }
+        assertNoError(err);
         genesisLedgerNode = results.ledgerNode;
         consensusApi = results.consensusPlugin.api;
         done();
@@ -60,9 +58,7 @@ describe('Multinode', () => {
     let genesisRecord;
     before(done => {
       genesisLedgerNode.blocks.getGenesis((err, result) => {
-        if(err) {
-          return done(err);
-        }
+        assertNoError(err);
         genesisRecord = result.genesisBlock;
         done();
       });
@@ -84,7 +80,10 @@ describe('Multinode', () => {
           peers.push(ledgerNode);
           callback();
         });
-      }, done);
+      }, err => {
+        assertNoError(err);
+        done();
+      });
     });
 
     // populate peers ids
@@ -210,10 +209,109 @@ describe('Multinode', () => {
     describe('Ledger Configuration', () => {
       // add a config event on the genesis node, settle the network, ensure
       // that new config is in effect on all nodes
-      it('should add a config event and achieve consensus', function(done) {
+      it('ValidationError on missing ledger property', async () => {
+        const ledgerConfiguration = bedrock.util.clone(
+          mockData.ledgerConfiguration);
+        ledgerConfiguration.creator = genesisLedgerNode._peerId;
+        ledgerConfiguration.sequence = 1;
+        delete ledgerConfiguration.ledger;
+        let error;
+        try {
+          await genesisLedgerNode.config.change({ledgerConfiguration});
+        } catch(e) {
+          error = e;
+        }
+        should.exist(error);
+        error.name.should.equal('ValidationError');
+        error.details.errors[0].message.should.equal(
+          `should have required property 'ledger'`);
+      });
+      it('SyntaxError on invalid ledger', async () => {
+        const ledgerConfiguration = bedrock.util.clone(
+          mockData.ledgerConfiguration);
+        ledgerConfiguration.creator = genesisLedgerNode._peerId;
+        ledgerConfiguration.sequence = 1;
+        ledgerConfiguration.ledger = 'https://example.com/invalidLedger';
+        let error;
+        try {
+          await genesisLedgerNode.config.change({ledgerConfiguration});
+        } catch(e) {
+          error = e;
+        }
+        should.exist(error);
+        error.name.should.equal('SyntaxError');
+        error.message.should.equal(`Invalid configuration 'ledger' value.`);
+      });
+      it('ValidationError on missing creator', async () => {
+        const ledgerConfiguration = bedrock.util.clone(
+          mockData.ledgerConfiguration);
+        // creator is not added
+        ledgerConfiguration.sequence = 1;
+        let error;
+        try {
+          await genesisLedgerNode.config.change({ledgerConfiguration});
+        } catch(e) {
+          error = e;
+        }
+        should.exist(error);
+        error.name.should.equal('ValidationError');
+        error.details.errors[0].message.should.equal(
+          `should have required property 'creator'`);
+      });
+      it('SyntaxError on invalid creator', async () => {
+        const ledgerConfiguration = bedrock.util.clone(
+          mockData.ledgerConfiguration);
+        // creator is invalid
+        ledgerConfiguration.creator = 'https://example.com/invalidCreator';
+        ledgerConfiguration.sequence = 1;
+        let error;
+        try {
+          await genesisLedgerNode.config.change({ledgerConfiguration});
+        } catch(e) {
+          error = e;
+        }
+        should.exist(error);
+        error.name.should.equal('SyntaxError');
+        error.message.should.equal(`Invalid configuration 'creator' value.`);
+      });
+      it('ValidationError on missing sequence', async () => {
+        const ledgerConfiguration = bedrock.util.clone(
+          mockData.ledgerConfiguration);
+        ledgerConfiguration.creator = genesisLedgerNode._peerId;
+        delete ledgerConfiguration.sequence;
+        let error;
+        try {
+          await genesisLedgerNode.config.change({ledgerConfiguration});
+        } catch(e) {
+          error = e;
+        }
+        should.exist(error);
+        error.name.should.equal('ValidationError');
+        error.details.errors[0].message.should.equal(
+          `should have required property 'sequence'`);
+      });
+      it('SyntaxError on invalid sequence', async () => {
+        const ledgerConfiguration = bedrock.util.clone(
+          mockData.ledgerConfiguration);
+        ledgerConfiguration.creator = genesisLedgerNode._peerId;
+        // invalid sequence, should be 1
+        ledgerConfiguration.sequence = 5;
+        let error;
+        try {
+          await genesisLedgerNode.config.change({ledgerConfiguration});
+        } catch(e) {
+          error = e;
+        }
+        should.exist(error);
+        error.name.should.equal('SyntaxError');
+        error.message.should.equal(`Invalid configuration 'sequence' value.`);
+      });
+      it('add a ledger config and achieve consensus', function(done) {
         this.timeout(210000);
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
+        ledgerConfiguration.creator = genesisLedgerNode._peerId;
+        ledgerConfiguration.sequence = 1;
         ledgerConfiguration.consensusMethod = 'Continuity9000';
         async.auto({
           changeConfig: callback => genesisLedgerNode.config.change(

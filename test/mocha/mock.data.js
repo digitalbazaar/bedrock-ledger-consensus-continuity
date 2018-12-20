@@ -30,6 +30,7 @@ const ledgerConfiguration = mock.ledgerConfiguration = {
   electorSelectionMethod: {
     type: 'MostRecentParticipants',
   },
+  sequence: 0,
 };
 
 mock.ledgerConfigurationRecovery = {
@@ -40,6 +41,7 @@ mock.ledgerConfigurationRecovery = {
   electorSelectionMethod: {
     type: 'MostRecentParticipantsWithRecovery',
   },
+  sequence: 0
 };
 
 const operations = mock.operations = {};

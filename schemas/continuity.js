@@ -45,11 +45,66 @@ continuityGenesisMergeEvent.properties.parentHash.minItems = 1;
 continuityGenesisMergeEvent.properties.parentHash.maxItems = 1;
 delete continuityGenesisMergeEvent.properties.treeHash;
 
+// allow configuration to specify a different consensusMethod
+const nonContinuity2017LedgerConfiguration = {
+  type: 'object',
+  required: ['consensusMethod'],
+  properties: {
+    consensusMethod: {
+      type: 'string',
+      not: {enum: ['Continuity2017']}
+    }
+  }
+};
+
+const continuity2017ledgerConfiguration = {
+  title: 'Continuity2017 Ledger Configuration',
+  type: 'object',
+  required: [
+    'consensusMethod', 'creator', 'electorSelectionMethod', 'ledger',
+    'sequence', 'type'
+  ],
+  // additional properties are validated at the ledgerNode layer
+  additionalProperties: true,
+  properties: {
+    creator: {
+      type: 'string',
+    },
+    type: {
+      type: 'string',
+      enum: ['WebLedgerConfiguration']
+    },
+    electorSelectionMethod: {
+      type: 'object',
+      required: ['type'],
+      additionalProperties: false,
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['MostRecentParticipants', 'MostRecentParticipantsWithRecovery']
+        }
+      }
+    },
+    ledger: {
+      type: 'string',
+    },
+    consensusMethod: {
+      type: 'string',
+      enum: ['Continuity2017'],
+    },
+    proof: schemas.linkedDataSignature2018(),
+    sequence: {
+      type: 'integer',
+      minimum: 1,
+    }
+  },
+};
+
 const webLedgerConfigurationEvent = {
   title: 'Continuity2017 WebLedgerConfigurationEvent',
   additionalProperties: false,
   // signature is not required
-  required: ['@context', 'basisBlockHeight', 'creator', 'ledgerConfiguration',
+  required: ['@context', 'basisBlockHeight', 'ledgerConfiguration',
     'parentHash', 'treeHash', 'type'],
   type: 'object',
   properties: {
@@ -58,28 +113,15 @@ const webLedgerConfigurationEvent = {
       type: 'integer',
       minimum: 0,
     },
-    creator: {
-      type: 'string'
-    },
     type: {
       type: 'string',
       enum: ['WebLedgerConfigurationEvent']
     },
     ledgerConfiguration: {
-      type: 'object',
-      properties: {
-        type: {
-          type: 'string',
-          enum: ['WebLedgerConfiguration']
-        },
-        ledger: {
-          type: 'string',
-        },
-        consensusMethod: {
-          type: 'string',
-        },
-        proof: schemas.linkedDataSignature2018(),
-      },
+      anyOf: [
+        continuity2017ledgerConfiguration,
+        nonContinuity2017LedgerConfiguration
+      ],
     },
     parentHash: {
       type: 'array',
@@ -98,10 +140,25 @@ const webLedgerConfigurationEvent = {
 
 const genesisConfigurationEvent = bedrock.util.clone(
   webLedgerConfigurationEvent);
+genesisConfigurationEvent.title =
+  'Continuity2017 Genesis WebLedgerConfigurationEvent';
 genesisConfigurationEvent.required = genesisConfigurationEvent.required.filter(
   p => !['basisBlockHeight', 'parentHash', 'treeHash'].includes(p));
 delete genesisConfigurationEvent.properties.parentHash;
 delete genesisConfigurationEvent.properties.treeHash;
+// the genesis config may not be a non Continuity2017 configuration
+const genesisLedgerConfiguration = bedrock.util.clone(
+  continuity2017ledgerConfiguration);
+genesisLedgerConfiguration.title =
+  'Continuity2017 Genesis Ledger Configuration';
+genesisLedgerConfiguration.required = genesisLedgerConfiguration.required
+  .filter(p => !['creator'].includes(p));
+genesisLedgerConfiguration.properties.sequence = {
+  type: 'integer',
+  enum: [0],
+};
+genesisConfigurationEvent.properties.ledgerConfiguration =
+  genesisLedgerConfiguration;
 
 const webLedgerOperationEvent = {
   title: 'Continuity2017 WebLedgerOperationEvent',
@@ -135,7 +192,7 @@ const webLedgerOperationEvent = {
 
 const webLedgerEvents = {
   title: 'Web Ledger Events',
-  oneOf: [
+  anyOf: [
     webLedgerOperationEvent,
     webLedgerConfigurationEvent,
     continuityMergeEvent
@@ -151,7 +208,11 @@ const event = {
       type: 'string'
     },
     event: {
-      oneOf: [webLedgerEvents]
+      anyOf: [
+        webLedgerOperationEvent,
+        webLedgerConfigurationEvent,
+        continuityMergeEvent
+      ]
     },
     eventHash: {
       type: 'string'
@@ -180,6 +241,7 @@ const localOperation = {
 module.exports.event = () => event;
 module.exports.continuityGenesisMergeEvent = () => continuityGenesisMergeEvent;
 module.exports.genesisConfigurationEvent = () => genesisConfigurationEvent;
+module.exports.genesisLedgerConfiguration = () => genesisLedgerConfiguration;
 module.exports.localOperation = () => localOperation;
 module.exports.webLedgerEvents = () => webLedgerEvents;
 module.exports.webLedgerConfigurationEvent = () => webLedgerConfigurationEvent;
