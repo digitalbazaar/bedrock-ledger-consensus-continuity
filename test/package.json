@@ -22,7 +22,7 @@
     "bedrock-ledger-consensus-continuity-storage": "^2.1.0",
     "bedrock-ledger-context": "^7.0.0",
     "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#validateConfiguration",
-    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#existsApi",
+    "bedrock-ledger-storage-mongodb": "digitalbazaar/bedrock-ledger-storage-mongodb#master",
     "bedrock-mongodb": "^5.0.0",
     "bedrock-passport": "^3.3.0",
     "bedrock-permission": "^2.5.3",
