@@ -1,6 +1,6 @@
 {
   "name": "bedrock-ledger-consensus-continuity",
-  "version": "2.0.1-0",
+  "version": "3.0.0",
   "description": "Implementation of Web Ledger Continuity Consensus Protocol.",
   "main": "./lib",
   "repository": {
