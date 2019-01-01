@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.0.1 - 2019-01-01
+
+### Fixed
+- Fix conditional related to generation one merge events in `_validateGraph`.
+
 ## 3.0.0 - 2018-12-31
 
 ### Added
