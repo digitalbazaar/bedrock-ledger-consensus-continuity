@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.0.2 - 2019-01-02
+
+### Fixed
+- Fix computation of merge `maxEvents`.
+
 ## 3.0.1 - 2019-01-01
 
 ### Fixed
