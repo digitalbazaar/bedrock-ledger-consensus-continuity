@@ -9,6 +9,29 @@ const {constants} = config;
 const _continuityConstants = require('../lib/continuityConstants');
 const {schemas} = require('bedrock-validation');
 
+const mergeEventProof = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['created', 'jws', 'proofPurpose', 'type', 'verificationMethod'],
+  properties: {
+    created: schemas.w3cDateTime(),
+    jws: {
+      type: 'string'
+    },
+    proofPurpose: {
+      type: 'string',
+      enum: ['assertionMethod']
+    },
+    type: {
+      type: 'string',
+      enum: ['Ed25519Signature2018']
+    },
+    verificationMethod: {
+      type: 'string'
+    },
+  }
+};
+
 const continuityMergeEvent = {
   title: 'Continuity2017 ContinuityMergeEvent',
   additionalProperties: false,
@@ -24,7 +47,7 @@ const continuityMergeEvent = {
       minItems: 2,
       maxItems: _continuityConstants.mergeEvents.maxEvents
     },
-    proof: schemas.linkedDataSignature2018(),
+    proof: mergeEventProof,
     treeHash: {
       type: 'string'
     },
