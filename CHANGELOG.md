@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.1.0 - 2019-01-23
+
+### Changed
+- Use jsonld-signatures 3.x for signing/verifying merge events.
+
 ## 3.0.2 - 2019-01-02
 
 ### Fixed
