@@ -17,7 +17,7 @@
     "bedrock-key": "^4.0.0",
     "bedrock-ledger-agent": "^2.1.0",
     "bedrock-ledger-consensus-continuity": "file:..",
-    "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^1.0.0",
+    "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^2.0.0",
     "bedrock-ledger-consensus-continuity-es-most-recent-participants-with-recovery": "^1.0.0",
     "bedrock-ledger-consensus-continuity-storage": "^2.2.0",
     "bedrock-ledger-context": "^11.0.0",
