@@ -1,5 +1,11 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.2.0 - 2019-02-13
+
+### Changed
+- Update several dependencies. See git history for changes.
+
+
 ## 3.1.0 - 2019-01-23
 
 ### Changed
