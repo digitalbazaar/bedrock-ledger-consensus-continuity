@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.2.1 - 2019-02-15
+
+### Fixed
+- Add genesis merge exception in `_validateGraph`.
+
 ## 3.2.0 - 2019-02-13
 
 ### Changed
