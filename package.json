@@ -3,6 +3,9 @@
   "version": "3.2.2-0",
   "description": "Implementation of Web Ledger Continuity Consensus Protocol.",
   "main": "./lib",
+  "scripts": {
+    "lint": "eslint lib"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/digitalbazaar/bedrock-ledger-consensus-continuity.git"
@@ -46,5 +49,9 @@
   },
   "engines": {
     "node": ">=8"
+  },
+  "devDependencies": {
+    "eslint": "^5.14.0",
+    "eslint-config-digitalbazaar": "^1.5.0"
   }
 }
