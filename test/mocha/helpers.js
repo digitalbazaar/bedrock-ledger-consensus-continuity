@@ -336,7 +336,7 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
       // is evidently missing some events.
       collection.find({
         'meta.consensus': false
-      }, {'meta.eventHash': 1}).sort({'$natural': 1}).toArray(
+      }, {'meta.eventHash': 1}).sort({$natural: 1}).toArray(
         (err, results) => {
           if(err) {
             return callback(err);
@@ -629,7 +629,7 @@ api.snapshotEvents = ({ledgerNode}, callback) => {
   // is evidently missing some events.
   collection.find({
     'meta.consensus': false
-  }).sort({'$natural': 1}).toArray((err, result) => {
+  }).sort({$natural: 1}).toArray((err, result) => {
     if(err) {
       return callback(err);
     }
