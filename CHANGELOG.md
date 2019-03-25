@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.3.0 - 2019-03-25
+
+### Changed
+- Use bedrock-ledger-node@8.
+
 ## 3.2.1 - 2019-02-15
 
 ### Fixed
