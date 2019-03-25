@@ -4,11 +4,8 @@
 'use strict';
 
 const _ = require('lodash');
-// const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
-// const uuid = require('uuid/v4');
-// const util = require('util');
 
 const helpers = require('./helpers');
 const mockData = require('./mock.data');

@@ -4,15 +4,11 @@
 'use strict';
 
 const async = require('async');
-// const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const expect = global.chai.expect;
-// const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-// const util = require('util');
-// const uuid = require('uuid/v4');
 
 let consensusApi;
 

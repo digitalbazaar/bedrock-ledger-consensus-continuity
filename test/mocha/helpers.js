@@ -13,8 +13,7 @@ const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures')();
 const jsonld = bedrock.jsonld;
-const uuid = require('uuid/v4');
-const {promisify} = require('util');
+const {util: {uuid}} = bedrock;
 
 jsigs.use('jsonld', jsonld);
 

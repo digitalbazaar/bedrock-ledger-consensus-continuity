@@ -8,12 +8,10 @@ const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const {config} = bedrock;
-const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-// const util = require('util');
-const uuid = require('uuid/v4');
+const {util: {uuid}} = bedrock;
 
 let consensusApi;
 

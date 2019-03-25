@@ -8,7 +8,7 @@ const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-const uuid = require('uuid/v4');
+const {util: {uuid}} = bedrock;
 
 describe.skip('Consensus Client - sendEvent API', () => {
   before(done => {

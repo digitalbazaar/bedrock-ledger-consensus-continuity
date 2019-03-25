@@ -9,11 +9,10 @@ const brLedgerNode = require('bedrock-ledger-node');
 const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
 const jsigs = require('jsonld-signatures')();
-const jsonld = bedrock.jsonld;
 const mockData = require('./mock.data');
 let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
-const uuid = require('uuid/v4');
+const {jsonld, util: {uuid}} = bedrock;
 
 jsigs.use('jsonld', jsonld);
 

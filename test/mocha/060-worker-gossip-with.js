@@ -6,12 +6,11 @@
 const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
-const {callbackify} = bedrock.util;
 const cache = require('bedrock-redis');
 const gossipCycle = require('./gossip-cycle');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-const uuid = require('uuid/v4');
+const {util: {callbackify, uuid}} = bedrock;
 
 describe('Worker - _gossipWith', () => {
   before(done => {

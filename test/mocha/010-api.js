@@ -12,7 +12,7 @@ const expect = global.chai.expect;
 const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
-const uuid = require('uuid/v4');
+const {util: {uuid}} = bedrock;
 
 describe('Continuity2017', () => {
   before(done => {

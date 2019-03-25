@@ -10,7 +10,7 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 // let request = require('request');
 // request = request.defaults({json: true, strictSSL: false});
-const uuid = require('uuid/v4');
+const {util: {uuid}} = bedrock;
 
 // FIXME: these tests will need to supply `creatorHeads` in the request
 describe.skip('Consensus Agent - Get History API', () => {
