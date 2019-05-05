@@ -4,7 +4,9 @@
   "description": "Implementation of Web Ledger Continuity Consensus Protocol.",
   "main": "./lib",
   "scripts": {
-    "lint": "eslint lib"
+    "lint": "eslint lib",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -30,7 +32,8 @@
     "multicodec": "^0.5.0",
     "ndjson": "^1.5.0",
     "p-limit": "^2.0.0",
-    "workerpool": "^2.3.0"
+    "workerpool": "^2.3.0",
+    "snyk": "^1.161.1"
   },
   "peerDependencies": {
     "bedrock": "^1.15.0",
@@ -52,5 +55,6 @@
   "devDependencies": {
     "eslint": "^5.14.0",
     "eslint-config-digitalbazaar": "^2.0.0"
-  }
+  },
+  "snyk": true
 }
