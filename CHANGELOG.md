@@ -1,5 +1,14 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.3.1 - TBD
+
+### Fixed
+- Ensure that `basisBlockHeight` is defined in `OperationQueue`.
+- During gossip, respect server limits by requesting needed events in chunks.
+- Fix `hasMore` flag in `events.create` API.
+- Use `noopLogger` in consensus worker.
+
+
 ## 3.3.0 - 2019-03-25
 
 ### Changed
