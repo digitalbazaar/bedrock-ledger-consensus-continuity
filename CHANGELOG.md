@@ -1,6 +1,6 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
-## 3.4.0 - TBD
+## 3.4.0 - 2019-05-30
 
 ### Changed
 - Use bedrock-ledger-context@12.
