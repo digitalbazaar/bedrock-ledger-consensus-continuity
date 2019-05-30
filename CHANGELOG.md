@@ -1,6 +1,6 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
-## 3.3.1 - TBD
+## 3.3.1 - 2019-05-30
 
 ### Fixed
 - Ensure that `basisBlockHeight` is defined in `OperationQueue`.
