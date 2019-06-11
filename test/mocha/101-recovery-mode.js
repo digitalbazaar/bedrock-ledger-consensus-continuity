@@ -1,15 +1,18 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const _ = require('lodash');
-const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
-const async = require('async');
 const cache = require('bedrock-redis');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
+const {promisify} = require('util');
+
+const helperUse = promisify(helpers.use);
+const helperNBlock = promisify(helpers.nBlocks);
+const helperSettleNetwork = promisify(helpers.settleNetwork);
 
 // NOTE: the tests in this file are designed to run in series
 // DO NOT use `it.only`
@@ -111,80 +114,47 @@ describe('Recovery mode simulation', () => {
     let consensusApi;
     const mockIdentity = mockData.identities.regularUser;
     const ledgerConfiguration = mockData.ledgerConfigurationRecovery;
-    before(function(done) {
+    before(async function() {
       this.timeout(TEST_TIMEOUT);
-      async.auto({
-        clean: callback => cache.client.flushall(callback),
-        actor: ['clean', (results, callback) => brIdentity.get(
-          null, mockIdentity.identity.id, (err, identity) => {
-            callback(err, identity);
-          })],
-        consensusPlugin: ['clean', (results, callback) => helpers.use(
-          'Continuity2017', callback)],
-        ledgerNode: ['actor', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            nodes.alpha = ledgerNode;
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        if(err) {
-          return done(err);
-        }
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+      await cache.client.flushall();
+
+      const consensusPlugin = await helperUse('Continuity2017');
+      const ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
+      nodes.alpha = ledgerNode;
+      consensusApi = consensusPlugin.api;
     });
 
     // get genesis record (block + meta)
     let genesisRecord;
-    before(done => {
-      nodes.alpha.blocks.getGenesis((err, result) => {
-        if(err) {
-          return done(err);
-        }
-        genesisRecord = result.genesisBlock;
-        done();
-      });
+    before(async () => {
+      ({genesisBlock: genesisRecord} = await nodes.alpha.blocks.getGenesis());
     });
 
     // add N - 1 more private nodes
-    before(function(done) {
+    before(async function() {
       this.timeout(TEST_TIMEOUT);
-      async.times(nodeCount - 1, (i, callback) => {
-        brLedgerNode.add(null, {
+      for(let i = 0; i < nodeCount - 1; ++i) {
+        nodes[nodeLabels[i]] = await brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
           owner: mockIdentity.identity.id
-        }, (err, ledgerNode) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes[nodeLabels[i]] = ledgerNode;
-          callback();
         });
-      }, done);
+      }
     });
 
     // populate peers and init heads
-    before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
-      consensusApi._voters.get(
-        {ledgerNodeId: ledgerNode.id}, (err, result) => {
-          assertNoError(err);
-          peers[i] = result.id;
-          ledgerNode._peerId = result.id;
-          heads[i] = [];
-          callback();
-        }),
-    err => {
-      assertNoError(err);
-      done();
-    }));
+    before(async () => {
+      for(const n in nodes) {
+        const ledgerNode = nodes[n];
+        const ledgerNodeId = ledgerNode.id;
+        const voter = await consensusApi._voters.get({ledgerNodeId});
+        peers[n] = voter.id;
+        ledgerNode._peerId = voter.id;
+        heads[n] = [];
+      }
+    });
 
     describe('Check Genesis Block', () => {
-      it('should have the proper information', done => {
+      it('should have the proper information', async () => {
 
         for(const n of Object.keys(nodes)) {
           console.log(`----- ${n} ----`);
@@ -193,35 +163,27 @@ describe('Recovery mode simulation', () => {
         }
 
         const blockHashes = [];
-        async.auto({
-          getLatest: callback => async.each(nodes, (ledgerNode, callback) =>
-            ledgerNode.storage.blocks.getLatest((err, result) => {
-              assertNoError(err);
-              const eventBlock = result.eventBlock;
-              should.exist(eventBlock.block);
-              eventBlock.block.blockHeight.should.equal(0);
-              eventBlock.block.event.should.be.an('array');
-              eventBlock.block.event.should.have.length(2);
-              const event = eventBlock.block.event[0];
-              // TODO: signature is dynamic... needs a better check
-              delete event.signature;
-              delete event.proof;
-              event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
-              should.exist(eventBlock.meta);
-              should.exist(eventBlock.block.consensusProof);
-              const consensusProof = eventBlock.block.consensusProof;
-              consensusProof.should.be.an('array');
-              consensusProof.should.have.length(1);
-              // FIXME: make assertions about the contents of consensusProof
-              // console.log('8888888', JSON.stringify(eventBlock, null, 2));
-              blockHashes.push(eventBlock.meta.blockHash);
-              callback();
-            }), callback),
-          testHash: ['getLatest', (results, callback) => {
-            blockHashes.every(h => h === blockHashes[0]).should.be.true;
-            callback();
-          }]
-        }, done);
+        for(const n in nodes) {
+          const ledgerNode = nodes[n];
+          const {eventBlock} = await ledgerNode.storage.blocks.getLatest();
+          should.exist(eventBlock.block);
+          eventBlock.block.blockHeight.should.equal(0);
+          eventBlock.block.event.should.be.an('array');
+          eventBlock.block.event.should.have.length(2);
+          const event = eventBlock.block.event[0];
+          // TODO: signature is dynamic... needs a better check
+          delete event.signature;
+          delete event.proof;
+          event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
+          should.exist(eventBlock.meta);
+          should.exist(eventBlock.block.consensusProof);
+          const consensusProof = eventBlock.block.consensusProof;
+          consensusProof.should.be.an('array');
+          consensusProof.should.have.length(1);
+          // FIXME: make assertions about the contents of consensusProof
+          blockHashes.push(eventBlock.meta.blockHash);
+        }
+        blockHashes.every(h => h === blockHashes[0]).should.be.true;
       });
     });
 
@@ -267,74 +229,42 @@ describe('Recovery mode simulation', () => {
     const targetBlockHeight = 5;
     let stageOneBlockHeight;
     describe(`${targetBlockHeight} Blocks`, () => {
-      it(`makes ${targetBlockHeight} blocks with all nodes`, function(done) {
+      it(`makes ${targetBlockHeight} blocks with all nodes`, async function() {
         this.timeout(TEST_TIMEOUT);
-        async.auto({
-          nBlocks: callback => helpers.nBlocks({
-            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
-            targetBlockHeight
-          }, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            console.log(
-              'targetBlockHashMap',
-              JSON.stringify(result, null, 2));
-            _.values(result.targetBlockHashMap)
-              .every(h => h === result.targetBlockHashMap.alpha)
-              .should.be.true;
-            callback(null, result);
-          }),
-          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              const summaries = {};
-              stageOneBlockHeight = result[Object.keys(result)[0]].eventBlock
-                .block.blockHeight;
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
-            })],
-          state: ['blockSummary', (results, callback) => {
-            const allRecordIds = [].concat(..._.values(
-              results.nBlocks.recordIds));
-            console.log(`Total operation count: ${allRecordIds.length}`);
-            async.eachSeries(allRecordIds, (recordId, callback) => {
-              nodes.alpha.records.get({recordId}, err => {
-                // just need to ensure that there is no NotFoundError
-                assertNoError(err);
-                callback();
-              });
-            }, callback);
-          }]
-        }, err => {
-          assertNoError(err);
-          done();
+        const result = await helperNBlock({
+          consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
+          targetBlockHeight
         });
+        console.log(
+          'targetBlockHashMap',
+          JSON.stringify(result, null, 2));
+        _.values(result.targetBlockHashMap)
+          .every(h => h === result.targetBlockHashMap.alpha)
+          .should.be.true;
+
+        await helperSettleNetwork({consensusApi, nodes: _.values(nodes)});
+
+        const blockSummary = await _latestBlockSummary();
+
+        const summaries = _createBlockSummaries(blockSummary);
+        stageOneBlockHeight = blockSummary[
+          Object.keys(blockSummary)[0]].eventBlock
+          .block.blockHeight;
+
+        console.log('Finishing block summaries:', JSON.stringify(
+          summaries, null, 2));
+        _.values(summaries).forEach(b => {
+          b.blockHeight.should.equal(summaries.alpha.blockHeight);
+          b.blockHash.should.equal(summaries.alpha.blockHash);
+        });
+        await _testRecords(result.recordIds);
       });
     }); // end one block
 
     const recoveryBlocksFourNodes = 5;
     let stageTwoBlockHeight;
     describe(`${recoveryBlocksFourNodes} Recovery Blocks`, () => {
-      it(`makes ${recoveryBlocksFourNodes} blocks w/4 nodes`, function(done) {
+      it(`makes ${recoveryBlocksFourNodes} blocks w/4 nodes`, async function() {
         this.timeout(TEST_TIMEOUT);
 
         const newTargetBlockHeight = stageOneBlockHeight +
@@ -342,74 +272,41 @@ describe('Recovery mode simulation', () => {
 
         // remove 3 out of 7 nodes
         _disableNodes(['epsilon', 'zeta', 'eta']);
-
-        async.auto({
-          nBlocks: callback => helpers.nBlocks({
-            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
-            targetBlockHeight: newTargetBlockHeight
-          }, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            console.log(
-              'targetBlockHashMap', JSON.stringify(result, null, 2));
-            const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
-            _.values(result.targetBlockHashMap)
-              .every(h => h === result.targetBlockHashMap[firstNodeLabel])
-              .should.be.true;
-
-            callback(null, result);
-          }),
-          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              stageTwoBlockHeight = result[Object.keys(result)[0]].eventBlock
-                .block.blockHeight;
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
-            })],
-          state: ['blockSummary', (results, callback) => {
-            const allRecordIds = [].concat(..._.values(
-              results.nBlocks.recordIds));
-            console.log(`Total operation count: ${allRecordIds.length}`);
-            async.eachSeries(allRecordIds, (recordId, callback) => {
-              nodes.alpha.records.get({recordId}, err => {
-                // just need to ensure that there is no NotFoundError
-                assertNoError(err);
-                callback();
-              });
-            }, callback);
-          }]
-        }, err => {
-          assertNoError(err);
-          done();
+        const result = await helperNBlock({
+          consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
+          targetBlockHeight: newTargetBlockHeight
         });
+        console.log(
+          'targetBlockHashMap', JSON.stringify(result, null, 2));
+        const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
+        _.values(result.targetBlockHashMap)
+          .every(h => h === result.targetBlockHashMap[firstNodeLabel])
+          .should.be.true;
+
+        await helperSettleNetwork({consensusApi, nodes: _.values(nodes)});
+
+        const blockSummary = await _latestBlockSummary();
+
+        stageTwoBlockHeight = blockSummary[
+          Object.keys(blockSummary)[0]].eventBlock
+          .block.blockHeight;
+
+        const summaries = _createBlockSummaries(blockSummary);
+        console.log('Finishing block summaries:', JSON.stringify(
+          summaries, null, 2));
+        _.values(summaries).forEach(b => {
+          b.blockHeight.should.equal(summaries.alpha.blockHeight);
+          b.blockHash.should.equal(summaries.alpha.blockHash);
+        });
+
+        await _testRecords(result.recordIds);
       });
     }); // end recovery blocks four nodes
 
     const recoveryBlocksThreeNodes = 5;
     let stageThreeBlockHeight;
     describe(`${recoveryBlocksThreeNodes} Recovery Blocks`, () => {
-      it(`makes ${recoveryBlocksThreeNodes} blocks w/3 nodes`, function(done) {
+      it(`make ${recoveryBlocksThreeNodes} blocks w/3 nodes`, async function() {
         this.timeout(TEST_TIMEOUT);
 
         const newTargetBlockHeight = stageTwoBlockHeight +
@@ -418,216 +315,141 @@ describe('Recovery mode simulation', () => {
         // remove 1 out of the remaining 4 nodes
         _disableNodes(['delta']);
 
-        async.auto({
-          nBlocks: callback => helpers.nBlocks({
-            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
-            targetBlockHeight: newTargetBlockHeight
-          }, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            console.log(
-              'targetBlockHashMap', JSON.stringify(result, null, 2));
-            const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
-            _.values(result.targetBlockHashMap)
-              .every(h => h === result.targetBlockHashMap[firstNodeLabel])
-              .should.be.true;
-
-            callback(null, result);
-          }),
-          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              stageThreeBlockHeight = result[Object.keys(result)[0]].eventBlock
-                .block.blockHeight;
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
-            })],
-          state: ['blockSummary', (results, callback) => {
-            const allRecordIds = [].concat(..._.values(
-              results.nBlocks.recordIds));
-            console.log(`Total operation count: ${allRecordIds.length}`);
-            async.eachSeries(allRecordIds, (recordId, callback) => {
-              nodes.alpha.records.get({recordId}, err => {
-                // just need to ensure that there is no NotFoundError
-                assertNoError(err);
-                callback();
-              });
-            }, callback);
-          }]
-        }, err => {
-          assertNoError(err);
-          done();
+        const result = await helperNBlock({
+          consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
+          targetBlockHeight: newTargetBlockHeight
         });
+        console.log(
+          'targetBlockHashMap', JSON.stringify(result, null, 2));
+        const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
+        _.values(result.targetBlockHashMap)
+          .every(h => h === result.targetBlockHashMap[firstNodeLabel])
+          .should.be.true;
+
+        await helperSettleNetwork({consensusApi, nodes: _.values(nodes)});
+
+        const blockSummary = await _latestBlockSummary();
+        stageThreeBlockHeight = blockSummary[
+          Object.keys(blockSummary)[0]].eventBlock
+          .block.blockHeight;
+
+        const summaries = _createBlockSummaries(blockSummary);
+        console.log('Finishing block summaries:', JSON.stringify(
+          summaries, null, 2));
+        _.values(summaries).forEach(b => {
+          b.blockHeight.should.equal(summaries.alpha.blockHeight);
+          b.blockHash.should.equal(summaries.alpha.blockHash);
+        });
+
+        await _testRecords(result.recordIds);
       });
     }); // end recovery blocks three nodes
 
     let stageFourBlockHeight;
     describe('Enable formerly disable nodes', () => {
-      it('let disabled nodes catch up', function(done) {
+      it('let disabled nodes catch up', async function() {
         this.timeout(TEST_TIMEOUT);
 
         // enable all previously disabled nodes, back to seven nodes
         _enableNodes(['delta', 'epsilon', 'zeta', 'eta']);
 
-        async.auto({
-          // let the previously disabled nodes catch up
-          countEvents: callback => _countEvents(callback),
-          settle: ['countEvents', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              stageFourBlockHeight = result[Object.keys(result)[0]].eventBlock
-                .block.blockHeight;
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
-            })],
-          countEvents2: ['blockSummary', (results, callback) =>
-            _countEvents(callback)]
-        }, err => {
-          assertNoError(err);
-          done();
+        // let the previously disabled nodes catch up
+        await _countEvents();
+
+        await helperSettleNetwork({consensusApi, nodes: _.values(nodes)});
+
+        const blockSummary = await _latestBlockSummary();
+        stageFourBlockHeight = blockSummary[
+          Object.keys(blockSummary)[0]].eventBlock
+          .block.blockHeight;
+
+        const summaries = _createBlockSummaries(blockSummary);
+        console.log('Finishing block summaries:', JSON.stringify(
+          summaries, null, 2));
+        _.values(summaries).forEach(b => {
+          b.blockHeight.should.equal(summaries.alpha.blockHeight);
+          b.blockHash.should.equal(summaries.alpha.blockHash);
         });
+
+        await _countEvents();
       });
     });
 
     const regularBlocksSevenNodes = 10;
     let stageFiveBlockHeight;
     describe(`${regularBlocksSevenNodes} Regular Blocks`, () => {
-      it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, function(done) {
+      it(`makes ${regularBlocksSevenNodes} blocks w/7 nodes`, async function() {
         this.timeout(TEST_TIMEOUT);
 
         const newTargetBlockHeight = stageFourBlockHeight +
           regularBlocksSevenNodes;
 
-        async.auto({
-          nBlocks: callback => helpers.nBlocks({
-            consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
-            targetBlockHeight: newTargetBlockHeight
-          }, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            console.log(
-              'targetBlockHashMap', JSON.stringify(result, null, 2));
-            const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
-            _.values(result.targetBlockHashMap)
-              .every(h => h === result.targetBlockHashMap[firstNodeLabel])
-              .should.be.true;
-
-            callback(null, result);
-          }),
-          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              stageFiveBlockHeight = result[Object.keys(result)[0]].eventBlock
-                .block.blockHeight;
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
-            })],
-          state: ['blockSummary', (results, callback) => {
-            const allRecordIds = [].concat(..._.values(
-              results.nBlocks.recordIds));
-            console.log(`Total operation count: ${allRecordIds.length}`);
-            async.eachSeries(allRecordIds, (recordId, callback) => {
-              nodes.alpha.records.get({recordId}, err => {
-                // just need to ensure that there is no NotFoundError
-                assertNoError(err);
-                callback();
-              });
-            }, callback);
-          }],
-          testParticipants: ['state', (results, callback) => {
-            const ledgerNode = nodes.alpha;
-            const {getParticipants} = ledgerNode.consensus._blocks;
-            getParticipants(
-              {blockHeight: stageFiveBlockHeight, ledgerNode},
-              (err, result) => {
-                assertNoError(err);
-                // proof on the last block created should involve all 7 nodes
-                result.consensusProofPeers.should.have.length(7);
-                result.consensusProofPeers.should.have.same.members(
-                  _.values(peers));
-                callback();
-              });
-          }]
-        }, err => {
-          assertNoError(err);
-          done();
+        const result = await helperNBlock({
+          consensusApi, nodes, opTemplate, operationOnWorkCycle: 'all',
+          targetBlockHeight: newTargetBlockHeight
         });
+        console.log(
+          'targetBlockHashMap', JSON.stringify(result, null, 2));
+        const firstNodeLabel = Object.keys(result.targetBlockHashMap)[0];
+        _.values(result.targetBlockHashMap)
+          .every(h => h === result.targetBlockHashMap[firstNodeLabel])
+          .should.be.true;
+
+        await helperSettleNetwork({consensusApi, nodes: _.values(nodes)});
+
+        const blockSummary = await _latestBlockSummary();
+        stageFiveBlockHeight = blockSummary[
+          Object.keys(blockSummary)[0]].eventBlock
+          .block.blockHeight;
+
+        const summaries = _createBlockSummaries(blockSummary);
+        console.log('Finishing block summaries:', JSON.stringify(
+          summaries, null, 2));
+        _.values(summaries).forEach(b => {
+          b.blockHeight.should.equal(summaries.alpha.blockHeight);
+          b.blockHash.should.equal(summaries.alpha.blockHash);
+        });
+
+        await _testRecords(result.recordIds);
+
+        // test participants in last block
+        const ledgerNode = nodes.alpha;
+        const {getParticipants} = ledgerNode.consensus._blocks;
+        const p = await getParticipants(
+          {blockHeight: stageFiveBlockHeight, ledgerNode});
+
+        // proof on the last block created should involve all 7 nodes
+        p.consensusProofPeers.should.have.length(7);
+        p.consensusProofPeers.should.have.same.members(
+          _.values(peers));
       });
     }); // end regular blocks seven nodes
   });
 });
 
-function _countEvents(callback) {
-  nodes.alpha.storage.events.collection.aggregate([
+async function _countEvents() {
+  const result = await nodes.alpha.storage.events.collection.aggregate([
     {$match: {'meta.continuity2017.type': 'm'}},
     {$group: {
       _id: '$meta.continuity2017.creator',
       total: {$sum: 1}
     }}
-  ]).toArray((err, result) => {
-    assertNoError(err);
-    console.log('EVENTS', JSON.stringify(result, null, 2));
-    callback();
+  ]).toArray();
+  console.log('EVENTS', JSON.stringify(result, null, 2));
+}
+
+function _createBlockSummaries(blockSummary) {
+  const summaries = {};
+  Object.keys(blockSummary).forEach(k => {
+    summaries[k] = {
+      blockCollection: nodes[k].storage.blocks.collection.s.name,
+      blockHeight: blockSummary[k].eventBlock.block.blockHeight,
+      blockHash: blockSummary[k].eventBlock.meta.blockHash,
+      previousBlockHash: blockSummary[k].eventBlock.block
+        .previousBlockHash,
+    };
   });
+  return summaries;
 }
 
 function _disableNodes(nodeLabels) {
@@ -644,12 +466,22 @@ function _enableNodes(nodeLabels) {
   }
 }
 
-function _latestBlockSummary(callback) {
+async function _latestBlockSummary() {
   const blocks = {};
-  async.eachOf(nodes, (ledgerNode, nodeName, callback) => {
-    ledgerNode.storage.blocks.getLatestSummary((err, result) => {
-      blocks[nodeName] = result;
-      callback();
-    });
-  }, err => callback(err, blocks));
+  for(const n in nodes) {
+    const ledgerNode = nodes[n];
+    blocks[n] = await ledgerNode.storage.blocks.getLatestSummary();
+  }
+  return blocks;
+}
+
+async function _testRecords(recordIds) {
+  const allRecordIds = [].concat(..._.values(recordIds));
+  console.log(`Total operation count: ${allRecordIds.length}`);
+  // all nodes should have all operations
+  // just need to ensure that there is no NotFoundError
+  for(const n in nodes) {
+    await Promise.all(allRecordIds.map(recordId =>
+      nodes[n].records.get({recordId})));
+  }
 }
