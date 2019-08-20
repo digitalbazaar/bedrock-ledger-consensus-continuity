@@ -12,7 +12,8 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const {util: {callbackify, uuid}} = bedrock;
 
-// FIXME: gossipWith has been refactored to have different return values
+// FIXME: gossipWith API no longer records events into the redis cache,
+// these tests will need to be refactored
 describe.skip('Worker - _gossipWith', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
