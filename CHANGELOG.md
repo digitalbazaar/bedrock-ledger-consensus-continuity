@@ -1,5 +1,12 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 3.4.1 - 2019-08-22
+
+### Fixed
+- Defer gossip batch processing based on basisBlockHeight. Do not attempt to
+  validate events until the local node has generated the block indicated by
+  the event's basisBlockHeight.
+
 ## 3.4.0 - 2019-05-30
 
 ### Changed
