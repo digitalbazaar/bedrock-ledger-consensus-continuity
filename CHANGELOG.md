@@ -1,5 +1,12 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+# 3.5.0 - 2019-08-29
+
+### Added
+- Implement maxRetries when attempting to process gossip batches. This prevents
+  a malformed gossip batch from introducing unnecessary delays in the gossip
+  pipeline.
+
 ## 3.4.1 - 2019-08-22
 
 ### Fixed
