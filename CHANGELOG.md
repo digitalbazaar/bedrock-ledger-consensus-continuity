@@ -1,5 +1,11 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+# 3.6.0 - 2019-09-06
+
+### Changed
+- Update deps in support of using Node 12 Ed25519 crypto. All native module
+  dependencies are now optional when used with Node 12.
+
 # 3.5.0 - 2019-08-29
 
 ### Added
