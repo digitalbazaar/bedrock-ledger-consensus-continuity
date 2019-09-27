@@ -1,5 +1,12 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+# 3.7.0 - TBD
+
+### Changed
+- Set default debounce configuration settings to zero. This serves to
+  significantly reduce consensus times in exchange for a modest increase in
+  CPU utilization.
+
 # 3.6.0 - 2019-09-06
 
 ### Changed
