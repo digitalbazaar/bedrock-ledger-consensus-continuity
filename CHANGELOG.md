@@ -1,6 +1,6 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
-# 3.7.0 - TBD
+# 3.7.0 - 2019-09-30
 
 ### Changed
 - Set default debounce configuration settings to zero. This serves to
