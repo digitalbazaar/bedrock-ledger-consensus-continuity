@@ -11,6 +11,7 @@ const cache = require('bedrock-redis');
 const expect = global.chai.expect;
 const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
+const jsonld = require('jsonld');
 const mockData = require('./mock.data');
 const {util: {uuid}} = bedrock;
 
@@ -30,10 +31,8 @@ describe('Continuity2017', () => {
       cleanCache: callback => cache.client.flushall(callback),
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-      actor: ['clean', (results, callback) => brIdentity.get(
-        null, mockIdentity.identity.id, (err, identity) => {
-          callback(err, identity);
-        })],
+      actor: ['clean', (results, callback) => brIdentity.getCapabilities(
+        {actor: null, id: mockIdentity.identity.id}, callback)],
       consensusPlugin: callback => helpers.use('Continuity2017', callback),
       ledgerNode: ['actor', (results, callback) => brLedgerNode.add(
         results.actor, {ledgerConfiguration}, (err, ledgerNode) => {
@@ -622,7 +621,7 @@ describe('Continuity2017', () => {
             const eventBlock = result.eventBlock;
             should.exist(eventBlock.block);
             const block = eventBlock.block;
-            bedrock.jsonld.compact(
+            jsonld.compact(
               block, block['@context'], (err, compacted) => {
                 should.not.exist(err);
                 delete block.event[0]['@context'];
@@ -649,7 +648,7 @@ describe('Continuity2017', () => {
                 block.event[0].operation[0].record['@context'],
                 (err, compacted) => callback(err, compacted)),
               compactBlock: ['compactInput', (results, callback) =>
-                bedrock.jsonld.compact(
+                jsonld.compact(
                   block, block['@context'], (err, compacted) => {
                     should.not.exist(err);
                     // use record compacted with its own context

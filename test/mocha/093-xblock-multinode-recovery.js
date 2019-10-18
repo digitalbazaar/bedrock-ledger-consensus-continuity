@@ -4,7 +4,6 @@
 'use strict';
 
 const _ = require('lodash');
-const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
 const cache = require('bedrock-redis');
@@ -41,13 +40,9 @@ describe('X Block Test using elector selector with recovery', () => {
       this.timeout(180000);
       async.auto({
         clean: callback => cache.client.flushall(callback),
-        actor: ['clean', (results, callback) => brIdentity.get(
-          null, mockIdentity.identity.id, (err, identity) => {
-            callback(err, identity);
-          })],
         consensusPlugin: ['clean', (results, callback) => helpers.use(
           'Continuity2017', callback)],
-        ledgerNode: ['actor', (results, callback) => {
+        ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
               return callback(err);

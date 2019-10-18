@@ -3,7 +3,6 @@
  */
 'use strict';
 
-const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
 
@@ -48,12 +47,9 @@ describe.skip('Multinode Basics', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     before(done => {
       async.auto({
-        actor: callback => brIdentity.get(
-          null, mockIdentity.identity.id, (err, identity) => {
-            callback(err, identity);
-          }),
+        clean: callback => helpers.fushCache(callback),
         consensusPlugin: callback => helpers.use('Continuity2017', callback),
-        ledgerNode: ['actor', (results, callback) => {
+        ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
               return callback(err);
@@ -491,7 +487,7 @@ describe.skip('Multinode Basics', () => {
         async.auto({
           alphaAddEvent1: callback => testNodes.alpha.consensus._events.add(
             helpers.createEventBasic({eventTemplate}),
-              testNodes.alpha, callback),
+            testNodes.alpha, callback),
           // beta will merge its new regular event
           workCycle1: ['alphaAddEvent1', (results, callback) => {
             console.log('WORKER CYCLE 1 ---------------------');

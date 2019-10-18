@@ -11,11 +11,8 @@ const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
-const jsigs = require('jsonld-signatures')();
-const jsonld = bedrock.jsonld;
+const jsigs = require('jsonld-signatures');
 const {util: {uuid}} = bedrock;
-
-jsigs.use('jsonld', jsonld);
 
 const ledgerHistory = {
   alpha: require('./history-alpha'),
@@ -247,6 +244,8 @@ api.addRemoteEvents = ({
           testMergeEvent.parentHash.push(result);
           callback(null, result);
         })],
+      // FIXME: this helper is not currently being used, jsigs API call
+      // will need to be updated
       sign: ['regularEventHash', (results, callback) => jsigs.sign(
         testMergeEvent, {
           algorithm: 'Ed25519Signature2018',
@@ -414,16 +413,7 @@ api.createEventBasic = ({eventTemplate}) => {
 api.createIdentity = function(userName) {
   const newIdentity = {
     id: 'did:' + uuid(),
-    type: 'Identity',
-    sysSlug: userName,
-    label: userName,
-    email: userName + '@bedrock.dev',
-    sysPassword: 'password',
-    sysPublic: ['label', 'url', 'description'],
-    sysResourceRole: [],
-    url: 'https://example.com',
     description: userName,
-    sysStatus: 'active'
   };
   return newIdentity;
 };
@@ -664,8 +654,8 @@ api.use = (plugin, callback) => {
 
 // Insert identities and public keys used for testing into database
 function insertTestData(mockData, callback) {
-  async.forEachOf(mockData.identities, (identity, key, callback) => {
-    brIdentity.insert(null, identity.identity, callback);
+  async.forEachOf(mockData.identities, ({identity, meta}, key, callback) => {
+    brIdentity.insert({actor: null, identity, meta}, callback);
   }, err => {
     if(err) {
       if(!database.isDuplicateError(err)) {

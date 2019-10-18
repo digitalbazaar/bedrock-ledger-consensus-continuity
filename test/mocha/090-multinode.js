@@ -4,10 +4,9 @@
 'use strict';
 
 const _ = require('lodash');
-const bedrock = require('bedrock');
-const brIdentity = require('bedrock-identity');
-const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
+const bedrock = require('bedrock');
+const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
@@ -31,14 +30,11 @@ describe('Multinode', () => {
     const {ledgerConfiguration} = mockData;
     before(done => {
       async.auto({
-        clean: callback =>
-          helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-        actor: ['clean', (results, callback) => brIdentity.get(
-          null, mockIdentity.identity.id, (err, identity) => {
-            callback(err, identity);
-          })],
+        flushCache: callback => helpers.flushCache(callback),
+        clean: ['flushCache', (results, callback) =>
+          helpers.removeCollections(['ledger', 'ledgerNode'], callback)],
         consensusPlugin: callback => helpers.use('Continuity2017', callback),
-        ledgerNode: ['actor', (results, callback) => {
+        ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
               return callback(err);

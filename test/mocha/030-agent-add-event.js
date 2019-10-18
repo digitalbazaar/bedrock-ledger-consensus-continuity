@@ -8,13 +8,14 @@ const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const hasher = brLedgerNode.consensus._hasher;
 const helpers = require('./helpers');
-const jsigs = require('jsonld-signatures')();
+const jsigs = require('jsonld-signatures');
 const mockData = require('./mock.data');
 let request = require('request');
 request = request.defaults({json: true, strictSSL: false});
-const {jsonld, util: {uuid}} = bedrock;
+const {util: {uuid}} = bedrock;
 
-jsigs.use('jsonld', jsonld);
+// FIXME: tests are already being skipped, but will also need to be updated
+// to latest jsigs API
 
 describe.skip('Consensus Agent - Add Event API', () => {
   before(done => {

@@ -1,12 +1,10 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 const {config} = require('bedrock');
 const path = require('path');
 
 config.mocha.tests.push(path.join(__dirname, 'mocha'));
-
-config.jsonld.strictSSL = false;
 
 // MongoDB
 config.mongodb.name = 'bedrock_ledger_continuity_test';
@@ -28,3 +26,5 @@ config['ledger-consensus-continuity'].gossip.cache.enabled = false;
 config['ledger-consensus-continuity'].writer.debounce = 50;
 
 config.mocha.options.bail = true;
+
+config['https-agent'].rejectUnauthorized = false;

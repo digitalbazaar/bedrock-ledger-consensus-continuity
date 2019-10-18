@@ -13,14 +13,15 @@ module.exports = mock;
 
 const identities = mock.identities = {};
 
-// identity with permission to access its own agreements
 const userName = 'regularUser';
 identities[userName] = {};
 identities[userName].identity = helpers.createIdentity(userName);
-identities[userName].identity.sysResourceRole.push({
-  sysRole: 'bedrock-ledger.test',
-  generateResource: 'id'
-});
+identities[userName].meta = {
+  sysResourceRole: [{
+    sysRole: 'bedrock-ledger.test',
+    generateResource: 'id'
+  }]
+};
 
 const ledgerConfiguration = mock.ledgerConfiguration = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
@@ -147,6 +148,7 @@ mock.ldDocuments[mock.authorizedSignerUrl] = {
   "publicKeyBase58": mock.groups.authorized.publicKey
 };
 
+/*
 const jsonld = bedrock.jsonld;
 const oldLoader = jsonld.documentLoader;
 jsonld.documentLoader = function(url, callback) {
@@ -169,3 +171,4 @@ jsonld.documentLoader = function(url, callback) {
   // }
   oldLoader(url, callback);
 };
+*/
