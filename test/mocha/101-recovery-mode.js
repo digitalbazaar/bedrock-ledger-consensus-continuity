@@ -75,15 +75,18 @@ describe('Recovery mode simulation', () => {
           recoveryElectors.push({id: peers[n]});
         }
 
-        // let r = recoveryElectorsByBlockHeight.get(blockHeight);
-        // if(r) {
-        //   return r;
+        // let res = recoveryElectorsByBlockHeight.get(blockHeight);
+        // if(res) {
+        //   return res;
         // }
 
-        if(electors.length === 1) {
+        if(electors.length === 1 || f === 1) {
           // recoveryElectorsByBlockHeight.set(blockHeight, []);
           return [];
         }
+
+        const r = f - 1;
+        const total = 3 * r + 1;
 
         // NOTE: computing recovery electors based on `electors` does not work
         // because the elector selection algorithm may have chosen multiple
@@ -95,13 +98,13 @@ describe('Recovery mode simulation', () => {
         //   .slice(0, f + 1);
 
         // recoveryElectors = recoveryElectors
-        //   .sort((a, b) => a.id.localeCompare(b.id)).slice(0, f + 1);
+        //   .sort((a, b) => a.id.localeCompare(b.id)).slice(0, total);
 
-        recoveryElectors = recoveryElectors.slice(0, f + 1);
+        recoveryElectors = recoveryElectors.slice(0, total);
 
-        const r = recoveryElectors.length < f + 1 ? [] : recoveryElectors;
-        // recoveryElectorsByBlockHeight.set(blockHeight, r);
-        return r;
+        const res = recoveryElectors.length < total ? [] : recoveryElectors;
+        // recoveryElectorsByBlockHeight.set(blockHeight, res);
+        return res;
       };
     // the return value here gets multiplied by 10
     electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 2;

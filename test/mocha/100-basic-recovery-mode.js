@@ -55,15 +55,17 @@ describe('Recovery mode simulation', () => {
 
     electorSelectionApi.api._computeRecoveryElectors =
       ({electors, f}) => {
+        if(electors.length === 1 || f === 1) {
+          return [];
+        }
         let recoveryElectors = [];
         for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
           recoveryElectors.push({id: peers[n]});
         }
-        if(electors.length === 1) {
-          return [];
-        }
-        recoveryElectors = recoveryElectors.slice(0, f + 1);
-        return recoveryElectors.length < f + 1 ? [] : recoveryElectors;
+        const r = f - 1;
+        const total = 3 * r + 1;
+        recoveryElectors = recoveryElectors.slice(0, total);
+        return recoveryElectors.length < total ? [] : recoveryElectors;
       };
     // the return value here gets multiplied by 10
     electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 2;
