@@ -29,6 +29,20 @@ describe('X Block Test using elector selector with recovery', () => {
     helpers.prepareDatabase(mockData, done);
   });
 
+  // FIXME: update bedrock-ledger...es-most-recent-participants-with-recovery
+  // to fix recovery elector count
+  before(() => {
+    const electorSelectionApi = brLedgerNode.use(
+      'MostRecentParticipantsWithRecovery');
+    electorSelectionApi.api._computeRecoveryElectors = ({electors, f}) => {
+      if(f <= 1) {
+        return [];
+      }
+      const r = f - 1;
+      return electors.slice(0, 3 * r + 1);
+    };
+  });
+
   const nodeCount = 6;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
