@@ -43,7 +43,7 @@ describe('X Block Test using elector selector with recovery', () => {
     };
   });
 
-  const nodeCount = 6;
+  const nodeCount = 8;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // get consensus plugin and create genesis ledger node
