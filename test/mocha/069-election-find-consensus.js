@@ -159,7 +159,8 @@ describe('Election API findConsensus', () => {
         findConsensus(
           {electors, ledgerNode, history: results.history}, (err, result) => {
             assertNoError(err);
-            should.not.exist(result);
+            should.exist(result);
+            result.consensus.should.equal(false);
             callback();
           });
       }]
