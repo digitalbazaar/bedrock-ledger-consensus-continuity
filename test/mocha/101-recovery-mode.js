@@ -349,7 +349,7 @@ describe.skip('Recovery mode simulation', () => {
     }); // end recovery blocks three nodes
 
     let stageFourBlockHeight;
-    describe('Enable formerly disable nodes', () => {
+    describe('Enable formerly disabled nodes', () => {
       it('let disabled nodes catch up', async function() {
         this.timeout(TEST_TIMEOUT);
 
