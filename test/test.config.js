@@ -28,3 +28,6 @@ config['ledger-consensus-continuity'].writer.debounce = 50;
 config.mocha.options.bail = true;
 
 config['https-agent'].rejectUnauthorized = false;
+
+// put jobs stuff in another redis database so db 0 can be flushed
+config.jobs.queueOptions.db = 1;
