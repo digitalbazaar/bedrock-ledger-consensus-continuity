@@ -56,9 +56,14 @@ describe('Recovery mode simulation', () => {
       return electors;
     };
 
-    // always return alpha as the sole elector
+    // use all REs as the decision electors when in recovery mode
     electorSelectionApi.api._computeElectorsForRecoveryMode = () => {
-      return [{id: peers.alpha}];
+      return [
+        {id: peers.alpha},
+        {id: peers.beta},
+        {id: peers.gamma},
+        {id: peers.delta}
+      ];
     };
 
     // since the recoveryElectors in this test are based on `nodes` which

@@ -34,9 +34,14 @@ describe('Recovery mode simulation', () => {
     const electorSelectionApi = brLedgerNode.use(
       'MostRecentParticipantsWithRecovery');
 
-    // always return alpha as the sole elector
+    // use all REs as the decision electors when in recovery mode
     electorSelectionApi.api._computeElectorsForRecoveryMode = () => {
-      return [{id: peers.alpha}];
+      return [
+        {id: peers.alpha},
+        {id: peers.beta},
+        {id: peers.gamma},
+        {id: peers.delta}
+      ];
     };
 
     let savedElectors;
