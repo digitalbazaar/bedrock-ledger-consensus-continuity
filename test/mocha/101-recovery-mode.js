@@ -421,7 +421,7 @@ describe('Recovery mode simulation', () => {
         await _testRecords(result.recordIds);
 
         // FIXME: check for electors via another new property in the
-        // data model (not consensusProofHash) once one has been adopted
+        // data model (not consensusProofHash) once `mode = 'first'` has been adopted
 
       //   // test participants in last block
       //   const ledgerNode = nodes.alpha;
