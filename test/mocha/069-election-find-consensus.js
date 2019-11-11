@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -124,19 +124,21 @@ describe('Election API findConsensus', () => {
       history: ['event1', (results, callback) => getRecentHistory(
         {creatorId, ledgerNode}, callback)],
       consensus: ['history', (results, callback) => {
-        findConsensus(
-          {electors, ledgerNode, history: results.history}, (err, result) => {
-            assertNoError(err);
-            result.consensusProofHash.should.have.length(1);
-            result.consensusProofHash[0].should.equal(
-              results.event1.mergeHash);
-            result.eventHash.should.have.length(2);
-            result.eventHash.should.have.same.members([
-              Object.keys(results.event1.regular)[0],
-              results.event1.merge.meta.eventHash
-            ]);
-            callback();
-          });
+        findConsensus({
+          electors, ledgerNode, history: results.history,
+          mode: 'firstWithConsensusProof'
+        }, (err, result) => {
+          assertNoError(err);
+          result.consensusProofHash.should.have.length(1);
+          result.consensusProofHash[0].should.equal(
+            results.event1.mergeHash);
+          result.eventHash.should.have.length(2);
+          result.eventHash.should.have.same.members([
+            Object.keys(results.event1.regular)[0],
+            results.event1.merge.meta.eventHash
+          ]);
+          callback();
+        });
       }]
     }, done);
   });
@@ -156,13 +158,15 @@ describe('Election API findConsensus', () => {
       history: ['event1', (results, callback) => getRecentHistory(
         {creatorId, ledgerNode}, callback)],
       consensus: ['history', (results, callback) => {
-        findConsensus(
-          {electors, ledgerNode, history: results.history}, (err, result) => {
-            assertNoError(err);
-            should.exist(result);
-            result.consensus.should.equal(false);
-            callback();
-          });
+        findConsensus({
+          electors, ledgerNode, history: results.history,
+          mode: 'firstWithConsensusProof'
+        }, (err, result) => {
+          assertNoError(err);
+          should.exist(result);
+          result.consensus.should.equal(false);
+          callback();
+        });
       }]
     }, done);
   });
@@ -183,40 +187,41 @@ describe('Election API findConsensus', () => {
             getRecentHistory({creatorId, ledgerNode}, callback);
           },
           consensus: ['history', (results, callback) => {
-            findConsensus(
-              {electors, ledgerNode, history: results.history},
-              (err, result) => {
-                assertNoError(err);
-                should.exist(result);
-                should.exist(result.eventHash);
-                result.eventHash.should.be.an('array');
-                result.eventHash.should.have.length(8);
-                result.eventHash.should.have.same.members([
-                  ...regularEvent.regularHash,
-                  ...regularEvent.mergeHash
-                ]);
-                should.exist(result.consensusProofHash);
-                result.consensusProofHash.should.be.an('array');
-                result.consensusProofHash.should.have.length(10);
-                result.consensusProofHash.should.have.same.members([
-                  copyMergeHashes.cpa,
-                  copyMergeHashes.cpb,
-                  copyMergeHashes.cp1,
-                  copyMergeHashes.cp2,
-                  copyMergeHashes.cp3,
-                  copyMergeHashes.cp4,
-                  copyMergeHashes.cp5,
-                  copyMergeHashes.cp6,
-                  copyMergeHashes.cp7,
-                  copyMergeHashes.cp8
-                ]);
-                // proofReport({
-                //   copyMergeHashes,
-                //   copyMergeHashesIndex,
-                //   consensusProofHash: result.consensusProofHash,
-                // });
-                callback();
-              });
+            findConsensus({
+              electors, ledgerNode, history: results.history,
+              mode: 'firstWithConsensusProof'
+            }, (err, result) => {
+              assertNoError(err);
+              should.exist(result);
+              should.exist(result.eventHash);
+              result.eventHash.should.be.an('array');
+              result.eventHash.should.have.length(8);
+              result.eventHash.should.have.same.members([
+                ...regularEvent.regularHash,
+                ...regularEvent.mergeHash
+              ]);
+              should.exist(result.consensusProofHash);
+              result.consensusProofHash.should.be.an('array');
+              result.consensusProofHash.should.have.length(10);
+              result.consensusProofHash.should.have.same.members([
+                copyMergeHashes.cpa,
+                copyMergeHashes.cpb,
+                copyMergeHashes.cp1,
+                copyMergeHashes.cp2,
+                copyMergeHashes.cp3,
+                copyMergeHashes.cp4,
+                copyMergeHashes.cp5,
+                copyMergeHashes.cp6,
+                copyMergeHashes.cp7,
+                copyMergeHashes.cp8
+              ]);
+              // proofReport({
+              //   copyMergeHashes,
+              //   copyMergeHashesIndex,
+              //   consensusProofHash: result.consensusProofHash,
+              // });
+              callback();
+            });
           }]
         }, callback), callback);
       }]
@@ -239,35 +244,36 @@ describe('Election API findConsensus', () => {
             getRecentHistory({creatorId, ledgerNode}, callback);
           },
           consensus: ['history', (results, callback) => {
-            findConsensus(
-              {electors, ledgerNode, history: results.history},
-              (err, result) => {
-                assertNoError(err);
-                result.eventHash.should.have.length(8);
-                result.eventHash.should.have.same.members([
-                  ...regularEvent.regularHash,
-                  ...regularEvent.mergeHash
-                ]);
-                result.consensusProofHash.should.have.length(10);
-                result.consensusProofHash.should.have.same.members([
-                  copyMergeHashes.cpa,
-                  copyMergeHashes.cpb,
-                  copyMergeHashes.cp1,
-                  copyMergeHashes.cp2,
-                  copyMergeHashes.cp3,
-                  copyMergeHashes.cp4,
-                  copyMergeHashes.cp5,
-                  copyMergeHashes.cp6,
-                  copyMergeHashes.cp7,
-                  copyMergeHashes.cp8
-                ]);
-                // proofReport({
-                //   copyMergeHashes,
-                //   copyMergeHashesIndex,
-                //   consensusProofHash: result.consensusProofHash,
-                // });
-                callback();
-              });
+            findConsensus({
+              electors, ledgerNode, history: results.history,
+              mode: 'firstWithConsensusProof'
+            }, (err, result) => {
+              assertNoError(err);
+              result.eventHash.should.have.length(8);
+              result.eventHash.should.have.same.members([
+                ...regularEvent.regularHash,
+                ...regularEvent.mergeHash
+              ]);
+              result.consensusProofHash.should.have.length(10);
+              result.consensusProofHash.should.have.same.members([
+                copyMergeHashes.cpa,
+                copyMergeHashes.cpb,
+                copyMergeHashes.cp1,
+                copyMergeHashes.cp2,
+                copyMergeHashes.cp3,
+                copyMergeHashes.cp4,
+                copyMergeHashes.cp5,
+                copyMergeHashes.cp6,
+                copyMergeHashes.cp7,
+                copyMergeHashes.cp8
+              ]);
+              // proofReport({
+              //   copyMergeHashes,
+              //   copyMergeHashesIndex,
+              //   consensusProofHash: result.consensusProofHash,
+              // });
+              callback();
+            });
           }]
         }, callback), callback);
       }]
@@ -290,35 +296,36 @@ describe('Election API findConsensus', () => {
             getRecentHistory({creatorId, ledgerNode}, callback);
           },
           consensus: ['history', (results, callback) => {
-            findConsensus(
-              {electors, ledgerNode, history: results.history},
-              (err, result) => {
-                assertNoError(err);
-                result.eventHash.should.have.length(8);
-                result.eventHash.should.have.same.members([
-                  ...regularEvent.regularHash,
-                  ...regularEvent.mergeHash
-                ]);
-                result.consensusProofHash.should.have.length(10);
-                result.consensusProofHash.should.have.same.members([
-                  copyMergeHashes.cpa,
-                  copyMergeHashes.cpb,
-                  copyMergeHashes.cp1,
-                  copyMergeHashes.cp2,
-                  copyMergeHashes.cp3,
-                  copyMergeHashes.cp4,
-                  copyMergeHashes.cp5,
-                  copyMergeHashes.cp6,
-                  copyMergeHashes.cp7,
-                  copyMergeHashes.cp8
-                ]);
-                // proofReport({
-                //   copyMergeHashes,
-                //   copyMergeHashesIndex,
-                //   consensusProofHash: result.consensusProofHash,
-                // });
-                callback();
-              });
+            findConsensus({
+              electors, ledgerNode, history: results.history,
+              mode: 'firstWithConsensusProof'
+            }, (err, result) => {
+              assertNoError(err);
+              result.eventHash.should.have.length(8);
+              result.eventHash.should.have.same.members([
+                ...regularEvent.regularHash,
+                ...regularEvent.mergeHash
+              ]);
+              result.consensusProofHash.should.have.length(10);
+              result.consensusProofHash.should.have.same.members([
+                copyMergeHashes.cpa,
+                copyMergeHashes.cpb,
+                copyMergeHashes.cp1,
+                copyMergeHashes.cp2,
+                copyMergeHashes.cp3,
+                copyMergeHashes.cp4,
+                copyMergeHashes.cp5,
+                copyMergeHashes.cp6,
+                copyMergeHashes.cp7,
+                copyMergeHashes.cp8
+              ]);
+              // proofReport({
+              //   copyMergeHashes,
+              //   copyMergeHashesIndex,
+              //   consensusProofHash: result.consensusProofHash,
+              // });
+              callback();
+            });
           }]
         }, callback), callback);
       }]
@@ -366,45 +373,46 @@ describe('Election API findConsensus', () => {
             getRecentHistory({creatorId, ledgerNode}, callback);
           },
           consensus: ['history', (results, callback) => {
-            findConsensus(
-              {electors, ledgerNode, history: results.history},
-              (err, result) => {
-                assertNoError(err);
-                should.exist(result);
-                should.exist(result.eventHash);
-                result.eventHash.should.be.an('array');
-                result.eventHash.should.have.length(8);
-                result.eventHash.should.have.same.members([
-                  regularEvent.alpha.regularHashes[0],
-                  regularEvent.beta.regularHashes[0],
-                  regularEvent.gamma.regularHashes[0],
-                  regularEvent.delta.regularHashes[0],
-                  regularEvent.alpha.mergeHash,
-                  regularEvent.beta.mergeHash,
-                  regularEvent.gamma.mergeHash,
-                  regularEvent.delta.mergeHash
-                  // exclude epsilon (non-elector)
-                ]);
-                result.consensusProofHash.should.have.length(10);
-                result.consensusProofHash.should.have.same.members([
-                  copyMergeHashes.cpa,
-                  copyMergeHashes.cpb,
-                  copyMergeHashes.cp1,
-                  copyMergeHashes.cp2,
-                  copyMergeHashes.cp3,
-                  copyMergeHashes.cp4,
-                  copyMergeHashes.cp5,
-                  copyMergeHashes.cp6,
-                  copyMergeHashes.cp7,
-                  copyMergeHashes.cp8
-                ]);
-                // proofReport({
-                //   copyMergeHashes,
-                //   copyMergeHashesIndex,
-                //   consensusProofHash: result.consensusProofHash,
-                // });
-                callback();
-              });
+            findConsensus({
+              electors, ledgerNode, history: results.history,
+              mode: 'firstWithConsensusProof'
+            }, (err, result) => {
+              assertNoError(err);
+              should.exist(result);
+              should.exist(result.eventHash);
+              result.eventHash.should.be.an('array');
+              result.eventHash.should.have.length(8);
+              result.eventHash.should.have.same.members([
+                regularEvent.alpha.regularHashes[0],
+                regularEvent.beta.regularHashes[0],
+                regularEvent.gamma.regularHashes[0],
+                regularEvent.delta.regularHashes[0],
+                regularEvent.alpha.mergeHash,
+                regularEvent.beta.mergeHash,
+                regularEvent.gamma.mergeHash,
+                regularEvent.delta.mergeHash
+                // exclude epsilon (non-elector)
+              ]);
+              result.consensusProofHash.should.have.length(10);
+              result.consensusProofHash.should.have.same.members([
+                copyMergeHashes.cpa,
+                copyMergeHashes.cpb,
+                copyMergeHashes.cp1,
+                copyMergeHashes.cp2,
+                copyMergeHashes.cp3,
+                copyMergeHashes.cp4,
+                copyMergeHashes.cp5,
+                copyMergeHashes.cp6,
+                copyMergeHashes.cp7,
+                copyMergeHashes.cp8
+              ]);
+              // proofReport({
+              //   copyMergeHashes,
+              //   copyMergeHashesIndex,
+              //   consensusProofHash: result.consensusProofHash,
+              // });
+              callback();
+            });
           }]
         }, callback), callback);
       }],
@@ -431,36 +439,38 @@ describe('Election API findConsensus', () => {
       event: ['history', (results, callback) => helpers.addEvent(
         {ledgerNode, eventTemplate, opTemplate}, callback)],
       consensus: ['event', (results, callback) => {
-        findConsensus(
-          {electors, ledgerNode, history: results.history}, (err, result) => {
-            const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
-              results.build;
-            assertNoError(err);
-            result.eventHash.should.have.length(8);
-            result.eventHash.should.have.same.members([
-              ...regularEvent.regularHash,
-              ...regularEvent.mergeHash
-            ]);
-            result.consensusProofHash.should.have.length(10);
-            result.consensusProofHash.should.have.same.members([
-              copyMergeHashes.cpa,
-              copyMergeHashes.cpb,
-              copyMergeHashes.cp1,
-              copyMergeHashes.cp2,
-              copyMergeHashes.cp3,
-              copyMergeHashes.cp4,
-              copyMergeHashes.cp5,
-              copyMergeHashes.cp6,
-              copyMergeHashes.cp7,
-              copyMergeHashes.cp8
-            ]);
-            // proofReport({
-            //   copyMergeHashes,
-            //   copyMergeHashesIndex,
-            //   consensusProofHash: result.consensusProofHash,
-            // });
-            callback();
-          });
+        findConsensus({
+          electors, ledgerNode, history: results.history,
+          mode: 'firstWithConsensusProof'
+        }, (err, result) => {
+          const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
+            results.build;
+          assertNoError(err);
+          result.eventHash.should.have.length(8);
+          result.eventHash.should.have.same.members([
+            ...regularEvent.regularHash,
+            ...regularEvent.mergeHash
+          ]);
+          result.consensusProofHash.should.have.length(10);
+          result.consensusProofHash.should.have.same.members([
+            copyMergeHashes.cpa,
+            copyMergeHashes.cpb,
+            copyMergeHashes.cp1,
+            copyMergeHashes.cp2,
+            copyMergeHashes.cp3,
+            copyMergeHashes.cp4,
+            copyMergeHashes.cp5,
+            copyMergeHashes.cp6,
+            copyMergeHashes.cp7,
+            copyMergeHashes.cp8
+          ]);
+          // proofReport({
+          //   copyMergeHashes,
+          //   copyMergeHashesIndex,
+          //   consensusProofHash: result.consensusProofHash,
+          // });
+          callback();
+        });
       }]
     }, done);
   });

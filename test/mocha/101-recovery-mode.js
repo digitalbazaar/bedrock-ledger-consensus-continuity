@@ -420,16 +420,19 @@ describe('Recovery mode simulation', () => {
 
         await _testRecords(result.recordIds);
 
-        // test participants in last block
-        const ledgerNode = nodes.alpha;
-        const {getParticipants} = ledgerNode.consensus._blocks;
-        const p = await getParticipants(
-          {blockHeight: stageFiveBlockHeight, ledgerNode});
+        // FIXME: check for electors via another new property in the
+        // data model (not consensusProofHash) once one has been adopted
 
-        // proof on the last block created should involve all 7 nodes
-        p.consensusProofPeers.should.have.length(7);
-        p.consensusProofPeers.should.have.same.members(
-          _.values(peers));
+      //   // test participants in last block
+      //   const ledgerNode = nodes.alpha;
+      //   const {getParticipants} = ledgerNode.consensus._blocks;
+      //   const p = await getParticipants(
+      //     {blockHeight: stageFiveBlockHeight, ledgerNode});
+      //
+      //   // proof on the last block created should involve all 7 nodes
+      //   p.consensusProofPeers.should.have.length(7);
+      //   p.consensusProofPeers.should.have.same.members(
+      //     _.values(peers));
       });
     }); // end regular blocks seven nodes
   });
