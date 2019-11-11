@@ -120,7 +120,6 @@ describe.skip('Election API _getElectorBranches', () => {
     });
     const getRecentHistory = consensusApi._events.getRecentHistory;
     const _getElectorBranches = consensusApi._election._getElectorBranches;
-    const _findMergeEventProof = consensusApi._election._findMergeEventProof;
     const eventTemplate = mockData.events.alpha;
     async.auto({
       // add a regular event and merge on every node
