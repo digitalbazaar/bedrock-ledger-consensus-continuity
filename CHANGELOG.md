@@ -1,5 +1,23 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+# 4.0.0 - 2019-xx-xx
+
+### Added
+
+- Support recovery mode capability, i.e., enable networks to require
+  `2f+1` support to each consensus but only `2r+1` support to make
+  decisions or to trigger new sets of electors to be chosen to ensure
+  network health and continuity.
+- Support multiple modes for determining which events reach consensus:
+  `first`, `firstWithConsensusProof`, and `batch`.
+- **BREAKING** Set default consensus mode to `first`.
+
+### Fixed
+- **BREAKING** Fix bugs related to consensus support
+  calculation. This is a bug fix but a breaking change
+  because it alters how support is calculated which
+  changes which events would achieve consensus.
+
 # 3.7.0 - 2019-09-30
 
 ### Changed
