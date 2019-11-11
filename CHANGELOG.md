@@ -1,6 +1,6 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
-# 4.0.0 - 2019-xx-xx
+# 4.0.0 - 2019-11-11
 
 ### Added
 
@@ -11,6 +11,8 @@
 - Support multiple modes for determining which events reach consensus:
   `first`, `firstWithConsensusProof`, and `batch`.
 - **BREAKING** Set default consensus mode to `first`.
+- Cache `prime` APIs that can be used to prime the redis cache based on data
+  stored in MongoDB.
 
 ### Fixed
 - **BREAKING** Fix bugs related to consensus support
