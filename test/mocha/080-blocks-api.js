@@ -145,12 +145,12 @@ describe('blocks API', () => {
           const ledgerNodeId = nodes.alpha.id;
           const blockHeightKey = _cacheKey.blockHeight(ledgerNodeId);
           const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
-          const eventKeys = hashes.map(eventHash => _cacheKey.event(
-            {eventHash, ledgerNodeId}));
+          const outstandingMergeEventKeys = hashes.map(eventHash =>
+            _cacheKey.outstandingMergeEvent({eventHash, ledgerNodeId}));
           const multi = cache.client.multi();
-          multi.sadd(outstandingMergeKey, eventKeys);
+          multi.sadd(outstandingMergeKey, outstandingMergeEventKeys);
           multi.set(blockHeightKey, 0);
-          eventKeys.forEach(k => multi.set(
+          outstandingMergeEventKeys.forEach(k => multi.set(
             k, JSON.stringify({test: 'string'})));
           multi.exec(callback);
         },
@@ -206,12 +206,12 @@ describe('blocks API', () => {
           const ledgerNodeId = nodes.alpha.id;
           const blockHeightKey = _cacheKey.blockHeight(ledgerNodeId);
           const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
-          const eventKeys = hashes.map(eventHash => _cacheKey.event(
-            {eventHash, ledgerNodeId}));
+          const outstandingMergeEventKeys = hashes.map(eventHash =>
+            _cacheKey.outstandingMergeEvent({eventHash, ledgerNodeId}));
           const multi = cache.client.multi();
-          multi.sadd(outstandingMergeKey, eventKeys);
+          multi.sadd(outstandingMergeKey, outstandingMergeEventKeys);
           multi.set(blockHeightKey, 499);
-          eventKeys.forEach(k => multi.set(
+          outstandingMergeEventKeys.forEach(k => multi.set(
             k, JSON.stringify({test: 'string'})));
           multi.exec(callback);
         }],
