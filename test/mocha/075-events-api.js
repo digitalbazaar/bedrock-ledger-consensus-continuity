@@ -141,14 +141,15 @@ describe('events API', () => {
         rebuildCache: ['merge', (results, callback) => {
           const {mergeHash: eventHash, regularHashes} = results.merge;
 
-          const eventKey = _cacheKey.event({eventHash, ledgerNodeId});
+          const outstandingMergeEventKey = _cacheKey.outstandingMergeEvent(
+            {eventHash, ledgerNodeId});
           const headKey = _cacheKey.head({creatorId, ledgerNodeId});
           const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
           const parentHashes = [...regularHashes];
           cache.client.multi()
             .sadd(childlessKey, parentHashes)
-            .del(eventKey, headKey)
-            .srem(outstandingMergeKey, eventKey)
+            .del(outstandingMergeEventKey, headKey)
+            .srem(outstandingMergeKey, outstandingMergeEventKey)
             .exec(callback);
         }],
         repair: ['rebuildCache', (results, callback) => {
@@ -189,14 +190,15 @@ describe('events API', () => {
         rebuildCache: ['merge', (results, callback) => {
           const {mergeHash: eventHash, regularHashes} = results.merge;
 
-          const eventKey = _cacheKey.event({eventHash, ledgerNodeId});
+          const outstandingMergeEventKey = _cacheKey.outstandingMergeEvent(
+            {eventHash, ledgerNodeId});
           const headKey = _cacheKey.head({creatorId, ledgerNodeId});
           const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
           const parentHashes = [...regularHashes];
           cache.client.multi()
             .sadd(childlessKey, parentHashes)
-            .del(eventKey, headKey)
-            .srem(outstandingMergeKey, eventKey)
+            .del(outstandingMergeEventKey, headKey)
+            .srem(outstandingMergeKey, outstandingMergeEventKey)
             .exec(callback);
         }],
         repair: ['rebuildCache', (results, callback) => {
