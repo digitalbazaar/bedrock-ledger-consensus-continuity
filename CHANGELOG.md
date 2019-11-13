@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 4.0.1 - 2019-11-13
+
+### Changed
+- Update peer dependency for bedrock v1 - v3.
+
 # 4.0.0 - 2019-11-11
 
 ### Added
