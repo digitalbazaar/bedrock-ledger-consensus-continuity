@@ -374,8 +374,9 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
             }
             callback(err);
           }), callback),
-        write: ['addEvents', (results, callback) =>
-          to.eventWriter.start(callback)]
+        write: ['addEvents', (results, callback) => {
+          to.eventWriter.start().then(() => callback(), callback);
+        }]
       }, callback);
     }]
   }, callback);

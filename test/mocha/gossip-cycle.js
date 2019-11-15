@@ -264,5 +264,5 @@ api.delta = (
 function _commitCache(ledgerNode, callback) {
   // ledgerNode.eventWriter is in immediate mode and stops itself
   // as soon as the event queue is cleared
-  ledgerNode.eventWriter.start(callback);
+  ledgerNode.eventWriter.start().then(() => callback(), callback);
 }
