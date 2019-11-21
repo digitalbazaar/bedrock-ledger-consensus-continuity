@@ -102,9 +102,14 @@ const continuity2017ledgerConfiguration = {
       required: ['type'],
       additionalProperties: false,
       properties: {
+        electorPool: {type: 'string'},
         type: {
           type: 'string',
-          enum: ['MostRecentParticipants', 'MostRecentParticipantsWithRecovery']
+          enum: [
+            'ElectorPoolElectorSelection',
+            'MostRecentParticipants',
+            'MostRecentParticipantsWithRecovery',
+          ]
         }
       }
     },
