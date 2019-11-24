@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -181,13 +181,13 @@ describe('Multinode', () => {
             async.eachSeries(peers, (ledgerNode, callback) =>
               async.every(recordIds, (recordId, callback) =>
                 ledgerNode.records.get({recordId}, (err, result) => {
-                  result.should.be.an('object');
                   if(err) {
                     if(err.name === 'NotFoundError') {
                       return callback(null, false);
                     }
                     return callback(err);
                   }
+                  result.should.be.an('object');
                   callback(null, true);
                 }),
               (err, result) => {
