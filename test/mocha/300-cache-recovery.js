@@ -203,8 +203,11 @@ describe('Cache Recovery', () => {
             // compare childless before/after prime
             const childlessAfterPrime = await _inspectChildless({nodes});
             for(const nodeLabel in childlessAfterPrime) {
-              childlessAfterPrime[nodeLabel].should.have.same.members(
-                childlessBeforePrime[nodeLabel]);
+              childlessAfterPrime[nodeLabel].childless.should.have.same.members(
+                childlessBeforePrime[nodeLabel].childless);
+              childlessAfterPrime[nodeLabel].localChildless
+                .should.have.same.members(
+                  childlessBeforePrime[nodeLabel].localChildless);
             }
 
             // compare outstanding merge events and block height before/after
@@ -287,15 +290,22 @@ async function _inspectChildless({nodes}) {
     const ledgerNodeId = ledgerNode.id;
     const {consensus: {_cache: {cacheKey: _cacheKey}}} = ledgerNode;
     const childlessKey = _cacheKey.childless(ledgerNodeId);
-    const keys = await cache.client.smembers(childlessKey);
+    const localChildlessKey = _cacheKey.localChildless(ledgerNodeId);
+    const childlessKeys = await cache.client.smembers(childlessKey);
+    const localChildlessKeys = await cache.client.smembers(localChildlessKey);
     const childlessHashesCache = [];
-    for(const key of keys) {
+    const localChildlessHashesCache = [];
+    for(const key of childlessKeys) {
       childlessHashesCache.push(key.substr(key.lastIndexOf('|') + 1));
     }
-    const childless = await ledgerNode.consensus._cache.prime
+    for(const key of localChildlessKeys) {
+      localChildlessHashesCache.push(key.substr(key.lastIndexOf('|') + 1));
+    }
+    const {childless, localChildless} = await ledgerNode.consensus._cache.prime
       .getChildlessEvents({ledgerNode});
     childlessHashesCache.should.have.same.members(childless);
-    report[nodeLabel] = childless;
+    localChildlessHashesCache.should.have.same.members(localChildless);
+    report[nodeLabel] = {childless, localChildless};
   }
   return report;
 }

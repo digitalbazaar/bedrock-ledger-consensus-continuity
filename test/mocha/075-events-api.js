@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -119,7 +119,9 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that no events were removed
-            updateCache.should.eql([0, 'OK', 'OK', 1, 0, 'OK', 0]);
+            // see `/lib/cache/events.addLocalMergeEvent` for the redis
+            // transaction that is executed that returns this result
+            updateCache.should.eql([0, 0, 'OK', 'OK', 1, 0, 'OK', 0]);
             callback();
           });
         }]
@@ -131,6 +133,7 @@ describe('events API', () => {
       const {creatorId} = ledgerNode;
       const ledgerNodeId = ledgerNode.id;
       const childlessKey = _cacheKey.childless(ledgerNodeId);
+      const localChildlessKey = _cacheKey.localChildless(ledgerNodeId);
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
@@ -148,6 +151,7 @@ describe('events API', () => {
           const parentHashes = [...regularHashes];
           cache.client.multi()
             .sadd(childlessKey, parentHashes)
+            .sadd(localChildlessKey, regularHashes)
             .del(outstandingMergeEventKey, headKey)
             .srem(outstandingMergeKey, outstandingMergeEventKey)
             .exec(callback);
@@ -159,7 +163,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([1, 'OK', 'OK', 1, 1, 'OK', 0]);
+            updateCache.should.eql([1, 1, 'OK', 'OK', 1, 1, 'OK', 0]);
             callback();
           });
         }],
@@ -179,6 +183,7 @@ describe('events API', () => {
       const {creatorId} = ledgerNode;
       const ledgerNodeId = ledgerNode.id;
       const childlessKey = _cacheKey.childless(ledgerNodeId);
+      const localChildlessKey = _cacheKey.localChildless(ledgerNodeId);
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
@@ -197,6 +202,7 @@ describe('events API', () => {
           const parentHashes = [...regularHashes];
           cache.client.multi()
             .sadd(childlessKey, parentHashes)
+            .sadd(localChildlessKey, regularHashes)
             .del(outstandingMergeEventKey, headKey)
             .srem(outstandingMergeKey, outstandingMergeEventKey)
             .exec(callback);
@@ -208,7 +214,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([5, 'OK', 'OK', 1, 1, 'OK', 0]);
+            updateCache.should.eql([5, 5, 'OK', 'OK', 1, 1, 'OK', 0]);
             callback();
           });
         }],
