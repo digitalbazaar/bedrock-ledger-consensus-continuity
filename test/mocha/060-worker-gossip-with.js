@@ -104,8 +104,7 @@ describe.skip('Worker - _gossipWith', () => {
         async.eachOf(nodes, (ledgerNode, i, callback) => {
           const {id: ledgerNodeId} = ledgerNode;
           // attach eventWriter to the node
-          ledgerNode.eventWriter = new EventWriter(
-            {immediate: true, ledgerNode: nodes[i]});
+          ledgerNode.eventWriter = new EventWriter({ledgerNode: nodes[i]});
           consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
@@ -256,8 +255,7 @@ describe.skip('Worker - _gossipWith', () => {
           {consensusApi, ledgerNode: nodes.alpha, mockData}, callback)],
       writer: ['remoteEvents', (results, callback) => {
         const eventWriter = new EventWriter({ledgerNode: nodes.alpha});
-        eventWriter.start(callback);
-        eventWriter.stop();
+        eventWriter.write().then(() => callback(), callback);
       }],
       mergeBranches: ['writer', (results, callback) => merge(
         {creatorId: peers.alpha, ledgerNode: nodes.alpha}, callback)],
@@ -613,6 +611,6 @@ describe.skip('Worker - _gossipWith', () => {
   function _commitCache(ledgerNode, callback) {
     // ledgerNode.eventWriter is in immediate mode and stops itself
     // as soon as the event queue is cleared
-    ledgerNode.eventWriter.start(callback);
+    ledgerNode.eventWriter.write().then(() => callback(), callback);
   }
 });

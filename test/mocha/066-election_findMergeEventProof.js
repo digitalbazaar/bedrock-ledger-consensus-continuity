@@ -112,8 +112,7 @@ describe('Election API _findMergeEventProof', () => {
         async.eachOf(nodes, (ledgerNode, i, callback) => {
           const {id: ledgerNodeId} = ledgerNode;
           // attach eventWriter to the node
-          ledgerNode.eventWriter = new EventWriter(
-            {immediate: true, ledgerNode});
+          ledgerNode.eventWriter = new EventWriter({ledgerNode});
           consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
@@ -294,7 +293,7 @@ describe('Election API _findMergeEventProof', () => {
               }
               nodes.epsilon = result;
               nodes.epsilon.eventWriter = new EventWriter(
-                {immediate: true, ledgerNode: nodes.epsilon});
+                {ledgerNode: nodes.epsilon});
               callback();
             }),
           creator: ['add', (results, callback) =>
@@ -641,7 +640,7 @@ describe('Election API _findMergeEventProof', () => {
               }
               nodes.epsilon = result;
               nodes.epsilon.eventWriter = new EventWriter(
-                {immediate: true, ledgerNode: nodes.epsilon});
+                {ledgerNode: nodes.epsilon});
               callback();
             }),
           creator: ['add', (results, callback) =>
