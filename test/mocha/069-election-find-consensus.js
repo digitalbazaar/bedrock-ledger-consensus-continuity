@@ -95,8 +95,7 @@ describe('Election API findConsensus', () => {
         async.eachOf(nodes, (ledgerNode, i, callback) => {
           const {id: ledgerNodeId} = ledgerNode;
           // attach eventWriter to the node
-          ledgerNode.eventWriter = new EventWriter(
-            {immediate: true, ledgerNode});
+          ledgerNode.eventWriter = new EventWriter({ledgerNode});
           consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
@@ -351,8 +350,7 @@ describe('Election API findConsensus', () => {
           const ledgerNode = nodes.epsilon;
           const {id: ledgerNodeId} = ledgerNode;
           // attach eventWriter to the node
-          ledgerNode.eventWriter = new EventWriter(
-            {immediate: true, ledgerNode});
+          ledgerNode.eventWriter = new EventWriter({ledgerNode});
           consensusApi._voters.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);
