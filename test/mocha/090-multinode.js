@@ -95,6 +95,29 @@ describe('Multinode', () => {
       done();
     }));
 
+    // override elector selection to force cycling and 3f+1
+    before(() => {
+      let candidates;
+      const electorSelectionApi = brLedgerNode.use('MostRecentParticipants');
+      electorSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
+        if(!candidates) {
+          candidates = [];
+          for(const peer of peers) {
+            candidates.push({id: peer._peerId});
+          }
+        }
+        const f = Math.floor((nodeCount - 1) / 3);
+        const count = 3 * f + 1;
+        // cycle electors deterministically using `blockHeight`
+        const start = blockHeight % candidates.length;
+        const electors = candidates.slice(start, start + count);
+        if(electors.length < count) {
+          electors.push(...candidates.slice(0, count - electors.length));
+        }
+        return {electors};
+      };
+    });
+
     describe('Check Genesis Block', () => {
       it('should have the proper information', done => async.auto({
         getLatest: callback => async.map(peers, (ledgerNode, callback) =>
@@ -151,8 +174,8 @@ describe('Multinode', () => {
                 should.exist(eventBlock.block);
                 eventBlock.block.blockHeight.should.equal(1);
                 eventBlock.block.event.should.be.an('array');
-                // a regular event and a merge event
-                eventBlock.block.event.should.have.length(2);
+                // a regular event and 10 merge events
+                eventBlock.block.event.should.have.length(11);
                 callback(null, eventBlock.meta.blockHash);
               }), callback)],
           testHash: ['getLatest', (results, callback) => {
