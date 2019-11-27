@@ -121,7 +121,7 @@ describe('events API', () => {
             // this set of results indicates that no events were removed
             // see `/lib/cache/events.addLocalMergeEvent` for the redis
             // transaction that is executed that returns this result
-            updateCache.should.eql([0, 0, 'OK', 'OK', 1, 0, 'OK', 0]);
+            updateCache.should.eql([0, 0, 'OK', 'OK', 1, 0, 'OK']);
             callback();
           });
         }]
@@ -163,7 +163,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([1, 1, 'OK', 'OK', 1, 1, 'OK', 0]);
+            updateCache.should.eql([1, 1, 'OK', 'OK', 1, 1, 'OK']);
             callback();
           });
         }],
@@ -214,7 +214,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([5, 5, 'OK', 'OK', 1, 1, 'OK', 0]);
+            updateCache.should.eql([5, 5, 'OK', 'OK', 1, 1, 'OK']);
             callback();
           });
         }],
