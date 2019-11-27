@@ -35,6 +35,26 @@ describe('X Block Test', () => {
   const nodeCount = 6;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
+    // override elector selection to force cycling and 3f+1
+    before(() => {
+      const electorSelectionApi = brLedgerNode.use('MostRecentParticipants');
+      electorSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
+        const candidates = [];
+        for(const p of Object.keys(peers)) {
+          candidates.push({id: peers[p]});
+        }
+        const f = Math.floor((nodeCount - 1) / 3);
+        const count = 3 * f + 1;
+        // cycle electors deterministically using `blockHeight`
+        const start = blockHeight % candidates.length;
+        const electors = candidates.slice(start, start + count);
+        if(electors.length < count) {
+          electors.push(...candidates.slice(0, count - electors.length));
+        }
+        return {electors};
+      };
+    });
+
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     const mockIdentity = mockData.identities.regularUser;
