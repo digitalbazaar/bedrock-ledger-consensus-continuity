@@ -331,9 +331,11 @@ async function _inspectOutstandingMergeEvents({nodes}) {
       ledgerNodeId);
     const keys = await cache.client.smembers(outstandingMergeKey);
     keys.every(k => k.startsWith('ome')).should.be.true;
-    const keyPrefix = keys[0].substr(0, keys[0].lastIndexOf('|') + 1);
-    const eventKeysInCache = await cache.client.keys(`${keyPrefix}*`);
-    eventKeysInCache.should.have.same.members(keys);
+    if(keys.length > 0) {
+      const keyPrefix = keys[0].substr(0, keys[0].lastIndexOf('|') + 1);
+      const eventKeysInCache = await cache.client.keys(`${keyPrefix}*`);
+      eventKeysInCache.should.have.same.members(keys);
+    }
 
     const eventHashes = [];
     for(const key of keys) {
