@@ -98,14 +98,16 @@ const continuity2017ledgerConfiguration = {
       enum: ['WebLedgerConfiguration']
     },
     electorSelectionMethod: {
+      // NOTE: this schema should not be too prescriptive, various elector
+      // selection methods may require additional properties here such as
+      // `electorPool`. The ledger validator for a given ledger implementation
+      // will be responsible for ensuring that the remaining properties are
+      // valid.
       type: 'object',
       required: ['type'],
-      additionalProperties: false,
+      additionalProperties: true,
       properties: {
-        type: {
-          type: 'string',
-          enum: ['MostRecentParticipants', 'MostRecentParticipantsWithRecovery']
-        }
+        type: {type: 'string'},
       }
     },
     ledger: {
