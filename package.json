@@ -44,7 +44,7 @@
     "bedrock-jsonld-document-loader": "^1.0.0",
     "bedrock-ledger-consensus-continuity-storage": "^2.2.0",
     "bedrock-ledger-context": "^15.0.0",
-    "bedrock-ledger-node": "^10.0.0",
+    "bedrock-ledger-node": "^10.1.0",
     "bedrock-ledger-storage-mongodb": "^3.0.0",
     "bedrock-mongodb": "5.5.0 - 6",
     "bedrock-permission": "^2.5.3",
