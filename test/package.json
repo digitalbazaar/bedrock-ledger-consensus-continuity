@@ -23,7 +23,7 @@
     "bedrock-ledger-consensus-continuity-es-most-recent-participants-with-recovery": "^1.0.0",
     "bedrock-ledger-consensus-continuity-storage": "^2.2.0",
     "bedrock-ledger-context": "^15.0.0",
-    "bedrock-ledger-node": "^10.0.0",
+    "bedrock-ledger-node": "^10.1.0",
     "bedrock-ledger-storage-mongodb": "^3.0.0",
     "bedrock-mongodb": "^6.0.0",
     "bedrock-passport": "^5.0.0",
