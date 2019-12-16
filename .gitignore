@@ -4,6 +4,7 @@
 *~
 .project
 .settings
+.vscode
 TAGS
 bower_components
 coverage
