@@ -10,7 +10,7 @@
     "async": "^2.4.1",
     "bedrock": "^2.0.0",
     "bedrock-docs": "^3.1.0",
-    "bedrock-express": "^2.0.6",
+    "bedrock-express": "^3.0.0",
     "bedrock-https-agent": "^1.0.0",
     "bedrock-identity": "^7.0.0",
     "bedrock-injector": "^1.0.0",
