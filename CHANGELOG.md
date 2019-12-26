@@ -1,5 +1,23 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 5.0.0 - 2019-12-26
+
+### Changed
+- Implement "single-pipeline" worker that coordinates the entire
+  ledger node (including running the consensus algorithm, gossipping
+  with peers, writing events, merging, and sending notifications).
+- Implement a number of optimizations, e.g., hashing merge events
+  with fewer computations, reduce calls to `getLatestSummary`,
+  calculate priority peers based on consensus results.
+- Update dependencies, including using the latest web ledger context
+  that uses JSON literals for web ledger records.
+- Improve client error reporting.
+
+### Fixed
+- **BREAKING** Change consensus support algorithm to better prevent
+  all byzantine failures. This is a breaking change because it changes
+  which events achieve consensus.
+
 ## 4.0.1 - 2019-11-13
 
 ### Changed
