@@ -73,7 +73,7 @@ describe('Recovery mode simulation', () => {
         return recoveryElectors.length < total ? [] : recoveryElectors;
       };
     // the return value here gets multiplied by 10
-    electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 0.5;
+    electorSelectionApi.api._computeRecoveryMinimumMergeEvents = () => 0.6;
   });
 
   const nodeCount = 7;
