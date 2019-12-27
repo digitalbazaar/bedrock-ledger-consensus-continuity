@@ -37,4 +37,4 @@ describe('gossip _getNeeded API', () => {
     error.name.should.equal('NetworkError');
     error.details.httpStatusCode.should.equal(404);
   });
-})
+});
