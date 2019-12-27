@@ -1,5 +1,11 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 5.0.1 - 2019-12-27
+
+### Fixed
+- **BREAKING** Ensure a supermajority of proposals are present
+  at a decision.
+
 ## 5.0.0 - 2019-12-26
 
 ### Changed
