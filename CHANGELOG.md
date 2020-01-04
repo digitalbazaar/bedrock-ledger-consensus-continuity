@@ -1,5 +1,11 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 5.0.2 - 2020-01-03
+
+### Fixed
+- **BREAKING** Revert need for a supermajority of proposals at
+  a decision. This reverts back to 5.0.0 behavior.
+
 ## 5.0.1 - 2019-12-27
 
 ### Fixed
