@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 5.0.3 - 2020-02-19
+
+### Fixed
+- Fix merge permit consumption calculation bug.
+
 ## 5.0.2 - 2020-01-03
 
 ### Fixed
