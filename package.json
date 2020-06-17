@@ -38,7 +38,6 @@
   },
   "peerDependencies": {
     "bedrock": "2.x - 3.x",
-    "bedrock-docs": "^3.0.0",
     "bedrock-express": "2.x - 3.x",
     "bedrock-https-agent": "^1.0.0",
     "bedrock-jsonld-document-loader": "^1.0.0",
