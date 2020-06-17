@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /* globals db */
 db = db.getSiblingDB('bedrock_ledger_continuity_test');
 // x = db.getCollectionNames();

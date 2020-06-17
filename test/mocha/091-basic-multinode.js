@@ -29,6 +29,7 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
+/* eslint-disable no-unused-vars */
 describe.skip('Multinode Basics', () => {
   before(done => {
     if(blessedEnabled) {

@@ -12,6 +12,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
+/* eslint-disable no-unused-vars */
 describe('Election API findConsensus', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);

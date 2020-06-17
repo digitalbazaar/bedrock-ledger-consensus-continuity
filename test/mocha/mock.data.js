@@ -99,9 +99,9 @@ events.config = {
 const mergeEvents = mock.mergeEvents = {};
 mergeEvents.alpha = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
-  'type': 'ContinuityMergeEvent',
-  'treeHash': 'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-XXX',
-  'parentHash': [
+  type: 'ContinuityMergeEvent',
+  treeHash: 'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-XXX',
+  parentHash: [
     'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-AAA',
     'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-BBB',
     'ni:///sha-256;1rj73NTf8Nx3fhGrwHo7elDCF7dfdUqPoK2tzpf-CCC'
@@ -129,23 +129,23 @@ mock.exampleIdentity =
   `https://example.com/i/${mock.groups.authorized.publicKey}`;
 mock.ldDocuments = {
   [mock.exampleIdentity]: {
-    "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
-    "id": mock.exampleIdentity,
-    "publicKey": [{
-      "id": mock.authorizedSignerUrl,
-      "type": "Ed25519VerificationKey2018",
-      "owner": mock.exampleIdentity,
-      "publicKeyBase58": mock.groups.authorized.publicKey
+    '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+    id: mock.exampleIdentity,
+    publicKey: [{
+      id: mock.authorizedSignerUrl,
+      type: 'Ed25519VerificationKey2018',
+      owner: mock.exampleIdentity,
+      publicKeyBase58: mock.groups.authorized.publicKey
     }]
   }
 };
 mock.ldDocuments[mock.authorizedSignerUrl] = {
-  "@context": constants.WEB_LEDGER_CONTEXT_V1_URL,
-  "type": "Ed25519VerificationKey2018",
-  "owner": mock.exampleIdentity,
-  "label": "Signing Key 2",
-  "id": mock.authorizedSignerUrl,
-  "publicKeyBase58": mock.groups.authorized.publicKey
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+  type: 'Ed25519VerificationKey2018',
+  owner: mock.exampleIdentity,
+  label: 'Signing Key 2',
+  id: mock.authorizedSignerUrl,
+  publicKeyBase58: mock.groups.authorized.publicKey
 };
 
 /*

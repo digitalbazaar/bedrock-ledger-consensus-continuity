@@ -22,6 +22,6 @@ api.scheduleWork = async () => {};
 bedrock.events.on('bedrock.start', () => {
   brLedgerNode.use('Continuity9000', {
     type: 'consensus',
-    api: api
+    api
   });
 });

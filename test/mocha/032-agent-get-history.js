@@ -79,6 +79,7 @@ describe.skip('Consensus Agent - Get History API', () => {
       addEvent: ['ledgerNode', (results, callback) =>
         ledgerNode.consensus._events.add(
           testEvent, ledgerNode, (err, result) => {
+            // eslint-disable-next-line no-unused-vars
             eventHash = result.meta.eventHash;
             callback();
           })],
@@ -261,9 +262,9 @@ function _copyEvents({eventHash, from, to, treeHash}, callback) {
           $graphLookup: {
             from: collection.s.name,
             startWith: '$eventHash',
-            connectFromField: "event.parentHash",
-            connectToField: "eventHash",
-            as: "_parents",
+            connectFromField: 'event.parentHash',
+            connectToField: 'eventHash',
+            as: '_parents',
             restrictSearchWithMatch: {eventHash: {$ne: treeHash}}
           },
         },

@@ -5,7 +5,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "main": "lib",
   "scripts": {
-    "lint": "eslint lib"
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
