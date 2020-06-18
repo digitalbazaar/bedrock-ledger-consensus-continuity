@@ -1,5 +1,14 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 6.0.0 - 2020-06-18
+
+### Added
+- Setup CI workflow.
+
+### Changed
+- **BREAKING**: Remove `bedrock-docs` dependency and RAML documentation.
+- Use async iterator in getEventsForGossip.
+
 ## 5.0.3 - 2020-02-19
 
 ### Fixed
