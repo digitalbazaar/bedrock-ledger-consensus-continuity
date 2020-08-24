@@ -38,21 +38,21 @@
   },
   "peerDependencies": {
     "bedrock": "2.x - 3.x",
-    "bedrock-express": "2.x - 3.x",
+    "bedrock-express": "2.x - 4.x",
     "bedrock-https-agent": "^2.0.0",
     "bedrock-jsonld-document-loader": "^1.0.0",
-    "bedrock-ledger-consensus-continuity-storage": "^2.5.0",
+    "bedrock-ledger-consensus-continuity-storage": "^3.0.0",
     "bedrock-ledger-context": "^15.0.0",
-    "bedrock-ledger-node": "^10.1.0",
-    "bedrock-ledger-storage-mongodb": "^3.0.0",
-    "bedrock-mongodb": "5.5.0 - 6",
-    "bedrock-permission": "^2.5.3",
+    "bedrock-ledger-node": "^11.0.0",
+    "bedrock-ledger-storage-mongodb": "^4.0.0",
+    "bedrock-mongodb": "^7.1.0",
+    "bedrock-permission": "^3.1.0",
     "bedrock-redis": "^3.4.0",
     "bedrock-rest": "2.x - 3.x",
-    "bedrock-validation": "^4.0.0"
+    "bedrock-validation": "^4.4.0"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=10"
   },
   "devDependencies": {
     "eslint": "^7.2.0",
