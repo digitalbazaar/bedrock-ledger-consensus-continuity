@@ -172,3 +172,9 @@ jsonld.documentLoader = function(url, callback) {
   oldLoader(url, callback);
 };
 */
+
+const consensusInput = {
+  'fig-1-2': require('./consensus-input-fig-1-2')
+};
+
+mock.consensusInput = consensusInput;
