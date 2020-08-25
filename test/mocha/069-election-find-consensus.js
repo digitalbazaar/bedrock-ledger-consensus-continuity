@@ -335,7 +335,10 @@ describe('Election API findConsensus', () => {
     this.timeout(120000);
     const findConsensus = consensusApi._election.findConsensus;
     const getRecentHistory = consensusApi._events.getRecentHistory;
-    const electors = _.values(peers).map(p => ({id: p}));
+    // all peers except epsilon are electors
+    const electors = _.values(peers)
+      .filter(p => p !== peers.epsilon)
+      .map(p => ({id: p}));
     async.auto({
       // add node epsilon for this test and remove it afterwards
       nodeEpsilon: callback => async.auto({

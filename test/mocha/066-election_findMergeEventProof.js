@@ -284,6 +284,10 @@ describe('Election API _findMergeEventProof', () => {
     it('ledger history delta produces same as alpha result', function(done) {
       this.timeout(120000);
       const report = {};
+      // all peers except epsilon are electors
+      const electors = _.values(peers)
+        .filter(p => p !== peers.epsilon)
+        .map(p => ({id: p}));
       // add node epsilon for this test and remove it afterwards
       async.auto({
         nodeEpsilon: callback => async.auto({
@@ -314,8 +318,6 @@ describe('Election API _findMergeEventProof', () => {
         testAll: ['build', (results, callback) => {
           // NOTE: for ledger history alpha, all nodes should have the same view
           const build = results.build;
-          // all peers are electors
-          const electors = _.values(peers).map(p => ({id: p}));
           async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
             history: callback => getRecentHistory({
               creatorId: nodes[i].creatorId,
@@ -369,14 +371,16 @@ describe('Election API _findMergeEventProof', () => {
     // FIXME: enable test
     it('ledger history epsilon', done => {
       const report = {};
+      // all peers except epsilon are electors
+      const electors = _.values(peers)
+        .filter(p => p !== peers.epsilon)
+        .map(p => ({id: p}));
       async.auto({
         build: callback => helpers.buildHistory(
           {consensusApi, historyId: 'epsilon', mockData, nodes}, callback),
         testAll: ['build', (results, callback) => {
           // NOTE: for ledger history alpha, all nodes should have the same view
           const build = results.build;
-          // all peers are electors
-          const electors = _.values(peers).map(p => ({id: p}));
           async.eachOfSeries(nodes, (ledgerNode, i, callback) => async.auto({
             history: callback => getRecentHistory({
               creatorId: nodes[i].creatorId,
