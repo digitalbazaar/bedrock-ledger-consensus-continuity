@@ -3,7 +3,6 @@
  */
 'use strict';
 
-const _ = require('lodash');
 const consensusApi =
   require('bedrock-ledger-consensus-continuity/lib/consensus');
 
