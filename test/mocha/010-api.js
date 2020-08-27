@@ -34,7 +34,7 @@ describe('Continuity2017', () => {
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     // get the actor for the ledger owner account
     const actor = await brAccount.getCapabilities(
-      {id: mockAccount.identity.id});
+      {id: mockAccount.account.id});
     // get the consensusPlugin that registered by this library
     const consensusPlugin = brLedgerNode.use('Continuity2017');
     ledgerNode = await brLedgerNode.add(actor, {ledgerConfiguration});
