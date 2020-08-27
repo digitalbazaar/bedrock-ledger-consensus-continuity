@@ -10,6 +10,7 @@ const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const database = require('bedrock-mongodb');
+const {promisify} = require('util');
 const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures');
 const {util: {uuid}} = bedrock;
@@ -496,19 +497,12 @@ api.nBlocks = ({
   });
 };
 
-// collections may be a string or array
-api.removeCollections = function(collections, callback) {
-  const collectionNames = [].concat(collections);
-  database.openCollections(collectionNames, () => {
-    async.each(collectionNames, function(collectionName, callback) {
-      if(!database.collections[collectionName]) {
-        return callback();
-      }
-      database.collections[collectionName].remove({}, callback);
-    }, function(err) {
-      callback(err);
-    });
-  });
+// called by prepareDatabase
+api.removeCollections = async (collectionNames = []) => {
+  await promisify(database.openCollections)(collectionNames);
+  for(const collectionName of collectionNames) {
+    await database.collections[collectionName].deleteMany({});
+  }
 };
 
 api.prepareDatabase = function(mockData, callback) {
@@ -643,14 +637,8 @@ api.snapshotEvents = ({ledgerNode}, callback) => {
   });
 };
 
-api.use = (plugin, callback) => {
-  let p;
-  try {
-    p = brLedgerNode.use(plugin);
-  } catch(e) {
-    return callback(e);
-  }
-  callback(null, p);
+api.use = plugin => {
+  return brLedgerNode.use(plugin);
 };
 
 // Insert identities and public keys used for testing into database

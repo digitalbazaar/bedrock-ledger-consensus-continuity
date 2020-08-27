@@ -1,11 +1,11 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const async = require('async');
 const bedrock = require('bedrock');
-const brIdentity = require('bedrock-identity');
+const brAccount = require('bedrock-account');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const expect = global.chai.expect;
@@ -24,53 +24,30 @@ describe('Continuity2017', () => {
   let genesisMergeHash;
   let creator;
   let ledgerNode;
-  beforeEach(done => {
-    const mockIdentity = mockData.identities.regularUser;
+  beforeEach(async function() {
+    const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    async.auto({
-      cleanCache: callback => cache.client.flushall(callback),
-      clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-      actor: ['clean', (results, callback) => brIdentity.getCapabilities(
-        {actor: null, id: mockIdentity.identity.id}, callback)],
-      consensusPlugin: callback => helpers.use('Continuity2017', callback),
-      ledgerNode: ['actor', (results, callback) => brLedgerNode.add(
-        results.actor, {ledgerConfiguration}, (err, ledgerNode) => {
-          if(err) {
-            return callback(err);
-          }
-          expect(ledgerNode).to.be.ok;
-          callback(null, ledgerNode);
-        })],
-      creator: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi = results.consensusPlugin.api;
-        ledgerNode = results.ledgerNode;
-        consensusApi._voters.get(
-          {ledgerNodeId: ledgerNode.id}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            creator = result;
-            ledgerNode.creatorId = result.id;
-            callback(null, result);
-          });
-      }],
-      genesisMerge: ['creator', (results, callback) => {
-        consensusApi._events.getHead({
-          creatorId: results.creator.id,
-          ledgerNode,
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          genesisMergeHash = result.eventHash;
-          callback();
-        });
-      }],
-    }, err => {
-      assertNoError(err);
-      done();
+    // start by flushing redis
+    await cache.client.flushall();
+    // remove the collections so we have fresh test data
+    await helpers.removeCollections(['ledger', 'ledgerNode']);
+    // get the actor for the ledger owner account
+    const actor = await brAccount.getCapabilities(
+      {id: mockAccount.identity.id});
+    // get the consensusPlugin that registered by this library
+    const consensusPlugin = brLedgerNode.use('Continuity2017');
+    ledgerNode = await brLedgerNode.add(actor, {ledgerConfiguration});
+    expect(ledgerNode, 'Expected ledgerNode to be ok').to.be.ok;
+    // the consensusApi is defined by this library
+    consensusApi = consensusPlugin.api;
+    creator = await consensusApi._voters.get(
+      {ledgerNodeId: ledgerNode.id});
+    ledgerNode.creatorId = creator.id;
+    const eventHead = await consensusApi._events.getHead({
+      creatorId: creator.id,
+      ledgerNode
     });
+    genesisMergeHash = eventHead.eventHash;
   });
 
   describe('add operation API', () => {

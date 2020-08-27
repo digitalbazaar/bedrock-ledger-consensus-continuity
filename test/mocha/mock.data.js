@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -11,12 +11,12 @@ const helpers = require('./helpers');
 const mock = {};
 module.exports = mock;
 
-const identities = mock.identities = {};
+const accounts = mock.accounts = {};
 
 const userName = 'regularUser';
-identities[userName] = {};
-identities[userName].identity = helpers.createIdentity(userName);
-identities[userName].meta = {
+accounts[userName] = {};
+accounts[userName].identity = helpers.createIdentity(userName);
+accounts[userName].meta = {
   sysResourceRole: [{
     sysRole: 'bedrock-ledger.test',
     generateResource: 'id'
