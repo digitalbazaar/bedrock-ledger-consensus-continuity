@@ -174,7 +174,16 @@ jsonld.documentLoader = function(url, callback) {
 */
 
 const consensusInput = {
-  'fig-1-2': require('./consensus-input-fig-1-2')
+  'fig-1-2': require('./consensus-input-fig-1-2'),
+  'fig-1-4': require('./consensus-input-fig-1-4'),
+  'fig-1-5': require('./consensus-input-fig-1-5'),
+  'fig-1-6': require('./consensus-input-fig-1-6'),
+  'fig-1-7': require('./consensus-input-fig-1-7'),
+  'fig-1-8': require('./consensus-input-fig-1-8'),
+  'fig-1-9': require('./consensus-input-fig-1-9'),
+  'fig-1-10': require('./consensus-input-fig-1-10'),
+  'fig-1-11': require('./consensus-input-fig-1-11'),
+  'fig-1-12': require('./consensus-input-fig-1-12')
 };
 
 mock.consensusInput = consensusInput;
