@@ -43,6 +43,7 @@ api.addEvent = async ({
     testEvent.basisBlockHeight = 1;
     const operation = bedrock.util.clone(opTemplate);
     const testRecordId = `https://example.com/event/${uuid()}`;
+    operation.creator = ledgerNode.creatorId;
     if(operation.type === 'CreateWebLedgerRecord') {
       operation.record.id = testRecordId;
     }
@@ -381,10 +382,7 @@ api.removeCollections = async function(collections) {
   const collectionNames = [].concat(collections);
   await openCollections(collectionNames);
   for(const collectionName of collectionNames) {
-    if(!database.collections[collectionName]) {
-      return;
-    }
-    await database.collections[collectionName].remove({});
+    await database.collections[collectionName].deleteMany({});
   }
 };
 
