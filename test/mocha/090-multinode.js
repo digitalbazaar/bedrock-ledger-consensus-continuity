@@ -28,28 +28,12 @@ describe('Multinode', () => {
     let consensusApi;
     let genesisLedgerNode;
     const {ledgerConfiguration} = mockData;
-    before(done => {
-      async.auto({
-        flushCache: callback => callbackify(helpers.flushCache)(callback),
-        clean: ['flushCache', (results, callback) =>
-          callbackify(helpers.removeCollections)(
-            ['ledger', 'ledgerNode'], callback)],
-        consensusPlugin: callback =>
-          callbackify(helpers.use)('Continuity2017', callback),
-        ledgerNode: ['clean', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        assertNoError(err);
-        genesisLedgerNode = results.ledgerNode;
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+    before(async function() {
+      await helpers.flushCache();
+      await helpers.removeCollections(['ledger', 'ledgerNode']);
+      const consensusPlugin = await helpers.use('Continuity2017');
+      genesisLedgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
+      consensusApi = consensusPlugin.api;
     });
 
     // get genesis record (block + meta)
