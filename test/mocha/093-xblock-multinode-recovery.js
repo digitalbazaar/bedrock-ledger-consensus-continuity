@@ -48,7 +48,7 @@ describe('X Block Test using elector selector with recovery', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    const mockIdentity = mockData.identities.regularUser;
+    const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfigurationRecovery;
     before(function(done) {
       this.timeout(180000);
@@ -92,7 +92,7 @@ describe('X Block Test using elector selector with recovery', () => {
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
+          owner: mockAccount.account.id
         }, (err, ledgerNode) => {
           if(err) {
             return callback(err);

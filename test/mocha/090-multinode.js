@@ -26,28 +26,14 @@ describe('Multinode', () => {
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     let genesisLedgerNode;
-    const mockIdentity = mockData.identities.regularUser;
+    const mockAccount = mockData.accounts.regularUser;
     const {ledgerConfiguration} = mockData;
-    before(done => {
-      async.auto({
-        flushCache: callback => helpers.flushCache(callback),
-        clean: ['flushCache', (results, callback) =>
-          helpers.removeCollections(['ledger', 'ledgerNode'], callback)],
-        consensusPlugin: callback => helpers.use('Continuity2017', callback),
-        ledgerNode: ['clean', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        assertNoError(err);
-        genesisLedgerNode = results.ledgerNode;
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+    before(async function() {
+      await helpers.flushCache();
+      await helpers.removeCollections(['ledger', 'ledgerNode']);
+      const consensusPlugin = helpers.use('Continuity2017');
+      genesisLedgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
+      consensusApi = consensusPlugin.api;
     });
 
     // get genesis record (block + meta)
@@ -68,7 +54,7 @@ describe('Multinode', () => {
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
+          owner: mockAccount.account.id
         }, (err, ledgerNode) => {
           if(err) {
             return callback(err);
@@ -373,7 +359,7 @@ describe('Multinode', () => {
         async.auto({
           addNode: callback => brLedgerNode.add(null, {
             genesisBlock: genesisRecord.block,
-            owner: mockIdentity.identity.id
+            owner: mockAccount.account.id
           }, (err, ledgerNode) => {
             if(err) {
               return callback(err);

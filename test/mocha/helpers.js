@@ -420,7 +420,7 @@ api.createIdentity = function(userName) {
   return newIdentity;
 };
 
-api.flushCache = callback => cache.client.flushall(callback);
+api.flushCache = async () => cache.client.flushall();
 
 api.nBlocks = ({
   consensusApi, nodes, operationOnWorkCycle = 'all', opTemplate,

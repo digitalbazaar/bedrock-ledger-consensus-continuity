@@ -57,7 +57,7 @@ describe('X Block Test', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    const mockIdentity = mockData.identities.regularUser;
+    const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
     before(function(done) {
       this.timeout(TEST_TIMEOUT);
@@ -98,7 +98,7 @@ describe('X Block Test', () => {
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
+          owner: mockAccount.account.id
         }, (err, ledgerNode) => {
           assertNoError(err);
           nodes[nodeLabels[i]] = ledgerNode;

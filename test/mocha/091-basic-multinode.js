@@ -31,12 +31,12 @@ const heads = {};
 
 /* eslint-disable no-unused-vars */
 describe.skip('Multinode Basics', () => {
-  before(done => {
+  before(async function() {
     if(blessedEnabled) {
       screen = blessed.screen({smartCSR: true});
       screen.key(['C-c'], (ch, key) => process.exit(0));
     }
-    helpers.prepareDatabase(mockData, done);
+    await helpers.prepareDatabase(mockData);
   });
 
   describe('Consensus with 2 Nodes', () => {
@@ -44,7 +44,7 @@ describe.skip('Multinode Basics', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    const mockIdentity = mockData.identities.regularUser;
+    const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
     before(done => {
       async.auto({
@@ -86,7 +86,7 @@ describe.skip('Multinode Basics', () => {
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
+          owner: mockAccount.account.id
         }, (err, ledgerNode) => {
           if(err) {
             return callback(err);

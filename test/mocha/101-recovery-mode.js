@@ -121,7 +121,7 @@ describe('Recovery mode simulation', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    const mockIdentity = mockData.identities.regularUser;
+    const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfigurationRecovery;
     before(async function() {
       this.timeout(TEST_TIMEOUT);
@@ -145,7 +145,7 @@ describe('Recovery mode simulation', () => {
       for(let i = 0; i < nodeCount - 1; ++i) {
         nodes[nodeLabels[i]] = await brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
+          owner: mockAccount.account.id
         });
       }
     });
