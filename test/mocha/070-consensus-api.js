@@ -48,6 +48,7 @@ describe('Consensus API findConsensus', () => {
 
     assertNoError(err);
     should.exist(result);
+    result.consensus.should.equal(true);
     should.exist(result.eventHashes);
     should.exist(result.eventHashes.mergeEventHashes);
     should.exist(result.eventHashes.parentHashes);
@@ -61,5 +62,131 @@ describe('Consensus API findConsensus', () => {
           .should.have.same.members(expectedSupport[eventHash]);
       }
     });
+  });
+  it.only('ledger history Figure 1.4', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-4'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.5', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-5'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.6', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-6'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.7', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-7'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.8', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-8'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.9', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-9'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.10', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-10'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.11', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-11'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
+  });
+  it.only('ledger history Figure 1.12', async () => {
+    let result, err;
+    const input = consensusInput['fig-1-12'];
+
+    try {
+      result = consensusApi.findConsensus(input);
+    } catch(e) {
+      err = e;
+    }
+
+    assertNoError(err);
+    should.exist(result);
+    result.consensus.should.equal(false);
   });
 });
