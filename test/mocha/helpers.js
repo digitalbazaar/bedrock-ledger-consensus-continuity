@@ -6,7 +6,7 @@
 const _ = require('lodash');
 const async = require('async');
 const bedrock = require('bedrock');
-const brIdentity = require('bedrock-identity');
+const brAccount = require('bedrock-account');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const database = require('bedrock-mongodb');
@@ -505,18 +505,12 @@ api.removeCollections = async (collectionNames = []) => {
   }
 };
 
-api.prepareDatabase = function(mockData, callback) {
-  async.series([
-    callback => {
-      api.removeCollections([
-        'identity', 'eventLog', 'ledger', 'ledgerNode', 'continuity2017_key',
-        'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
-      ], callback);
-    },
-    callback => {
-      insertTestData(mockData, callback);
-    }
-  ], callback);
+api.prepareDatabase = async function(mockData) {
+  await api.removeCollections([
+    'identity', 'eventLog', 'ledger', 'ledgerNode', 'continuity2017_key',
+    'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
+  ]);
+  await insertTestData(mockData);
 };
 
 api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
@@ -642,16 +636,16 @@ api.use = plugin => {
 };
 
 // Insert identities and public keys used for testing into database
-function insertTestData(mockData, callback) {
-  async.forEachOf(mockData.identities, ({identity, meta}, key, callback) => {
-    brIdentity.insert({actor: null, identity, meta}, callback);
-  }, err => {
-    if(err) {
+async function insertTestData(mockData) {
+  for(const key in mockData.accounts) {
+    try {
+      const {account, meta} = mockData.accounts[key];
+      await brAccount.insert({actor: null, account, meta});
+    } catch(err) {
       if(!database.isDuplicateError(err)) {
         // duplicate error means test data is already loaded
-        return callback(err);
+        throw err;
       }
     }
-    callback();
-  }, callback);
+  }
 }

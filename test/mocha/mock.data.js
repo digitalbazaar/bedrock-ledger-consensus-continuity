@@ -15,7 +15,7 @@ const accounts = mock.accounts = {};
 
 const userName = 'regularUser';
 accounts[userName] = {};
-accounts[userName].identity = helpers.createIdentity(userName);
+accounts[userName].account = helpers.createIdentity(userName);
 accounts[userName].meta = {
   sysResourceRole: [{
     sysRole: 'bedrock-ledger.test',

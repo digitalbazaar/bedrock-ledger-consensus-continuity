@@ -16,8 +16,8 @@ const mockData = require('./mock.data');
 const {util: {uuid}} = bedrock;
 
 describe('Continuity2017', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   // get consensus plugin and create ledger node for use in each test
   let consensusApi;
@@ -33,7 +33,7 @@ describe('Continuity2017', () => {
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     // get the actor for the ledger owner account
     const actor = await brAccount.getCapabilities(
-      {id: mockAccount.identity.id});
+      {id: mockAccount.account.id});
     // get the consensusPlugin that registered by this library
     const consensusPlugin = brLedgerNode.use('Continuity2017');
     ledgerNode = await brLedgerNode.add(actor, {ledgerConfiguration});
