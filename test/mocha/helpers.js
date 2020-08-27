@@ -266,9 +266,10 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
   } else {
     // FIXME: use a more efficient query, the commented aggregate function
     // is evidently missing some events.
+    const projection = {'meta.eventHash': 1};
     const results = await collection.find({
       'meta.consensus': false
-    }, {'meta.eventHash': 1}).sort({$natural: 1}).toArray();
+    }, {projection}).sort({$natural: 1}).toArray();
     events = await from.storage.events.getMany({
       eventHashes: results.map(r => r.meta.eventHash)
     }).toArray();
