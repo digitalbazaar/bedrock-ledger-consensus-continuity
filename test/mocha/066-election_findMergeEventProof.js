@@ -44,15 +44,14 @@ describe('Election API _findMergeEventProof', () => {
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
     nodes.gamma = await brLedgerNode.add(null, {genesisBlock});
     nodes.delta = await brLedgerNode.add(null, {genesisBlock});
-    let index = 0;
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       ledgerNode.eventWriter = new EventWriter({ledgerNode});
       const {id: ledgerNodeId} = ledgerNode;
       const voter = await consensusApi._voters.get({ledgerNodeId});
-      peers[index] = voter.id;
+      peers[key] = voter.id;
       ledgerNode.creatorId = voter.id;
-      helpers.peersReverse[voter.id] = index++;
+      helpers.peersReverse[voter.id] = key;
     }
     // genesisMerge: ['creatorId', (results, callback) => {
     //   consensusApi._events.getHead({
