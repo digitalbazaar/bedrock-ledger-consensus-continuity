@@ -19,35 +19,14 @@ describe.skip('Consensus Client - sendEvent API', () => {
   let consensusApi;
   let ledgerNode;
   let peerId;
-  beforeEach(done => {
+  beforeEach(async function() {
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    async.auto({
-      clean: callback =>
-        callbackify(helpers.removeCollections)(
-          ['ledger', 'ledgerNode'], callback),
-      consensusPlugin: callback =>
-        callbackify(helpers.use)('Continuity2017', (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          consensusApi = result.api;
-          callback();
-        }),
-      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {ledgerConfiguration}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          ledgerNode = result;
-          callback();
-        })],
-      getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._voters.get(ledgerNode.id, (err, result) => {
-          peerId = result.id;
-          callback();
-        });
-      }]
-    }, done);
+    await helpers.removeCollections(['ledger', 'ledgerNode']);
+    const plugin = await helpers.use('Continuity2017');
+    consensusApi = plugin.api;
+    ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
+    const voter = await consensusApi._voters.get(ledgerNode.id);
+    peerId = voter.id;
   });
   it('should send an event', done => {
     const testEvent = bedrock.util.clone(mockData.events.alpha);
