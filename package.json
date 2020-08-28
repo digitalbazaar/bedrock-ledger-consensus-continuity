@@ -34,7 +34,7 @@
     "ndjson": "^1.5.0",
     "p-limit": "^2.0.0",
     "rdf-canonize": "^1.0.3",
-    "workerpool": "^5.0.2"
+    "workerpool": "^6.0.0"
   },
   "peerDependencies": {
     "bedrock": "2.x - 3.x",
