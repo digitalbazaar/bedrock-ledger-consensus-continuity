@@ -25,34 +25,14 @@ describe.skip('Consensus Agent - Add Event API', () => {
   let consensusApi;
   let ledgerNode;
   let voterId;
-  beforeEach(done => {
+  beforeEach(async function() {
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    async.auto({
-      clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-      consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          consensusApi = result.api;
-          callback();
-        }),
-      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {ledgerConfiguration}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          ledgerNode = result;
-          callback();
-        })],
-      getVoter: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._voters.get(ledgerNode.id, (err, result) => {
-          voterId = result.id;
-          callback();
-        });
-      }]
-    }, done);
+    await helpers.removeCollections(['ledger', 'ledgerNode']);
+    const plugin = helpers.use('Continuity2017');
+    consensusApi = plugin.api;
+    ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
+    const voter = await consensusApi._voters.get(ledgerNode.id);
+    voterId = voter.id;
   });
   it('should add a regular remote event', done => {
     const testUrl = voterId + '/events';

@@ -28,77 +28,31 @@ describe.skip('Consensus Agent - Get History API', () => {
   let peerId;
   let eventHash;
   let testEventId;
-  beforeEach(done => {
+  beforeEach(async function() {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     const testEvent = bedrock.util.clone(mockData.events.alpha);
     testEventId = 'https://example.com/events/' + uuid();
     testEvent.operation[0].record.id = testEventId;
-    async.auto({
-      clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-      consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          consensusApi = result.api;
-          getHistory = consensusApi._client.getHistory;
-          getRecentHistory = consensusApi._events.getRecentHistory;
-          mergeBranches = consensusApi._events.mergeBranches;
-          callback();
-        }),
-      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {ledgerConfiguration}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          ledgerNode = result;
-          callback(null, result);
-        })],
-      creator: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._voters.get(ledgerNode.id, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          peerId = result.id;
-          callback(null, result);
-        });
-      }],
-      genesisMerge: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._events.getHead({
-          creatorId: peerId,
-          ledgerNode
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          genesisMerge = result;
-          callback();
-        });
-      }],
-      addEvent: ['ledgerNode', (results, callback) =>
-        ledgerNode.consensus._events.add(
-          testEvent, ledgerNode, (err, result) => {
-            // eslint-disable-next-line no-unused-vars
-            eventHash = result.meta.eventHash;
-            callback();
-          })],
-      genesisBlock: ['ledgerNode', (results, callback) =>
-        ledgerNode.blocks.getGenesis((err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          callback(null, result.genesisBlock.block);
-        })],
-      nodeBeta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          ledgerNodeBeta = result;
-          callback(null, result);
-        })]
-    }, done);
+    await helpers.removeCollections(['ledger', 'ledgerNode']);
+    const plugin = helpers.use('Continuity2017');
+    consensusApi = plugin.api;
+    getHistory = consensusApi._client.getHistory;
+    getRecentHistory = consensusApi._events.getRecentHistory;
+    mergeBranches = consensusApi._events.mergeBranches;
+    ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
+    const voter = await consensusApi._voters.get(ledgerNode.id);
+    peerId = voter.id;
+    genesisMerge = await consensusApi._events.getHead({
+      creatorId: peerId,
+      ledgerNode
+    });
+    const addEvent = await ledgerNode.consensus._events.add(
+      testEvent, ledgerNode);
+    // eslint-disable-next-line no-unused-vars
+    eventHash = addEvent.meta.eventHash;
+    const {genesisBlock: _genesisBlock} = await ledgerNode.blocks.getGenesis();
+    const genesisBlock = _genesisBlock.block;
+    ledgerNodeBeta = await brLedgerNode.add(null, {genesisBlock});
   });
   it('should return an empty array', done => {
     async.auto({
