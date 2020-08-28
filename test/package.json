@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "async": "^2.4.1",
-    "bedrock": "^2.0.0",
+    "bedrock": "^3.0.0",
     "bedrock-express": "^3.0.0",
     "bedrock-https-agent": "^1.0.0",
     "bedrock-identity": "^7.0.0",
