@@ -642,7 +642,7 @@ async function insertTestData(mockData) {
       const {account, meta} = mockData.accounts[key];
       await brAccount.insert({actor: null, account, meta});
     } catch(err) {
-      if(!database.isDuplicateError(err)) {
+      if(!(err.name === 'DuplicateError')) {
         // duplicate error means test data is already loaded
         throw err;
       }
