@@ -32,94 +32,48 @@ describe.skip('Worker - _gossipWith', () => {
   const nodeLabels = ['beta', 'gamma', 'delta', 'epsilon'];
   const nodes = {};
   const peers = {};
-  beforeEach(function(done) {
+  beforeEach(async function() {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    async.auto({
-      flush: callback => cache.client.flushall(callback),
-      clean: callback =>
-        callbackify(helpers.removeCollections)(
-          ['ledger', 'ledgerNode'], callback),
-      consensusPlugin: callback =>
-        callbackify(helpers.use)('Continuity2017', (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          consensusApi = result.api;
-          merge = consensusApi._events.merge;
-          cacheKey = consensusApi._cache.cacheKey;
-          gossipWith = callbackify(consensusApi._gossip.gossipWith);
-          EventWriter = consensusApi._worker.EventWriter;
-          GossipPeer = consensusApi._gossip.GossipPeer;
-          callback();
-        }),
-      ledgerNode: ['clean', 'flush', (results, callback) => brLedgerNode.add(
-        null, {ledgerConfiguration}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.alpha = result;
-          callback();
-        })],
-      genesisBlock: ['ledgerNode', (results, callback) =>
-        nodes.alpha.blocks.getGenesis((err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          callback(null, result.genesisBlock.block);
-        })],
-      createNodes: ['genesisBlock', (results, callback) => {
-        async.times(nodeCount - 1, (i, callback) => brLedgerNode.add(null, {
-          genesisBlock: results.genesisBlock,
-        }, (err, ledgerNode) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes[nodeLabels[i]] = ledgerNode;
-          callback();
-        }), callback);
-      }],
-      getPeer: ['consensusPlugin', 'createNodes', (results, callback) =>
-        async.eachOf(nodes, (ledgerNode, i, callback) =>
-          consensusApi._voters.get(
-            {ledgerNodeId: ledgerNode.id}, (err, result) => {
-              peers[i] = new GossipPeer({
-                creatorId: result.id,
-                ledgerNodeId: ledgerNode.id
-              });
-              callback();
-            }), callback)],
-      genesisMerge: ['consensusPlugin', 'getPeer', (results, callback) => {
-        const {creatorId} = peers.alpha;
-        consensusApi._events.getHead({
-          creatorId, ledgerNode: nodes.alpha
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          genesisMergeHash = result.eventHash;
-          callback();
-        });
-      }],
-      creator: ['createNodes', (results, callback) =>
-        async.eachOf(nodes, (ledgerNode, i, callback) => {
-          const {id: ledgerNodeId} = ledgerNode;
-          // attach eventWriter to the node
-          ledgerNode.eventWriter = new EventWriter({ledgerNode: nodes[i]});
-          consensusApi._voters.get({ledgerNodeId}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            peers[i] = new GossipPeer({
-              creatorId: result.id,
-              ledgerNodeId
-            });
-            ledgerNode.creatorId = result.id;
-            helpers.peersReverse[result.id] = i;
-            callback();
-          });
-        }, callback)]
-    }, done);
+    await cache.client.flushall();
+    await helpers.removeCollections(['ledger', 'ledgerNode']);
+    const plugin = await helpers.use('Continuity2017');
+    consensusApi = plugin.api;
+    merge = consensusApi._events.merge;
+    cacheKey = consensusApi._cache.cacheKey;
+    gossipWith = callbackify(consensusApi._gossip.gossipWith);
+    EventWriter = consensusApi._worker.EventWriter;
+    GossipPeer = consensusApi._gossip.GossipPeer;
+    nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
+    const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
+    const genesisBlock = _genesisBlock.block;
+    for(let count = 0; count < (nodeCount - 1); count++) {
+      const node = await brLedgerNode.add(null, {genesisBlock});
+      const key = nodeLabels[count];
+      nodes[key] = node;
+      const voter = await consensusApi._voters.get({ledgerNodeId: node.id});
+      peers[key] = new GossipPeer({
+        creatorId: voter.id,
+        ledgerNodeId: node.id
+      });
+    }
+    const {creatorId} = peers.alpha;
+    const eventHead = await consensusApi._events.getHead({
+      creatorId, ledgerNode: nodes.alpha});
+    genesisMergeHash = eventHead.eventHash;
+    for(const key in nodes) {
+      const ledgerNode = nodes[key];
+      const {id: ledgerNodeId} = ledgerNode;
+      // attach eventWriter to the node
+      ledgerNode.eventWriter = new EventWriter({ledgerNode});
+      const result = await consensusApi._voters.get({ledgerNodeId});
+      peers[key] = new GossipPeer({
+        creatorId: result.id,
+        ledgerNodeId
+      });
+      ledgerNode.creatorId = result.id;
+      helpers.peersReverse[result.id] = key;
+    }
   });
   /*
     gossip wih ledgerNode from nodes.beta, there is no merge event on
