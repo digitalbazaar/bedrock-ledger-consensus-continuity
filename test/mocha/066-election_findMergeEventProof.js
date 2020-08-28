@@ -13,8 +13,8 @@ let consensusApi;
 
 /* eslint-disable no-unused-vars */
 describe('Election API _findMergeEventProof', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   let _findMergeEventProof;
   let _getElectorBranches;

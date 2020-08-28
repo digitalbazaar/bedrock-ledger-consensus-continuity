@@ -14,8 +14,8 @@ let consensusApi;
 
 /* eslint-disable no-unused-vars */
 describe('Election API findConsensus', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   let genesisBlock;
   let EventWriter;

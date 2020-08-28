@@ -25,8 +25,8 @@ const peers = {};
 const heads = {};
 
 describe('X Block Test using elector selector with recovery', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
 
   // FIXME: update bedrock-ledger...es-most-recent-participants-with-recovery

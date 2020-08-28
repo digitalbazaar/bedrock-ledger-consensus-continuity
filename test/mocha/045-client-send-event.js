@@ -11,8 +11,8 @@ const mockData = require('./mock.data');
 const {util: {uuid}} = bedrock;
 
 describe.skip('Consensus Client - sendEvent API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
 
   let consensusApi;

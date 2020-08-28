@@ -14,8 +14,8 @@ const {util: {uuid}} = bedrock;
 
 // FIXME: these tests will need to supply `creatorHeads` in the request
 describe.skip('Consensus Agent - Get History API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
 
   let consensusApi;

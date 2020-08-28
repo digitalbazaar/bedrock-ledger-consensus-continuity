@@ -17,8 +17,8 @@ const mockData = require('./mock.data');
 const nodeCount = 10;
 
 describe('Multinode', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
 
   describe(`Consensus with ${nodeCount} Nodes`, () => {

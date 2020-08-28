@@ -16,8 +16,8 @@ const {util: {uuid}} = bedrock;
 let consensusApi;
 
 describe('blocks API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   let repairCache;
   let _cacheKey;

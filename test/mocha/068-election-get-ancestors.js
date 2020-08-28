@@ -13,8 +13,8 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 describe('Election API _getAncestors', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   let genesisMerge;
   let EventWriter;

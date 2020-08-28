@@ -33,9 +33,9 @@ const heads = {};
 
 /* eslint-disable no-unused-vars */
 describe('Recovery mode simulation', () => {
-  before(function(done) {
+  before(async function() {
     this.timeout(TEST_TIMEOUT);
-    helpers.prepareDatabase(mockData, done);
+    await helpers.prepareDatabase(mockData);
   });
 
   // override elector selection helpers for tests

@@ -15,8 +15,8 @@ const {util: {callbackify, uuid}} = bedrock;
 // FIXME: gossipWith API no longer records events into the redis cache,
 // these tests will need to be refactored
 describe.skip('Worker - _gossipWith', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
 
   let cacheKey;

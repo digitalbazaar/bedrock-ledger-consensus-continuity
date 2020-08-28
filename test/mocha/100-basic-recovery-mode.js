@@ -25,8 +25,8 @@ const peers = {};
 const heads = {};
 
 describe('Recovery mode simulation', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
 
   // override elector selection helpers for tests

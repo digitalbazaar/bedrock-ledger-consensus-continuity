@@ -28,9 +28,9 @@ const peers = {};
 const heads = {};
 
 describe('Cache Recovery', () => {
-  before(function(done) {
+  before(async function() {
     this.timeout(TEST_TIMEOUT);
-    helpers.prepareDatabase(mockData, done);
+    await helpers.prepareDatabase(mockData);
   });
 
   const nodeCount = 6;

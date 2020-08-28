@@ -13,8 +13,8 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 describe('events API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   let repairCache;
   let _cacheKey;

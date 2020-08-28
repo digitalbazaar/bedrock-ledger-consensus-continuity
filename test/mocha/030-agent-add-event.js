@@ -18,8 +18,8 @@ const {util: {uuid}} = bedrock;
 // to latest jsigs API
 
 describe.skip('Consensus Agent - Add Event API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
 
   let consensusApi;

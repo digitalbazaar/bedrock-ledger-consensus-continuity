@@ -11,8 +11,8 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 describe('events.mergeBranches API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   let merge;
   let genesisMergeHash;

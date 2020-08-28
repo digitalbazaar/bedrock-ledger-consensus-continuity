@@ -14,8 +14,8 @@ let consensusApi;
 
 /* eslint-disable no-unused-vars */
 describe.skip('Election API _getElectorBranches', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async function() {
+    await helpers.prepareDatabase(mockData);
   });
   let genesisMerge;
   let eventHash;
