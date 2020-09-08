@@ -46,27 +46,11 @@ describe.skip('Multinode Basics', () => {
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    before(done => {
-      async.auto({
-        clean: callback => helpers.fushCache(callback),
-        consensusPlugin: callback =>
-          callbackify(helpers.use)('Continuity2017', callback),
-        ledgerNode: ['clean', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            nodes.alpha = ledgerNode;
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        if(err) {
-          return done(err);
-        }
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+    before(async function() {
+      await helpers.flushCache();
+      const consensusPlugin = await helpers.use('Continuity2017');
+      consensusApi = consensusPlugin.api;
+      nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     });
 
     // get genesis record (block + meta)
