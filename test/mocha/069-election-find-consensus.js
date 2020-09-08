@@ -21,93 +21,40 @@ describe('Election API findConsensus', () => {
   let EventWriter;
   const nodes = {};
   const peers = {};
-  beforeEach(function(done) {
+  beforeEach(async function() {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    async.auto({
-      flush: helpers.flushCache,
-      clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-      consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          consensusApi = result.api;
-          EventWriter = consensusApi._worker.EventWriter;
-          callback();
-        }),
-      ledgerNode: ['clean', 'flush', (results, callback) => brLedgerNode.add(
-        null, {ledgerConfiguration}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.alpha = result;
-          callback(null, result);
-        })],
-      creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        const {id: ledgerNodeId} = nodes.alpha;
-        consensusApi._voters.get({ledgerNodeId}, (err, result) => {
-          callback(null, result.id);
-        });
-      }],
-      genesisBlock: ['ledgerNode', (results, callback) =>
-        nodes.alpha.blocks.getGenesis((err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          genesisBlock = result.genesisBlock.block;
-          callback(null, result.genesisBlock.block);
-        })],
-      nodeBeta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.beta = result;
-          callback(null, result);
-        })],
-      nodeGamma: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.gamma = result;
-          callback(null, result);
-        })],
-      nodeDelta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.delta = result;
-          callback(null, result);
-        })],
-      // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps
-      // nodeEpsilon: ['genesisBlock', (results, callback) => brLedgerNode.add(
-      //   null, {genesisBlock: results.genesisBlock}, (err, result) => {
-      //     if(err) {
-      //       return callback(err);
-      //     }
-      //     nodes.epsilon = result;
-      //     callback(null, result);
-      //   })],
-      creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
-        async.eachOf(nodes, (ledgerNode, i, callback) => {
-          const {id: ledgerNodeId} = ledgerNode;
-          // attach eventWriter to the node
-          ledgerNode.eventWriter = new EventWriter({ledgerNode});
-          consensusApi._voters.get({ledgerNodeId}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            peers[i] = result.id;
-            ledgerNode.creatorId = result.id;
-            helpers.peersReverse[result.id] = i;
-            callback();
-          });
-        }, callback)]
-    }, done);
+    await helpers.flushCache();
+    await helpers.removeCollections(['ledger', 'ledgerNode']);
+    const plugin = helpers.use('Continuity2017');
+    consensusApi = plugin.api;
+    EventWriter = consensusApi._worker.EventWriter;
+    nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
+    const {id: ledgerNodeId} = nodes.alpha;
+    const _voter = await consensusApi._voters.get({ledgerNodeId});
+    const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
+    genesisBlock = _genesisBlock.block;
+    nodes.beta = await brLedgerNode.add(null, {genesisBlock});
+    nodes.gamma = await brLedgerNode.add(null, {genesisBlock});
+    nodes.delta = await brLedgerNode.add(null, {genesisBlock});
+    for(const key in nodes) {
+      const ledgerNode = nodes[key];
+      ledgerNode.eventWriter = new EventWriter({ledgerNode});
+      const {id: ledgerNodeId} = ledgerNode;
+      const voter = await consensusApi._voters.get({ledgerNodeId});
+      peers[key] = voter.id;
+      ledgerNode.creatorId = voter.id;
+      helpers.peersReverse[voter.id] = key;
+    }
+    // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps
+    // nodeEpsilon: ['genesisBlock', (results, callback) => brLedgerNode.add(
+    //   null, {genesisBlock: results.genesisBlock}, (err, result) => {
+    //     if(err) {
+    //       return callback(err);
+    //     }
+    //     nodes.epsilon = result;
+    //     callback(null, result);
+    //   })],
   });
   it('single node consensus', done => {
     // the genesisMerge already has consensus
