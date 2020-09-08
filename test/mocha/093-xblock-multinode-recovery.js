@@ -50,28 +50,12 @@ describe('X Block Test using elector selector with recovery', () => {
     let consensusApi;
     const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfigurationRecovery;
-    before(function(done) {
+    before(async function() {
       this.timeout(180000);
-      async.auto({
-        clean: callback => cache.client.flushall(callback),
-        consensusPlugin: ['clean', (results, callback) => helpers.use(
-          'Continuity2017', callback)],
-        ledgerNode: ['clean', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            nodes.alpha = ledgerNode;
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        if(err) {
-          return done(err);
-        }
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+      await cache.client.flushall();
+      const consensusPlugin = helpers.use('Continuity2017');
+      nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
+      consensusApi = consensusPlugin.api;
     });
 
     // get genesis record (block + meta)

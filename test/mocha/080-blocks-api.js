@@ -38,9 +38,8 @@ describe('blocks API', () => {
       {ledgerNodeId: nodes.alpha.id});
     const {id: creatorId} = alphaVoter;
     const ledgerNode = nodes.alpha;
-    const headEvent = await consensusApi._events.getHead(
+    genesisMergeHash = await consensusApi._events.getHead(
       {creatorId, ledgerNode});
-    genesisMergeHash = headEvent.eventHash;
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     const genesisBlock = _genesisBlock.block;
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
@@ -139,7 +138,7 @@ describe('blocks API', () => {
               const eventRecord = {
                 event, meta
               };
-              ledgerNode.storage.events.collection.insert(
+              ledgerNode.storage.events.collection.insertOne(
                 eventRecord, callback);
             }]
           }, callback);

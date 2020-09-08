@@ -126,10 +126,8 @@ describe('Recovery mode simulation', () => {
     before(async function() {
       this.timeout(TEST_TIMEOUT);
       await cache.client.flushall();
-
       const consensusPlugin = await helperUse('Continuity2017');
-      const ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
-      nodes.alpha = ledgerNode;
+      nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
       consensusApi = consensusPlugin.api;
     });
 
