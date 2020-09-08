@@ -58,38 +58,21 @@ describe('Cache Recovery', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    const ledgerConfiguration = mockData.ledgerConfiguration;
-    before(function(done) {
+    const ledgerConfiguration = mockData.ledgerConfigurationRecovery;
+    before(async function() {
       this.timeout(TEST_TIMEOUT);
-      async.auto({
-        clean: callback => cache.client.flushall(callback),
-        consensusPlugin: ['clean', (results, callback) =>
-          callbackify(helpers.use)('Continuity2017', callback)],
-        ledgerNode: ['clean', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            nodes.alpha = ledgerNode;
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        assertNoError(err);
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+      await cache.client.flushall();
+      const consensusPlugin = await helpers.use('Continuity2017');
+      nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
+      consensusApi = consensusPlugin.api;
     });
 
     // get genesis record (block + meta)
     let genesisRecord;
-    before(function(done) {
+    before(async function() {
       this.timeout(TEST_TIMEOUT);
-      nodes.alpha.blocks.getGenesis((err, result) => {
-        assertNoError(err);
-        genesisRecord = result.genesisBlock;
-        done();
-      });
+      const result = await nodes.alpha.blocks.getGenesis();
+      genesisRecord = result.genesisBlock;
     });
 
     // add N - 1 more private nodes
