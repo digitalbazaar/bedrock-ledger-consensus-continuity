@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -46,26 +46,11 @@ describe.skip('Multinode Basics', () => {
     let consensusApi;
     const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    before(done => {
-      async.auto({
-        clean: callback => helpers.fushCache(callback),
-        consensusPlugin: callback => helpers.use('Continuity2017', callback),
-        ledgerNode: ['clean', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            nodes.alpha = ledgerNode;
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        if(err) {
-          return done(err);
-        }
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+    before(async function() {
+      await helpers.flushCache();
+      const consensusPlugin = helpers.use('Continuity2017');
+      consensusApi = consensusPlugin.api;
+      nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     });
 
     // get genesis record (block + meta)
