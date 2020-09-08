@@ -10,7 +10,6 @@ const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const {promisify} = require('util');
 
-const helperUse = promisify(helpers.use);
 const helperNBlock = promisify(helpers.nBlocks);
 const helperSettleNetwork = promisify(helpers.settleNetwork);
 
@@ -126,7 +125,7 @@ describe('Recovery mode simulation', () => {
     before(async function() {
       this.timeout(TEST_TIMEOUT);
       await cache.client.flushall();
-      const consensusPlugin = await helperUse('Continuity2017');
+      const consensusPlugin = helpers.use('Continuity2017');
       nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
       consensusApi = consensusPlugin.api;
     });
