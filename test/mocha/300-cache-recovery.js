@@ -31,7 +31,6 @@ describe('Cache Recovery', function() {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase(mockData);
-console.log('finished prepare db');
   });
 
   const nodeCount = 6;

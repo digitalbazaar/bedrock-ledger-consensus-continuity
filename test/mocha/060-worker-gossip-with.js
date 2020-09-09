@@ -56,7 +56,6 @@ describe.skip('Worker - _gossipWith', () => {
         creatorId: voter.id,
         ledgerNodeId: node.id
       });
-console.log('created node', count, key);
     }
     const {creatorId} = peers.alpha;
     const eventHead = await consensusApi._events.getHead({
