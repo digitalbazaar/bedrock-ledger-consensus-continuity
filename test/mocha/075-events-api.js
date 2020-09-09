@@ -32,7 +32,8 @@ describe('events API', () => {
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     // FIXME is this used anywhere? I might have made a mistake
     // in the refactoring
-    const voter = await consensusApi._voters.get({ledgerNodeId: nodes.alpha.id});
+    // const voter = await consensusApi._voters.get(
+    //  {ledgerNodeId: nodes.alpha.id});
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     const genesisBlock = _genesisBlock.block;
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
