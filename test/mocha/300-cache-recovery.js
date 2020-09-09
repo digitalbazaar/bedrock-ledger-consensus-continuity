@@ -27,17 +27,19 @@ const nodes = {};
 const peers = {};
 const heads = {};
 
-describe('Cache Recovery', () => {
+describe('Cache Recovery', function() {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase(mockData);
+console.log('finished prepare db');
   });
 
   const nodeCount = 6;
-  describe(`Consensus with ${nodeCount} Nodes`, () => {
+  describe(`Consensus with ${nodeCount} Nodes`, function() {
 
     // override elector selection to force cycling and 3f+1
-    before(() => {
+    before(function() {
+      this.timeout(TEST_TIMEOUT);
       const electorSelectionApi = brLedgerNode.use('MostRecentParticipants');
       electorSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
         const candidates = [];
@@ -60,26 +62,12 @@ describe('Cache Recovery', () => {
     let consensusApi;
     const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
-    before(function(done) {
+    before(async function() {
       this.timeout(TEST_TIMEOUT);
-      async.auto({
-        clean: callback => cache.client.flushall(callback),
-        consensusPlugin: ['clean', (results, callback) => helpers.use(
-          'Continuity2017', callback)],
-        ledgerNode: ['clean', (results, callback) => {
-          brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
-            if(err) {
-              return callback(err);
-            }
-            nodes.alpha = ledgerNode;
-            callback(null, ledgerNode);
-          });
-        }]
-      }, (err, results) => {
-        assertNoError(err);
-        consensusApi = results.consensusPlugin.api;
-        done();
-      });
+      await cache.client.flushall();
+      const consensusPlugin = helpers.use('Continuity2017');
+      nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
+      consensusApi = consensusPlugin.api;
     });
 
     // get genesis record (block + meta)
@@ -129,7 +117,7 @@ describe('Cache Recovery', () => {
       });
     });
 
-    describe('Check Genesis Block', () => {
+    describe('Check Genesis Block', function() {
       it('should have the proper information', done => {
         const blockHashes = [];
         async.auto({
@@ -176,7 +164,7 @@ describe('Cache Recovery', () => {
 
     const targetBlockHeight = 10;
 
-    describe(`${targetBlockHeight} Blocks`, () => {
+    describe(`${targetBlockHeight} Blocks`, function() {
       it('makes many more blocks', function(done) {
         this.timeout(0);
         let childlessBeforePrime;
@@ -196,15 +184,15 @@ describe('Cache Recovery', () => {
               callback(null, result);
             }),
           // inspect outstandingMerge key
-          inspectCache: ['nBlocks', callbackify(async () => {
+          inspectCache: ['nBlocks', callbackify(async function() {
             outstandingMergeEventsBeforePrime =
               await _inspectOutstandingMergeEvents({nodes});
           })],
           // inspect childess hash key
-          inspectCache2: ['inspectCache', callbackify(async () => {
+          inspectCache2: ['inspectCache', callbackify(async function() {
             childlessBeforePrime = await _inspectChildless({nodes});
           })],
-          flushCache: ['inspectCache2', callbackify(async () => {
+          flushCache: ['inspectCache2', callbackify(async function() {
             const keysBefore = await cache.client.keys('*');
             keysBefore.should.be.an('array');
             keysBefore.should.have.length.gt(0);
@@ -213,13 +201,13 @@ describe('Cache Recovery', () => {
             keys.should.be.an('array');
             keys.should.have.length(0);
           })],
-          primeCache: ['flushCache', callbackify(async () => {
+          primeCache: ['flushCache', callbackify(async function() {
             for(const nodeLabel in nodes) {
               const ledgerNode = nodes[nodeLabel];
               await ledgerNode.consensus._cache.prime.primeAll({ledgerNode});
             }
           })],
-          afterPrime: ['primeCache', callbackify(async () => {
+          afterPrime: ['primeCache', callbackify(async function() {
             // compare childless before/after prime
             const childlessAfterPrime = await _inspectChildless({nodes});
             for(const nodeLabel in childlessAfterPrime) {
@@ -389,7 +377,7 @@ function _latestBlockSummary(callback) {
 function _nBlocks({consensusApi, targetBlockHeight}, callback) {
   const recordIds = {alpha: [], beta: [], gamma: [], delta: []};
   const targetBlockHashMap = {};
-  async.until(() => {
+  async.until(function() {
     return Object.keys(targetBlockHashMap).length ===
       Object.keys(nodes).length;
   }, callback => {

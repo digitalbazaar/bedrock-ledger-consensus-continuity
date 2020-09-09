@@ -16,34 +16,30 @@ const mockData = require('./mock.data');
 // the total number of nodes on the ledger may be adjusted here
 const nodeCount = 10;
 
-describe('Multinode', () => {
+describe('Multinode', function() {
   before(async function() {
     await helpers.prepareDatabase(mockData);
   });
 
-  describe(`Consensus with ${nodeCount} Nodes`, () => {
+  describe(`Consensus with ${nodeCount} Nodes`, function() {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     let genesisLedgerNode;
+    // get genesis record (block + meta)
+    let genesisRecord;
     const mockAccount = mockData.accounts.regularUser;
     const {ledgerConfiguration} = mockData;
     before(async function() {
+      this.timeout(120000);
       await helpers.flushCache();
       await helpers.removeCollections(['ledger', 'ledgerNode']);
       const consensusPlugin = helpers.use('Continuity2017');
-      genesisLedgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
       consensusApi = consensusPlugin.api;
-    });
-
-    // get genesis record (block + meta)
-    let genesisRecord;
-    before(done => {
-      genesisLedgerNode.blocks.getGenesis((err, result) => {
-        assertNoError(err);
-        genesisRecord = result.genesisBlock;
-        done();
-      });
+      genesisLedgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
+      const {genesisBlock} = await genesisLedgerNode.
+        blocks.getGenesis();
+      genesisRecord = genesisBlock;
     });
 
     // add N - 1 more private nodes
@@ -82,7 +78,8 @@ describe('Multinode', () => {
     }));
 
     // override elector selection to force cycling and 3f+1
-    before(() => {
+    before(function() {
+      this.timeout(120000);
       let candidates;
       const electorSelectionApi = brLedgerNode.use('MostRecentParticipants');
       electorSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
@@ -104,7 +101,7 @@ describe('Multinode', () => {
       };
     });
 
-    describe('Check Genesis Block', () => {
+    describe('Check Genesis Block', function() {
       it('should have the proper information', done => async.auto({
         getLatest: callback => async.map(peers, (ledgerNode, callback) =>
           ledgerNode.storage.blocks.getLatest((err, result) => {
@@ -141,7 +138,7 @@ describe('Multinode', () => {
       }));
     });
 
-    describe('Block 1', () => {
+    describe('Block 1', function() {
       // add a single op to genesis node, genesis node will be sole elector
       it('should add an operation and achieve consensus', function(done) {
         this.timeout(30000);
@@ -183,7 +180,7 @@ describe('Multinode', () => {
         }, done);
       });
     }); // end block 1
-    describe('Operations', () => {
+    describe('Operations', function() {
       // add an operation on all peers, settle and ensure that all records are
       // available via the records API
       it('add an operation on all nodes and achieve consensus', function(done) {
@@ -221,10 +218,10 @@ describe('Multinode', () => {
         });
       });
     }); // end Operations
-    describe('Ledger Configuration', () => {
+    describe('Ledger Configuration', function() {
       // add a config event on the genesis node, settle the network, ensure
       // that new config is in effect on all nodes
-      it('ValidationError on missing ledger property', async () => {
+      it('ValidationError on missing ledger property', async function() {
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
         ledgerConfiguration.creator = genesisLedgerNode._peerId;
@@ -241,7 +238,7 @@ describe('Multinode', () => {
         error.details.errors[0].message.should.equal(
           `should have required property 'ledger'`);
       });
-      it('SyntaxError on invalid ledger', async () => {
+      it('SyntaxError on invalid ledger', async function() {
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
         ledgerConfiguration.creator = genesisLedgerNode._peerId;
@@ -257,7 +254,7 @@ describe('Multinode', () => {
         error.name.should.equal('SyntaxError');
         error.message.should.equal(`Invalid configuration 'ledger' value.`);
       });
-      it('ValidationError on missing creator', async () => {
+      it('ValidationError on missing creator', async function() {
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
         // creator is not added
@@ -273,7 +270,7 @@ describe('Multinode', () => {
         error.details.errors[0].message.should.equal(
           `should have required property 'creator'`);
       });
-      it('SyntaxError on invalid creator', async () => {
+      it('SyntaxError on invalid creator', async function() {
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
         // creator is invalid
@@ -289,7 +286,7 @@ describe('Multinode', () => {
         error.name.should.equal('SyntaxError');
         error.message.should.equal(`Invalid configuration 'creator' value.`);
       });
-      it('ValidationError on missing sequence', async () => {
+      it('ValidationError on missing sequence', async function() {
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
         ledgerConfiguration.creator = genesisLedgerNode._peerId;
@@ -305,7 +302,7 @@ describe('Multinode', () => {
         error.details.errors[0].message.should.equal(
           `should have required property 'sequence'`);
       });
-      it('SyntaxError on invalid sequence', async () => {
+      it('SyntaxError on invalid sequence', async function() {
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
         ledgerConfiguration.creator = genesisLedgerNode._peerId;
@@ -353,7 +350,7 @@ describe('Multinode', () => {
         });
       });
     }); // end Ledger Configuration
-    describe('Catch-up', () => {
+    describe('Catch-up', function() {
       it('a new node is able to catch up', function(done) {
         this.timeout(120000);
         async.auto({
@@ -389,9 +386,9 @@ describe('Multinode', () => {
         });
       });
     });
-    describe('Reinitialize Nodes', () => {
+    describe('Reinitialize Nodes', function() {
       // the nodes should load with a new consensus method
-      it('nodes should have new consensus method', async () => {
+      it('nodes should have new consensus method', async function() {
         const nodeIds = peers.map(n => n.id);
         for(const ledgerNodeId of nodeIds) {
           const ledgerNode = await brLedgerNode.get(null, ledgerNodeId);
