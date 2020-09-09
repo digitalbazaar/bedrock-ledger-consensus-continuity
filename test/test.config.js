@@ -5,6 +5,7 @@ const {config} = require('bedrock');
 const path = require('path');
 
 config.mocha.tests.push(path.join(__dirname, 'mocha'));
+config.mocha.options.timeout = 60000;
 
 // MongoDB
 config.mongodb.name = 'bedrock_ledger_continuity_test';
