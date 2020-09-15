@@ -164,7 +164,8 @@ describe('Recovery mode simulation', () => {
 
         for(const n of Object.keys(nodes)) {
           console.log(`----- ${n} ----`);
-          console.log(`Storage ${nodes[n].storage.events.collection.collectionName}`);
+          console.log(`Storage ${nodes[n].storage.events.collection.
+            collectionName}`);
           console.log(`PeerId ${peers[n]}`);
         }
 
