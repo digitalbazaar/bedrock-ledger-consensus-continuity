@@ -176,7 +176,8 @@ describe('X Block Test using elector selector with recovery', () => {
               const summaries = {};
               Object.keys(result).forEach(k => {
                 summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.collection.s.name,
+                  blockCollection: nodes[k].storage.blocks.
+                    collection.collectionName,
                   blockHeight: result[k].eventBlock.block.blockHeight,
                   blockHash: result[k].eventBlock.meta.blockHash,
                   previousBlockHash: result[k].eventBlock.block

@@ -329,8 +329,8 @@ api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
   async.auto({
     events: callback => {
       const collection = from.storage.events.collection;
-      if(useSnapshot && snapshot[collection.s.name]) {
-        return callback(null, snapshot[collection.s.name]);
+      if(useSnapshot && snapshot[collection.collectionName]) {
+        return callback(null, snapshot[collection.collectionName]);
       }
       // FIXME: use a more efficient query, the commented aggregate function
       // is evidently missing some events.
@@ -625,7 +625,7 @@ api.snapshotEvents = ({ledgerNode}, callback) => {
         return r;
       });
       // make snapshot
-      snapshot[collection.s.name] = results;
+      snapshot[collection.collectionName] = results;
       callback(null, results);
     });
   });

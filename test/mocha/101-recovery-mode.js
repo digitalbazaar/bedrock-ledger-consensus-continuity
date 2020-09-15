@@ -164,7 +164,7 @@ describe('Recovery mode simulation', () => {
 
         for(const n of Object.keys(nodes)) {
           console.log(`----- ${n} ----`);
-          console.log(`Storage ${nodes[n].storage.events.collection.s.name}`);
+          console.log(`Storage ${nodes[n].storage.events.collection.collectionName}`);
           console.log(`PeerId ${peers[n]}`);
         }
 
@@ -452,7 +452,7 @@ function _createBlockSummaries(blockSummary) {
   const summaries = {};
   Object.keys(blockSummary).forEach(k => {
     summaries[k] = {
-      blockCollection: nodes[k].storage.blocks.collection.s.name,
+      blockCollection: nodes[k].storage.blocks.collection.collectionName,
       blockHeight: blockSummary[k].eventBlock.block.blockHeight,
       blockHash: blockSummary[k].eventBlock.meta.blockHash,
       previousBlockHash: blockSummary[k].eventBlock.block

@@ -139,7 +139,8 @@ describe.skip('Multinode Basics', () => {
       });
       it('two nodes reach consensus on two blocks', function(done) {
         this.timeout(120000);
-        console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
+        console.log('ALPHA COLL',
+          nodes.alpha.storage.events.collection.collectionName);
         async.auto({
           betaAddEvent1: callback => nodes.beta.consensus._events.add(
             helpers.createEventBasic({eventTemplate}), nodes.beta, callback),
@@ -851,7 +852,8 @@ describe.skip('Multinode Basics', () => {
     }); // end one block
     describe.skip('More Blocks', () => {
       it('should add an event and achieve consensus', function(done) {
-        console.log('ALPHA COLL', nodes.alpha.storage.events.collection.s.name);
+        console.log('ALPHA COLL',
+          nodes.alpha.storage.events.collection.collectionName);
         this.timeout(120000);
         const eventTemplate = mockData.events.alpha;
         async.auto({

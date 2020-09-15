@@ -117,7 +117,8 @@ describe.skip('Election API _getElectorBranches', () => {
     console.log('COLLECTIONS');
     Object.keys(nodes).forEach(nodeLabel => {
       console.log(
-        `${nodeLabel}: ${nodes[nodeLabel].storage.events.collection.s.name}`);
+        `${nodeLabel}: ${nodes[nodeLabel].storage.events.
+          collection.collectionName}`);
     });
     const getRecentHistory = consensusApi._events.getRecentHistory;
     const _getElectorBranches = consensusApi._election._getElectorBranches;
