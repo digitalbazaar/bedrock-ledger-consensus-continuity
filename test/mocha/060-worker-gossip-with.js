@@ -307,11 +307,12 @@ describe.skip('Worker - _gossipWith', () => {
       ], callback)],
       count: ['gossipWith', (results, callback) => {
         async.eachOfSeries(testNodes, (ledgerNode, i, callback) => {
-          ledgerNode.storage.events.collection.count({}, (err, result) => {
-            assertNoError(err);
-            result.should.equal(8);
-            callback();
-          });
+          ledgerNode.storage.events.collection.countDocuments({},
+            (err, result) => {
+              assertNoError(err);
+              result.should.equal(8);
+              callback();
+            });
         }, callback);
       }],
       test: ['count', (results, callback) => {
@@ -409,11 +410,12 @@ describe.skip('Worker - _gossipWith', () => {
         callback => {
           const eventMap = {};
           async.eachOfSeries(testNodes, (ledgerNode, i, callback) => {
-            ledgerNode.storage.events.collection.count({}, (err, result) => {
-              assertNoError(err);
-              eventMap[i] = result;
-              callback();
-            });
+            ledgerNode.storage.events.collection.countDocuments({},
+              (err, result) => {
+                assertNoError(err);
+                eventMap[i] = result;
+                callback();
+              });
           }, err => {
             assertNoError(err);
             // eventMap.alpha.should.equal(12);
@@ -448,11 +450,12 @@ describe.skip('Worker - _gossipWith', () => {
       count: ['gossipWith', (results, callback) => {
         const eventMap = {};
         async.eachOfSeries(testNodes, (ledgerNode, i, callback) => {
-          ledgerNode.storage.events.collection.count({}, (err, result) => {
-            assertNoError(err);
-            eventMap[i] = result;
-            callback();
-          });
+          ledgerNode.storage.events.collection.countDocuments({},
+            (err, result) => {
+              assertNoError(err);
+              eventMap[i] = result;
+              callback();
+            });
         }, err => {
           assertNoError(err);
           // eventMap.alpha.should.equal(14);
