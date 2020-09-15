@@ -215,7 +215,7 @@ function _copyEvents({eventHash, from, to, treeHash}, callback) {
         {$match: {eventHash}},
         {
           $graphLookup: {
-            from: collection.s.name,
+            from: collection.collectionName,
             startWith: '$eventHash',
             connectFromField: 'event.parentHash',
             connectToField: 'eventHash',
