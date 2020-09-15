@@ -495,3 +495,18 @@ api.snapshotEvents = async ({ledgerNode}) => {
 api.use = async plugin => {
   return brLedgerNode.use(plugin);
 };
+
+// Insert identities and public keys used for testing into database
+async function insertTestData(mockData) {
+  for(const key in mockData.accounts) {
+    try {
+      const {account, meta} = mockData.accounts[key];
+      await brAccount.insert({actor: null, account, meta});
+    } catch(err) {
+      if(!(err.name === 'DuplicateError')) {
+        // duplicate error means test data is already loaded
+        throw err;
+      }
+    }
+  }
+}

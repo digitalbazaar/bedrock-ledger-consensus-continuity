@@ -119,7 +119,8 @@ describe.skip('Election API _getTails', () => {
     console.log('COLLECTIONS');
     Object.keys(nodes).forEach(nodeLabel => {
       console.log(
-        `${nodeLabel}: ${nodes[nodeLabel].storage.events.collection.s.name}`);
+        `${nodeLabel}: ${nodes[nodeLabel].storage.events.
+          collection.collectionName}`);
     });
     const getRecentHistory = consensusApi._events.getRecentHistory;
     const _getTails = consensusApi._election._getTails;
