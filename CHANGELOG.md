@@ -1,10 +1,14 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
-## 7.0.0 - 2020-09-xx
+## 7.0.0 - 2020-09-30
 
 ### Fixed
 - **BREAKING**: Ensure first ancestors from other branches are
   included in most recent ancestors calculations.
+
+### Changed
+- Use jsonld-signatures@6.
+- Use crypto-ld@3.9.0.
 
 ## 6.0.0 - 2020-06-18
 
