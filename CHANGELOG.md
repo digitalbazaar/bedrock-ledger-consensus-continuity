@@ -1,5 +1,11 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 7.0.0 - 2020-09-xx
+
+### Fixed
+- **BREAKING**: Ensure first ancestors from other branches are
+  included in most recent ancestors calculations.
+
 ## 6.0.0 - 2020-06-18
 
 ### Added
