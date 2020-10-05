@@ -672,7 +672,7 @@ describe('Election API _findMergeEventProof', () => {
     // FIXME: enable test
     // FIXME: this test was passing before upgrade
     // it is now failing becauses proof.consensus is empty for alpha etc.
-    it.skip('ledger history epsilon', done => {
+    it('ledger history epsilon', done => {
       const report = {};
       async.auto({
         build: callback => helpers.buildHistory(
