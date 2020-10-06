@@ -47,7 +47,7 @@
     "bedrock-ledger-context": "^15.0.0",
     "bedrock-ledger-node": "^11.0.0",
     "bedrock-ledger-storage-mongodb": "^4.0.0",
-    "bedrock-mongodb": "^7.1.0",
+    "bedrock-mongodb": "7.x-8.x",
     "bedrock-permission": "^3.1.0",
     "bedrock-redis": "^3.4.0",
     "bedrock-rest": "2.x - 3.x",
