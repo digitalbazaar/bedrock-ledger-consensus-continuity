@@ -1,5 +1,22 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+### 8.0.0 -
+
+### Changed
+- **BREAKING**: Use `bedrock-mongodb` 7.x-8.x.
+- **BREAKING**: Use `bedrock-ledger-storage-mongodb`: ^4.0.0.
+- Update numerous mongodb calls to match mongo driver 3.5 api.
+- Increment engines.node to >= 12.
+- Switched from `req.user.identity.id` to `req.user.account.id` for owner.
+- Changed helpers.prepareDatabase so it is async.
+- Numerous test before blocks are now async.
+
+### Removed
+- **BREAKING**: Dependency on `bedrock-identity`.
+
+### Added
+- A one minute timeout to tests.
+
 ## 7.0.1 - 2020-10-08
 
 ### Fixed
