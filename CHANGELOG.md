@@ -1,5 +1,11 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 7.0.1 - 2020-10-08
+
+### Fixed
+- Fix getHead calculation in getMergeStatus.
+- Fix call to notifyFlag API.
+
 ## 7.0.0 - 2020-09-30
 
 ### Fixed
