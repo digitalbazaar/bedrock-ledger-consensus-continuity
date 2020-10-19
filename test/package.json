@@ -17,7 +17,6 @@
     "bedrock-injector": "^1.0.0",
     "bedrock-jobs": "^3.1.0",
     "bedrock-jsonld-document-loader": "^1.0.0",
-    "bedrock-key": "^4.0.0",
     "bedrock-ledger-agent": "github:digitalbazaar/bedrock-ledger-agent#upgrade-bedrock-mongodb-7",
     "bedrock-ledger-consensus-continuity": "file:..",
     "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^2.0.0",
