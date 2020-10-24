@@ -9,6 +9,7 @@
   "dependencies": {
     "async": "^2.4.1",
     "bedrock": "^3.0.0",
+    "bedrock-cooldown": "digitalbazaar/bedrock-cooldown#initial",
     "bedrock-express": "^3.0.0",
     "bedrock-https-agent": "^2.0.0",
     "bedrock-identity": "^7.0.0",

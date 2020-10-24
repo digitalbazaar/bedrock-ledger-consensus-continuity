@@ -8,6 +8,7 @@ require('bedrock-ledger-consensus-continuity-es-most-recent-participants');
 require('bedrock-ledger-consensus-continuity-es-most-recent-participants-' +
   'with-recovery');
 require('bedrock-ledger-storage-mongodb');
+require('bedrock-cooldown');
 
 // initialize a mock alternate consensus method used in testing
 require('./mocha/mock.alternate-consensus');
