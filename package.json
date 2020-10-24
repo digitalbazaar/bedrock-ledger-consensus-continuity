@@ -40,6 +40,7 @@
   },
   "peerDependencies": {
     "bedrock": "2.x - 3.x",
+    "bedrock-cooldown": "digitalbazaar/bedrock-cooldown#initial",
     "bedrock-express": "2.x - 3.x",
     "bedrock-https-agent": "^2.0.0",
     "bedrock-jsonld-document-loader": "^1.0.0",
