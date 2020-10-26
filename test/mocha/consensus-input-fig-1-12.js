@@ -1,215 +1,120 @@
+/*
+ * Copyright (c) 2020 Digital Bazaar, Inc. All rights reserved.
+ */
 'use strict';
 
+const Graph = require('./tools/Graph');
+
+const figure1_12 = new Graph();
+
+// create initial nodes
+figure1_12
+  .addNode('1')
+  .addNode('b')
+  .addNode('2')
+  .addNode('3');
+
+figure1_12
+  // pi_1 y1
+  .mergeEvent({eventHash: 'y1', to: '1', from: []})
+  // pi_b yb
+  .mergeEvent({eventHash: 'yb', to: 'b', from: []})
+  // pi_2 y2
+  .mergeEvent({eventHash: 'y2', to: '2', from: []})
+  // pi_3 y3
+  .mergeEvent({eventHash: 'y3', to: '3', from: []})
+  // pi_1 1st event (supports Y1)
+  .mergeEvent({
+    eventHash: '1-1',
+    to: '1',
+    from: [
+      '1',
+      {nodeId: 'b', hash: 'yb'},
+      {nodeId: '3', hash: 'y3'}
+    ]
+  })
+  // pi_b 1st event (supports Y1)
+  .mergeEvent({
+    eventHash: 'b-1',
+    to: 'b',
+    from: [
+      'b',
+      {nodeId: '3', hash: 'y3'},
+      {nodeId: '1', hash: 'y1'},
+    ]
+  })
+  // pi_2 1st event (supports Y2)
+  .mergeEvent({
+    eventHash: '2-1',
+    to: '2',
+    from: [
+      '2',
+      {nodeId: '1', hash: 'y1'},
+      {nodeId: 'b', hash: 'yb'},
+      {nodeId: '3', hash: 'y3'}
+    ]
+  })
+  // pi_3 1st event (supports Y1)
+  .mergeEvent({
+    eventHash: '3-1',
+    to: '3',
+    from: [
+      '3',
+      {nodeId: '1', hash: 'y1'},
+      {nodeId: 'b', hash: 'yb'},
+    ]
+  })
+  // pi_b forks (supports Y1)
+  .addNode('b1', {isElector: false})
+  .mergeEvent({
+    eventHash: 'b1-1',
+    forked: true,
+    to: 'b1',
+    from: [
+      'b'
+    ]
+  })
+  // pi_b forks (supports Y2)
+  .addNode('b2', {isElector: false})
+  .mergeEvent({
+    eventHash: 'b2-1',
+    forked: true,
+    to: 'b2',
+    from: [
+      'b',
+      {nodeId: '2', hash: '2-1'}
+    ]
+  })
+  // pi_1 2nd event (supports Y2, proposes Y2)
+  .mergeEvent({
+    eventHash: '1-2',
+    to: '1',
+    from: [
+      '1',
+      {nodeId: 'b2', hash: 'b2-1'}
+    ]
+  })
+  // pi_2 2nd event (supports Y1, proposes Y1)
+  .mergeEvent({
+    eventHash: '2-2',
+    to: '2',
+    from: [
+      '2',
+      {nodeId: '1', hash: '1-1'},
+      {nodeId: 'b1', hash: 'b1-1'},
+      {nodeId: '3', hash: '3-1'}
+    ]
+  });
+
+const ledgerNodeId = '2';
 const input = {
-  ledgerNodeId: '2',
-  history: {
-    events: [
-      {
-        _children: [],
-        _parents: [],
-        eventHash: 'y1',
-        event: {
-          parentHash: [
-            '2e5baa2a-08af-45c5-a545-745e820b6b5d'
-          ],
-          treeHash: '2e5baa2a-08af-45c5-a545-745e820b6b5d',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: '1'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: 'y3',
-        event: {
-          parentHash: [
-            '59cff9a2-f1f3-405e-808c-fe78b0610396'
-          ],
-          treeHash: '59cff9a2-f1f3-405e-808c-fe78b0610396',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: '3'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: 'yb',
-        event: {
-          parentHash: [
-            'de82182f-06ea-4cc3-b1ad-89ea8fffff19'
-          ],
-          treeHash: 'de82182f-06ea-4cc3-b1ad-89ea8fffff19',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: 'b'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: 'b-1',
-        event: {
-          parentHash: [
-            'yb',
-            'y3',
-            'y1'
-          ],
-          treeHash: 'yb',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: 'b'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: 'y2',
-        event: {
-          parentHash: [
-            '9247c0fb-b8c2-4002-91e7-e6637636db9c'
-          ],
-          treeHash: '9247c0fb-b8c2-4002-91e7-e6637636db9c',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: '2'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: '3-1',
-        event: {
-          parentHash: [
-            'y3',
-            'y1',
-            'yb'
-          ],
-          treeHash: 'y3',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: '3'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: 'b1-1',
-        event: {
-          parentHash: [
-            'b-1'
-          ],
-          treeHash: 'b-1',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: 'b1'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: '1-1',
-        event: {
-          parentHash: [
-            'y1',
-            'yb',
-            'y3'
-          ],
-          treeHash: 'y1',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: '1'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: '2-1',
-        event: {
-          parentHash: [
-            'y2',
-            'y1',
-            'yb',
-            'y3'
-          ],
-          treeHash: 'y2',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: '2'
-          }
-        }
-      },
-      {
-        _children: [],
-        _parents: [],
-        eventHash: '2-2',
-        event: {
-          parentHash: [
-            '2-1',
-            '1-1',
-            'b1-1',
-            '3-1'
-          ],
-          treeHash: '2-1',
-          type: 'ContinuityMergeEvent'
-        },
-        meta: {
-          continuity2017: {
-            creator: '2'
-          }
-        }
-      }
-    ],
-    eventMap: {},
-    localBranchHead: {
-      eventHash: '2-2',
-      generation: 3
-    }
-  },
-  electors: [
-    {
-      id: '1'
-    },
-    {
-      id: 'b'
-    },
-    {
-      id: '2'
-    },
-    {
-      id: '3'
-    }
-  ],
+  ledgerNodeId,
+  history: figure1_12.getHistory({nodeId: ledgerNodeId}),
+  electors: figure1_12.getElectors(),
   recoveryElectors: [],
   mode: 'first'
 };
 
 input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
+
 module.exports = input;

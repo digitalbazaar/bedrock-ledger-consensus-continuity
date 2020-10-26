@@ -63,7 +63,7 @@ describe('Consensus API findConsensus', () => {
       }
     });
   });
-  it.only('ledger history Figure 1.4', async () => {
+  it('ledger history Figure 1.4', async () => {
     let result, err;
     const input = consensusInput['fig-1-4'];
 
@@ -77,7 +77,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.5', async () => {
+  it('ledger history Figure 1.5', async () => {
     let result, err;
     const input = consensusInput['fig-1-5'];
 
@@ -91,7 +91,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.6', async () => {
+  it('ledger history Figure 1.6', async () => {
     let result, err;
     const input = consensusInput['fig-1-6'];
 
@@ -105,7 +105,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.7', async () => {
+  it('ledger history Figure 1.7', async () => {
     let result, err;
     const input = consensusInput['fig-1-7'];
 
@@ -119,7 +119,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.8', async () => {
+  it('ledger history Figure 1.8', async () => {
     let result, err;
     const input = consensusInput['fig-1-8'];
 
@@ -133,7 +133,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.9', async () => {
+  it('ledger history Figure 1.9', async () => {
     let result, err;
     const input = consensusInput['fig-1-9'];
 
@@ -147,7 +147,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.10', async () => {
+  it('ledger history Figure 1.10', async () => {
     let result, err;
     const input = consensusInput['fig-1-10'];
 
@@ -161,7 +161,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.11', async () => {
+  it('ledger history Figure 1.11', async () => {
     let result, err;
     const input = consensusInput['fig-1-11'];
 
@@ -175,7 +175,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it.only('ledger history Figure 1.12', async () => {
+  it('ledger history Figure 1.12', async () => {
     let result, err;
     const input = consensusInput['fig-1-12'];
 
