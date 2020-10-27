@@ -6,7 +6,7 @@
     "webcola": "^3.3.8"
   },
   "scripts": {
-    "serve": "http-server ..",
+    "serve": "http-server .",
     "build": "node build.js"
   },
   "engine": {
