@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "dependencies": {
+    "d3": "^4.13.0",
+    "http-server": "^0.11.1",
+    "webcola": "^3.3.8"
+  },
+  "scripts": {
+    "serve": "http-server ..",
+    "build": "node build.js"
+  },
+  "engine": {
+    "node": ">=10.12.0"
+  }
+}
