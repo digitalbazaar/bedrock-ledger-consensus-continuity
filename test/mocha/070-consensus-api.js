@@ -14,7 +14,7 @@ const {consensusInput} = mockData;
 describe('Consensus API findConsensus', () => {
   it.only('ledger history Figure 1.2', async () => {
     let result, err;
-    const input = consensusInput['fig-1-2'];
+    const {input} = consensusInput['fig-1-2'];
 
     const supportY1 = ['y1', 'y3', 'y4'];
     const supportY2 = ['y1', 'y2', 'y3', 'y4'];
@@ -65,7 +65,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.4', async () => {
     let result, err;
-    const input = consensusInput['fig-1-4'];
+    const {input} = consensusInput['fig-1-4'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -79,7 +79,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.5', async () => {
     let result, err;
-    const input = consensusInput['fig-1-5'];
+    const {input} = consensusInput['fig-1-5'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -93,7 +93,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.6', async () => {
     let result, err;
-    const input = consensusInput['fig-1-6'];
+    const {input} = consensusInput['fig-1-6'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -107,7 +107,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.7', async () => {
     let result, err;
-    const input = consensusInput['fig-1-7'];
+    const {input} = consensusInput['fig-1-7'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -121,7 +121,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.8', async () => {
     let result, err;
-    const input = consensusInput['fig-1-8'];
+    const {input} = consensusInput['fig-1-8'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -135,7 +135,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.9', async () => {
     let result, err;
-    const input = consensusInput['fig-1-9'];
+    const {input} = consensusInput['fig-1-9'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -149,7 +149,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.10', async () => {
     let result, err;
-    const input = consensusInput['fig-1-10'];
+    const {input} = consensusInput['fig-1-10'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -163,7 +163,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.11', async () => {
     let result, err;
-    const input = consensusInput['fig-1-11'];
+    const {input} = consensusInput['fig-1-11'];
 
     try {
       result = consensusApi.findConsensus(input);
@@ -177,7 +177,7 @@ describe('Consensus API findConsensus', () => {
   });
   it('ledger history Figure 1.12', async () => {
     let result, err;
-    const input = consensusInput['fig-1-12'];
+    const {input} = consensusInput['fig-1-12'];
 
     try {
       result = consensusApi.findConsensus(input);
