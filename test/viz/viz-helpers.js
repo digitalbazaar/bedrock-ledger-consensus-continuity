@@ -344,13 +344,14 @@ api.saveTestInputDataForD3 = async ({
  *
  * @param history - input to findConsensus
  * @param consensus - output from findConsensus
+ * @param display - hints for display
  *
  * @return event visualization JSON data
  */
 api.testOutputDataForTimeline = ({
   //nodeId, build, history, branches, proof, nodes
   /* eslint-disable-next-line no-unused-vars */
-  historyId, nodeId, nodes = [], history, consensus
+  historyId, nodeId, history, consensus, display
 }) => {
   //const allXs = proof.consensus.map(p => p.x.eventHash);
   //const allYs = proof.consensus.map(p => p.y.eventHash);
@@ -368,14 +369,15 @@ api.testOutputDataForTimeline = ({
 
   // viz data
   const data = {nodes: []};
-  debugger;
-  //return data;
+  if(display) {
+    data.display = display;
+  }
 
   // map from creator to node name
-  const creatorNameMap = {};
-  Object.keys(nodes).forEach(name => {
-    creatorNameMap[nodes[name].creatorId] = name;
-  });
+  //const creatorNameMap = {};
+  //Object.keys(nodes).forEach(name => {
+  //  creatorNameMap[nodes[name].creatorId] = name;
+  //});
 
   // process all events
   //debugger;
@@ -401,13 +403,13 @@ api.testOutputDataForTimeline = ({
 };
 
 api.saveTestOutputDataForTimeline = async ({
-  directory, tag, historyId, nodeId, nodes, history, consensus
+  directory, tag, historyId, nodeId, history, consensus, display
 }) => {
   const filename = path.join(
     directory, `${tag}--${historyId}--${nodeId}--output.json`);
 
   const data = api.testOutputDataForTimeline({
-    historyId, nodeId, nodes, history, consensus
+    historyId, nodeId, history, consensus, display
   });
 
   /*

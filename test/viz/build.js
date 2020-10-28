@@ -27,37 +27,38 @@ async function main() {
   const inputInfo = [];
   const outputInfo = [];
 
-  for(const [id, data] of Object.entries(consensusInput)) {
-    //console.log(`INPUT[${id}]', data);
+  for(const [id, {input, display}] of Object.entries(consensusInput)) {
+    //console.log(`INPUT[${id}]', {input, display});
     const inputResult = await vizHelpers.saveTestInputDataForD3({
       directory: outputDirectory,
       // ledger history for d3
       tag: 'lh-d3',
       historyId: id,
-      nodeId: data.ledgerNodeId,
-      history: data.history
+      nodeId: input.ledgerNodeId,
+      history: input.history
     });
     // record filenames
     inputInfo.push({
-      label: `history="${id}" node="${data.ledgerNodeId}"`,
+      label: `history="${id}" node="${input.ledgerNodeId}"`,
       url: path.join('data', path.basename(inputResult.filename))
     });
 
     //console.log('INPUT', input);
-    const consensusResult = consensusApi.findConsensus(data);
+    const consensusResult = consensusApi.findConsensus(input);
     console.log('RESULT', consensusResult);
     const outputResult = await vizHelpers.saveTestOutputDataForTimeline({
       directory: outputDirectory,
       // ledger history for timeline
       tag: 'lh-tl',
       historyId: id,
-      nodeId: data.ledgerNodeId,
-      history: data.history,
-      consensus: consensusResult
+      nodeId: input.ledgerNodeId,
+      history: input.history,
+      consensus: consensusResult,
+      display
     });
     // record filenames
     outputInfo.push({
-      label: `history="${id}" node="${data.ledgerNodeId}"`,
+      label: `history="${id}" node="${input.ledgerNodeId}"`,
       url: path.join('data', path.basename(outputResult.filename))
     });
   }

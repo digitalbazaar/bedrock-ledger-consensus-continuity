@@ -57,6 +57,7 @@
 </div>
 <hr>
 
+<div id="title"></div>
 <div id="visualization"></div>
 <div id="loading" hidden>Loading...</div>
 <div id="errors"></div>
@@ -76,6 +77,7 @@ let arrow;
 
 function clearTimeline() {
   $('#loading').hide();
+  $('#title').empty();
   $('#visualization').empty();
   $('#errors').empty();
   $('#selected').empty();
@@ -87,6 +89,10 @@ function setupTimeline(data) {
   console.log('DATA', data);
   // DOM element where the Timeline will be attached
   const container = document.getElementById('visualization');
+
+  if(data.display && data.display.title) {
+    $('#title').html(data.display.title);
+  }
 
   /*
   const groups = new vis.DataSet([
@@ -100,10 +106,18 @@ function setupTimeline(data) {
   const groups = new vis.DataSet();
   for(const e of data.nodes) {
     if(!groups.get(e.creatorName)) {
-      groups.add({
+      const options = {
         id: e.creatorName,
-        content: e.creatorName
-      });
+        content: e.creatorName,
+        order: Infinity
+      };
+      if(data.display && data.display.nodeOrder) {
+        const idx = data.display.nodeOrder.indexOf(e.creatorName);
+        if(idx !== -1) {
+          options.order = idx;
+        }
+      }
+      groups.add(options);
     }
   }
 
