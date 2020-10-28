@@ -1,4 +1,5 @@
 /* eslint-disable */
+/* https://github.com/javdome/timeline-arrows */
 class Arrow {
 
     constructor(timeline, dependencies) {
