@@ -1,3 +1,4 @@
+/* eslint-disable */
 class Arrow {
 
     constructor(timeline, dependencies) {
