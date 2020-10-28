@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Consensus Event Visualization</title>
+<style>
+
+@import url(./style.css);
+
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+  cursor: move;
+}
+
+.link {
+  stroke: #999;
+  stroke-width: 3px;
+  stroke-opacity: 1;
+}
+
+.label {
+  fill: white;
+  font-family: Verdana;
+  font-size: 25px;
+  text-anchor: middle;
+  cursor: move;
+}
+
+.guideline {
+  stroke: orangered;
+  stroke-width: 4px;
+}
+
+</style>
+</head>
+<body>
+
+<label for="inputs">Input</label>
+<select name="inputs" id="inputs">
+</select>
+<br>
+<label for="datapath">File</label>
+<input id="datapath"></input>
+<input id="dataload" type="submit" value="Load">
+<!--
+<br>
+<input id="grouped" type="checkbox" checked="checked"> Grouped
+<br>
+<input id="ordered" type="checkbox" checked="checked"> Ordered
+-->
+
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<!--<script src="../extern/d3v4.js"></script>-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>-->
+<script src="./node_modules/d3/build/d3.min.js"></script>
+<!--<script src="../cola.min.js"></script>-->
+<!--<script src="./node_modules/webcola/WebCola/cola.min.js"></script>-->
+<script src="./node_modules/webcola/WebCola/cola.js"></script>
+
+<!-- automatic input files: window._indexForD3 -->
+<script src="./data/lh-d3--index.js"></script>
+
+<script>
+  const width = 1000;
+  const height = 1600;
+  const color = d3.scaleOrdinal(d3.schemeCategory20)
+
+  // set here so always get same color order
+  const colors = {
+    normal: color(1),
+    x: color(2),
+    y: color(3),
+    yCandidate: color(4)
+  };
+
+  const d3cola = cola.d3adaptor(d3)
+  //const color = d3.scale.category20();
+  //const d3cola = cola.d3adaptor()
+    .linkDistance(120)
+    .avoidOverlaps(true)
+    .size([width, height]);
+
+  const svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  function main() {
+    const info = [
+      //'./example-1.json',
+      ...window._indexForD3
+    ];
+    for(const item of info) {
+      $('<option/>').val(item.url).html(item.label).appendTo('#inputs');
+    }
+
+    $('#inputs').change(function(e) {
+      const url = e.target.value;
+      console.log('loading', {url});
+      $('#datapath').val(url);
+      load(url);
+    });
+
+    $('#datapath').val($('#inputs').val());
+    $('#dataload').click(function() {
+      load($('#datapath')[0].value);
+    });
+  }
+
+  function load(filename) {
+    /*
+    FIXME: reset everything
+    d3cola
+      .nodes([])
+      .links([])
+      .constraints([]);
+    svg.empty();
+    */
+    //d3.select('svg').remove();
+    d3.json(filename, function (error, graph) {
+      if (error) {
+        console.error('LOAD ERROR', error);
+        throw error;
+      }
+      //console.log('GRAPH', graph);
+      //console.log('C', JSON.stringify(graph.constraints, null, 2));
+      //graph.constraints = graph.constraints.filter(c => c.axis === 'y');
+      /*
+      graph.constraints.forEach((c, i) => {
+        if(c.axis === 'x') {
+          //delete c.axis;
+          //delete c.left;
+          //delete c.right;
+          //delete c.gap;
+          //delete c.equality;
+          //c.left = 1;
+          //c.right = 10;
+          console.log('LR', i, c.left, c.right);
+        }
+      });
+      */
+      //graph.constraints = [];
+      //console.log('C2', JSON.stringify(graph.constraints, null, 2));
+      graph.nodes.forEach(function (v) { v.x = 400, v.y = 50 });
+      d3cola
+        .nodes(graph.nodes)
+        .links(graph.links)
+        .constraints(graph.constraints)
+        .start(10,10,10);
+
+      var link = svg.selectAll(".link")
+          .data(graph.links)
+        .enter().append("line")
+          .attr("class", "link");
+
+      var guideline = svg.selectAll(".guideline")
+          .data(graph.constraints.filter(function (c) { return c.type === 'alignment' }))
+        .enter().append("line")
+          .attr("class", "guideline")
+          .attr("stroke-dasharray", "5,5");
+
+      var node = svg.selectAll(".node")
+          .data(graph.nodes)
+        .enter().append("rect")
+          .attr("class", "node")
+          .attr("width", function (d) { return d.width; })
+          .attr("height", function (d) { return d.height; })
+          .attr("rx", 5).attr("ry", 5)
+          .style("fill", function (d) {
+            if(d.isX) { return colors.x; }
+            if(d.isY) { return colors.y; }
+            if(d.isYCandidate) { return colors.yCandidate; }
+            return colors.normal;
+          })
+          .call(d3cola.drag);
+
+      var label = svg.selectAll(".label")
+          .data(graph.nodes)
+        .enter().append("text")
+          .attr("class", "label")
+          .text(function (d) {
+            // FIXME
+            if(d.name === 'XXX') {
+              return d.creatorName.slice(0,3);
+            }
+            return d.name;
+          })
+          .call(d3cola.drag);
+
+      node.append("title")
+        .text(function (d) {
+          let t = d.name;
+          t = t + '\neventHash: ' + d.eventHash;
+          t = t + (d.isX ? '\nX' : '');
+          t = t + (d.isY ? '\nY' : '');
+          t = t + (d.creatorName ? ('\nCreator: ' + d.creatorName) : '');
+          return t;
+        });
+
+      d3cola.on("tick", function () {
+        link.attr("x1", function (d) { return d.source.x; })
+            .attr("y1", function (d) { return d.source.y; })
+            .attr("x2", function (d) { return d.target.x; })
+            .attr("y2", function (d) { return d.target.y; });
+
+        guideline
+            .attr("x1", function (d) { return getAlignmentBounds(graph.nodes, d).x; })
+            .attr("y1", function (d) {
+              return d.bounds.y;
+            })
+            .attr("x2", function (d) { return d.bounds.X; })
+            .attr("y2", function (d) {
+              return d.bounds.Y;
+            });
+
+        node.attr("x", function (d) { return d.x - d.width / 2; })
+            .attr("y", function (d) { return d.y - d.height / 2; });
+
+        label.attr("x", function (d) { return d.x; })
+             .attr("y", function (d) {
+               var h = this.getBBox().height;
+               return d.y + h/4;
+             });
+      });
+    });
+  }
+
+  function getAlignmentBounds(vs, c) {
+    var os = c.offsets;
+    if (c.axis === 'x') {
+      var x = vs[os[0].node].x;
+      c.bounds = new cola.Rectangle(x, x,
+      //c.bounds = new cola.vpsc.Rectangle(x, x,
+        Math.min.apply(Math, os.map(function (o) { return vs[o.node].bounds.y - 20; })),
+        Math.max.apply(Math, os.map(function (o) { return vs[o.node].bounds.Y + 20; })));
+    } else {
+      var y = vs[os[0].node].y;
+      c.bounds = new cola.Rectangle(
+      //c.bounds = new cola.vpsc.Rectangle(
+        Math.min.apply(Math, os.map(function (o) { return vs[o.node].bounds.x - 20; })),
+        Math.max.apply(Math, os.map(function (o) { return vs[o.node].bounds.X + 20; })),
+        y, y);
+    }
+    return c.bounds;
+  }
+
+  $(document).ready(function() {
+    main();
+  });
+</script>
+
+<!--
+<style>
+
+.links line {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+</style>
+-->
+
+<!--<svg width="960" height="600"></svg>-->
+<!--<svg width="1080" height="700"></svg>-->
+
+<!--<script src="https://d3js.org/d3.v4.min.js"></script>-->
+<!--
+<script>
+var groupLock = true;
+var dependencyOrder = true;
+var dependencyGap = 30;
+
+$('#grouped').on('change', function(e) {
+  groupLock = e.target.checked;
+});
+$('#ordered').on('change', function(e) {
+  dependencyOrder = e.target.checked;
+});
+
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+function load(path) {
+d3.json(path, function(error, graph) {
+  if (error) throw error;
+//console.log('G', graph);
+
+  var groups = {};
+  var y = 0;
+  var dy = +svg.attr("height") / (graph.groups.length + 1);
+  graph.groups.forEach(function(g) {
+    groups[g.id] = g;
+    y += dy;
+    g.y = y;
+  });
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(graph.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("circle")
+    .data(graph.nodes)
+    .enter().append("circle")
+      .attr("r", function(d) { return d.merge ? 6 : 3; })
+      .style("stroke", "black")
+      .style("stroke-width", function(d) { return d.consensus ? 2 : 0; })
+      .style("fill", function(d) { return color(d.group); })
+      .on("click", function(d) {
+        d.highlight = !d.highlight;
+        if(d.highlight) {
+          d3.select(this).style("fill", "black");
+        } else {
+          d3.select(this).style("fill", function(d) { return color(d.group); })
+        }
+      })
+      .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+  node.append("title")
+      .text(function(d) { return d.id + '\n\n' + d.group; });
+
+  simulation
+      .nodes(graph.nodes)
+      .on("tick", ticked);
+
+  simulation.force("link")
+      .links(graph.links);
+
+  function ticked() {
+    node
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; })
+
+    link
+        .attr("x1", function(d) {
+          return d.source.x;
+        })
+        .attr("y1", function(d) {
+          if(groupLock) {
+            // groups on same horizontal line
+            var goal = groups[d.source.group].y;
+            if(d.merge) {
+              //goal += dy/2;
+            }
+            d.source.y += Math.sign(goal - d.source.y);
+            //d.source.y = goal;
+	  }
+	  return d.source.y;
+	})
+        .attr("x2", function(d) {
+          if(dependencyOrder) {
+	    // dependency order
+	    if((d.target.x - d.source.x) < dependencyGap) {
+	      d.target.x += 5;
+	    }
+          }
+/*
+if((d.target.x - d.source.x) < dependencyGap) {
+console.log('X!', d.source.id, d.target.id, d.source.x, d.target.x, d.target.x - d.source.x);
+}
+*/
+          return d.target.x;
+        })
+        .attr("y2", function(d) {
+          if(groupLock) {
+            // groups on same horizontal line
+            var goal = groups[d.target.group].y;
+            if(d.merge) {
+              //goal += dy/2;
+            }
+            d.target.y += Math.sign(goal - d.target.y);
+            //d.target.y = goal;
+          }
+/*
+if(Math.abs(groups[d.target.group].y - d.target.y) > 1) {
+console.log('Y!', d.target.id, groups[d.target.group].y, d.target.y);
+}
+*/
+          return d.target.y;
+        });
+  }
+});
+}
+
+function dragstarted(d) {
+  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+
+function dragended(d) {
+  if (!d3.event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+$('#dataload').click(function() {
+  svg.empty();
+  load($('#datapath')[0].value);
+});
+
+</script>
+-->
+</body>
+</html>
