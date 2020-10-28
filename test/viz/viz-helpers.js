@@ -22,6 +22,7 @@ function eventsToIds(events) {
  * @return event visualization JSON data
  */
 api.visualizationData = ({
+  /* eslint-disable-next-line no-unused-vars */
   nodeId, build, history, branches, proof, nodes
 }) => {
   const allXs = proof.consensus.map(p => p.x.eventHash);
@@ -75,7 +76,7 @@ api.visualizationData = ({
   });
 
   // process all events
-  debugger;
+  //debugger;
   history.events.forEach((e, i) => {
     data.nodes.push({
       //name: e.eventHash,
@@ -133,12 +134,13 @@ api.saveVisualizationDataD3 = async ({
   */
 
   await fs.writeFile(filename, JSON.stringify(data, null, 2));
-  console.log(`[viz] wrote d3: ${filename}`);
+  console.log(`[viz] wrote data for d3: ${filename}`);
 
   //debugger;
 };
 
 const {inspect} = require('util');
+/* eslint-disable-next-line no-unused-vars */
 function _dbg(msg, json) {
   console.log(msg, inspect(json, {depth: 16, colors: true}));
 }
@@ -150,7 +152,7 @@ function _dbg(msg, json) {
  *
  * @return event visualization JSON data
  */
-api.inputVisualizationData = ({
+api.testInputData = ({
   historyId,
   nodeId,
   history
@@ -224,7 +226,7 @@ api.inputVisualizationData = ({
   //});
   // FIXME: current 'input' tests have simple creator names
   // find all creator names
-  history.events.forEach((e, i) => {
+  history.events.forEach(e => {
     const creator = e.meta.continuity2017.creator;
     creatorNameMap[creator] = creator;
   });
@@ -307,13 +309,13 @@ api.inputVisualizationData = ({
   return data;
 };
 
-api.saveInputVisualizationDataD3 = async ({
+api.saveTestInputDataForD3 = async ({
   directory, tag, historyId, nodeId, history
 }) => {
   const filename = path.join(
     directory, `${tag}--${historyId}--${nodeId}--input.json`);
 
-  const data = api.inputVisualizationData({historyId, nodeId, history});
+  const data = api.testInputData({historyId, nodeId, history});
 
   /*
   console.log('BUILD', build);
@@ -326,7 +328,7 @@ api.saveInputVisualizationDataD3 = async ({
   */
 
   await fs.writeFile(filename, JSON.stringify(data, null, 2));
-  console.log(`[viz] wrote d3: ${filename}`);
+  console.log(`[viz] wrote test input data for d3: ${filename}`);
 
   //debugger;
 
@@ -335,8 +337,48 @@ api.saveInputVisualizationDataD3 = async ({
   };
 };
 
-api.saveInputVisualizationIndexesD3 = async ({
-  directory, tag, filenames
+api.saveTestOutputDataForTimeline = async ({
+  directory, tag, historyId, nodeId, history, consensus
+}) => {
+  const filename = path.join(
+    directory, `${tag}--${historyId}--${nodeId}--output.json`);
+
+  //const data = api.testInputVisualizationData({historyId, nodeId, history});
+  const data = {};
+
+  /*
+  console.log('BUILD', build);
+  console.log('HISTORY', history);
+  console.log('BRANCHES', branches);
+  console.log('PROOF', proof);
+  console.log('X', allXs);
+  console.log('Y', allYs);
+  console.log('YCandidates', yCandidates);
+  */
+
+  await fs.writeFile(filename, JSON.stringify(data, null, 2));
+  console.log(`[viz] wrote test input data for d3: ${filename}`);
+
+  //debugger;
+
+  return {
+    filename
+  };
+};
+
+/**
+ * Save a *index.js file with result data.
+ *
+ * Each info object:
+ *   "label": string, optional
+ *   "url": url/file with data, optional
+ *   "data": plain JSON data
+ *
+ * @param jsName - window[jsName] to use
+ * @param info - array of objects with result data
+ */
+api.saveIndexJS = async ({
+  directory, tag, jsName, info
 }) => {
   /*
   const filename = `./data/${tag}-input-index.json`;
@@ -347,11 +389,11 @@ api.saveInputVisualizationIndexesD3 = async ({
   }, null, 2));
   */
   const filename = path.join(
-    directory, `${tag}--input--index.js`);
+    directory, `${tag}--index.js`);
 
   await fs.writeFile(filename,
-    `window._vizInputFilenames = ${JSON.stringify(filenames, null, 2)};`);
-  console.log(`[viz] wrote input index: ${filename}`);
+    `window.${jsName} = ${JSON.stringify(info, null, 2)};`);
+  console.log(`[viz] wrote index JS: ${filename}`);
 };
 
 /**
@@ -360,6 +402,7 @@ api.saveInputVisualizationIndexesD3 = async ({
  * @return event visualization JSON data
  */
 api.visualizationDataTimeline = ({
+  /* eslint-disable-next-line no-unused-vars */
   nodeId, build, history, branches, proof, nodes
 }) => {
   const allXs = proof.consensus.map(p => p.x.eventHash);
@@ -386,8 +429,8 @@ api.visualizationDataTimeline = ({
   });
 
   // process all events
-  debugger;
-  history.events.forEach((e, i) => {
+  //debugger;
+  history.events.forEach(e => {
     data.nodes.push({
       id: e.eventHash,
       name: build.copyMergeHashesIndex[e.eventHash] || null,
@@ -426,7 +469,7 @@ api.saveVisualizationDataTimeline = async ({
   */
 
   await fs.writeFile(filename, JSON.stringify(data, null, 2));
-  console.log(`[viz] wrote tl: ${filename}`);
+  console.log(`[viz] wrote timeline data: ${filename}`);
 
   //debugger;
 };
