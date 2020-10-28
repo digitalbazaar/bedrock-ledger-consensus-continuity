@@ -20,43 +20,51 @@ figure1_4
   .mergeEvent({eventHash: 'yb', to: 'b', from: []})
   // pi_2 y2
   .mergeEvent({eventHash: 'y2', to: '2', from: []})
+  // pi_b 1st event
+  .mergeEvent({
+    eventHash: 'b-1',
+    to: 'b',
+    from: [
+      'b'
+    ]
+  })
   // pi_1 1st event
   .mergeEvent({
     eventHash: '1-1',
     to: '1',
     from: [
       '1',
-      {nodeId: 'b', hash: 'yb'}
+      {nodeId: 'b', hash: 'b-1'}
     ]
   })
   // pi_b forks and creates m1
-  .addNode('b1', {isElector: false})
   .mergeEvent({
     eventHash: 'b1-1',
-    forked: true,
-    to: 'b1',
+    to: 'b',
+    fork: true,
+    treeHash: 'b-1',
     from: [
-      'b'
+      {nodeId: 'b', hash: 'b-1'}
     ]
   })
   // pi_b forks and creates m2
-  .addNode('b2', {isElector: false})
   .mergeEvent({
     eventHash: 'b2-1',
-    forked: true,
-    to: 'b2',
+    to: 'b',
+    fork: true,
+    treeHash: 'b-1',
     from: [
-      'b'
+      {nodeId: 'b', hash: 'b-1'}
     ]
   })
   // pi_b forks and creates m3
-  .addNode('b3', {isElector: false})
   .mergeEvent({
     eventHash: 'b3-1',
-    forked: true,
-    to: 'b3',
+    to: 'b',
+    fork: true,
+    treeHash: 'b-1',
     from: [
-      'b'
+      {nodeId: 'b', hash: 'b-1'}
     ]
   })
   // pi_1 2nd event
@@ -65,7 +73,7 @@ figure1_4
     to: '1',
     from: [
       '1',
-      {nodeId: 'b1', hash: 'b1-1'}
+      {nodeId: 'b', hash: 'b1-1'}
     ]
   })
   // pi_1 3rd event
@@ -76,28 +84,34 @@ figure1_4
       '1'
     ]
   })
-  // pi_b1 2nd event
+  // pi_b fork-1 2nd event
   .mergeEvent({
     eventHash: 'b1-2',
-    to: 'b1',
+    to: 'b',
+    fork: true,
+    treeHash: 'b1-1',
     from: [
-      'b1'
+      {nodeId: 'b', hash: 'b1-1'}
     ]
   })
-  // pi_b2 2nd event
+  // pi_b fork-2 2nd event
   .mergeEvent({
     eventHash: 'b2-2',
-    to: 'b2',
+    to: 'b',
+    fork: true,
+    treeHash: 'b2-1',
     from: [
-      'b2'
+      {nodeId: 'b', hash: 'b2-1'}
     ]
   })
-  // pi_b3 2nd event
+  // pi_b fork-3 2nd event
   .mergeEvent({
     eventHash: 'b3-2',
-    to: 'b3',
+    to: 'b',
+    fork: true,
+    treeHash: 'b3-1',
     from: [
-      'b3'
+      {nodeId: 'b', hash: 'b3-1'}
     ]
   })
   // pi_2 1st event
@@ -106,7 +120,7 @@ figure1_4
     to: '2',
     from: [
       '2',
-      {nodeId: 'b3', hash: 'b3-2'}
+      {nodeId: 'b', hash: 'b3-2'}
     ]
   })
   // pi_2 2nd event
