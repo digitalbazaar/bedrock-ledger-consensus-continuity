@@ -337,14 +337,78 @@ api.saveTestInputDataForD3 = async ({
   };
 };
 
+/**
+ * Create event JSON data to be used with visualization tools.
+ *
+ * Outputs data for timeline UI.
+ *
+ * @param history - input to findConsensus
+ * @param consensus - output from findConsensus
+ *
+ * @return event visualization JSON data
+ */
+api.testOutputDataForTimeline = ({
+  /* eslint-disable-next-line no-unused-vars */
+  //nodeId, build, history, branches, proof, nodes
+  historyId, nodeId, nodes = [], history, consensus
+}) => {
+  //const allXs = proof.consensus.map(p => p.x.eventHash);
+  //const allYs = proof.consensus.map(p => p.y.eventHash);
+  //const yCandidates = proof.yCandidates.map(c => c.eventHash);
+
+  /*
+  console.log('BUILD', build);
+  console.log('HISTORY', history);
+  console.log('BRANCHES', branches);
+  console.log('PROOF', proof);
+  console.log('X', allXs);
+  console.log('Y', allYs);
+  console.log('YCandidates', yCandidates);
+  */
+
+  // viz data
+  const data = {nodes: []};
+  debugger;
+  //return data;
+
+  // map from creator to node name
+  const creatorNameMap = {};
+  Object.keys(nodes).forEach(name => {
+    creatorNameMap[nodes[name].creatorId] = name;
+  });
+
+  // process all events
+  //debugger;
+  history.events.forEach(e => {
+    data.nodes.push({
+      id: e.eventHash,
+      //name: build.copyMergeHashesIndex[e.eventHash] || null,
+      name: e.eventHash,
+      //eventHash: e.eventHash,
+      //isX: allXs.includes(e.eventHash),
+      //isY: allYs.includes(e.eventHash),
+      //isYCandidate: yCandidates.includes(e.eventHash),
+      //creatorName: creatorNameMap[e.meta.continuity2017.creator],
+      creatorName: e.meta.continuity2017.creator,
+      parents: eventsToIds(e._parents),
+      supporting: eventsToIds(e._supporting),
+      proposalEndorsement: eventsToIds(e._proposalEndorsement),
+      endorsesProposal: eventsToIds(e._endorsesProposal)
+    });
+  });
+
+  return data;
+};
+
 api.saveTestOutputDataForTimeline = async ({
-  directory, tag, historyId, nodeId, history, consensus
+  directory, tag, historyId, nodeId, nodes, history, consensus
 }) => {
   const filename = path.join(
     directory, `${tag}--${historyId}--${nodeId}--output.json`);
 
-  //const data = api.testInputVisualizationData({historyId, nodeId, history});
-  const data = {};
+  const data = api.testOutputDataForTimeline({
+    historyId, nodeId, nodes, history, consensus
+  });
 
   /*
   console.log('BUILD', build);
