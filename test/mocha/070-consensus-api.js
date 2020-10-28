@@ -12,7 +12,7 @@ const {consensusInput} = mockData;
 
 /* eslint-disable no-unused-vars */
 describe('Consensus API findConsensus', () => {
-  it.only('ledger history Figure 1.2', async () => {
+  it('ledger history Figure 1.2', async () => {
     let result, err;
     const input = consensusInput['fig-1-2'];
 
@@ -45,7 +45,7 @@ describe('Consensus API findConsensus', () => {
     } catch(e) {
       err = e;
     }
-
+    debugger;
     assertNoError(err);
     should.exist(result);
     result.consensus.should.equal(true);
@@ -72,7 +72,7 @@ describe('Consensus API findConsensus', () => {
     } catch(e) {
       err = e;
     }
-
+    debugger;
     assertNoError(err);
     should.exist(result);
     result.consensus.should.equal(false);
@@ -105,7 +105,7 @@ describe('Consensus API findConsensus', () => {
     should.exist(result);
     result.consensus.should.equal(false);
   });
-  it('ledger history Figure 1.7', async () => {
+  it.only('ledger history Figure 1.7', async () => {
     let result, err;
     const input = consensusInput['fig-1-7'];
 
@@ -114,7 +114,7 @@ describe('Consensus API findConsensus', () => {
     } catch(e) {
       err = e;
     }
-
+    debugger;
     assertNoError(err);
     should.exist(result);
     result.consensus.should.equal(false);
@@ -124,11 +124,13 @@ describe('Consensus API findConsensus', () => {
     const input = consensusInput['fig-1-8'];
 
     try {
+      debugger;
+
       result = consensusApi.findConsensus(input);
     } catch(e) {
       err = e;
     }
-
+    debugger;
     assertNoError(err);
     should.exist(result);
     result.consensus.should.equal(false);
