@@ -244,6 +244,7 @@ function load(dataUrl) {
   // load data via an ajax request. When the data is in, load the timeline
   $.ajax({
     url: dataUrl,
+    cache: false,
     success: function(data) {
       // hide the "loading..." message
       $('#loading').hide();
