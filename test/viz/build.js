@@ -10,14 +10,9 @@ const path = require('path');
 
 const {consensusInput} = require('../mocha/mock.data');
 
-const {
-  saveInputVisualizationDataD3,
-  saveInputVisualizationIndexesD3
-} = require('./viz-helpers.js');
+const vizHelpers = require('./viz-helpers.js');
 
 const outputDirectory = path.join(__dirname, 'data');
-// tag as 'ledger history' => 'lh'
-const outputTag = 'lh';
 
 async function main() {
   // save the known 'input' style histories.
@@ -28,31 +23,59 @@ async function main() {
   // make a data dir
   await fs.mkdir(outputDirectory, {recursive: true});
 
-  // track filenames for index
-  const filenames = [];
+  // track data for indexes
+  const inputInfo = [];
+  const outputInfo = [];
 
   for(const [id, data] of Object.entries(consensusInput)) {
     //console.log(`INPUT[${id}]', data);
-    const result = await saveInputVisualizationDataD3({
+    const inputResult = await vizHelpers.saveTestInputDataForD3({
       directory: outputDirectory,
-      tag: outputTag,
+      // ledger history for d3
+      tag: 'lh-d3',
       historyId: id,
       nodeId: data.ledgerNodeId,
       history: data.history
     });
     // record filenames
-    filenames.push(result);
+    inputInfo.push({
+      label: `history="${id}" node="${data.ledgerNodeId}"`,
+      url: path.join('data', path.basename(inputResult.filename))
+    });
 
     //console.log('INPUT', input);
-    //const result = consensusApi.findConsensus(input);
-    //console.log('RESULT', result);
+    const consensusResult = consensusApi.findConsensus(data);
+    console.log('RESULT', consensusResult);
+    const outputResult = await vizHelpers.saveTestOutputDataForTimeline({
+      directory: outputDirectory,
+      // ledger history for timeline
+      tag: 'lh-tl',
+      historyId: id,
+      nodeId: data.ledgerNodeId,
+      history: data.history,
+      consensus: consensusResult
+    });
+    // record filenames
+    outputInfo.push({
+      label: `history="${id}" node="${data.ledgerNodeId}"`,
+      url: path.join('data', path.basename(outputResult.filename))
+    });
   }
 
-  // save index
-  const result = await saveInputVisualizationIndexesD3({
+  // save test input index for D3
+  await vizHelpers.saveIndexJS({
     directory: outputDirectory,
-    tag: outputTag,
-    filenames: filenames.map(f => path.join('data', path.basename(f.filename)))
+    tag: 'lh-d3',
+    jsName: '_indexForD3',
+    info: inputInfo
+  });
+
+  // save test output index for Timeline
+  await vizHelpers.saveIndexJS({
+    directory: outputDirectory,
+    tag: 'lh-tl',
+    jsName: '_indexForTimeline',
+    info: outputInfo
   });
 }
 
