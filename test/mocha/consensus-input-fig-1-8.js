@@ -48,28 +48,29 @@ figure1_8
     from: [
       '2',
       {nodeId: 'b', hash: 'yb'},
-      {nodeId: '1', hash: 'y1'}
+      {nodeId: '1', hash: 'y1'},
+      {nodeId: '3', hash: 'y3'},
     ]
   })
   // pi_b forks (supports Y1)
-  .addNode('b1', {isElector: false})
   .mergeEvent({
     eventHash: 'b1-1',
-    forked: true,
-    to: 'b1',
+    to: 'b',
+    fork: true,
+    treeHash: 'b-1',
     from: [
-      'b'
+      {nodeId: 'b', hash: 'b-1'}
     ]
   })
   // pi_b forks (supports Y2)
-  .addNode('b2', {isElector: false})
   .mergeEvent({
     eventHash: 'b2-1',
-    forked: true,
-    to: 'b2',
+    to: 'b',
+    fork: true,
+    treeHash: 'b-1',
     from: [
-      'b',
-      {nodeId: '2', hash: '2-1'},
+      {nodeId: 'b', hash: 'b-1'},
+      {nodeId: '2', hash: '2-1'}
     ]
   })
   // pi_3 1st event (supports Y2)
@@ -87,16 +88,16 @@ figure1_8
     to: '2',
     from: [
       '2',
-      {nodeId: 'b1', hash: 'b1-1'},
+      {nodeId: 'b', hash: 'b1-1'},
       {nodeId: '1', hash: '1-1'},
     ]
   })
-  // b2 2nd event (supports Y2)
+  // pi_b fork-2 2nd event (supports Y2)
   .mergeEvent({
     eventHash: 'b2-2',
-    to: 'b2',
+    to: 'b',
     from: [
-      'b2'
+      {nodeId: 'b', hash: 'b2-1'}
     ]
   })
   // pi_1 2nd event (merge event m1, supports Y2, proposes Y2)
@@ -105,7 +106,7 @@ figure1_8
     to: '1',
     from: [
       '1',
-      {nodeId: 'b2', hash: 'b2-1'}
+      {nodeId: 'b', hash: 'b2-1'}
     ]
   })
   // pi_2 3rd event (merge event m3, supports Y1, proposes Y1)
@@ -114,7 +115,7 @@ figure1_8
     to: '2',
     from: [
       '2',
-      {nodeId: 'b2', hash: 'b2-2'}
+      {nodeId: 'b', hash: 'b2-2'}
     ]
   })
   // pi_2 4th event (supports Y2)

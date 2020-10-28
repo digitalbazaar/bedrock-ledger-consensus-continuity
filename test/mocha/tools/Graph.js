@@ -32,7 +32,7 @@ class Graph {
     return this;
   }
 
-  mergeEvent({eventHash, to, from = [], forked = false}) {
+  mergeEvent({eventHash, to, from = [], fork = false, treeHash} = {}) {
     if(typeof to === 'string') {
       to = {
         nodeId: to
@@ -65,15 +65,13 @@ class Graph {
       return this.eventMap[fromBranch.tail.value].eventHash;
     });
 
-    let treeHash = toBranch.tail ?
-      this.eventMap[toBranch.tail.value].eventHash : uuid();
+    if(!fork) {
+      treeHash = toBranch.tail ?
+        this.eventMap[toBranch.tail.value].eventHash : uuid();
+    }
 
     if(parents.length === 0) {
       parents.push(treeHash);
-    }
-
-    if(forked) {
-      treeHash = parents[0];
     }
 
     if(this.eventMap[eventHash]) {
