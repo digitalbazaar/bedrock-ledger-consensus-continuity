@@ -259,6 +259,11 @@ const input = {
   mode: 'first'
 };
 
+const display = {
+  title: 'Figure 1.7',
+  nodeOrder: ['1', 'h', 'b', 'b1', 'b2', 'alpha', '2']
+};
+
 input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
 
-module.exports = input;
+module.exports = {input, display};
