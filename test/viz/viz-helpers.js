@@ -348,8 +348,8 @@ api.saveTestInputDataForD3 = async ({
  * @return event visualization JSON data
  */
 api.testOutputDataForTimeline = ({
-  /* eslint-disable-next-line no-unused-vars */
   //nodeId, build, history, branches, proof, nodes
+  /* eslint-disable-next-line no-unused-vars */
   historyId, nodeId, nodes = [], history, consensus
 }) => {
   //const allXs = proof.consensus.map(p => p.x.eventHash);
