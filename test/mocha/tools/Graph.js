@@ -33,6 +33,9 @@ class Graph {
   }
 
   mergeEvent({eventHash, to, from = [], fork = false, treeHash} = {}) {
+    if(fork && !treeHash) {
+      throw new Error(`"treeHash" must be specified: ${eventHash}`);
+    }
     if(typeof to === 'string') {
       to = {
         nodeId: to

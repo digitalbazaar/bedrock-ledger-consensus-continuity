@@ -12,8 +12,7 @@ figure1_9
   .addNode('1')
   .addNode('b')
   .addNode('2')
-  .addNode('3')
-  .addNode('alpha');
+  .addNode('3');
 
 figure1_9
   // pi_1 y1
@@ -24,8 +23,6 @@ figure1_9
   .mergeEvent({eventHash: 'y2', to: '2', from: []})
   // pi_3 y3
   .mergeEvent({eventHash: 'y3', to: '3', from: []})
-  // pi_alpha yalpha
-  .mergeEvent({eventHash: 'yalpha', to: 'alpha', from: []})
   // pi_b 1st event (supports Y1)
   .mergeEvent({
     eventHash: 'b-1',
@@ -33,7 +30,6 @@ figure1_9
     from: [
       'b',
       {nodeId: '3', hash: 'y3'},
-      {nodeId: '1', hash: 'y1'},
       {nodeId: '2', hash: 'y2'}
     ]
   })
@@ -44,29 +40,28 @@ figure1_9
     from: [
       '3',
       {nodeId: 'b', hash: 'yb'},
-      {nodeId: '1', hash: 'y1'},
       {nodeId: '2', hash: 'y2'}
     ]
   })
   // pi_b forks (supports Y1)
-  .addNode('b1', {isElector: false})
   .mergeEvent({
     eventHash: 'b1-1',
-    forked: true,
-    to: 'b1',
+    to: 'b',
+    fork: true,
+    treeHash: 'b-1',
     from: [
-      'b'
+      {nodeId: 'b', hash: 'b-1'},
     ]
   })
   // pi_b forks (supports Y2)
-  .addNode('b2', {isElector: false})
   .mergeEvent({
     eventHash: 'b2-1',
-    forked: true,
-    to: 'b2',
+    to: 'b',
+    fork: true,
+    treeHash: 'b-1',
     from: [
-      'b',
-      {nodeId: 'alpha', hash: 'yalpha'}
+      {nodeId: 'b', hash: 'b-1'},
+      {nodeId: '1', hash: 'y1'},
     ]
   })
   // pi_1 1st event (supports Y2)
@@ -75,7 +70,7 @@ figure1_9
     to: '1',
     from: [
       '1',
-      {nodeId: 'b2', hash: 'b2-1'}
+      {nodeId: 'b', hash: 'b2-1'}
     ]
   })
   // pi_2 1st event (supports Y1, proposes Y1)
@@ -84,16 +79,16 @@ figure1_9
     to: '2',
     from: [
       '2',
-      {nodeId: 'b1', hash: 'b1-1'},
+      {nodeId: 'b', hash: 'b1-1'},
       {nodeId: '3', hash: '3-1'}
     ]
   })
   // b1 2nd event (supports Y1, proposes Y1)
   .mergeEvent({
     eventHash: 'b1-2',
-    to: 'b1',
+    to: 'b',
     from: [
-      'b1',
+      {nodeId: 'b', hash: 'b1-1'},
       {nodeId: '2', hash: '2-1'}
     ]
   })
@@ -112,7 +107,7 @@ figure1_9
     to: '2',
     from: [
       '2',
-      {nodeId: 'b1', hash: 'b1-2'},
+      {nodeId: 'b', hash: 'b1-2'},
       {nodeId: '3', hash: '3-2'}
     ]
   });
@@ -128,7 +123,7 @@ const input = {
 
 const display = {
   title: 'Figure 1.9',
-  nodeOrder: ['1', 'b', 'b1', '2', '3']
+  nodeOrder: ['1', 'b', '2', '3']
 };
 
 input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
