@@ -382,6 +382,12 @@ api.testOutputDataForTimeline = ({
   // process all events
   //debugger;
   history.events.forEach(e => {
+    const _votes = {};
+    if(e._votes) {
+      for(const [key, value] of Object.entries(e._votes)) {
+        _votes[key] = value.eventHash;
+      }
+    }
     data.nodes.push({
       id: e.eventHash,
       //name: build.copyMergeHashesIndex[e.eventHash] || null,
@@ -396,6 +402,8 @@ api.testOutputDataForTimeline = ({
       supporting: eventsToIds(e._supporting),
       proposalEndorsement: eventsToIds(e._proposalEndorsement),
       endorsesProposal: eventsToIds(e._endorsesProposal),
+      votes: _votes,
+      decision: !!e._decision,
       proposal: e._proposal ? [e._proposal.eventHash] : [],
       treeParent: e._treeParent ? [e._treeParent.eventHash] : []
     });
