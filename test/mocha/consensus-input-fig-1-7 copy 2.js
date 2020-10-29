@@ -32,6 +32,15 @@ figure1_7
   .mergeEvent({eventHash: 'ybeta', to: 'beta', from: []})
   // pi_gamma ygamma
   .mergeEvent({eventHash: 'ygamma', to: 'gamma', from: []})
+  // pi_h 0th "extra" history event
+  .mergeEvent({
+    eventHash: 'h-extra-0',
+    to: 'h',
+    from: [
+      'h',
+      {nodeId: 'alpha', hash: 'yalpha'},
+    ]
+  })
   // pi_h 1st "extra" history event
   .mergeEvent({
     eventHash: 'h-extra-1',
@@ -39,7 +48,8 @@ figure1_7
     from: [
       'h',
       {nodeId: '1', hash: 'y1'},
-      {nodeId: 'b', hash: 'yb'}
+      {nodeId: 'b', hash: 'yb'},
+      {nodeId: 'gamma', hash: 'ygamma'},
     ]
   })
   // pi_alpha 1st "extra" history event
@@ -91,6 +101,7 @@ figure1_7
     from: [
       'b',
       {nodeId: 'h', hash: 'yh'},
+      {nodeId: 'gamma', hash: 'ygamma'},
     ]
   })
   // pi_b forks (supports Y1)
@@ -267,7 +278,7 @@ figure1_7
     ]
   });
 
-const ledgerNodeId = '2';
+const ledgerNodeId = '1';
 const input = {
   ledgerNodeId,
   history: figure1_7.getHistory({nodeId: ledgerNodeId}),

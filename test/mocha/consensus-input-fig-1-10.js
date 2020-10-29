@@ -53,23 +53,23 @@ figure1_10
     ]
   })
   // pi_b forks (supports Y1)
-  .addNode('b1', {isElector: false})
   .mergeEvent({
     eventHash: 'b1-1',
-    forked: true,
-    to: 'b1',
+    fork: true,
+    to: 'b',
+    treeHash: 'b-1',
     from: [
-      'b'
+      {nodeId: 'b', hash: 'b-1'},
     ]
   })
   // pi_b forks (supports Y2)
-  .addNode('b2', {isElector: false})
   .mergeEvent({
     eventHash: 'b2-1',
-    forked: true,
-    to: 'b2',
+    fork: true,
+    to: 'b',
+    treeHash: 'b-1',
     from: [
-      'b',
+      {nodeId: 'b', hash: 'b-1'},
       {nodeId: '2', hash: '2-1'}
     ]
   })
@@ -79,7 +79,7 @@ figure1_10
     to: '1',
     from: [
       '1',
-      {nodeId: 'b2', hash: 'b2-1'}
+      {nodeId: 'b', hash: 'b2-1'}
     ]
   })
   // pi_2 2nd event (supports Y1)
@@ -88,7 +88,7 @@ figure1_10
     to: '2',
     from: [
       '2',
-      {nodeId: 'b1', hash: 'b1-1'},
+      {nodeId: 'b', hash: 'b1-1'},
       {nodeId: '3', hash: '3-1'}
     ]
   });
@@ -104,7 +104,7 @@ const input = {
 
 const display = {
   title: 'Figure 1.10',
-  nodeOrder: ['1', 'b', 'b1', '2', '3']
+  nodeOrder: ['1', 'b', '2', '3']
 };
 
 input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
