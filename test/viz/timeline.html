@@ -7,21 +7,36 @@
     body, html {
       font-family: sans-serif;
     }
-    .vis-item.default {
-      background-color: 'blue';
+    .vis-item.default, .legend span.default {
+      background-color: lightblue;
       color: black;
     }
-    .vis-item.supporting {
+    .vis-item.supporting, .legend span.supporting {
       background-color: red;
       color: white;
     }
-    .vis-item.proposalEndorsement {
+    .vis-item.proposalEndorsement, .legend span.proposalEndorsement {
       background-color: yellow;
       color: black;
     }
-    .vis-item.endorsesProposal {
+    .vis-item.endorsesProposal, .legend span.endorsesProposal {
       background-color: green;
       color: white;
+    }
+    .vis-item.proposal, .legend span.proposal {
+      background-color: lime;
+      color: black;
+    }
+    .vis-item.treeParent, .legend span.treeParent {
+      background-color: tan;
+      color: black;
+    }
+    .legend {
+      padding: 0.25em;
+    }
+    .legend > span {
+      border: 1px solid black;
+      padding: 0.25em;
     }
   </style>
 
@@ -54,6 +69,16 @@
   <input type="button" id="zoomOut" value="-" />
   <input type="button" id="moveLeft" value="<<" />
   <input type="button" id="moveRight" value=">>" />
+</div>
+<hr>
+<div class="legend">
+  Legend:
+  <span class="default">default</span>
+  <span class="supporting">supporting</span>
+  <span class="proposalEndorsement">proposal endorsement</span>
+  <span class="endorsesProposal">endorses proposal</span>
+  <span class="proposal">proposal</span>
+  <!--<span class="treeParent">tree parent</span>-->
 </div>
 <hr>
 
@@ -235,28 +260,40 @@ function setupTimeline(data) {
   timeline.on('itemover', ({item, event}) => {
     //console.log('OVER', item);
     const e = idMap[item];
-    for(const s of e.supporting) {
-      items.update({id: s, className: 'supporting'});
+    for(const id of e.supporting) {
+      items.update({id, className: 'supporting'});
     }
-    for(const s of e.proposalEndorsement) {
-      items.update({id: s, className: 'proposalEndorsement'});
+    for(const id of e.proposalEndorsement) {
+      items.update({id, className: 'proposalEndorsement'});
     }
-    for(const s of e.endorsesProposal) {
-      items.update({id: s, className: 'endorsesProposal'});
+    for(const id of e.endorsesProposal) {
+      items.update({id, className: 'endorsesProposal'});
     }
+    for(const id of e.proposal) {
+      items.update({id, className: 'proposal'});
+    }
+    //for(const id of e.treeParent) {
+    //  items.update({id, className: 'treeParent'});
+    //}
   });
   timeline.on('itemout', ({item, event}) => {
     //console.log('OUT', item);
     const e = idMap[item];
-    for(const s of e.supporting) {
-      items.update({id: s, className: 'default'});
+    for(const id of e.supporting) {
+      items.update({id, className: 'default'});
     }
-    for(const s of e.proposalEndorsement) {
-      items.update({id: s, className: 'default'});
+    for(const id of e.proposalEndorsement) {
+      items.update({id, className: 'default'});
     }
-    for(const s of e.endorsesProposal) {
-      items.update({id: s, className: 'default'});
+    for(const id of e.endorsesProposal) {
+      items.update({id, className: 'default'});
     }
+    for(const id of e.proposal) {
+      items.update({id, className: 'default'});
+    }
+    //for(const id of e.treeParent) {
+    //  items.update({id, className: 'default'});
+    //}
   });
 }
 
