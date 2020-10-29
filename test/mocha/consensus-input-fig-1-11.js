@@ -5,16 +5,16 @@
 
 const Graph = require('./tools/Graph');
 
-const figure1_11 = new Graph();
+const graph = new Graph();
 
 // create initial nodes
-figure1_11
+graph
   .addNode('1')
   .addNode('b')
   .addNode('2')
   .addNode('3');
 
-figure1_11
+graph
   // pi_1 y1
   .mergeEvent({eventHash: 'y1', to: '1', from: []})
   // pi_b yb
@@ -29,8 +29,8 @@ figure1_11
     to: '1',
     from: [
       '1',
-      {nodeId: 'b', hash: 'yb'},
-      {nodeId: '2', hash: 'y2'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: '2', eventHash: 'y2'},
     ]
   })
   // pi_b 1st event (supports Y1)
@@ -39,8 +39,8 @@ figure1_11
     to: 'b',
     from: [
       'b',
-      {nodeId: '1', hash: 'y1'},
-      {nodeId: '2', hash: 'y2'},
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: '2', eventHash: 'y2'},
     ]
   })
   // pi_2 1st event (supports Y1)
@@ -49,8 +49,8 @@ figure1_11
     to: '2',
     from: [
       '2',
-      {nodeId: 'b', hash: 'yb'},
-      {nodeId: '1', hash: 'y1'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: '1', eventHash: 'y1'},
     ]
   })
   // pi_3 1st event (supports Y2)
@@ -59,9 +59,9 @@ figure1_11
     to: '3',
     from: [
       '3',
-      {nodeId: '2', hash: 'y2'},
-      {nodeId: 'b', hash: 'yb'},
-      {nodeId: '1', hash: 'y1'},
+      {nodeId: '2', eventHash: 'y2'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: '1', eventHash: 'y1'},
     ]
   })
   // pi_b forks (supports Y1)
@@ -71,7 +71,7 @@ figure1_11
     fork: true,
     treeHash: 'b-1',
     from: [
-      {nodeId: 'b', hash: 'b-1'},
+      {nodeId: 'b', eventHash: 'b-1'},
     ]
   })
   // pi_b forks (supports Y2)
@@ -81,8 +81,8 @@ figure1_11
     fork: true,
     treeHash: 'b-1',
     from: [
-      {nodeId: 'b', hash: 'b-1'},
-      {nodeId: '3', hash: '3-1'}
+      {nodeId: 'b', eventHash: 'b-1'},
+      {nodeId: '3', eventHash: '3-1'}
     ]
   })
   // pi_2 2nd event (supports Y1, proposes Y1)
@@ -91,9 +91,9 @@ figure1_11
     to: '2',
     from: [
       '2',
-      {nodeId: '1', hash: '1-1'},
-      {nodeId: 'b', hash: 'b-1'},
-      {nodeId: '3', hash: '3-1'},
+      {nodeId: '1', eventHash: '1-1'},
+      {nodeId: 'b', eventHash: 'b-1'},
+      {nodeId: '3', eventHash: '3-1'},
     ]
   })
   // pi_1 2nd event (supports Y2)
@@ -102,8 +102,8 @@ figure1_11
     to: '1',
     from: [
       '1',
-      {nodeId: 'b', hash: 'b2-1'},
-      {nodeId: '2', hash: '2-2'}
+      {nodeId: 'b', eventHash: 'b2-1'},
+      {nodeId: '2', eventHash: '2-2'}
     ]
   })
   // pi_3 2nd event (supports Y1, proposes Y1)
@@ -112,7 +112,7 @@ figure1_11
     to: '3',
     from: [
       '3',
-      {nodeId: '2', hash: '2-2'}
+      {nodeId: '2', eventHash: '2-2'}
     ]
   })
   // pi_2 3rd event (supports Y1, proposes Y1, endorses Y1)
@@ -121,16 +121,16 @@ figure1_11
     to: '2',
     from: [
       '2',
-      {nodeId: '1', hash: '1-2'},
-      {nodeId: '3', hash: '3-2'}
+      {nodeId: '1', eventHash: '1-2'},
+      {nodeId: '3', eventHash: '3-2'}
     ]
   });
 
 const ledgerNodeId = '2';
 const input = {
   ledgerNodeId,
-  history: figure1_11.getHistory({nodeId: ledgerNodeId}),
-  electors: figure1_11.getElectors(),
+  history: graph.getHistory({nodeId: ledgerNodeId}),
+  electors: graph.getElectors(),
   recoveryElectors: [],
   mode: 'first'
 };
@@ -142,4 +142,4 @@ const display = {
 
 input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
 
-module.exports = {input, display};
+module.exports = {input, display, graph};
