@@ -5,10 +5,10 @@
 
 const Graph = require('./tools/Graph');
 
-const figure1_5 = new Graph();
+const graph = new Graph();
 
 // create initial nodes
-figure1_5
+graph
   .addNode('1')
   .addNode('2')
   .addNode('3')
@@ -16,7 +16,7 @@ figure1_5
   .addNode('4')
   .addNode('5');
 
-figure1_5
+graph
   // pi_1 y1
   .mergeEvent({eventHash: 'y1', to: '1', from: []})
   // pi_2 y2
@@ -29,12 +29,62 @@ figure1_5
   .mergeEvent({eventHash: 'y4', to: '4', from: []})
   // pi_5 y5
   .mergeEvent({eventHash: 'y5', to: '5', from: []})
+  // pi_1 1st "extra" history event
+  .mergeEvent({
+    eventHash: '1-extra-1',
+    to: '1',
+    from: [
+      '1',
+      {nodeId: '2', eventHash: 'y2'},
+      {nodeId: '3', eventHash: 'y3'},
+      {nodeId: 'pi', eventHash: 'ypi'},
+      {nodeId: '4', eventHash: 'y4'},
+      {nodeId: '5', eventHash: 'y5'},
+    ]
+  })
+  // pi_2 1st "extra" history event
+  .mergeEvent({
+    eventHash: '2-extra-1',
+    to: '2',
+    from: [
+      '2',
+      {nodeId: '1', eventHash: '1-extra-1'}
+    ]
+  })
+  // pi_3 1st "extra" history event
+  .mergeEvent({
+    eventHash: '3-extra-1',
+    to: '3',
+    from: [
+      '3',
+      {nodeId: '2', eventHash: '2-extra-1'}
+    ]
+  })
+  // pi_4 1st "extra" history event
+  .mergeEvent({
+    eventHash: '4-extra-1',
+    to: '4',
+    from: [
+      '4',
+      {nodeId: '3', eventHash: '3-extra-1'}
+    ]
+  })
+  // pi_5 1st "extra" history event
+  .mergeEvent({
+    eventHash: '5-extra-1',
+    to: '5',
+    from: [
+      '5',
+      {nodeId: '4', eventHash: '4-extra-1'}
+    ]
+  })
   // pi 1st event (merge event m on node pi)
   .mergeEvent({
     eventHash: 'pi-1',
     to: 'pi',
     from: [
-      'pi'
+      'pi',
+      {nodeId: '5', eventHash: '5-extra-1'}
     ]
   })
   // pi_1 1st event
@@ -43,7 +93,7 @@ figure1_5
     to: '1',
     from: [
       '1',
-      {nodeId: 'pi', hash: 'pi-1'}
+      {nodeId: 'pi', eventHash: 'pi-1'}
     ]
   })
   // pi_3 1st event
@@ -52,7 +102,7 @@ figure1_5
     to: '3',
     from: [
       '3',
-      {nodeId: 'pi', hash: 'pi-1'}
+      {nodeId: 'pi', eventHash: 'pi-1'}
     ]
   })
   // pi_2 1st event
@@ -61,7 +111,7 @@ figure1_5
     to: '2',
     from: [
       '2',
-      {nodeId: '3', hash: '3-1'}
+      {nodeId: '3', eventHash: '3-1'}
     ]
   })
   // pi_4 1st event
@@ -70,7 +120,7 @@ figure1_5
     to: '4',
     from: [
       '4',
-      {nodeId: 'pi', hash: 'pi-1'}
+      {nodeId: 'pi', eventHash: 'pi-1'}
     ]
   })
   // pi_5 1st event
@@ -79,7 +129,7 @@ figure1_5
     to: '5',
     from: [
       '5',
-      {nodeId: 'pi', hash: 'pi-1'}
+      {nodeId: 'pi', eventHash: 'pi-1'}
     ]
   })
   // pi 2nd event (pi's endorsement e_m of merge event m on node pi)
@@ -88,18 +138,18 @@ figure1_5
     to: 'pi',
     from: [
       'pi',
-      {nodeId: '1', hash: '1-1'},
-      {nodeId: '2', hash: '2-1'},
-      {nodeId: '4', hash: '4-1'},
-      {nodeId: '5', hash: '5-1'}
+      {nodeId: '1', eventHash: '1-1'},
+      {nodeId: '2', eventHash: '2-1'},
+      {nodeId: '4', eventHash: '4-1'},
+      {nodeId: '5', eventHash: '5-1'}
     ]
   });
 
 const ledgerNodeId = 'pi';
 const input = {
   ledgerNodeId,
-  history: figure1_5.getHistory({nodeId: ledgerNodeId}),
-  electors: figure1_5.getElectors(),
+  history: graph.getHistory({nodeId: ledgerNodeId}),
+  electors: graph.getElectors(),
   recoveryElectors: [],
   mode: 'first'
 };
@@ -111,4 +161,4 @@ const display = {
 
 input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
 
-module.exports = {input, display};
+module.exports = {input, display, graph};

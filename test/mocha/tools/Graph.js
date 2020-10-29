@@ -58,12 +58,12 @@ class Graph {
 
     const toBranch = this._getBranch({nodeId: to.nodeId});
 
-    const parents = from.map(({nodeId, hash}) => {
-      // return specified hash
-      if(hash) {
-        return hash;
+    const parents = from.map(({nodeId, eventHash}) => {
+      // return specified eventHash
+      if(eventHash) {
+        return eventHash;
       }
-      // return latest hash on branch
+      // return latest eventHash on branch
       const fromBranch = this._getBranch({nodeId});
       return this.eventMap[fromBranch.tail.value].eventHash;
     });
