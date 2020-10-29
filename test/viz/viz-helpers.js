@@ -395,7 +395,9 @@ api.testOutputDataForTimeline = ({
       parents: eventsToIds(e._parents),
       supporting: eventsToIds(e._supporting),
       proposalEndorsement: eventsToIds(e._proposalEndorsement),
-      endorsesProposal: eventsToIds(e._endorsesProposal)
+      endorsesProposal: eventsToIds(e._endorsesProposal),
+      proposal: e._proposal ? [e._proposal.eventHash] : [],
+      treeParent: e._treeParent ? [e._treeParent.eventHash] : []
     });
   });
 
