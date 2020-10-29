@@ -5,10 +5,10 @@
 
 const Graph = require('./tools/Graph');
 
-const figure1_7 = new Graph();
+const graph = new Graph();
 
 // create initial nodes
-figure1_7
+graph
   .addNode('1')
   .addNode('h')
   .addNode('b')
@@ -17,7 +17,7 @@ figure1_7
   .addNode('beta')
   .addNode('gamma');
 
-figure1_7
+graph
   // pi_1 y1
   .mergeEvent({eventHash: 'y1', to: '1', from: []})
   // pi_h yh
@@ -38,8 +38,8 @@ figure1_7
     to: 'h',
     from: [
       'h',
-      {nodeId: '1', hash: 'y1'},
-      {nodeId: 'b', hash: 'yb'}
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: 'b', eventHash: 'yb'}
     ]
   })
   // pi_alpha 1st "extra" history event
@@ -48,12 +48,12 @@ figure1_7
     to: 'alpha',
     from: [
       'alpha',
-      {nodeId: '1', hash: 'y1'},
-      {nodeId: '2', hash: 'y2'},
-      {nodeId: 'b', hash: 'yb'},
-      {nodeId: 'h', hash: 'yh'},
-      {nodeId: 'beta', hash: 'ybeta'},
-      {nodeId: 'gamma', hash: 'ygamma'},
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: '2', eventHash: 'y2'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: 'h', eventHash: 'yh'},
+      {nodeId: 'beta', eventHash: 'ybeta'},
+      {nodeId: 'gamma', eventHash: 'ygamma'},
     ]
   })
   // pi_beta 1st "extra" history event
@@ -62,12 +62,12 @@ figure1_7
     to: 'beta',
     from: [
       'beta',
-      {nodeId: '1', hash: 'y1'},
-      {nodeId: '2', hash: 'y2'},
-      {nodeId: 'b', hash: 'yb'},
-      {nodeId: 'h', hash: 'yh'},
-      {nodeId: 'alpha', hash: 'yalpha'},
-      {nodeId: 'gamma', hash: 'ygamma'},
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: '2', eventHash: 'y2'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: 'h', eventHash: 'yh'},
+      {nodeId: 'alpha', eventHash: 'yalpha'},
+      {nodeId: 'gamma', eventHash: 'ygamma'},
     ]
   })
   // pi_gamma "extra" history 1st event
@@ -76,12 +76,12 @@ figure1_7
     to: 'gamma',
     from: [
       'gamma',
-      {nodeId: '1', hash: 'y1'},
-      {nodeId: '2', hash: 'y2'},
-      {nodeId: 'b', hash: 'yb'},
-      {nodeId: 'h', hash: 'yh'},
-      {nodeId: 'alpha', hash: 'yalpha'},
-      {nodeId: 'beta', hash: 'ybeta'},
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: '2', eventHash: 'y2'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: 'h', eventHash: 'yh'},
+      {nodeId: 'alpha', eventHash: 'yalpha'},
+      {nodeId: 'beta', eventHash: 'ybeta'},
     ]
   })
   // pi_b 1st event
@@ -90,7 +90,7 @@ figure1_7
     to: 'b',
     from: [
       'b',
-      {nodeId: 'h', hash: 'yh'},
+      {nodeId: 'h', eventHash: 'yh'},
     ]
   })
   // pi_b forks (supports Y1)
@@ -100,8 +100,8 @@ figure1_7
     fork: true,
     treeHash: 'b-1',
     from: [
-      {nodeId: 'b', hash: 'b-1'},
-      {nodeId: '1', hash: 'y1'},
+      {nodeId: 'b', eventHash: 'b-1'},
+      {nodeId: '1', eventHash: 'y1'},
     ]
   })
   // pi_b forks (supports Y2)
@@ -111,12 +111,12 @@ figure1_7
     fork: true,
     treeHash: 'b-1',
     from: [
-      {nodeId: 'b', hash: 'b-1'},
-      {nodeId: '1', hash: 'y1'},
-      {nodeId: '2', hash: 'y2'},
-      {nodeId: 'alpha', hash: 'alpha-extra-1'},
-      {nodeId: 'beta', hash: 'beta-extra-1'},
-      {nodeId: 'gamma', hash: 'gamma-extra-1'},
+      {nodeId: 'b', eventHash: 'b-1'},
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: '2', eventHash: 'y2'},
+      {nodeId: 'alpha', eventHash: 'alpha-extra-1'},
+      {nodeId: 'beta', eventHash: 'beta-extra-1'},
+      {nodeId: 'gamma', eventHash: 'gamma-extra-1'},
     ]
   })
   // pi_b fork-1 2nd event
@@ -126,7 +126,7 @@ figure1_7
     fork: true,
     treeHash: 'b1-1',
     from: [
-      {nodeId: 'b', hash: 'b1-1'}
+      {nodeId: 'b', eventHash: 'b1-1'}
     ]
   })
   // pi_b fork-2 2nd event
@@ -136,7 +136,7 @@ figure1_7
     fork: true,
     treeHash: 'b2-1',
     from: [
-      {nodeId: 'b', hash: 'b2-1'}
+      {nodeId: 'b', eventHash: 'b2-1'}
     ]
   })
   // pi_1 1st event (merge event m, supports Y1)
@@ -145,7 +145,7 @@ figure1_7
     to: '1',
     from: [
       '1',
-      {nodeId: 'b', hash: 'b1-2'}
+      {nodeId: 'b', eventHash: 'b1-2'}
     ]
   })
   // pi_h 1st event (merge event m1)
@@ -154,7 +154,7 @@ figure1_7
     to: 'h',
     from: [
       'h',
-      {nodeId: '1', hash: '1-1'},
+      {nodeId: '1', eventHash: '1-1'},
     ]
   })
   // pi_b fork-1 "extra" history 1st event
@@ -164,8 +164,8 @@ figure1_7
     fork: true,
     treeHash: 'b1-2',
     from: [
-      {nodeId: 'b', hash: 'b1-2'},
-      {nodeId: '1', hash: '1-1'},
+      {nodeId: 'b', eventHash: 'b1-2'},
+      {nodeId: '1', eventHash: '1-1'},
     ]
   })
   // pi_1 "extra" history 1st event
@@ -174,7 +174,7 @@ figure1_7
     to: '1',
     from: [
       '1',
-      {nodeId: 'b', hash: 'b1-extra-1'}
+      {nodeId: 'b', eventHash: 'b1-extra-1'}
     ]
   })
   // pi_1 2nd event (merge event m1, supports Y1, endorsement of m)
@@ -183,7 +183,7 @@ figure1_7
     to: '1',
     from: [
       '1',
-      {nodeId: 'h', hash: 'h-1'}
+      {nodeId: 'h', eventHash: 'h-1'}
     ]
   })
   // pi_2 1st event (merge event m', supports Y2)
@@ -192,8 +192,8 @@ figure1_7
     to: '2',
     from: [
       '2',
-      {nodeId: 'h', hash: 'h-extra-1'},
-      {nodeId: 'b', hash: 'b2-2'}
+      {nodeId: 'h', eventHash: 'h-extra-1'},
+      {nodeId: 'b', eventHash: 'b2-2'}
     ]
   })
   // pi_alpha "extra" history 2nd event
@@ -202,7 +202,7 @@ figure1_7
     to: 'alpha',
     from: [
       'alpha',
-      {nodeId: '2', hash: '2-1'}
+      {nodeId: '2', eventHash: '2-1'}
     ]
   })
   // pi_beta "extra" history 2nd event
@@ -211,7 +211,7 @@ figure1_7
     to: 'beta',
     from: [
       'beta',
-      {nodeId: 'alpha', hash: 'alpha-extra-2'}
+      {nodeId: 'alpha', eventHash: 'alpha-extra-2'}
     ]
   })
   // pi_gamma "extra" history 2nd event
@@ -220,7 +220,7 @@ figure1_7
     to: 'gamma',
     from: [
       'gamma',
-      {nodeId: 'beta', hash: 'beta-extra-2'}
+      {nodeId: 'beta', eventHash: 'beta-extra-2'}
     ]
   })
   // pi_h 2nd event (merge event m2)
@@ -229,7 +229,7 @@ figure1_7
     to: 'h',
     from: [
       'h',
-      {nodeId: '2', hash: '2-1'}
+      {nodeId: '2', eventHash: '2-1'}
     ]
   })
   // pi_b fork-2 "extra" history 1st event
@@ -239,8 +239,8 @@ figure1_7
     fork: true,
     treeHash: 'b2-2',
     from: [
-      {nodeId: 'b', hash: 'b2-2'},
-      {nodeId: '2', hash: '2-1'}
+      {nodeId: 'b', eventHash: 'b2-2'},
+      {nodeId: '2', eventHash: '2-1'}
     ]
   })
   // pi_2 "extra" history 1st event
@@ -249,10 +249,10 @@ figure1_7
     to: '2',
     from: [
       '2',
-      {nodeId: 'b', hash: 'b2-extra-1'},
-      // {nodeId: 'alpha', hash: 'alpha-extra-2'},
-      // {nodeId: 'gamma', hash: 'gamma-extra-2'},
-      // {nodeId: 'gamma', hash: 'gamma-extra-2'},
+      {nodeId: 'b', eventHash: 'b2-extra-1'},
+      // {nodeId: 'alpha', eventHash: 'alpha-extra-2'},
+      // {nodeId: 'gamma', eventHash: 'gamma-extra-2'},
+      // {nodeId: 'gamma', eventHash: 'gamma-extra-2'},
     ]
   })
   // pi_2 2nd event (merge event m', supports Y2, endorsement of m')
@@ -261,8 +261,8 @@ figure1_7
     to: '2',
     from: [
       '2',
-      {nodeId: 'h', hash: 'h-2'},
-      {nodeId: 'beta', hash: 'beta-extra-2'},
+      {nodeId: 'h', eventHash: 'h-2'},
+      {nodeId: 'beta', eventHash: 'beta-extra-2'},
 
     ]
   });
@@ -270,8 +270,8 @@ figure1_7
 const ledgerNodeId = '2';
 const input = {
   ledgerNodeId,
-  history: figure1_7.getHistory({nodeId: ledgerNodeId}),
-  electors: figure1_7.getElectors(),
+  history: graph.getHistory({nodeId: ledgerNodeId}),
+  electors: graph.getElectors(),
   recoveryElectors: [],
   mode: 'first'
 };
@@ -283,4 +283,4 @@ const display = {
 
 input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
 
-module.exports = {input, display};
+module.exports = {input, display, graph};
