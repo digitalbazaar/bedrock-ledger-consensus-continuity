@@ -7,29 +7,45 @@
     body, html {
       font-family: sans-serif;
     }
-    .vis-item.default, .legend span.default {
-      background-color: lightblue;
-      color: black;
+    .vis-item.vis-box.default, .legend span.default {
+      border: thick solid lightgray;
     }
-    .vis-item.supporting, .legend span.supporting {
+    .vis-item.vis-box.supporting, .legend span.supporting {
       background-color: red;
       color: white;
+      border: thick solid red;
     }
-    .vis-item.proposalEndorsement, .legend span.proposalEndorsement {
+    .vis-item.vis-box.proposalEndorsement, .legend span.proposalEndorsement {
       background-color: yellow;
       color: black;
+      border: thick solid yellow;
     }
-    .vis-item.endorsesProposal, .legend span.endorsesProposal {
+    .vis-item.vis-box.endorsesProposal, .legend span.endorsesProposal {
       background-color: green;
       color: white;
+      border: thick solid green;
     }
-    .vis-item.proposal, .legend span.proposal {
+    .vis-item.vis-box.proposal, .legend span.proposal {
       background-color: lime;
       color: black;
+      border: thick solid lime;
     }
-    .vis-item.treeParent, .legend span.treeParent {
+    .vis-item.vis-box.treeParent, .legend span.treeParent {
       background-color: tan;
       color: black;
+      border: thick solid tan;
+    }
+    .vis-item.vis-box.parent, .legend span.parent {
+      border: thick solid black;
+    }
+    .vis-item.vis-box.parentplus, .legend span.parentplus {
+      border: thick solid gray;
+    }
+    .vis-item.vis-box.child, .legend span.child {
+      border: thick solid darkmagenta;
+    }
+    .vis-item.vis-box.childplus, .legend span.childplus {
+      border: thick solid magenta;
     }
     .legend {
       padding: 0.25em;
@@ -64,6 +80,7 @@
 </div>
 <hr>
 <div class="menu">
+  View:
   <input type="button" id="zoomAll" value="[ ]" />
   <input type="button" id="zoomIn" value="+" />
   <input type="button" id="zoomOut" value="-" />
@@ -79,6 +96,10 @@
   <span class="endorsesProposal">endorses proposal</span>
   <span class="proposal">proposal</span>
   <!--<span class="treeParent">tree parent</span>-->
+  <span class="parent">parent</span>
+  <span class="parentplus">parent+</span>
+  <span class="child">child</span>
+  <span class="childplus">child+</span>
 </div>
 <hr>
 
@@ -256,6 +277,48 @@ function setupTimeline(data) {
     }
   });
 
+  function _parents(id) {
+    return idMap[id].parents;
+  }
+
+  function __parents(id, parents) {
+    _parents(id).forEach(p => {
+      parents.add(p);
+      __parents(p, parents);
+    });
+  }
+
+  // parents parents, etc
+  function _parentsplus(id) {
+    const parentsplus = new Set();
+    __parents(id, parentsplus);
+    // remove direct parents
+    _parents(id).forEach(p => parentsplus.delete(p));
+    return [...parentsplus];
+  }
+
+  function _children(id) {
+    return data.nodes
+      .filter(node => node.parents.includes(id))
+      .map(node => node.id);
+  }
+
+  function __children(id, children) {
+    _children(id).forEach(c => {
+      children.add(c);
+      __children(c, children);
+    });
+  }
+
+  // childrens children, etc
+  function _childrenplus(id) {
+    const childrenplus = new Set();
+    __children(id, childrenplus);
+    // remove direct children
+    _children(id).forEach(c => childrenplus.delete(c));
+    return [...childrenplus];
+  }
+
   // hover
   timeline.on('itemover', ({item, event}) => {
     //console.log('OVER', item);
@@ -275,6 +338,24 @@ function setupTimeline(data) {
     //for(const id of e.treeParent) {
     //  items.update({id, className: 'treeParent'});
     //}
+
+    // below are done last to add to above classes
+    for(const id of _parents(item)) {
+      const _class = items.get(id).className;
+      items.update({id, className: `${_class} parent`});
+    }
+    for(const id of _parentsplus(item)) {
+      const _class = items.get(id).className;
+      items.update({id, className: `${_class} parentplus`});
+    }
+    for(const id of _children(item)) {
+      const _class = items.get(id).className;
+      items.update({id, className: `${_class} child`});
+    }
+    for(const id of _childrenplus(item)) {
+      const _class = items.get(id).className;
+      items.update({id, className: `${_class} childplus`});
+    }
   });
   timeline.on('itemout', ({item, event}) => {
     //console.log('OUT', item);
@@ -294,6 +375,18 @@ function setupTimeline(data) {
     //for(const id of e.treeParent) {
     //  items.update({id, className: 'default'});
     //}
+    for(const id of _parents(item)) {
+      items.update({id, className: 'default'});
+    }
+    for(const id of _parentsplus(item)) {
+      items.update({id, className: 'default'});
+    }
+    for(const id of _children(item)) {
+      items.update({id, className: 'default'});
+    }
+    for(const id of _childrenplus(item)) {
+      items.update({id, className: 'default'});
+    }
   });
 }
 
