@@ -157,7 +157,7 @@ api.testInputData = ({
   nodeId,
   history
 }) => {
-  console.log('INPUT VIZ DATA', {historyId, nodeId});
+  console.log('[viz] generating viz data', {historyId, nodeId});
   //_dbg('HISTORY', history);
   //const allXs = proof.consensus.map(p => p.x.eventHash);
   //const allYs = proof.consensus.map(p => p.y.eventHash);
@@ -433,7 +433,7 @@ api.saveTestOutputDataForTimeline = async ({
   */
 
   await fs.writeFile(filename, JSON.stringify(data, null, 2));
-  console.log(`[viz] wrote test input data for d3: ${filename}`);
+  console.log(`[viz] wrote test input data for timeline: ${filename}`);
 
   //debugger;
 
