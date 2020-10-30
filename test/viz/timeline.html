@@ -299,6 +299,28 @@ function setupTimeline(data) {
     },
     start: t(0),
     end: t(maxTimeIndex),
+    tooltip: {
+      template: function(originalItemData, parsedItemData) {
+        const node = idMap[originalItemData.id];
+        let tips = [];
+        if(node.decision) {
+          tips.push(`Decision: <span style="color: green">&check;</span>`);
+        } else {
+          tips.push(`Decision: <span style="color: red">&cross;</span>`);
+        }
+        // key ids for forks (vote map has false)
+        const forks = Object.entries(node.votes)
+          .filter(([k, v]) => v === false)
+          .map(([k, v]) => k);
+        if(forks.length > 0) {
+          const ftext = forks.map(v => `"${v}"`).join(', ');
+          tips.push(`${forks.lenth > 1 ? 'Forks' : 'Fork'} detected: ${ftext}`);
+        }
+        if(tips.length > 0) {
+          return tips.join('<br>');
+        }
+      }
+    }
   };
 
   // Create a Timeline
