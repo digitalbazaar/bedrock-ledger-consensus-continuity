@@ -385,7 +385,7 @@ api.testOutputDataForTimeline = ({
     const _votes = {};
     if(e._votes) {
       for(const [key, value] of Object.entries(e._votes)) {
-        _votes[key] = value.eventHash;
+        _votes[key] = typeof value === 'object' ? value.eventHash : value;
       }
     }
     data.nodes.push({
