@@ -12,7 +12,7 @@ const {consensusInput} = mockData;
 
 /* eslint-disable no-unused-vars */
 describe('Consensus API findConsensus', () => {
-  describe.only('Figure 1.2', async () => {
+  describe('Figure 1.2', async () => {
     const {graph} = consensusInput['fig-1-2'];
 
     const nodes = ['1', '2', '3', '4'];
@@ -109,7 +109,7 @@ describe('Consensus API findConsensus', () => {
 
     _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  describe.only('Figure 1.4', async () => {
+  describe('Figure 1.4', async () => {
     const {graph} = consensusInput['fig-1-4'];
 
     const nodes = ['2'];
@@ -159,7 +159,7 @@ describe('Consensus API findConsensus', () => {
       },
       '2-2': {
         support: supportY4,
-        detectedFork: ['b']
+        detectFork: ['b']
       }
     };
 
@@ -173,7 +173,7 @@ describe('Consensus API findConsensus', () => {
 
     _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  describe.only('Figure 1.5', async () => {
+  describe('Figure 1.5', async () => {
     const {graph} = consensusInput['fig-1-5'];
 
     const nodes = ['pi'];
@@ -234,7 +234,7 @@ describe('Consensus API findConsensus', () => {
     _validateNodesState({nodes, graph, expectedState, extendedTests});
 
   });
-  describe.only('Figure 1.6', async () => {
+  describe('Figure 1.6', async () => {
     const {graph} = consensusInput['fig-1-6'];
 
     const nodes = ['2', 'pi'];
@@ -282,8 +282,6 @@ describe('Consensus API findConsensus', () => {
         support: supportY1,
         proposal: 'pi-1',
         endorsed: true,
-        // FIXME: Can we assert the set of endorsers in a test, if continuity
-        //        short circuits after it finds the first 2f + 1?
         endorsersTotal: 5, // 2f + 1
         endorsement: ['pi-2']
       },
@@ -308,21 +306,107 @@ describe('Consensus API findConsensus', () => {
 
     _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  it('Figure 1.7', async () => { // FIXME: Not finished
-    let result, err;
-    const {input} = consensusInput['fig-1-7'];
+  describe('Figure 1.7', async () => {
+    const {graph} = consensusInput['fig-1-7'];
+    const nodes = ['1', '2'];
 
-    try {
-      result = consensusApi.findConsensus(input);
-    } catch(e) {
-      err = e;
+    // Support
+    const supportY1 = ['y1', 'y2', 'yh', 'yb', 'ygamma'];
+    const supportY2 = ['y1', 'y2', 'yh', 'yb', 'yalpha', 'ybeta', 'ygamma'];
+
+    const expectedState = {
+      y1: {
+        support: ['y1']
+      },
+      y2: {
+        support: ['y2']
+      },
+      yh: {
+        support: ['yh']
+      },
+      yb: {
+        support: ['yb']
+      },
+      yalpha: {
+        support: ['yalpha']
+      },
+      ybeta: {
+        support: ['ybeta']
+      },
+      ygamma: {
+        support: ['ygamma']
+      },
+      '1-1': {
+        _exclude: {
+          // Note: Exclude this state from tests involving Node 2 as it cannot
+          // be deduced by its perspective of the DAG. In other words, Node 2
+          // does not contain enough of the DAG in its history to make these
+          // assertions.
+          2: new Set(['endorsed', 'proposal', 'endorsersTotal', 'endorsement'])
+        },
+        support: supportY1,
+        proposal: '1-1',
+        endorsed: true,
+        endorsersTotal: 5, // 2f + 1
+        endorsement: ['1-2']
+      },
+      '1-2': {
+        support: supportY1,
+        proposal: '1-1',
+        endorses: ['1-1']
+      },
+      'h-1': {
+        support: supportY1
+      },
+      'h-2': {
+        support: supportY2,
+        detectFork: ['b']
+      },
+      'b-1': {
+        support: supportY1
+      },
+      'b1-1': {
+        support: supportY1
+      },
+      'b1-2': {
+        support: supportY1
+      },
+      'b2-1': {
+        support: supportY2
+      },
+      'b2-2': {
+        support: supportY2
+      },
+      '2-1': {
+        support: supportY2,
+        proposal: '2-1',
+        endorsed: true,
+        endorsersTotal: 5, // 2f + 1
+        endorsement: ['2-2']
+      },
+      '2-2': {
+        support: supportY2,
+        proposal: '2-1',
+        endorses: ['2-1'],
+        detectFork: ['b']
+      }
+    };
+
+    const extendedTests = new Map();
+
+    function _node1ExtendedTest({result}) {
+      result.consensus.should.equal(false);
     }
-    debugger;
-    assertNoError(err);
-    should.exist(result);
-    result.consensus.should.equal(false);
+    function _node2ExtendedTest({result}) {
+      result.consensus.should.equal(false);
+    }
+
+    extendedTests.set('1', _node1ExtendedTest);
+    extendedTests.set('2', _node2ExtendedTest);
+
+    _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  describe.only('Figure 1.8', async () => {
+  describe('Figure 1.8', async () => {
     const {graph} = consensusInput['fig-1-8'];
 
     const nodes = ['2'];
@@ -373,16 +457,16 @@ describe('Consensus API findConsensus', () => {
       '2-3': {
         support: supportY1,
         proposal: '2-2',
-        detectedFork: ['b']
+        detectFork: ['b']
       },
       '2-4': {
         support: supportY2,
-        detectedFork: ['b']
+        detectFork: ['b']
       },
       '2-5': {
         support: supportY2,
         proposal: '2-5',
-        detectedFork: ['b']
+        detectFork: ['b']
       },
       '3-1': {
         support: supportY2
@@ -402,7 +486,7 @@ describe('Consensus API findConsensus', () => {
 
     _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  describe.only('Figure 1.9', async () => {
+  describe('Figure 1.9', async () => {
     const {graph} = consensusInput['fig-1-9'];
 
     const nodes = ['1', '2'];
@@ -475,7 +559,7 @@ describe('Consensus API findConsensus', () => {
 
     _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  describe.only('Figure 1.10', async () => {
+  describe('Figure 1.10', async () => {
     const {graph} = consensusInput['fig-1-10'];
 
     const nodes = ['1', '2'];
@@ -534,7 +618,7 @@ describe('Consensus API findConsensus', () => {
 
     _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  describe.only('Figure 1.11', async () => {
+  describe('Figure 1.11', async () => {
     const {graph} = consensusInput['fig-1-11'];
 
     const nodes = ['2'];
@@ -605,7 +689,7 @@ describe('Consensus API findConsensus', () => {
 
     _validateNodesState({nodes, graph, expectedState, extendedTests});
   });
-  describe.only('Figure 1.12', async () => {
+  describe('Figure 1.12', async () => {
     const {graph} = consensusInput['fig-1-12'];
 
     const nodes = ['1', '2'];
@@ -692,7 +776,7 @@ function _validateNodesState({
         }
         assertNoError(err);
         should.exist(result);
-        _validateState({input, expectedState});
+        _validateState({input, expectedState, nodeId});
 
         const _extendedTest = extendedTests.get(nodeId);
         if(_extendedTest) {
@@ -703,7 +787,7 @@ function _validateNodesState({
   }
 }
 
-function _validateState({input, expectedState}) {
+function _validateState({input, expectedState, nodeId}) {
   const {events} = input.history;
   events.forEach(event => {
     const {
@@ -711,54 +795,65 @@ function _validateState({input, expectedState}) {
       _endorsers, _proposalEndorsed, _proposalEndorsement, _endorsesProposal
     } = event;
     const expectedEventState = expectedState[eventHash];
+    let exclude = new Set();
+    if(_hasExclusion({expectedEventState, nodeId})) {
+      exclude = expectedEventState._exclude[nodeId];
+    }
+
     // validate support
-    _validateSupport({expectedEventState, _supporting});
+    _validateSupport({exclude, expectedEventState, _supporting});
     // validate proposals
-    _validateProposals({expectedEventState, _proposal});
+    _validateProposals({exclude, expectedEventState, _proposal});
     // validate endorsed event
-    _validateProposalEndorsed({expectedEventState, _proposalEndorsed});
+    _validateProposalEndorsed({exclude, expectedEventState, _proposalEndorsed});
     // validate total endorsers
-    _validateTotalEndorsers({expectedEventState, _endorsers});
+    _validateTotalEndorsers({exclude, expectedEventState, _endorsers});
     // validate endorsements
     _validateEndorsements(
-      {expectedEventState, _electorEndorsement, _proposalEndorsement});
+      {exclude, expectedEventState, _electorEndorsement, _proposalEndorsement});
     // validate endorsing event
-    _validateEndorsingEvent({expectedEventState, _endorsesProposal});
+    _validateEndorsingEvent({exclude, expectedEventState, _endorsesProposal});
     // validate detected forks
-    _validateDetectedForks({expectedEventState, _votes});
+    _validateDetectedForks({exclude, expectedEventState, _votes});
   });
 }
 
-function _validateSupport({expectedEventState, _supporting}) {
-  if(expectedEventState && expectedEventState.support) {
+function _validateSupport({expectedEventState, _supporting, exclude}) {
+  const skip = exclude.has('support');
+  if(expectedEventState && expectedEventState.support && !skip) {
     const support = _supporting.map(({eventHash}) => eventHash);
     support.should.have.same.members(expectedEventState.support);
   }
 }
 
-function _validateProposals({expectedEventState, _proposal}) {
-  if(expectedEventState && expectedEventState.proposal) {
+function _validateProposals({expectedEventState, _proposal, exclude}) {
+  const skip = exclude.has('proposal');
+  if(expectedEventState && expectedEventState.proposal && !skip) {
     _proposal.eventHash.should.equal(expectedEventState.proposal);
   }
 }
 
-function _validateProposalEndorsed({expectedEventState, _proposalEndorsed}) {
-  if(expectedEventState && expectedEventState.endorsed) {
+function _validateProposalEndorsed(
+  {expectedEventState, _proposalEndorsed, exclude}) {
+  const skip = exclude.has('endorsed');
+  if(expectedEventState && expectedEventState.endorsed && !skip) {
     // should be endorsed
     _proposalEndorsed.should.equal(true);
   }
 }
 
-function _validateTotalEndorsers({expectedEventState, _endorsers}) {
-  if(expectedEventState && expectedEventState.endorsersTotal) {
+function _validateTotalEndorsers({expectedEventState, _endorsers, exclude}) {
+  const skip = exclude.has('endorsersTotal');
+  if(expectedEventState && expectedEventState.endorsersTotal && !skip) {
     // should specify total number of endorsers
     _endorsers.size.should.equal(expectedEventState.endorsersTotal);
   }
 }
 
 function _validateEndorsements(
-  {expectedEventState, _electorEndorsement, _proposalEndorsement}) {
-  if(expectedEventState && expectedEventState.endorsement) {
+  {expectedEventState, _electorEndorsement, _proposalEndorsement, exclude}) {
+  const skip = exclude.has('endorsement');
+  if(expectedEventState && expectedEventState.endorsement && !skip) {
     // should specify the endorsing event
     const electorEndorsements =
         _electorEndorsement.map(({eventHash}) => eventHash);
@@ -771,18 +866,26 @@ function _validateEndorsements(
   }
 }
 
-function _validateEndorsingEvent({expectedEventState, _endorsesProposal}) {
-  if(expectedEventState && expectedEventState.endorses) {
+function _validateEndorsingEvent(
+  {expectedEventState, _endorsesProposal, exclude}) {
+  const skip = exclude.has('endorses');
+  if(expectedEventState && expectedEventState.endorses && !skip) {
     const endorsedProposals =
       _endorsesProposal.map(({eventHash}) => eventHash);
     endorsedProposals.should.have.same.members(expectedEventState.endorses);
   }
 }
 
-function _validateDetectedForks({expectedEventState, _votes}) {
-  if(expectedEventState && expectedEventState.detectedFork) {
-    expectedEventState.detectedFork.forEach(nodeId => {
+function _validateDetectedForks({expectedEventState, _votes, exclude}) {
+  const skip = exclude.has('detectFork');
+  if(expectedEventState && expectedEventState.detectFork && !skip) {
+    expectedEventState.detectFork.forEach(nodeId => {
       _votes[nodeId].should.equal(false);
     });
   }
+}
+
+function _hasExclusion({expectedEventState, nodeId}) {
+  return expectedEventState && expectedEventState._exclude &&
+    expectedEventState._exclude[nodeId];
 }

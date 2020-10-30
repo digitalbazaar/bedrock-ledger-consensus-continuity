@@ -34,7 +34,7 @@ graph
   .mergeEvent({eventHash: 'y6', to: '6', from: []})
   // pi_1 1st "extra" history event
   .mergeEvent({
-    eventHash: '1-extra-1',
+    eventHash: '1-xt-1',
     to: '1',
     from: [
       '1',
@@ -47,38 +47,38 @@ graph
   })
   // pi_2 1st "extra" history event
   .mergeEvent({
-    eventHash: '2-extra-1',
+    eventHash: '2-xt-1',
     to: '2',
     from: [
       '2',
-      {nodeId: '1', eventHash: '1-extra-1'}
+      {nodeId: '1', eventHash: '1-xt-1'}
     ]
   })
   // pi_3 1st "extra" history event
   .mergeEvent({
-    eventHash: '3-extra-1',
+    eventHash: '3-xt-1',
     to: '3',
     from: [
       '3',
-      {nodeId: '2', eventHash: '2-extra-1'}
+      {nodeId: '2', eventHash: '2-xt-1'}
     ]
   })
   // pi_4 1st "extra" history event
   .mergeEvent({
-    eventHash: '4-extra-1',
+    eventHash: '4-xt-1',
     to: '4',
     from: [
       '4',
-      {nodeId: '3', eventHash: '3-extra-1'}
+      {nodeId: '3', eventHash: '3-xt-1'}
     ]
   })
   // pi_5 1st "extra" history event
   .mergeEvent({
-    eventHash: '5-extra-1',
+    eventHash: '5-xt-1',
     to: '5',
     from: [
       '5',
-      {nodeId: '4', eventHash: '4-extra-1'}
+      {nodeId: '4', eventHash: '4-xt-1'}
     ]
   })
   // pi 1st event (merge event m on node pi)
@@ -87,7 +87,7 @@ graph
     to: 'pi',
     from: [
       'pi',
-      {nodeId: '5', eventHash: '5-extra-1'}
+      {nodeId: '5', eventHash: '5-xt-1'}
     ]
   })
   // pi_1 1st event
