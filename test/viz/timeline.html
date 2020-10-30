@@ -333,7 +333,7 @@ function setupTimeline(data) {
     const ancestors = new Set();
     __ancestors(id, ancestors);
     // remove direct ancestors
-    _ancestors(id).forEach(a => ancestors.delete(a));
+    _directAncestors(id).forEach(a => ancestors.delete(a));
     return [...ancestors];
   }
 
@@ -362,7 +362,7 @@ function setupTimeline(data) {
     const descendants = new Set();
     __descendants(id, descendants);
     // remove direct descendants
-    _descendants(id).forEach(d => descendants.delete(d));
+    _directDescendants(id).forEach(d => descendants.delete(d));
     return [...descendants];
   }
 
