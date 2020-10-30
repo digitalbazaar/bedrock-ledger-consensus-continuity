@@ -166,7 +166,11 @@ function setupTimeline(data) {
   const container = document.getElementById('visualization');
 
   if(data.display && data.display.title) {
-    $('#title').html(data.display.title);
+    let title = data.display.title;
+    if(data.nodeId) {
+      title += ` (view from node "${data.nodeId}")`;
+    }
+    $('#title').html(title);
   }
 
   /*
