@@ -180,6 +180,4 @@ const display = {
   nodeOrder: ['1', '2', '3', 'pi', '4', '5', '6']
 };
 
-input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
-
 module.exports = {input, display, graph};
