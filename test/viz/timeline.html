@@ -35,24 +35,38 @@
       color: black;
       border: thick solid tan;
     }
-    .vis-item.vis-box.parent, .legend span.parent {
-      border: thick solid black;
-    }
-    .vis-item.vis-box.parentplus, .legend span.parentplus {
+    .vis-item.vis-box.ancestor, .legend span.ancestor {
       border: thick solid gray;
     }
-    .vis-item.vis-box.child, .legend span.child {
+    .vis-item.vis-box.directAncestor, .legend span.directAncestor {
+      border: thick solid black;
+    }
+    .vis-item.vis-box.indirectAncestor, .legend span.indirectAncestor {
+      border: thick solid gray;
+    }
+    .vis-item.vis-box.descendant, .legend span.descendant {
+      border: thick solid gray;
+    }
+    .vis-item.vis-box.directDescendant, .legend span.directDescendant {
       border: thick solid darkmagenta;
     }
-    .vis-item.vis-box.childplus, .legend span.childplus {
+    .vis-item.vis-box.indirectDescendant, .legend span.indirectDescendant {
       border: thick solid magenta;
     }
     .legend {
       padding: 0.25em;
     }
-    .legend > span {
-      border: 1px solid black;
+    .legend p {
+      padding: 0.20em;
+    }
+    .legend span {
+      border: 1px solid blue;
       padding: 0.25em;
+      margin-top: 0.25em;
+      margin-bottom: 0.25em;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 
@@ -70,11 +84,11 @@
 <body>
 
 <div>
-<label for="inputs">Input</label>
+<label for="inputs">Input:</label>
 <select name="inputs" id="inputs">
 </select>
 <br>
-<label for="dataurl">URL</label>
+<label for="dataurl">URL:</label>
 <input id="dataurl"></input>
 <input id="dataload" type="submit" value="Load">
 </div>
@@ -86,20 +100,34 @@
   <input type="button" id="zoomOut" value="-" />
   <input type="button" id="moveLeft" value="<<" />
   <input type="button" id="moveRight" value=">>" />
+  <br>
+  Advanced Mode:
+  <input type="checkbox" id="advancedMode" />
 </div>
 <hr>
 <div class="legend">
   Legend:
+  <p>
   <span class="default">default</span>
+
+  <!-- basic -->
+  <span class="ancestor basicMode">ancestor</span>
+  <span class="descendant basicMode">descendant</span>
+
+  <!-- advanced -->
+  <span class="directAncestor advancedMode hidden">direct ancestor</span>
+  <span class="indirectAncestor advancedMode hidden">indirect ancestor</span>
+  <span class="directDescendant advancedMode hidden">direct descendant</span>
+  <span class="indirectDescendant advancedMode hidden">indirect descendant</span>
+  </p>
+
+  <p>
   <span class="supporting">supporting</span>
+  <span class="proposal">proposal</span>
   <span class="proposalEndorsement">proposal endorsement</span>
   <span class="endorsesProposal">endorses proposal</span>
-  <span class="proposal">proposal</span>
   <!--<span class="treeParent">tree parent</span>-->
-  <span class="parent">parent</span>
-  <span class="parentplus">parent+</span>
-  <span class="child">child</span>
-  <span class="childplus">child+</span>
+  </p>
 </div>
 <hr>
 
@@ -118,6 +146,7 @@ function t(n) {
   return new Date(n * tScale);
 }
 
+let isAdvancedUI = false;
 let timeline;
 let arrow;
 
@@ -277,46 +306,60 @@ function setupTimeline(data) {
     }
   });
 
-  function _parents(id) {
+  function _directAncestors(id) {
     return idMap[id].parents;
   }
 
-  function __parents(id, parents) {
-    _parents(id).forEach(p => {
-      parents.add(p);
-      __parents(p, parents);
+  function __ancestors(id, ancestors) {
+    _directAncestors(id).forEach(a => {
+      ancestors.add(a);
+      __ancestors(a, ancestors);
     });
   }
 
-  // parents parents, etc
-  function _parentsplus(id) {
-    const parentsplus = new Set();
-    __parents(id, parentsplus);
-    // remove direct parents
-    _parents(id).forEach(p => parentsplus.delete(p));
-    return [...parentsplus];
+  // all ancestors
+  function _ancestors(id) {
+    const ancestors = new Set();
+    __ancestors(id, ancestors);
+    return [...ancestors];
   }
 
-  function _children(id) {
+  // all but direct ancestors
+  function _indirectAncestors(id) {
+    const ancestors = new Set();
+    __ancestors(id, ancestors);
+    // remove direct ancestors
+    _ancestors(id).forEach(a => ancestors.delete(a));
+    return [...ancestors];
+  }
+
+  function _directDescendants(id) {
     return data.nodes
       .filter(node => node.parents.includes(id))
       .map(node => node.id);
   }
 
-  function __children(id, children) {
-    _children(id).forEach(c => {
-      children.add(c);
-      __children(c, children);
+  function __descendants(id, descendants) {
+    _directDescendants(id).forEach(d => {
+      descendants.add(d);
+      __descendants(d, descendants);
     });
   }
 
-  // childrens children, etc
-  function _childrenplus(id) {
-    const childrenplus = new Set();
-    __children(id, childrenplus);
-    // remove direct children
-    _children(id).forEach(c => childrenplus.delete(c));
-    return [...childrenplus];
+  // all descendants
+  function _descendants(id) {
+    const descendants = new Set();
+    __descendants(id, descendants);
+    return [...descendants];
+  }
+
+  // all but direct descendants
+  function _indirectDescendants(id) {
+    const descendants = new Set();
+    __descendants(id, descendants);
+    // remove direct descendants
+    _descendants(id).forEach(d => descendants.delete(d));
+    return [...descendants];
   }
 
   // hover
@@ -340,21 +383,25 @@ function setupTimeline(data) {
     //}
 
     // below are done last to add to above classes
-    for(const id of _parents(item)) {
+    for(const id of _directAncestors(item)) {
       const _class = items.get(id).className;
-      items.update({id, className: `${_class} parent`});
+      const _new = isAdvancedUI ? 'directAncestor' : 'ancestor';
+      items.update({id, className: `${_class} ${_new}`});
     }
-    for(const id of _parentsplus(item)) {
+    for(const id of _indirectAncestors(item)) {
       const _class = items.get(id).className;
-      items.update({id, className: `${_class} parentplus`});
+      const _new = isAdvancedUI ? 'indirectAncestor' : 'ancestor';
+      items.update({id, className: `${_class} ${_new}`});
     }
-    for(const id of _children(item)) {
+    for(const id of _directDescendants(item)) {
       const _class = items.get(id).className;
-      items.update({id, className: `${_class} child`});
+      const _new = isAdvancedUI ? 'directDescendant' : 'descendant';
+      items.update({id, className: `${_class} ${_new}`});
     }
-    for(const id of _childrenplus(item)) {
+    for(const id of _indirectDescendants(item)) {
       const _class = items.get(id).className;
-      items.update({id, className: `${_class} childplus`});
+      const _new = isAdvancedUI ? 'indirectDescendant' : 'descendant';
+      items.update({id, className: `${_class} ${_new}`});
     }
   });
   timeline.on('itemout', ({item, event}) => {
@@ -375,16 +422,16 @@ function setupTimeline(data) {
     //for(const id of e.treeParent) {
     //  items.update({id, className: 'default'});
     //}
-    for(const id of _parents(item)) {
+    for(const id of _directAncestors(item)) {
       items.update({id, className: 'default'});
     }
-    for(const id of _parentsplus(item)) {
+    for(const id of _indirectAncestors(item)) {
       items.update({id, className: 'default'});
     }
-    for(const id of _children(item)) {
+    for(const id of _directDescendants(item)) {
       items.update({id, className: 'default'});
     }
-    for(const id of _childrenplus(item)) {
+    for(const id of _indirectDescendants(item)) {
       items.update({id, className: 'default'});
     }
   });
@@ -411,6 +458,17 @@ function load(dataUrl) {
   });
 }
 
+function setAdvancedUI(mode) {
+  isAdvancedUI = mode;
+  if(mode) {
+    $('.basicMode').addClass('hidden');
+    $('.advancedMode').removeClass('hidden');
+  } else {
+    $('.basicMode').removeClass('hidden');
+    $('.advancedMode').addClass('hidden');
+  }
+}
+
 function main() {
   clearTimeline();
   const info = [
@@ -420,6 +478,8 @@ function main() {
   for(const item of info) {
     $('<option/>').val(item.url).html(item.label).appendTo('#inputs');
   }
+
+  // data
 
   $('#inputs').change(function(e) {
     const url = e.target.value;
@@ -432,6 +492,8 @@ function main() {
   $('#dataload').click(function() {
     load($('#dataurl')[0].value);
   });
+
+  // view
 
   $('#zoomAll').on('click', function() {
     timeline.fit();
@@ -448,6 +510,13 @@ function main() {
   $('#moveRight').on('click', function() {
     move(-0.2);
   });
+
+  // mode
+  $('#advancedMode').on('change', function(e) {
+    setAdvancedUI($('#advancedMode').prop('checked'));
+  });
+  $('#advancedMode').prop('checked', isAdvancedUI);
+  setAdvancedUI(isAdvancedUI);
 
   /**
    * Move the timeline a given percentage to left or right
