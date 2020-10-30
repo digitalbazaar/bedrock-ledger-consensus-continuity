@@ -368,7 +368,11 @@ api.testOutputDataForTimeline = ({
   */
 
   // viz data
-  const data = {nodes: []};
+  const data = {
+    historyId,
+    nodeId,
+    nodes: []
+  };
   if(display) {
     data.display = display;
   }
