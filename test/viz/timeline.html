@@ -369,14 +369,17 @@ function setupTimeline(data) {
     for(const id of e.supporting) {
       items.update({id, className: 'supporting'});
     }
+    for(const id of e.proposal) {
+      // prioritize endorsesProposal
+      if(!(id in e.endorsesProposal)) {
+        items.update({id, className: 'proposal'});
+      }
+    }
     for(const id of e.proposalEndorsement) {
       items.update({id, className: 'proposalEndorsement'});
     }
     for(const id of e.endorsesProposal) {
       items.update({id, className: 'endorsesProposal'});
-    }
-    for(const id of e.proposal) {
-      items.update({id, className: 'proposal'});
     }
     //for(const id of e.treeParent) {
     //  items.update({id, className: 'treeParent'});
