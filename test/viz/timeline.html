@@ -73,6 +73,17 @@
     .hidden {
       display: none;
     }
+    .fork {
+      background-color: #ff000030;
+    }
+    .default-group {
+    }
+    .vis-item .has-decision, .legend span.has-decision {
+      text-decoration: underline green;
+    }
+    .vis-item .has-forks, .legend span.has-forks {
+      text-decoration: overline red;
+    }
   </style>
 
   <script
@@ -116,6 +127,8 @@
   <span class="default">default</span>
 
   <!-- basic -->
+  <span class="default has-decision">decision</span>
+  <span class="default has-forks">forks detected</span>
   <span class="ancestor basicMode">ancestor</span>
   <span class="descendant basicMode">descendant</span>
 
@@ -320,6 +333,20 @@ function setupTimeline(data) {
           return tips.join('<br>');
         }
       }
+    },
+    template: function(item, element, data) {
+      const node = idMap[item.id];
+      const classes = [];
+      if(Object.entries(node.votes).some(([k, v]) => v === false)) {
+        classes.push('has-forks');
+      }
+      if(node.decision) {
+        classes.push('has-decision');
+      }
+      if(classes.length > 0) {
+        return `<span class="${classes.join(' ')}">${item.content}</span>`;
+      }
+      return item.content;
     }
   };
 
@@ -438,6 +465,14 @@ function setupTimeline(data) {
       const _new = isAdvancedUI ? 'indirectDescendant' : 'descendant';
       items.update({id, className: `${_class} ${_new}`});
     }
+
+    // key ids for forks (vote map has false)
+    const forks = Object.entries(idMap[item].votes)
+      .filter(([k, v]) => v === false)
+      .map(([k, v]) => k);
+    for(const id of forks) {
+      groups.update({id, className: 'fork'});
+    }
   });
   timeline.on('itemout', ({item, event}) => {
     //console.log('OUT', item);
@@ -468,6 +503,15 @@ function setupTimeline(data) {
     }
     for(const id of _indirectDescendants(item)) {
       items.update({id, className: 'default'});
+    }
+    // key ids for forks (vote map has false)
+    const forks = Object.entries(idMap[item].votes)
+      .filter(([k, v]) => v === false)
+      .map(([k, v]) => k);
+    for(const id of forks) {
+      // use after vizjs update
+      //groups.updateOnly({id, className: 'DELETE'});
+      groups.update({id, className: 'default-group'});
     }
   });
 }
