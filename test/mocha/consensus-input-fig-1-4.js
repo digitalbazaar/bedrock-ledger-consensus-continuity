@@ -147,6 +147,4 @@ const display = {
   nodeOrder: ['1', 'b', '2']
 };
 
-input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
-
 module.exports = {input, display, graph};
