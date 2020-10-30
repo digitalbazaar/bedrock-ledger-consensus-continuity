@@ -16,7 +16,7 @@ const outputDirectory = path.join(__dirname, 'data');
 
 async function main() {
   // save the known 'input' style histories.
-  console.log('SAVING INPUT DATA');
+  console.log('[viz] Building test input data.');
 
   //console.log('INPUT', consensusInput);
 
@@ -45,7 +45,7 @@ async function main() {
 
     //console.log('INPUT', input);
     const consensusResult = consensusApi.findConsensus(input);
-    console.log('RESULT', consensusResult);
+    //console.log('RESULT', consensusResult);
     const outputResult = await vizHelpers.saveTestOutputDataForTimeline({
       directory: outputDirectory,
       // ledger history for timeline
