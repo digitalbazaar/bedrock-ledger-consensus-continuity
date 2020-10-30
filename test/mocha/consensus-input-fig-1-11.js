@@ -121,6 +121,7 @@ graph
     to: '2',
     from: [
       '2',
+      {nodeId: 'b', eventHash: 'b1-1'},
       {nodeId: '1', eventHash: '1-2'},
       {nodeId: '3', eventHash: '3-2'}
     ]
@@ -139,7 +140,5 @@ const display = {
   title: 'Figure 1.11',
   nodeOrder: ['1', 'b', '2', '3']
 };
-
-input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
 
 module.exports = {input, display, graph};

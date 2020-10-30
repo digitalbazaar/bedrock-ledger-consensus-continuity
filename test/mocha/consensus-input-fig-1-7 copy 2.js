@@ -292,6 +292,4 @@ const display = {
   nodeOrder: ['gamma', '1', 'h', 'b', '2', 'alpha', 'beta']
 };
 
-input.history.events.forEach(e => input.history.eventMap[e.eventHash] = e);
-
 module.exports = {input, display, graph};

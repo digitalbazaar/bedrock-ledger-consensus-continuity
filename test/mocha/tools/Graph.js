@@ -117,14 +117,18 @@ class Graph {
       .sort((a, b) => (a.order < b.order) ? 1 : -1)
       .map(({event}) => event);
 
-    return {
+    const history = JSON.parse(JSON.stringify({
       events,
       eventMap: {},
       localBranchHead: {
         eventHash: tails[0],
         generation: node.branch.length
       }
-    };
+    }));
+
+    history.events.forEach(e => history.eventMap[e.eventHash] = e);
+
+    return history;
   }
 
   getElectors() {
