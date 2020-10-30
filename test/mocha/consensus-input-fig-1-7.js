@@ -32,19 +32,22 @@ graph
   .mergeEvent({eventHash: 'ybeta', to: 'beta', from: []})
   // pi_gamma ygamma
   .mergeEvent({eventHash: 'ygamma', to: 'gamma', from: []})
-  // pi_h 1st "extra" history event
+  // pi_h "extra" history 1st event
   .mergeEvent({
-    eventHash: 'h-extra-1',
+    eventHash: 'h-xt-1',
     to: 'h',
     from: [
       'h',
       {nodeId: '1', eventHash: 'y1'},
-      {nodeId: 'b', eventHash: 'yb'}
+      {nodeId: '2', eventHash: 'y2'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: 'gamma', eventHash: 'ygamma'},
+
     ]
   })
-  // pi_alpha 1st "extra" history event
+  // pi_alpha "extra" history 1st event
   .mergeEvent({
-    eventHash: 'alpha-extra-1',
+    eventHash: 'alpha-xt-1',
     to: 'alpha',
     from: [
       'alpha',
@@ -56,9 +59,9 @@ graph
       {nodeId: 'gamma', eventHash: 'ygamma'},
     ]
   })
-  // pi_beta 1st "extra" history event
+  // pi_beta "extra" history 1st event
   .mergeEvent({
-    eventHash: 'beta-extra-1',
+    eventHash: 'beta-xt-1',
     to: 'beta',
     from: [
       'beta',
@@ -70,16 +73,36 @@ graph
       {nodeId: 'gamma', eventHash: 'ygamma'},
     ]
   })
+  // pi_2 "extra" history 1st event
+  .mergeEvent({
+    eventHash: '2-xt-1',
+    to: '2',
+    from: [
+      '2',
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: 'gamma', eventHash: 'ygamma'},
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: 'h', eventHash: 'yh'}
+    ]
+  })
   // pi_gamma "extra" history 1st event
   .mergeEvent({
-    eventHash: 'gamma-extra-1',
+    eventHash: 'gamma-xt-1',
     to: 'gamma',
     from: [
       'gamma',
       {nodeId: '1', eventHash: 'y1'},
       {nodeId: '2', eventHash: 'y2'},
       {nodeId: 'b', eventHash: 'yb'},
-      {nodeId: 'h', eventHash: 'yh'},
+      {nodeId: 'h', eventHash: 'yh'}
+    ]
+  })
+  // pi_gamma "extra" history 2nd event
+  .mergeEvent({
+    eventHash: 'gamma-xt-2',
+    to: 'gamma',
+    from: [
+      'gamma',
       {nodeId: 'alpha', eventHash: 'yalpha'},
       {nodeId: 'beta', eventHash: 'ybeta'},
     ]
@@ -90,6 +113,9 @@ graph
     to: 'b',
     from: [
       'b',
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: '2', eventHash: '2-xt-1'},
+      {nodeId: 'gamma', eventHash: 'gamma-xt-1'},
       {nodeId: 'h', eventHash: 'yh'},
     ]
   })
@@ -114,9 +140,9 @@ graph
       {nodeId: 'b', eventHash: 'b-1'},
       {nodeId: '1', eventHash: 'y1'},
       {nodeId: '2', eventHash: 'y2'},
-      {nodeId: 'alpha', eventHash: 'alpha-extra-1'},
-      {nodeId: 'beta', eventHash: 'beta-extra-1'},
-      {nodeId: 'gamma', eventHash: 'gamma-extra-1'},
+      {nodeId: 'alpha', eventHash: 'alpha-xt-1'},
+      {nodeId: 'beta', eventHash: 'beta-xt-1'},
+      {nodeId: 'gamma', eventHash: 'gamma-xt-2'},
     ]
   })
   // pi_b fork-1 2nd event
@@ -145,7 +171,17 @@ graph
     to: '1',
     from: [
       '1',
-      {nodeId: 'b', eventHash: 'b1-2'}
+      {nodeId: 'b', eventHash: 'b1-2'},
+      {nodeId: 'h', eventHash: 'h-xt-1'},
+    ]
+  })
+  // pi_gamma "extra" history 3rd event
+  .mergeEvent({
+    eventHash: 'gamma-xt-3',
+    to: 'gamma',
+    from: [
+      'gamma',
+      {nodeId: '1', eventHash: '1-1'},
     ]
   })
   // pi_h 1st event (merge event m1)
@@ -159,7 +195,7 @@ graph
   })
   // pi_b fork-1 "extra" history 1st event
   .mergeEvent({
-    eventHash: 'b1-extra-1',
+    eventHash: 'b1-xt-1',
     to: 'b',
     fork: true,
     treeHash: 'b1-2',
@@ -168,13 +204,24 @@ graph
       {nodeId: '1', eventHash: '1-1'},
     ]
   })
+  // pi_alpha "extra" history 2nd event
+  .mergeEvent({
+    eventHash: 'alpha-xt-2',
+    to: 'alpha',
+    from: [
+      'alpha',
+      {nodeId: '1', eventHash: '1-1'}
+    ]
+  })
   // pi_1 "extra" history 1st event
   .mergeEvent({
-    eventHash: '1-extra-1',
+    eventHash: '1-xt-1',
     to: '1',
     from: [
       '1',
-      {nodeId: 'b', eventHash: 'b1-extra-1'}
+      {nodeId: 'b', eventHash: 'b1-xt-1'},
+      {nodeId: 'gamma', eventHash: 'gamma-xt-3'},
+      {nodeId: 'alpha', eventHash: 'alpha-xt-2'},
     ]
   })
   // pi_1 2nd event (merge event m1, supports Y1, endorsement of m)
@@ -192,13 +239,13 @@ graph
     to: '2',
     from: [
       '2',
-      {nodeId: 'h', eventHash: 'h-extra-1'},
+      {nodeId: 'h', eventHash: 'h-xt-1'},
       {nodeId: 'b', eventHash: 'b2-2'}
     ]
   })
-  // pi_alpha "extra" history 2nd event
+  // pi_alpha "extra" history 3rd event
   .mergeEvent({
-    eventHash: 'alpha-extra-2',
+    eventHash: 'alpha-xt-3',
     to: 'alpha',
     from: [
       'alpha',
@@ -207,20 +254,11 @@ graph
   })
   // pi_beta "extra" history 2nd event
   .mergeEvent({
-    eventHash: 'beta-extra-2',
+    eventHash: 'beta-xt-2',
     to: 'beta',
     from: [
       'beta',
-      {nodeId: 'alpha', eventHash: 'alpha-extra-2'}
-    ]
-  })
-  // pi_gamma "extra" history 2nd event
-  .mergeEvent({
-    eventHash: 'gamma-extra-2',
-    to: 'gamma',
-    from: [
-      'gamma',
-      {nodeId: 'beta', eventHash: 'beta-extra-2'}
+      {nodeId: 'alpha', eventHash: 'alpha-xt-3'}
     ]
   })
   // pi_h 2nd event (merge event m2)
@@ -234,7 +272,7 @@ graph
   })
   // pi_b fork-2 "extra" history 1st event
   .mergeEvent({
-    eventHash: 'b2-extra-1',
+    eventHash: 'b2-xt-1',
     to: 'b',
     fork: true,
     treeHash: 'b2-2',
@@ -245,14 +283,11 @@ graph
   })
   // pi_2 "extra" history 1st event
   .mergeEvent({
-    eventHash: '2-extra-1',
+    eventHash: '2-xt-2',
     to: '2',
     from: [
       '2',
-      {nodeId: 'b', eventHash: 'b2-extra-1'},
-      // {nodeId: 'alpha', eventHash: 'alpha-extra-2'},
-      // {nodeId: 'gamma', eventHash: 'gamma-extra-2'},
-      // {nodeId: 'gamma', eventHash: 'gamma-extra-2'},
+      {nodeId: 'b', eventHash: 'b2-xt-1'},
     ]
   })
   // pi_2 2nd event (merge event m', supports Y2, endorsement of m')
@@ -262,7 +297,7 @@ graph
     from: [
       '2',
       {nodeId: 'h', eventHash: 'h-2'},
-      {nodeId: 'beta', eventHash: 'beta-extra-2'},
+      {nodeId: 'beta', eventHash: 'beta-xt-2'},
 
     ]
   });
