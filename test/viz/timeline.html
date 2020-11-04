@@ -111,11 +111,16 @@
 <hr>
 <div class="menu">
   View:
-  <input type="button" id="zoomAll" value="[ ]" />
-  <input type="button" id="zoomIn" value="+" />
-  <input type="button" id="zoomOut" value="-" />
-  <input type="button" id="moveLeft" value="<<" />
-  <input type="button" id="moveRight" value=">>" />
+  <input type="button" id="zoomAll" value="[ ]" title="zoom all" />
+  &nbsp;
+  <input type="button" id="zoomOut1" value="-" title="zoom out" />
+  <input type="button" id="zoomOut2" value="--" title="zoom out more" />
+  &nbsp;
+  <input type="button" id="zoomIn1" value="+" title="zoom in" />
+  <input type="button" id="zoomIn2" value="++" title="zoom in more" />
+  &nbsp;
+  <input type="button" id="moveLeft" value="<<" title="move left" />
+  <input type="button" id="moveRight" value=">>" title="move right" />
   <br>
   Advanced Mode:
   <input type="checkbox" id="advancedMode" />
@@ -577,11 +582,17 @@ function main() {
   $('#zoomAll').on('click', function() {
     timeline.fit();
   });
-  $('#zoomIn').on('click', function() {
-    timeline.zoomIn(0.2);
+  $('#zoomOut1').on('click', function() {
+    timeline.zoomOut(0.05);
   });
-  $('#zoomOut').on('click', function() {
+  $('#zoomOut2').on('click', function() {
     timeline.zoomOut(0.2);
+  });
+  $('#zoomIn1').on('click', function() {
+    timeline.zoomIn(0.05);
+  });
+  $('#zoomIn2').on('click', function() {
+    timeline.zoomIn(0.2);
   });
   $('#moveLeft').on('click', function() {
     move(0.2);
