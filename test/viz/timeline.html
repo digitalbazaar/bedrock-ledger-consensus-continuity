@@ -7,55 +7,55 @@
     body, html {
       font-family: sans-serif;
     }
-    .vis-item.vis-box.default, .legend span.default {
+    .vis-item.vis-box.default, .legend .cont-legend.default {
       border: thick solid lightgray;
     }
-    .legend span.selected {
+    .legend .cont-legend.selected {
       background-color: #fff785;
       color: black;
-      border: thick solid #fff785;
+      border: thick solid lightgray;
     }
-    .vis-item.vis-box.supporting, .legend span.supporting {
+    .vis-item.vis-box.supporting, .legend .cont-legend.supporting {
       background-color: red;
       color: white;
-      border: thick solid red;
+      border: thick solid lightgray;
     }
-    .vis-item.vis-box.proposalEndorsement, .legend span.proposalEndorsement {
+    .vis-item.vis-box.proposalEndorsement, .legend .cont-legend.proposalEndorsement {
       background-color: blue;
       color: white;
-      border: thick solid blue;
+      border: thick solid lightgray;
     }
-    .vis-item.vis-box.endorsesProposal, .legend span.endorsesProposal {
+    .vis-item.vis-box.endorsesProposal, .legend .cont-legend.endorsesProposal {
       background-color: green;
       color: white;
-      border: thick solid green;
+      border: thick solid lightgray;
     }
-    .vis-item.vis-box.proposal, .legend span.proposal {
+    .vis-item.vis-box.proposal, .legend .cont-legend.proposal {
       background-color: lime;
       color: black;
-      border: thick solid lime;
+      border: thick solid lightgray;
     }
-    .vis-item.vis-box.treeParent, .legend span.treeParent {
+    .vis-item.vis-box.treeParent, .legend .cont-legend.treeParent {
       background-color: tan;
       color: black;
-      border: thick solid tan;
+      border: thick solid lightgray;
     }
-    .vis-item.vis-box.ancestor, .legend span.ancestor {
+    .vis-item.vis-box.ancestor, .legend .cont-legend.ancestor {
       border: thick solid gray;
     }
-    .vis-item.vis-box.directAncestor, .legend span.directAncestor {
+    .vis-item.vis-box.directAncestor, .legend .cont-legend.directAncestor {
       border: thick solid black;
     }
-    .vis-item.vis-box.indirectAncestor, .legend span.indirectAncestor {
+    .vis-item.vis-box.indirectAncestor, .legend .cont-legend.indirectAncestor {
       border: thick solid gray;
     }
-    .vis-item.vis-box.descendant, .legend span.descendant {
+    .vis-item.vis-box.descendant, .legend .cont-legend.descendant {
       border: thick solid gray;
     }
-    .vis-item.vis-box.directDescendant, .legend span.directDescendant {
+    .vis-item.vis-box.directDescendant, .legend .cont-legend.directDescendant {
       border: thick solid darkmagenta;
     }
-    .vis-item.vis-box.indirectDescendant, .legend span.indirectDescendant {
+    .vis-item.vis-box.indirectDescendant, .legend .cont-legend.indirectDescendant {
       border: thick solid magenta;
     }
     .legend {
@@ -64,11 +64,8 @@
     .legend p {
       padding: 0.20em;
     }
-    .legend span {
-      border: 1px solid blue;
+    .legend .cont-legend {
       padding: 0.25em;
-      margin-top: 0.25em;
-      margin-bottom: 0.25em;
     }
     .hidden {
       display: none;
@@ -78,17 +75,13 @@
     }
     .default-group {
     }
-    .vis-item .cont-event {
-      /* thick indicator region offset into visjs padding area */
-      border: 3px solid transparent;
-      margin: -4px;
-      padding: 1px;
+    .cont-event.has-decision {
+      border-right: 0.7em solid green;
+      padding-right: 0.3em;
     }
-    .vis-item .cont-event.has-decision, .legend span.has-decision {
-      border-bottom-color: green;
-    }
-    .vis-item .cont-event.has-forks, .legend span.has-forks {
-      border-top-color: red;
+    .vis-item .cont-event.has-forks, .legend .cont-event.has-forks {
+      border-left: 0.7em solid red;
+      padding-left: 0.3em;
     }
   </style>
 
@@ -135,28 +128,28 @@
 <div class="legend">
   Legend:
   <p>
-  <span class="default">default</span>
+  <span class="cont-legend default">default</span>
 
   <!-- basic -->
-  <span class="default has-decision">decision</span>
-  <span class="default has-forks">forks detected</span>
-  <span class="ancestor basicMode">ancestor</span>
-  <span class="descendant basicMode">descendant</span>
+  <span class="cont-legend default"><span class="cont-event has-decision">decision</span></span>
+  <span class="cont-legend default"><span class="cont-event has-forks">forks detected</span></span>
+  <span class="cont-legend ancestor basicMode">ancestor</span>
+  <span class="cont-legend descendant basicMode">descendant</span>
 
   <!-- advanced -->
-  <span class="directAncestor advancedMode hidden">direct ancestor</span>
-  <span class="indirectAncestor advancedMode hidden">indirect ancestor</span>
-  <span class="directDescendant advancedMode hidden">direct descendant</span>
-  <span class="indirectDescendant advancedMode hidden">indirect descendant</span>
+  <span class="cont-legend directAncestor advancedMode hidden">direct ancestor</span>
+  <span class="cont-legend indirectAncestor advancedMode hidden">indirect ancestor</span>
+  <span class="cont-legend directDescendant advancedMode hidden">direct descendant</span>
+  <span class="cont-legend indirectDescendant advancedMode hidden">indirect descendant</span>
   </p>
 
   <p>
-  <span class="selected">selected</span>
-  <span class="supporting">supporting</span>
-  <span class="proposal">proposal</span>
-  <span class="proposalEndorsement">proposal endorsement</span>
-  <span class="endorsesProposal">endorses proposal</span>
-  <!--<span class="treeParent">tree parent</span>-->
+  <span class="cont-legend selected">selected</span>
+  <span class="cont-legend supporting">supporting</span>
+  <span class="cont-legend proposal">proposal</span>
+  <span class="cont-legend proposalEndorsement">proposal endorsement</span>
+  <span class="cont-legend endorsesProposal">endorses proposal</span>
+  <!--<span class="cont-legend treeParent">tree parent</span>-->
   </p>
 </div>
 <hr>
