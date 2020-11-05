@@ -78,11 +78,17 @@
     }
     .default-group {
     }
-    .vis-item .has-decision, .legend span.has-decision {
-      text-decoration: underline green;
+    .vis-item .cont-event {
+      /* thick indicator region offset into visjs padding area */
+      border: 3px solid transparent;
+      margin: -4px;
+      padding: 1px;
     }
-    .vis-item .has-forks, .legend span.has-forks {
-      text-decoration: overline red;
+    .vis-item .cont-event.has-decision, .legend span.has-decision {
+      border-bottom-color: green;
+    }
+    .vis-item .cont-event.has-forks, .legend span.has-forks {
+      border-top-color: red;
     }
   </style>
 
@@ -341,7 +347,7 @@ function setupTimeline(data) {
     },
     template: function(item, element, data) {
       const node = idMap[item.id];
-      const classes = [];
+      const classes = ['cont-event'];
       if(Object.entries(node.votes).some(([k, v]) => v === false)) {
         classes.push('has-forks');
       }
@@ -349,7 +355,7 @@ function setupTimeline(data) {
         classes.push('has-decision');
       }
       if(classes.length > 0) {
-        return `<span class="${classes.join(' ')}">${item.content}</span>`;
+        return `<div class="${classes.join(' ')}">${item.content}</div>`;
       }
       return item.content;
     }
