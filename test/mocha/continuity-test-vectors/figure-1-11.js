@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const Graph = require('./tools/Graph');
+const Graph = require('../tools/Graph');
 
 const graph = new Graph();
 
@@ -23,24 +23,45 @@ graph
   .mergeEvent({eventHash: 'y2', to: '2', from: []})
   // pi_3 y3
   .mergeEvent({eventHash: 'y3', to: '3', from: []})
+  // pi_1 1st event (supports Y1)
+  .mergeEvent({
+    eventHash: '1-1',
+    to: '1',
+    from: [
+      '1',
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: '2', eventHash: 'y2'},
+    ]
+  })
   // pi_b 1st event (supports Y1)
   .mergeEvent({
     eventHash: 'b-1',
     to: 'b',
     from: [
       'b',
-      {nodeId: '3', eventHash: 'y3'},
-      {nodeId: '2', eventHash: 'y2'}
+      {nodeId: '1', eventHash: 'y1'},
+      {nodeId: '2', eventHash: 'y2'},
     ]
   })
-  // pi_3 1st event (supports Y1)
+  // pi_2 1st event (supports Y1)
+  .mergeEvent({
+    eventHash: '2-1',
+    to: '2',
+    from: [
+      '2',
+      {nodeId: 'b', eventHash: 'yb'},
+      {nodeId: '1', eventHash: 'y1'},
+    ]
+  })
+  // pi_3 1st event (supports Y2)
   .mergeEvent({
     eventHash: '3-1',
     to: '3',
     from: [
       '3',
+      {nodeId: '2', eventHash: 'y2'},
       {nodeId: 'b', eventHash: 'yb'},
-      {nodeId: '2', eventHash: 'y2'}
+      {nodeId: '1', eventHash: 'y1'},
     ]
   })
   // pi_b forks (supports Y1)
@@ -61,35 +82,28 @@ graph
     treeHash: 'b-1',
     from: [
       {nodeId: 'b', eventHash: 'b-1'},
-      {nodeId: '1', eventHash: 'y1'},
-    ]
-  })
-  // pi_1 1st event (supports Y2)
-  .mergeEvent({
-    eventHash: '1-1',
-    to: '1',
-    from: [
-      '1',
-      {nodeId: 'b', eventHash: 'b2-1'}
-    ]
-  })
-  // pi_2 1st event (supports Y1, proposes Y1)
-  .mergeEvent({
-    eventHash: '2-1',
-    to: '2',
-    from: [
-      '2',
-      {nodeId: 'b', eventHash: 'b1-1'},
       {nodeId: '3', eventHash: '3-1'}
     ]
   })
-  // b1 2nd event (supports Y1, proposes Y1)
+  // pi_2 2nd event (supports Y1, proposes Y1)
   .mergeEvent({
-    eventHash: 'b1-2',
-    to: 'b',
+    eventHash: '2-2',
+    to: '2',
     from: [
-      {nodeId: 'b', eventHash: 'b1-1'},
-      {nodeId: '2', eventHash: '2-1'}
+      '2',
+      {nodeId: '1', eventHash: '1-1'},
+      {nodeId: 'b', eventHash: 'b-1'},
+      {nodeId: '3', eventHash: '3-1'},
+    ]
+  })
+  // pi_1 2nd event (supports Y2)
+  .mergeEvent({
+    eventHash: '1-2',
+    to: '1',
+    from: [
+      '1',
+      {nodeId: 'b', eventHash: 'b2-1'},
+      {nodeId: '2', eventHash: '2-2'}
     ]
   })
   // pi_3 2nd event (supports Y1, proposes Y1)
@@ -98,16 +112,17 @@ graph
     to: '3',
     from: [
       '3',
-      {nodeId: '2', eventHash: '2-1'}
+      {nodeId: '2', eventHash: '2-2'}
     ]
   })
-  // pi_2 2nd event (supports Y1, proposes Y1, endorses Y1)
+  // pi_2 3rd event (supports Y1, proposes Y1, endorses Y1)
   .mergeEvent({
-    eventHash: '2-2',
+    eventHash: '2-3',
     to: '2',
     from: [
       '2',
-      {nodeId: 'b', eventHash: 'b1-2'},
+      {nodeId: 'b', eventHash: 'b1-1'},
+      {nodeId: '1', eventHash: '1-2'},
       {nodeId: '3', eventHash: '3-2'}
     ]
   });
@@ -122,7 +137,7 @@ const input = {
 };
 
 const display = {
-  title: 'Figure 1.9',
+  title: 'Figure 1.11',
   nodeOrder: ['1', 'b', '2', '3']
 };
 
