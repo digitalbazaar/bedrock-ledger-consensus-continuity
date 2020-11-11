@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const Graph = require('./tools/Graph');
+const Graph = require('../tools/Graph');
 
 const graph = new Graph();
 
