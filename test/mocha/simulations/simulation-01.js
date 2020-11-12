@@ -64,11 +64,11 @@ async function pipelineFn() {
 async function load({user, witnessCount}) {
   // FIXME: Get from params
   const id = 'simulation-01';
-  // FIXME: Get from params
   const creator = user;
 
   const simulator = new Simulator({
-    id, creator, witnessCount, pipeline: pipelineFn});
+    id, creator, witnessCount, pipeline: pipelineFn
+  });
 
   const results = await simulator.start();
   console.log(results);

@@ -38,7 +38,7 @@ async function main() {
 
   if(trials === 1) {
     // do not use workerpool for a single trial, allows for profiling
-    return load();
+    return load({user, witnessCount});
   }
 
   const simulationPool = workerpool.pool(
