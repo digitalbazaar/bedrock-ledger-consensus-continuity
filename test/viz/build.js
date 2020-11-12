@@ -27,8 +27,14 @@ async function main() {
   const inputInfo = [];
   const outputInfo = [];
 
-  for(const [id, {input, display}] of Object.entries(consensusInput)) {
+  for(const [id, options] of Object.entries(consensusInput)) {
     //console.log(`INPUT[${id}]', {input, display});
+    let input, display;
+    if(options.load) {
+      ({input, display} = await options.load());
+    } else {
+      ({input, display} = options);
+    }
     const inputResult = await vizHelpers.saveTestInputDataForD3({
       directory: outputDirectory,
       // ledger history for d3
