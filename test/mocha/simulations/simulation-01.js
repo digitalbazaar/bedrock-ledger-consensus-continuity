@@ -61,16 +61,17 @@ async function pipelineFn() {
   }
 }
 
-async function load() {
+async function load({user, witnessCount}) {
+  // FIXME: Get from params
   const id = 'simulation-01';
-  const creator = 'gannan08';
+  // FIXME: Get from params
+  const creator = user;
 
   const simulator = new Simulator({
-    id, creator, witnessCount: 22, pipeline: pipelineFn
-  });
+    id, creator, witnessCount, pipeline: pipelineFn});
+
   const results = await simulator.start();
   console.log(results);
-
   const {graph} = simulator;
 
   const ledgerNodeId = '1';
@@ -90,7 +91,5 @@ async function load() {
 
   return {input, display};
 }
-
-load();
 
 module.exports = {load};
