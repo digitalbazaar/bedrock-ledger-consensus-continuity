@@ -16,7 +16,7 @@ async function mergeStrategy() {
 
   // merge event into history
   const events = [{nodeId: peer.nodeId, eventHash: peerHead}];
-  await this.merge({events});
+  return this.merge({events});
 }
 
 async function gossipStrategy() {
