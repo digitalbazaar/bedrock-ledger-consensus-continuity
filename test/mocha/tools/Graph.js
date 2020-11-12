@@ -3,15 +3,21 @@
  */
 'use strict';
 
+const Denque = require('denque');
+const LRU = require('lru-cache');
 const uuid = require('uuid-random');
 const yallist = require('yallist');
+const v8 = require('v8');
 const helpers = require('./helpers');
 
 const {strfy} = helpers;
 
+const MAX_CACHE_SIZE = 4096;
+
 class Graph {
   constructor() {
     this.nodes = new Map();
+    this.bfsCache = new LRU({max: MAX_CACHE_SIZE});
     this.eventMap = {};
   }
 
@@ -102,31 +108,27 @@ class Graph {
     return this;
   }
 
-  getHistory({nodeId}) {
+  getHistory({nodeId, extraEvents = []} = {}) {
     const node = this.nodes.get(nodeId);
 
-    const tails = [];
+    const tail = node.branch.tail.value;
 
-    tails.push(node.branch.tail.value);
+    const results = this._traverseBFS({tail});
 
-    const results = new Map();
+    const events = Array.from(results.values());
 
-    tails.forEach(tail => this._traverseBFS({tail, results}));
-
-    const events = Array.from(results.values())
-      .sort((a, b) => (a.order < b.order) ? 1 : -1)
-      .map(({event}) => event);
-
-    const history = JSON.parse(JSON.stringify({
-      events,
+    const history = v8.deserialize(v8.serialize({
+      events: [...events, ...extraEvents],
       eventMap: {},
       localBranchHead: {
-        eventHash: tails[0],
+        eventHash: tail,
         generation: node.branch.length
       }
     }));
 
-    history.events.forEach(e => history.eventMap[e.eventHash] = e);
+    for(const event of history.events) {
+      history.eventMap[event.eventHash] = event;
+    }
 
     return history;
   }
@@ -153,23 +155,43 @@ class Graph {
     console.log('eventMap', strfy({eventMap}));
   }
 
-  _traverseBFS({tail, results}) {
-    const queue = [tail];
-    let counter = 0;
+  _traverseBFS({tail}) {
+    const cachedResults = this.bfsCache.get(tail);
+    if(cachedResults) {
+      return cachedResults;
+    }
+
+    const results = new Set();
+    const queue = new Denque([tail]);
+
     while(queue.length > 0) {
       const eventHash = queue.shift();
+
+      const cachedEvents = this.bfsCache.get(eventHash);
+      if(cachedEvents) {
+        for(const cachedEvent of cachedEvents.values()) {
+          results.add(cachedEvent);
+        }
+        continue;
+      }
+
       const event = this.eventMap[eventHash];
 
       if(!event) {
         continue;
       }
 
-      results.set(eventHash, {event, order: ++counter});
+      results.add(event);
 
       const {event: {parentHash}} = event;
 
-      queue.push(...parentHash);
+      for(const hash of parentHash) {
+        queue.push(hash);
+      }
     }
+
+    this.bfsCache.set(tail, results);
+    return results;
   }
 
   _getBranch({nodeId}) {
