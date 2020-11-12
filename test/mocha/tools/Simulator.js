@@ -10,6 +10,7 @@ const Graph = require('./Graph');
 
 class Witness {
   constructor({nodeId, pipeline, graph, witnesses}) {
+    this.tickId = null;
     this.witnesses = witnesses;
     this.nodeId = nodeId;
     this.pipeline = pipeline;
@@ -17,9 +18,11 @@ class Witness {
     this.outstandingMergeEvents = [];
     this.activityLog = [];
     this.hasConsensus = false;
+    this.totalEventsMerged = 0;
   }
 
-  async tick() {
+  async tick({id}) {
+    this.tickId = id;
     await this.pipeline(this);
   }
 
@@ -36,6 +39,7 @@ class Witness {
     } else {
       details = await this.findConsensus();
     }
+    details = {...details, tick: this.tickId};
 
     const activity = {type, details};
 
@@ -47,11 +51,28 @@ class Witness {
   async findConsensus() {
     const consensusInput = await this.getConsensusInput();
 
+    const timer = helpers.getTimer();
     const result = await consensusApi.findConsensus(consensusInput);
+    const duration = timer.elapsed();
+
+    const nodeHistory = await this.getHistory();
+
     if(result.consensus) {
       this.hasConsensus = true;
     }
-    return result;
+
+    console.log({
+      duration,
+      totalEventsMerged: this.totalEventsMerged,
+      totalMergeEvents: nodeHistory.events.length
+    });
+
+    return {
+      ...result,
+      duration,
+      totalEventsMerged: this.totalEventsMerged,
+      totalMergeEvents: nodeHistory.events.length
+    };
   }
 
   async getConsensusInput() {
@@ -77,6 +98,7 @@ class Witness {
       to: nodeId,
       from: [nodeId, ...events]
     });
+    this.totalEventsMerged++;
 
     const history = await this.getHistory({includeOutstanding: false});
     const mergedEvents = history.events.map(({eventHash}) => eventHash);
@@ -138,6 +160,9 @@ class Simulator {
       // create nodes in graph
       this.graph.addNode(nodeId);
       this.graph.mergeEvent({eventHash: `y${nodeId}`, to: nodeId, from: []});
+
+      const witness = this.witnesses.get(nodeId);
+      witness.totalEventsMerged++;
     }
   }
 
@@ -152,15 +177,23 @@ class Simulator {
   async start() {
     let tick = 0;
     const MAX_TICKS = 1000;
-    while(this.continue() && tick < MAX_TICKS) {
-      console.log(`========== TICK ${tick + 1} ==========`);
+    while(this.continue() && tick <= MAX_TICKS) {
+      tick++;
+      console.log(`\n========== TICK ${tick} ==========`);
       for(let i = 0; i < this.witnesses.size; i++) {
         const nodeId = this._nodeId(i);
+        console.log(`\n++++++++++ Node ${nodeId} ++++++++++`);
         const witness = this.witnesses.get(nodeId);
-        await witness.tick();
+        await witness.tick({id: tick});
       }
-      ++tick;
     }
+
+    // Activity Log
+    // for(let i = 0; i < this.witnesses.size; i++) {
+    //   const nodeId = this._nodeId(i);
+    //   const witness = this.witnesses.get(nodeId);
+    //   console.log(witness.activityLog);
+    // }
     console.log('\nTotal Ticks:', tick);
   }
 
