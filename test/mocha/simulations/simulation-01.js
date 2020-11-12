@@ -4,6 +4,7 @@
 'use strict';
 
 const _ = require('lodash');
+const promClient = require('./prometheus-client');
 const Simulator = require('../tools/Simulator');
 
 async function mergeStrategy() {
@@ -70,8 +71,7 @@ async function load({user, witnessCount}) {
     id, creator, witnessCount, pipeline: pipelineFn
   });
 
-  const results = await simulator.start();
-  console.log(results);
+  const report = await simulator.start();
   const {graph} = simulator;
 
   const ledgerNodeId = '1';
@@ -89,7 +89,9 @@ async function load({user, witnessCount}) {
     nodeOrder: ['0', '1', '2', '3']
   };
 
-  return {input, display};
+  await promClient.send({report});
+  console.log(report);
+  return {input, display, report};
 }
 
 module.exports = {load};
