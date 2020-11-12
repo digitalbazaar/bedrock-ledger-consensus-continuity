@@ -46,12 +46,15 @@ async function gossipStrategy() {
 }
 
 async function pipelineFn() {
-  for(let i = 0; i < 1; i++) {
-    await this.run({type: 'merge', fn: mergeStrategy});
-    await this.run({type: 'gossip', fn: gossipStrategy});
-    await this.run({type: 'merge', fn: mergeStrategy});
-  }
+  // const count = (((this.witnesses.size - 1) / 3 * 2) + 1);
+  // const count = (this.witnesses.size - 1) / 3 * 2;
+  const count = 1;
 
+  for(let i = 0; i < count; i++) {
+    // await this.run({type: 'merge', fn: mergeStrategy});
+    await this.run({type: 'gossip', fn: gossipStrategy});
+  }
+  await this.run({type: 'merge', fn: mergeStrategy});
   const consensusResults = await this.run({type: 'consensus'});
   if(consensusResults.consensus) {
     console.log(`Found Consensus - Node ${this.nodeId}`);
@@ -59,7 +62,7 @@ async function pipelineFn() {
 }
 
 async function load() {
-  const simulator = new Simulator({witnessCount: 4, pipeline: pipelineFn});
+  const simulator = new Simulator({witnessCount: 31, pipeline: pipelineFn});
   await simulator.start();
   const {graph} = simulator;
 
