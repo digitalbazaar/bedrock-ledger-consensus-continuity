@@ -16,6 +16,11 @@ async function main() {
       describe: 'The pet name for the simulation.',
       alias: 'n',
     })
+    .option('pipelineJs', {
+      describe: 'Path to the pipeline.',
+      alias: 'p',
+      default: './pipeline-reference.js',
+    })
     .option('trials', {
       describe: 'The number of trials.',
       alias: 't',
@@ -31,14 +36,16 @@ async function main() {
       default: 4,
     });
 
-  const {trials, user, witnessCount} = yargs.argv;
+  const {pipelineJs, trials, user, witnessCount} = yargs.argv;
   if(!(trials && user && witnessCount)) {
-    throw new Error('Ensure proper options are specified.  See --help.');
+    throw new Error('Ensure proper options are specified. See --help.');
   }
+
+  const simulationOptions = {pipelineJs, user, witnessCount};
 
   if(trials === 1) {
     // do not use workerpool for a single trial, allows for profiling
-    return load({user, witnessCount});
+    return load(simulationOptions);
   }
 
   const simulationPool = workerpool.pool(
@@ -47,9 +54,7 @@ async function main() {
 
   const promises = [];
   for(let i = 0; i < trials; ++i) {
-    promises.push(simulationWorker.runSimulation({
-      user, witnessCount
-    }));
+    promises.push(simulationWorker.runSimulation(simulationOptions));
   }
 
   await Promise.all(promises);

@@ -8,10 +8,10 @@ const {load} = require('./simulation-01');
 
 workerpool.worker({
   runSimulation: ({
+    pipelineJs,
     user,
     witnessCount,
   }) => {
-    console.log('111111111', witnessCount);
-    return load({user, witnessCount});
+    return load({pipelineJs, user, witnessCount});
   }
 });
