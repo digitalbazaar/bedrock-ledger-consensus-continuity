@@ -18,7 +18,7 @@ class Witness {
     this.outstandingMergeEvents = [];
     this.activityLog = [];
     this.hasConsensus = false;
-    this.totalEventsMerged = 0;
+    this.totalMergeEventsCreated = 0;
   }
 
   async tick({id}) {
@@ -41,7 +41,7 @@ class Witness {
     }
     details = {...details, tick: this.tickId};
 
-    const activity = {type, details};
+    const activity = {type, details, nodeId: this.nodeId};
 
     this.activityLog.push(activity);
 
@@ -53,7 +53,7 @@ class Witness {
 
     const timer = helpers.getTimer();
     const result = await consensusApi.findConsensus(consensusInput);
-    const duration = timer.elapsed();
+    const consensusDuration = timer.elapsed();
 
     const nodeHistory = await this.getHistory();
 
@@ -61,16 +61,20 @@ class Witness {
       this.hasConsensus = true;
     }
 
-    console.log({
-      duration,
-      totalEventsMerged: this.totalEventsMerged,
+    const report = {
+      consensusDuration,
+      totalMergeEventsCreated: this.totalMergeEventsCreated,
       totalMergeEvents: nodeHistory.events.length
+    };
+
+    Object.keys(report).forEach(metric => {
+      console.log(`${metric}:`, report[metric]);
     });
 
     return {
       ...result,
-      duration,
-      totalEventsMerged: this.totalEventsMerged,
+      consensusDuration,
+      totalMergeEventsCreated: this.totalMergeEventsCreated,
       totalMergeEvents: nodeHistory.events.length
     };
   }
@@ -98,7 +102,7 @@ class Witness {
       to: nodeId,
       from: [nodeId, ...events]
     });
-    this.totalEventsMerged++;
+    this.totalMergeEventsCreated++;
 
     const history = await this.getHistory({includeOutstanding: false});
     const mergedEvents = history.events.map(({eventHash}) => eventHash);
@@ -134,36 +138,21 @@ class Witness {
 }
 
 class Simulator {
-  constructor({witnessCount, pipeline, init} = {}) {
+  constructor({id, creator, witnessCount, pipeline, init} = {}) {
+    this.id = id;
+    this.runId = Date.now();
+    this.creator = creator;
     this.graph = new Graph();
     this.witnesses = new Map();
-    this.ticks = [];
+    this.tick = 0;
 
-    for(let i = 0; i < witnessCount; i++) {
-      const nodeId = this._nodeId(i);
-
-      // add witness to map
-      const witness = new Witness({
-        nodeId, pipeline, graph: this.graph, witnesses: this.witnesses
-      });
-      this.witnesses.set(nodeId, witness);
-    }
+    this._createWitnesses({count: witnessCount, pipeline});
 
     if(init) {
       return init(this);
     }
 
-    // default initialization
-    for(let i = 0; i < witnessCount; i++) {
-      const nodeId = this._nodeId(i);
-
-      // create nodes in graph
-      this.graph.addNode(nodeId);
-      this.graph.mergeEvent({eventHash: `y${nodeId}`, to: nodeId, from: []});
-
-      const witness = this.witnesses.get(nodeId);
-      witness.totalEventsMerged++;
-    }
+    this._defaultInitialization({count: witnessCount});
   }
 
   continue() {
@@ -175,26 +164,98 @@ class Simulator {
   }
 
   async start() {
-    let tick = 0;
+    this.tick = 0;
     const MAX_TICKS = 1000;
-    while(this.continue() && tick <= MAX_TICKS) {
-      tick++;
-      console.log(`\n========== TICK ${tick} ==========`);
+    while(this.continue() && this.tick <= MAX_TICKS) {
+      this.tick++;
+      console.log(`\n========== TICK ${this.tick} ==========`);
       for(let i = 0; i < this.witnesses.size; i++) {
         const nodeId = this._nodeId(i);
         console.log(`\n++++++++++ Node ${nodeId} ++++++++++`);
         const witness = this.witnesses.get(nodeId);
-        await witness.tick({id: tick});
+        await witness.tick({id: this.tick});
       }
     }
 
+    // console.log('\nTotal Ticks:', tick);
+    return this._generateReport();
+  }
+
+  _generateReport() {
+    const {id, runId, creator, tick} = this;
+
+    const consensusReports = [];
+    const gossipSessions = {};
+
     // Activity Log
-    // for(let i = 0; i < this.witnesses.size; i++) {
-    //   const nodeId = this._nodeId(i);
-    //   const witness = this.witnesses.get(nodeId);
-    //   console.log(witness.activityLog);
-    // }
-    console.log('\nTotal Ticks:', tick);
+    for(let i = 0; i < this.witnesses.size; i++) {
+      const nodeId = this._nodeId(i);
+      const witness = this.witnesses.get(nodeId);
+
+      // find earliest consensus
+      const earliestConsensus = witness.activityLog.find(({type, details}) => {
+        if(type === 'consensus' && details.consensus === true) {
+          return true;
+        }
+      });
+
+      consensusReports.push(earliestConsensus);
+
+      // calculate total gossip sessions
+      const gossips = witness.activityLog.filter(({type}) => type === 'gossip');
+      gossipSessions[nodeId] = gossips.length;
+    }
+
+    // calculate network averages
+    const results = consensusReports.reduce((acc, curr, idx) => {
+      Object.keys(acc).forEach(key => {
+        acc[key] += curr.details[key];
+      });
+
+      const {length} = consensusReports;
+
+      if(idx === length - 1) {
+        Object.keys(acc).forEach(key => {
+          acc[key] /= length;
+        });
+      }
+
+      return acc;
+    }, {consensusDuration: 0, totalMergeEvents: 0, totalMergeEventsCreated: 0});
+
+    return {
+      id,
+      runId,
+      creator,
+      totalTicks: tick,
+      average: results,
+      gossipSessions
+    };
+  }
+
+  _defaultInitialization({count}) {
+    for(let i = 0; i < count; i++) {
+      const nodeId = this._nodeId(i);
+
+      // create nodes in graph
+      this.graph.addNode(nodeId);
+      this.graph.mergeEvent({eventHash: `y${nodeId}`, to: nodeId, from: []});
+
+      const witness = this.witnesses.get(nodeId);
+      witness.totalMergeEventsCreated++;
+    }
+  }
+
+  _createWitnesses({count, pipeline}) {
+    for(let i = 0; i < count; i++) {
+      const nodeId = this._nodeId(i);
+
+      // add witness to map
+      const witness = new Witness({
+        nodeId, pipeline, graph: this.graph, witnesses: this.witnesses
+      });
+      this.witnesses.set(nodeId, witness);
+    }
   }
 
   _nodeId(num) {
