@@ -162,11 +162,13 @@
 
 <script type="text/javascript">
 
-const epoch = new Date(0);
-const tScale = 10;
+// using custom units for the 'time' axis
+// need offset and scale for timeline ui to work well
+const epoch = new Date(1000);
+const tScale = 1000;
 // map to larger "time" so can zoom out
 function t(n) {
-  return new Date(n * tScale);
+  return new Date(+epoch + n * tScale);
 }
 
 let isAdvancedUI = false;
@@ -302,6 +304,8 @@ function setupTimeline(data) {
 
   // Configuration for the Timeline
   const options = {
+    horizontalScroll: true,
+    zoomKey: 'ctrlKey',
     format: {
       minorLabels: (date, scale, step) => {
         const d = (date - epoch) / tScale;
