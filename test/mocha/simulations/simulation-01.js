@@ -62,8 +62,15 @@ async function pipelineFn() {
 }
 
 async function load() {
-  const simulator = new Simulator({witnessCount: 31, pipeline: pipelineFn});
-  await simulator.start();
+  const id = 'simulation-01';
+  const creator = 'gannan08';
+
+  const simulator = new Simulator({
+    id, creator, witnessCount: 22, pipeline: pipelineFn
+  });
+  const results = await simulator.start();
+  console.log(results);
+
   const {graph} = simulator;
 
   const ledgerNodeId = '1';
