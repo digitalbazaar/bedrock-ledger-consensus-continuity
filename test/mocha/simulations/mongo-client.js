@@ -11,9 +11,9 @@ if(!mongoUrl) {
   throw new Error('You must setup "process.env.MONGODB_URL".');
 }
 
-module.exports.send = async function({report}) {
+module.exports.send = async function({payload}) {
   const {collection, db} = await _initMongo2();
-  await collection.insert(report);
+  await collection.insert(payload);
   await _closeMongo({db});
 };
 
