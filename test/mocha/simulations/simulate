@@ -12,6 +12,9 @@ main().catch(console.error);
 async function main() {
   yargs
     .help('help', 'Show help.')
+    .option('nosend', {
+      describe: 'Do not send metrics.',
+    })
     .option('pipelineJs', {
       describe: 'Path to the pipeline.',
       alias: 'p',
@@ -32,13 +35,13 @@ async function main() {
       default: 4,
     });
 
-  const {pipelineJs, trials, user, witnessCount} = yargs.argv;
+  const {nosend, pipelineJs, trials, user, witnessCount} = yargs.argv;
   if(!(trials && user && witnessCount)) {
     throw new Error('Ensure proper options are specified. See --help.');
   }
 
   const run = Date.now();
-  const simulationOptions = {pipelineJs, user, witnessCount, run};
+  const simulationOptions = {nosend, pipelineJs, user, witnessCount, run};
 
   if(trials === 1) {
     // do not use workerpool for a single trial, allows for profiling
