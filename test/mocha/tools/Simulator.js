@@ -3,140 +3,9 @@
  */
 'use strict';
 
-const consensusApi =
-  require('bedrock-ledger-consensus-continuity/lib/consensus');
 const Graph = require('./Graph');
-const helpers = require('./helpers');
+const Witness = require('./Witness');
 const uuid = require('uuid-random');
-
-class Witness {
-  constructor({nodeId, pipeline, graph, witnesses}) {
-    this.tickId = null;
-    this.witnesses = witnesses;
-    this.nodeId = nodeId;
-    this.pipeline = pipeline;
-    this.graph = graph;
-    this.outstandingMergeEvents = [];
-    this.activityLog = [];
-    this.hasConsensus = false;
-    this.totalMergeEventsCreated = 0;
-  }
-
-  async tick({id}) {
-    this.tickId = id;
-    await this.pipeline(this);
-  }
-
-  async run({type, fn} = {}) {
-    const EXPECTED_TYPES = new Set(['merge', 'gossip', 'consensus']);
-    if(!EXPECTED_TYPES.has(type)) {
-      throw new Error('Unexpected type.');
-    }
-
-    let details;
-    if(type !== 'consensus') {
-      fn = fn.bind(this);
-      details = await fn(this);
-    } else {
-      details = await this.findConsensus();
-    }
-    details = {...details, tick: this.tickId};
-
-    const activity = {type, details, nodeId: this.nodeId};
-
-    this.activityLog.push(activity);
-
-    return details;
-  }
-
-  async findConsensus() {
-    const consensusInput = await this.getConsensusInput();
-
-    const timer = helpers.getTimer();
-    const result = await consensusApi.findConsensus(consensusInput);
-    const consensusDuration = timer.elapsed();
-
-    const nodeHistory = await this.getHistory();
-
-    if(result.consensus) {
-      this.hasConsensus = true;
-    }
-
-    const report = {
-      consensusDuration,
-      totalMergeEventsCreated: this.totalMergeEventsCreated,
-      totalMergeEvents: nodeHistory.events.length
-    };
-
-    Object.keys(report).forEach(metric => {
-      console.log(`${metric}:`, report[metric]);
-    });
-
-    return {
-      ...result,
-      consensusDuration,
-      totalMergeEventsCreated: this.totalMergeEventsCreated,
-      totalMergeEvents: nodeHistory.events.length
-    };
-  }
-
-  async getConsensusInput() {
-    const {nodeId: ledgerNodeId} = this;
-
-    const consensusInput = {
-      ledgerNodeId,
-      history: await this.getHistory(),
-      electors: this.graph.getElectors(),
-      recoveryElectors: [],
-      mode: 'first'
-    };
-
-    return consensusInput;
-  }
-
-  async merge({events = []} = {}) {
-    const eventHash = await helpers.generateId();
-    const {nodeId} = this;
-
-    this.graph.mergeEvent({
-      eventHash,
-      to: nodeId,
-      from: [nodeId, ...events]
-    });
-    this.totalMergeEventsCreated++;
-
-    const history = await this.getHistory({includeOutstanding: false});
-    const mergedEvents = history.events.map(({eventHash}) => eventHash);
-    this.outstandingMergeEvents = this.outstandingMergeEvents
-      .filter(({eventHash}) => !mergedEvents.includes(eventHash));
-  }
-
-  async getHead() {
-    const history = await this.getHistory({includeOutstanding: false});
-    return history.localBranchHead.eventHash;
-  }
-
-  async getHistory({includeOutstanding = true} = {}) {
-    const {nodeId} = this;
-    const extraEvents = includeOutstanding ? this.outstandingMergeEvents : [];
-    return this.graph.getHistory({nodeId, extraEvents});
-  }
-
-  async addEvents({events}) {
-    this.outstandingMergeEvents.push(...events);
-  }
-
-  async getEvents({events}) {
-    const history = await this.getHistory();
-    return history.events.filter(({eventHash}) => events.includes(eventHash));
-  }
-
-  async getPeers() {
-    const peers = new Map(this.witnesses);
-    peers.delete(this.nodeId);
-    return Array.from(peers.values());
-  }
-}
 
 class Simulator {
   constructor({id, name, creator, run, witnessCount, pipeline, init} = {}) {
@@ -206,9 +75,22 @@ class Simulator {
 
       // calculate total gossip sessions
       const gossips = witness.activityLog.filter(({type}) => type === 'gossip');
-      gossipSessions[nodeId] = gossips.length;
+      const downloadedEventsTotal = gossips.reduce((acc, curr) => {
+        acc += curr.details.events;
+        return acc;
+      }, 0);
+
+      gossipSessions[nodeId] = {
+        total: gossips.length,
+        downloadedEventsTotal
+      };
     }
 
+    const baseResult = {
+      consensusDuration: 0,
+      totalMergeEvents: 0,
+      totalMergeEventsCreated: 0
+    };
     // calculate network averages
     const results = consensusReports.reduce((acc, curr, idx) => {
       Object.keys(acc).forEach(key => {
@@ -224,7 +106,7 @@ class Simulator {
       }
 
       return acc;
-    }, {consensusDuration: 0, totalMergeEvents: 0, totalMergeEventsCreated: 0});
+    }, baseResult);
 
     return {
       id,
@@ -232,7 +114,7 @@ class Simulator {
       run,
       creator,
       timestamp,
-      totalTicks: tick,
+      totalTimeSlices: tick,
       average: results,
       gossipSessions
     };

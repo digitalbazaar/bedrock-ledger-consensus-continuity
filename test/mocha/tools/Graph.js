@@ -21,6 +21,10 @@ class Graph {
     this.eventMap = {};
   }
 
+  static traverseBFS(options) {
+    return _traverseBFS(options);
+  }
+
   addNode(id, options = {}) {
     const {isElector = true} = options;
     if(this.nodes.has(id)) {
@@ -62,7 +66,7 @@ class Graph {
       }
     });
 
-    const toBranch = this._getBranch({nodeId: to.nodeId});
+    const toBranch = this.getBranch({nodeId: to.nodeId});
 
     const parents = from.map(({nodeId, eventHash}) => {
       // return specified eventHash
@@ -70,7 +74,7 @@ class Graph {
         return eventHash;
       }
       // return latest eventHash on branch
-      const fromBranch = this._getBranch({nodeId});
+      const fromBranch = this.getBranch({nodeId});
       return this.eventMap[fromBranch.tail.value].eventHash;
     });
 
@@ -106,6 +110,14 @@ class Graph {
     toBranch.push(eventHash);
 
     return this;
+  }
+
+  getBranch({nodeId}) {
+    const node = this.nodes.get(nodeId);
+    if(!node) {
+      throw new Error(`The node does not exist: "${nodeId}"`);
+    }
+    return node.branch;
   }
 
   getHistory({nodeId, extraEvents = []} = {}) {
@@ -156,51 +168,49 @@ class Graph {
   }
 
   _traverseBFS({tail}) {
-    const cachedResults = this.bfsCache.get(tail);
-    if(cachedResults) {
-      return cachedResults;
-    }
+    return _traverseBFS({
+      tail, bfsCache: this.bfsCache, eventMap: this.eventMap
+    });
+  }
+}
 
-    const results = new Set();
-    const queue = new Denque([tail]);
-
-    while(queue.length > 0) {
-      const eventHash = queue.shift();
-
-      const cachedEvents = this.bfsCache.get(eventHash);
-      if(cachedEvents) {
-        for(const cachedEvent of cachedEvents.values()) {
-          results.add(cachedEvent);
-        }
-        continue;
-      }
-
-      const event = this.eventMap[eventHash];
-
-      if(!event) {
-        continue;
-      }
-
-      results.add(event);
-
-      const {event: {parentHash}} = event;
-
-      for(const hash of parentHash) {
-        queue.push(hash);
-      }
-    }
-
-    this.bfsCache.set(tail, results);
-    return results;
+function _traverseBFS({tail, bfsCache = new LRU(), eventMap} = {}) {
+  const cachedResults = bfsCache.get(tail);
+  if(cachedResults) {
+    return cachedResults;
   }
 
-  _getBranch({nodeId}) {
-    const node = this.nodes.get(nodeId);
-    if(!node) {
-      throw new Error(`The node does not exist: "${nodeId}"`);
+  const results = new Set();
+  const queue = new Denque([tail]);
+
+  while(queue.length > 0) {
+    const eventHash = queue.shift();
+
+    const cachedEvents = bfsCache.get(eventHash);
+    if(cachedEvents) {
+      for(const cachedEvent of cachedEvents.values()) {
+        results.add(cachedEvent);
+      }
+      continue;
     }
-    return node.branch;
+
+    const event = eventMap[eventHash];
+
+    if(!event) {
+      continue;
+    }
+
+    results.add(event);
+
+    const {event: {parentHash}} = event;
+
+    for(const hash of parentHash) {
+      queue.push(hash);
+    }
   }
+
+  bfsCache.set(tail, results);
+  return results;
 }
 
 module.exports = Graph;
