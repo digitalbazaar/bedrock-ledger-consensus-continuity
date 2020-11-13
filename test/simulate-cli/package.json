@@ -1,0 +1,12 @@
+{
+  "name": "simulate-cli",
+  "version": "0.0.1-0",
+  "private": true,
+  "dependencies": {
+    "@digitalbazaar/http-client": "^1.0.0",
+    "lodash": "^4.17.20",
+    "mongodb": "^3.6.3",
+    "workerpool": "^6.0.3",
+    "yargs": "^16.1.0"
+  }
+}
