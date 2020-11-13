@@ -87,6 +87,7 @@ graph
   .mergeEvent({
     eventHash: 'b1-2',
     to: 'b',
+    treeHash: 'b1-1',
     from: [
       {nodeId: 'b', eventHash: 'b1-1'},
       {nodeId: '2', eventHash: '2-1'}
