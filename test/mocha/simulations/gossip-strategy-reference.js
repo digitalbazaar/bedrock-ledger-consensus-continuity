@@ -28,5 +28,15 @@ module.exports.run = async function() {
   // add events to node
   await this.addEvents({events: downloadedEvents});
 
+  const gossips = this.activityLog.filter(({type}) => type === 'gossip');
+  const downloadedEventsTotal = gossips.reduce((acc, curr) => {
+    acc += curr.details.events;
+    return acc;
+  }, 0);
+
+  console.log('downloadedEvents:', downloadedEvents.length);
+  console.log(
+    'downloadedEventsTotal:', downloadedEventsTotal + downloadedEvents.length);
+
   return {peer: peer.nodeId, events: downloadedEvents.length};
 };

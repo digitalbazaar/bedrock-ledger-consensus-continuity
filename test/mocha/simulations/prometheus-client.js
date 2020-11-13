@@ -13,18 +13,23 @@ module.exports = api;
 
 api.send = send;
 
+const PROMETHEUS_NAMESPACE = 'simulation';
+const PROMETHEUS_JOB = 'continuity_simulation';
+
+/* eslint-disable max-len */
 const PROMETHEUS_METRIC_NAMES = new Map([
-  ['totalTicks', 'total_ticks'],
-  ['consensusDuration', 'avg_consensus_duration'],
-  ['totalMergeEvents', 'avg_total_merge_events'],
-  ['totalMergeEventsCreated', 'avg_total_merge_events_created'],
-  ['gossipSessions', 'total_gossip_sessions'],
+  ['totalTimeSlices', `${PROMETHEUS_NAMESPACE}_time_slices_total`],
+  ['consensusDuration', `${PROMETHEUS_NAMESPACE}_avg_consensus_duration_milliseconds`],
+  ['totalMergeEvents', `${PROMETHEUS_NAMESPACE}_avg_merge_events_total`],
+  ['totalMergeEventsCreated', `${PROMETHEUS_NAMESPACE}_avg_merge_events_created_total`],
+  ['gossipSessions', `${PROMETHEUS_NAMESPACE}_gossip_sessions_total`],
 ]);
+/* eslint-enable max-len */
 
 async function send({report}) {
   // implement
   const metrics = createMetrics({report});
-  const job = 'continuity_simulation';
+  const job = PROMETHEUS_JOB;
   const headers = {'content-type': 'text/plain'};
   await httpClient.post(`http://104.131.25.239:9091/metrics/job/${job}`, {
     agent, body: metrics, headers
@@ -35,29 +40,37 @@ function createMetrics({report}) {
   const labelKeys = ['id', 'name', 'run', 'creator', 'timestamp'];
   const label = labelKeys.map(key => `${key}="${report[key]}"`).join(', ');
 
-  const metrics = ['totalTicks', 'average', 'gossipSessions'];
   let prometheusData = '';
 
   const name = report.name.replace(/\-|\./g, '_');
   const {run, timestamp} = report;
   const suffix = `${run}_${timestamp}_${name}`;
 
-  metrics.forEach(key => {
-    if(key === 'totalTicks') {
-      const metricName = PROMETHEUS_METRIC_NAMES.get(key);
-      prometheusData += `${metricName}_${suffix}{${label}} ${report[key]}\n`;
-    } else if(key === 'average') {
-      Object.keys(report[key]).forEach(k => {
-        const metricName = PROMETHEUS_METRIC_NAMES.get(k);
-        prometheusData +=
-          `${metricName}_${suffix}{${label}} ${report[key][k]}\n`;
-      });
-    }
-  });
-
+  prometheusData += _generateTimeSlicesMetric({report, label, suffix});
+  prometheusData += _generateAveragesMetric({report, label, suffix});
   // TODO: Capture gossip session data
 
-  console.log({prometheusData});
-
   return prometheusData;
+}
+
+function _generateTimeSlicesMetric({report, label, suffix}) {
+  const reportKey = 'totalTimeSlices';
+  let metric = '';
+
+  const metricName = PROMETHEUS_METRIC_NAMES.get(reportKey);
+  metric += `${metricName}_${suffix}{${label}} ${report[reportKey]}\n`;
+
+  return metric;
+}
+
+function _generateAveragesMetric({report, label, suffix}) {
+  const reportKey = 'average';
+  let metric = '';
+
+  Object.keys(report[reportKey]).forEach(k => {
+    const metricName = PROMETHEUS_METRIC_NAMES.get(k);
+    metric += `${metricName}_${suffix}{${label}} ${metric[k]}\n`;
+  });
+
+  return metric;
 }
