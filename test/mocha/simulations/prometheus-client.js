@@ -55,6 +55,8 @@ function createMetrics({report}) {
     }
   });
 
+  // TODO: Capture gossip session data
+
   console.log({prometheusData});
 
   return prometheusData;
