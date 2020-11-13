@@ -14,9 +14,9 @@ api.strfy = a => JSON.stringify(a, null, 2);
 api.generateId = generateId;
 api.getTimer = getTimer;
 
-async function generateId() {
-  const buffer = await randomBytes(8);
-  return buffer.toString('base64');
+async function generateId({encoding = 'base64', bytes = 8} = {}) {
+  const buffer = await randomBytes(bytes);
+  return buffer.toString(encoding);
 }
 
 function getTimer() {

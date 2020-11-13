@@ -5,8 +5,9 @@
 
 const consensusApi =
   require('bedrock-ledger-consensus-continuity/lib/consensus');
-const helpers = require('./helpers');
 const Graph = require('./Graph');
+const helpers = require('./helpers');
+const uuid = require('uuid-random');
 
 class Witness {
   constructor({nodeId, pipeline, graph, witnesses}) {
@@ -138,9 +139,11 @@ class Witness {
 }
 
 class Simulator {
-  constructor({id, creator, witnessCount, pipeline, init} = {}) {
-    this.id = id;
-    this.runId = Date.now();
+  constructor({id, name, creator, run, witnessCount, pipeline, init} = {}) {
+    this.id = uuid();
+    this.name = name || id;
+    this.run = run;
+    this.timestamp = Date.now();
     this.creator = creator;
     this.graph = new Graph();
     this.witnesses = new Map();
@@ -182,7 +185,7 @@ class Simulator {
   }
 
   _generateReport() {
-    const {id, runId, creator, tick} = this;
+    const {id, name, run, creator, tick, timestamp} = this;
 
     const consensusReports = [];
     const gossipSessions = {};
@@ -225,8 +228,10 @@ class Simulator {
 
     return {
       id,
-      runId,
+      name,
+      run,
       creator,
+      timestamp,
       totalTicks: tick,
       average: results,
       gossipSessions

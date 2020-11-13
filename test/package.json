@@ -7,6 +7,7 @@
     "watch": "grunt watch"
   },
   "dependencies": {
+    "@digitalbazaar/http-client": "^1.0.0",
     "async": "^2.4.1",
     "bedrock": "^3.0.0",
     "bedrock-express": "^3.0.0",

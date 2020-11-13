@@ -4,14 +4,8 @@
 'use strict';
 
 const workerpool = require('workerpool');
-const {load} = require('./simulation-01');
+const {load} = require('./simulation');
 
 workerpool.worker({
-  runSimulation: ({
-    pipelineJs,
-    user,
-    witnessCount,
-  }) => {
-    return load({pipelineJs, user, witnessCount});
-  }
+  runSimulation: options => load(options)
 });
