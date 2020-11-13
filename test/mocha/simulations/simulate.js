@@ -3,15 +3,12 @@
  */
 'use strict';
 
-const mongoClient = require('./mongo-client');
-const promClient = require('./prometheus-client');
 const Simulator = require('../tools/Simulator');
 
 const PIPELINE_FILE = './pipeline-reference.js';
 const WITNESS_COUNT = 4;
 
 const USER = 'add-user';
-const SEND_RUN = false;
 
 async function load() {
   const creator = USER;
@@ -40,29 +37,10 @@ async function load() {
     nodeOrder: ['0', '1', '2', '3']
   };
 
-  const visualizer = {};
-  for(const elector of graph.getElectors()) {
-    const ledgerNodeId = elector.id;
-    visualizer[ledgerNodeId] = {
-      ledgerNodeId,
-      history: graph.getHistory({nodeId: ledgerNodeId}),
-      electors: graph.getElectors(),
-      recoveryElectors: [],
-      mode: 'first'
-    };
-  }
-
-  if(SEND_RUN) {
-    await Promise.all([
-      promClient.send({report}),
-      mongoClient.send({payload: {report, visualizer}}),
-    ]);
-  }
-
   console.log(report);
   return {input, display, report};
 }
 
-// load();
+load();
 
 module.exports = {load};
