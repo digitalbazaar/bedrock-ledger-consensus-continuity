@@ -54,7 +54,7 @@ async function load({
 
   if(!nosend) {
     await Promise.all([
-      promClient.send({report}),
+      // promClient.send({report}),
       mongoClient.send({payload: {report, visualizer}}),
     ]);
   }
