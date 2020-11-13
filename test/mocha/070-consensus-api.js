@@ -821,6 +821,7 @@ function _validateState({input, expectedState, nodeId}) {
 function _validateSupport({expectedEventState, _supporting, exclude}) {
   const skip = exclude.has('support');
   if(expectedEventState && expectedEventState.support && !skip) {
+    should.exist(_supporting);
     const support = _supporting.map(({eventHash}) => eventHash);
     support.should.have.same.members(expectedEventState.support);
   }
@@ -846,6 +847,7 @@ function _validateTotalEndorsers({expectedEventState, _endorsers, exclude}) {
   const skip = exclude.has('endorsersTotal');
   if(expectedEventState && expectedEventState.endorsersTotal && !skip) {
     // should specify total number of endorsers
+    should.exist(_endorsers);
     _endorsers.size.should.equal(expectedEventState.endorsersTotal);
   }
 }
@@ -856,11 +858,11 @@ function _validateEndorsements(
   if(expectedEventState && expectedEventState.endorsement && !skip) {
     // should specify the endorsing event
     const electorEndorsements =
-        _electorEndorsement.map(({eventHash}) => eventHash);
+      _electorEndorsement.map(({eventHash}) => eventHash);
     electorEndorsements.should.have.same.members(
       expectedEventState.endorsement);
     const proposalEndorsements =
-        _proposalEndorsement.map(({eventHash}) => eventHash);
+      _proposalEndorsement.map(({eventHash}) => eventHash);
     proposalEndorsements.should.have.same.members(
       expectedEventState.endorsement);
   }
@@ -870,6 +872,7 @@ function _validateEndorsingEvent(
   {expectedEventState, _endorsesProposal, exclude}) {
   const skip = exclude.has('endorses');
   if(expectedEventState && expectedEventState.endorses && !skip) {
+    should.exist(_endorsesProposal);
     const endorsedProposals =
       _endorsesProposal.map(({eventHash}) => eventHash);
     endorsedProposals.should.have.same.members(expectedEventState.endorses);
