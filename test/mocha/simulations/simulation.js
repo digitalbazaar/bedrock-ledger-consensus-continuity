@@ -7,6 +7,7 @@ const promClient = require('./prometheus-client');
 const Simulator = require('../tools/Simulator');
 
 async function load({
+  nosend,
   pipelineJs,
   user,
   witnessCount,
@@ -38,7 +39,9 @@ async function load({
     nodeOrder: ['0', '1', '2', '3']
   };
 
-  await promClient.send({report});
+  if(!nosend) {
+    await promClient.send({report});
+  }
   console.log(report);
   return {input, display, report};
 }
