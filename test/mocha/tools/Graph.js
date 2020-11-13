@@ -78,7 +78,7 @@ class Graph {
       return this.eventMap[fromBranch.tail.value].eventHash;
     });
 
-    if(!fork) {
+    if(!fork && !treeHash) {
       treeHash = toBranch.tail ?
         this.eventMap[toBranch.tail.value].eventHash : uuid();
     }
