@@ -11,7 +11,7 @@ class Simulator {
   constructor({id, name, creator, run, witnessCount, pipeline, init} = {}) {
     this.id = uuid();
     this.name = name || id;
-    this.run = run;
+    this.run = run || uuid();
     this.timestamp = Date.now();
     this.creator = creator;
     this.graph = new Graph();

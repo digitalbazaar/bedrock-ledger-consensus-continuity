@@ -8,7 +8,7 @@ const {MongoClient} = require('mongodb');
 const mongoUrl = process.env.MONGODB_URL;
 
 if(!mongoUrl) {
-  throw new Error('You must setup "process.env.MONGODB_URL".');
+  // throw new Error('You must setup "process.env.MONGODB_URL".');
 }
 
 module.exports.send = async function({payload}) {
