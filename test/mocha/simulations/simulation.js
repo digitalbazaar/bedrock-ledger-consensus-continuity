@@ -40,10 +40,22 @@ async function load({
     nodeOrder: ['0', '1', '2', '3']
   };
 
+  const visualizer = {};
+  for(const elector of graph.getElectors()) {
+    const ledgerNodeId = elector.id;
+    visualizer[ledgerNodeId] = {
+      ledgerNodeId,
+      history: graph.getHistory({nodeId: ledgerNodeId}),
+      electors: graph.getElectors(),
+      recoveryElectors: [],
+      mode: 'first'
+    };
+  }
+
   if(!nosend) {
     await Promise.all([
       promClient.send({report}),
-      mongoClient.send({report}),
+      mongoClient.send({payload: {report, visualizer}}),
     ]);
   }
   console.log(report);
