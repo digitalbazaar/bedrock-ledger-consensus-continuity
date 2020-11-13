@@ -7,7 +7,6 @@ const Denque = require('denque');
 const LRU = require('lru-cache');
 const uuid = require('uuid-random');
 const yallist = require('yallist');
-const v8 = require('v8');
 const helpers = require('./helpers');
 
 const {strfy} = helpers;
@@ -129,14 +128,14 @@ class Graph {
 
     const events = Array.from(results.values());
 
-    const history = v8.deserialize(v8.serialize({
+    const history = deepCopy({
       events: [...events, ...extraEvents],
       eventMap: {},
       localBranchHead: {
         eventHash: tail,
         generation: node.branch.length
       }
-    }));
+    });
 
     for(const event of history.events) {
       history.eventMap[event.eventHash] = event;
@@ -211,6 +210,33 @@ function _traverseBFS({tail, bfsCache = new LRU(), eventMap} = {}) {
 
   bfsCache.set(tail, results);
   return results;
+}
+
+// Fastest implementation of deep copy
+// https://gist.github.com/c7x43t/38afee87bb7391efb9ac27a3c282e5ed/
+function deepCopy(o) {
+  // if not array or object or is null return self
+  if(typeof o !== 'object' || o === null) {
+    return o;
+  }
+  let newO, i;
+  // handle case: array
+  if(o instanceof Array) {
+    let l;
+    newO = [];
+    for(i = 0, l = o.length; i < l; i++) {
+      newO[i] = deepCopy(o[i]);
+    }
+    return newO;
+  }
+  // handle case: object
+  newO = {};
+  for(i in o) {
+    if(o.hasOwnProperty(i)) {
+      newO[i] = deepCopy(o[i]);
+    }
+  }
+  return newO;
 }
 
 module.exports = Graph;
