@@ -10,14 +10,14 @@ async function load({
   pipelineJs,
   user,
   witnessCount,
+  run
 }) {
-  // FIXME: Get from params
-  const id = 'simulation-01';
   const creator = user;
   const pipelineApi = require(pipelineJs);
+  const {pipeline, name} = pipelineApi;
 
   const simulator = new Simulator({
-    id, creator, witnessCount, pipeline: pipelineApi.run
+    name, creator, witnessCount, pipeline, run
   });
 
   const report = await simulator.start();

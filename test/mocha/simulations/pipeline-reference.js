@@ -6,7 +6,8 @@
 const gossipStrategy = require('./gossip-strategy-reference');
 const mergeStrategy = require('./merge-strategy-reference');
 
-module.exports.run = async function() {
+module.exports.name = 'pipeline-reference';
+module.exports.pipeline = async function() {
   // const count = (((this.witnesses.size - 1) / 3 * 2) + 1);
   // const count = (this.witnesses.size - 1) / 3 * 2;
   const count = 1;
