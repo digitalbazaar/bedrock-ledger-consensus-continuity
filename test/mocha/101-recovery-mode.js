@@ -32,7 +32,7 @@ const peers = {};
 const heads = {};
 
 /* eslint-disable no-unused-vars */
-describe('Recovery mode simulation', () => {
+describe.skip('Recovery mode simulation', () => {
   before(function(done) {
     this.timeout(TEST_TIMEOUT);
     helpers.prepareDatabase(mockData, done);

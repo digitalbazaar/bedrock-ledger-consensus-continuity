@@ -469,7 +469,7 @@ describe('Election API _findMergeEventProof', () => {
     });
   });
 
-  describe('"firstWithConsensusProof" mode', () => {
+  describe.skip('"firstWithConsensusProof" mode', () => {
     it('ledger history alpha', done => {
       const report = {};
       async.auto({
