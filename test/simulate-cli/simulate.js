@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const Simulator = require('../tools/Simulator');
+const Simulator = require('../mocha/tools/Simulator');
 
 const PIPELINE_FILE = './pipeline-reference.js';
 const WITNESS_COUNT = 4;
