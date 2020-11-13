@@ -3,6 +3,7 @@
  */
 'use strict';
 
+const mongoClient = require('./mongo-client');
 const promClient = require('./prometheus-client');
 const Simulator = require('../tools/Simulator');
 
@@ -35,12 +36,15 @@ async function load({
   };
 
   const display = {
-    title: 'Simulation 01',
+    title: name,
     nodeOrder: ['0', '1', '2', '3']
   };
 
   if(!nosend) {
-    await promClient.send({report});
+    await Promise.all([
+      promClient.send({report}),
+      mongoClient.send({report}),
+    ]);
   }
   console.log(report);
   return {input, display, report};
