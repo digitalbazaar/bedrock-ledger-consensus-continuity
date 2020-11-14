@@ -17,7 +17,7 @@ class Graph {
   constructor() {
     this.nodes = new Map();
     this.bfsCache = new LRU({max: MAX_CACHE_SIZE});
-    this.eventMap = {};
+    this.eventMap = new Map();
   }
 
   static traverseBFS(options) {
@@ -56,8 +56,9 @@ class Graph {
 
     from = from.map(f => {
       if(typeof f === 'string') {
-        return from = {
-          nodeId: f
+        return {
+          nodeId: f,
+          eventHash: null
         };
       } else {
         // validate object and ensure it's the proper format
@@ -74,23 +75,23 @@ class Graph {
       }
       // return latest eventHash on branch
       const fromBranch = this.getBranch({nodeId});
-      return this.eventMap[fromBranch.tail.value].eventHash;
+      return this.eventMap.get(fromBranch.tail.value).eventHash;
     });
 
     if(!fork && !treeHash) {
       treeHash = toBranch.tail ?
-        this.eventMap[toBranch.tail.value].eventHash : uuid();
+        this.eventMap.get(toBranch.tail.value).eventHash : uuid();
     }
 
     if(parents.length === 0) {
       parents.push(treeHash);
     }
 
-    if(this.eventMap[eventHash]) {
+    if(this.eventMap.has(eventHash)) {
       throw new Error(`Duplicate Error: EventHash "${eventHash}" exists.`);
     }
 
-    this.eventMap[eventHash] = {
+    const event = {
       _children: [],
       _parents: [],
       eventHash,
@@ -105,6 +106,7 @@ class Graph {
         }
       }
     };
+    this.eventMap.set(eventHash, event);
 
     toBranch.push(eventHash);
 
@@ -163,7 +165,7 @@ class Graph {
     });
     console.log('nodes', nodes);
     console.log('nodeData', strfy({nodeData}));
-    console.log('eventMap', strfy({eventMap}));
+    console.log('eventMap', eventMap);
   }
 
   _traverseBFS({tail}) {
@@ -193,7 +195,7 @@ function _traverseBFS({tail, bfsCache = new LRU(), eventMap} = {}) {
       continue;
     }
 
-    const event = eventMap[eventHash];
+    const event = eventMap.get(eventHash);
 
     if(!event) {
       continue;
