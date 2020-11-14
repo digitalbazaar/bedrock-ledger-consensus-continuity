@@ -66,10 +66,11 @@ function _generateAveragesMetric({report, label, suffix}) {
   const reportKey = 'average';
   let metric = '';
 
-  Object.keys(report[reportKey]).forEach(k => {
+  const averagesReport = report[reportKey];
+  for(const [k, v] of Object.entries(averagesReport)) {
     const metricName = PROMETHEUS_METRIC_NAMES.get(k);
-    metric += `${metricName}_${suffix}{${label}} ${metric[k]}\n`;
-  });
+    metric += `${metricName}_${suffix}{${label}} ${v}\n`;
+  }
 
   return metric;
 }
