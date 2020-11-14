@@ -6,7 +6,7 @@
 const Simulator = require('../mocha/tools/Simulator');
 
 const PIPELINE_FILE = './pipeline-reference.js';
-const WITNESS_COUNT = 4;
+const WITNESS_COUNT = 31;
 
 const USER = 'add-user';
 
