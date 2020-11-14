@@ -13,7 +13,13 @@ function eventsToIds(events) {
   if(!events) {
     return [];
   }
-  return events.map(e => e.eventHash);
+  if(events instanceof Set || events instanceof Map) {
+    return [...events.values()].map(e => e.eventHash);
+  }
+  if(Array.isArray(events)) {
+    return events.map(e => e.eventHash);
+  }
+  throw new Error('Unknown event container type.');
 }
 
 /**
