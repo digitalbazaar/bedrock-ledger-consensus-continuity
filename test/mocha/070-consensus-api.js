@@ -798,8 +798,8 @@ function _validateState({input, expectedState, nodeId}) {
         proposal: _proposal,
         proposalEndorsed: _proposalEndorsed,
         proposalEndorsement: _proposalEndorsement,
-        supporting: _supporting,
-        votes: _votes
+        support: _support,
+        mostRecentWitnessAncestors: _mostRecentWitnessAncestors
       }
     } = event;
     const expectedEventState = expectedState[eventHash];
@@ -809,7 +809,7 @@ function _validateState({input, expectedState, nodeId}) {
     }
 
     // validate support
-    _validateSupport({exclude, expectedEventState, _supporting});
+    _validateSupport({exclude, expectedEventState, _support});
     // validate proposals
     _validateProposals({exclude, expectedEventState, _proposal});
     // validate endorsed event
@@ -822,15 +822,16 @@ function _validateState({input, expectedState, nodeId}) {
     // validate endorsing event
     _validateEndorsingEvent({exclude, expectedEventState, _endorsesProposal});
     // validate detected forks
-    _validateDetectedForks({exclude, expectedEventState, _votes});
+    _validateDetectedForks(
+      {exclude, expectedEventState, _mostRecentWitnessAncestors});
   });
 }
 
-function _validateSupport({expectedEventState, _supporting, exclude}) {
+function _validateSupport({expectedEventState, _support, exclude}) {
   const skip = exclude.has('support');
   if(expectedEventState && expectedEventState.support && !skip) {
-    should.exist(_supporting);
-    const support = _supporting.map(({eventHash}) => eventHash);
+    should.exist(_support);
+    const support = _support.map(({eventHash}) => eventHash);
     support.should.have.same.members(expectedEventState.support);
   }
 }
@@ -883,11 +884,12 @@ function _validateEndorsingEvent(
   }
 }
 
-function _validateDetectedForks({expectedEventState, _votes, exclude}) {
+function _validateDetectedForks(
+  {expectedEventState, _mostRecentWitnessAncestors, exclude}) {
   const skip = exclude.has('detectFork');
   if(expectedEventState && expectedEventState.detectFork && !skip) {
     expectedEventState.detectFork.forEach(nodeId => {
-      _votes.get(nodeId).should.equal(false);
+      _mostRecentWitnessAncestors.get(nodeId).should.equal(false);
     });
   }
 }

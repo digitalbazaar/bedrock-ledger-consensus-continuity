@@ -15,7 +15,7 @@
       color: black;
       border: thick solid lightgray;
     }
-    .vis-item.vis-box.supporting, .legend .cont-legend.supporting {
+    .vis-item.vis-box.support, .legend .cont-legend.support {
       background-color: red;
       color: white;
       border: thick solid lightgray;
@@ -145,7 +145,7 @@
 
   <p>
   <span class="cont-legend selected">selected</span>
-  <span class="cont-legend supporting">supporting</span>
+  <span class="cont-legend support">support</span>
   <span class="cont-legend proposal">proposal</span>
   <span class="cont-legend proposalEndorsement">proposal endorsement</span>
   <span class="cont-legend endorsesProposal">endorses proposal</span>
@@ -329,8 +329,8 @@ function setupTimeline(data) {
         } else {
           tips.push(`Decision: <span style="color: red">&cross;</span>`);
         }
-        // key ids for forks (vote map has false)
-        const forks = Object.entries(node.votes)
+        // key ids for forks (MRWA map has false)
+        const forks = Object.entries(node.mostRecentWitnessAncestors)
           .filter(([k, v]) => v === false)
           .map(([k, v]) => k);
         if(forks.length > 0) {
@@ -345,7 +345,8 @@ function setupTimeline(data) {
     template: function(item, element, data) {
       const node = idMap[item.id];
       const classes = ['cont-event'];
-      if(Object.entries(node.votes).some(([k, v]) => v === false)) {
+      if(Object.entries(node.mostRecentWitnessAncestors)
+        .some(([k, v]) => v === false)) {
         classes.push('has-forks');
       }
       if(node.decision) {
@@ -433,8 +434,8 @@ function setupTimeline(data) {
   timeline.on('itemover', ({item, event}) => {
     //console.log('OVER', item);
     const e = idMap[item];
-    for(const id of e.supporting) {
-      items.update({id, className: 'supporting'});
+    for(const id of e.support) {
+      items.update({id, className: 'support'});
     }
     for(const id of e.proposal) {
       // prioritize endorsesProposal
@@ -475,7 +476,7 @@ function setupTimeline(data) {
     }
 
     // key ids for forks (vote map has false)
-    const forks = Object.entries(idMap[item].votes)
+    const forks = Object.entries(idMap[item].mostRecentWitnessAncestors)
       .filter(([k, v]) => v === false)
       .map(([k, v]) => k);
     for(const id of forks) {
@@ -485,7 +486,7 @@ function setupTimeline(data) {
   timeline.on('itemout', ({item, event}) => {
     //console.log('OUT', item);
     const e = idMap[item];
-    for(const id of e.supporting) {
+    for(const id of e.support) {
       items.update({id, className: 'default'});
     }
     for(const id of e.proposalEndorsement) {
@@ -513,7 +514,7 @@ function setupTimeline(data) {
       items.update({id, className: 'default'});
     }
     // key ids for forks (vote map has false)
-    const forks = Object.entries(idMap[item].votes)
+    const forks = Object.entries(idMap[item].mostRecentWitnessAncestors)
       .filter(([k, v]) => v === false)
       .map(([k, v]) => k);
     for(const id of forks) {
