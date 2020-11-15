@@ -130,16 +130,11 @@ class Graph {
 
     const history = deepCopy({
       events: [...events, ...extraEvents],
-      eventMap: {},
       localBranchHead: {
         eventHash: tail,
         generation: node.branch.length
       }
     });
-
-    for(const event of history.events) {
-      history.eventMap[event.eventHash] = event;
-    }
 
     return history;
   }
