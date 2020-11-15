@@ -103,17 +103,22 @@ class Witness {
     });
     this.totalMergeEventsCreated++;
 
+    await this._updateOutstandingMergeEvents();
+  }
+
+  async _updateOutstandingMergeEvents() {
     const history = await this.getHistory({includeOutstanding: false});
-    const mergedEvents = history.events.map(({eventHash}) => eventHash);
+    const mergedEvents = history.events.map(_eventHashMapper);
 
     const outstandingEventsMap = new Map();
-    this.outstandingMergeEvents.forEach(event => {
-      outstandingEventsMap.set(event.eventHash, event);
-    });
 
-    mergedEvents.forEach(eventHash => {
+    for(const event of this.outstandingMergeEvents) {
+      outstandingEventsMap.set(event.eventHash, event);
+    }
+
+    for(const eventHash of mergedEvents) {
       outstandingEventsMap.delete(eventHash);
-    });
+    }
 
     this.outstandingMergeEvents = Array.from(outstandingEventsMap.values());
   }
@@ -132,19 +137,20 @@ class Witness {
     const history = await this.getHistory();
     const peerHistory = await peer.getHistory();
 
-    const events = history.events.map(({eventHash}) => eventHash);
-    const peerEvents = peerHistory.events.map(({eventHash}) => eventHash);
+    const events = history.events.map(_eventHashMapper);
+    const peerEvents = peerHistory.events.map(_eventHashMapper);
 
     const peerEventsSeenLocally = _.intersection(events, peerEvents);
     const localPeerEvents = new Set(peerEventsSeenLocally);
 
     const localPeerBranch = this.graph.getBranch({nodeId: peerNodeId});
     const orderedLocalPeerEvents = [];
-    localPeerBranch.forEach(eventHash => {
+
+    for(const eventHash of localPeerBranch) {
       if(localPeerEvents.has(eventHash)) {
         orderedLocalPeerEvents.push(eventHash);
       }
-    });
+    }
 
     console.log('peerEvents:', peerEvents.length);
     console.log('localPeerEventsLength:', localPeerEvents.size);
@@ -170,7 +176,21 @@ class Witness {
 
   async getEvents({events}) {
     const history = await this.getHistory();
-    return history.events.filter(({eventHash}) => events.includes(eventHash));
+    const localEventsMap = new Map();
+
+    for(const event of history.events) {
+      localEventsMap.set(event.eventHash, event);
+    }
+
+    const eventsInLocalHistory = [];
+    for(const event of events) {
+      const localEvent = localEventsMap.get(event);
+      if(localEvent) {
+        eventsInLocalHistory.push(localEvent);
+      }
+    }
+
+    return eventsInLocalHistory;
   }
 
   async getPeers() {
@@ -182,12 +202,16 @@ class Witness {
   async getLocalPeers() {
     const peers = [];
 
-    this.seenPeers.forEach(peerNodeId => {
+    for(const peerNodeId of this.seenPeers) {
       peers.push(this.witnesses.get(peerNodeId));
-    });
+    }
 
     return peers;
   }
+}
+
+function _eventHashMapper({eventHash}) {
+  return eventHash;
 }
 
 module.exports = Witness;
