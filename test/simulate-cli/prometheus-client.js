@@ -37,8 +37,15 @@ async function send({report}) {
 }
 
 function createMetrics({report}) {
-  const labelKeys = ['id', 'name', 'run', 'creator', 'timestamp'];
-  const label = labelKeys.map(key => `${key}="${report[key]}"`).join(', ');
+  const labelKeys = [
+    'id', 'name', 'run', 'creator', 'timestamp', 'witnessCount'
+  ];
+  const label = labelKeys.map(key => {
+    if(key === 'witnessCount') {
+      return `${key}="${report[key].toString().padStart(5, 0)}"`;
+    }
+    return `${key}="${report[key]}"`;
+  }).join(', ');
 
   let prometheusData = '';
 
