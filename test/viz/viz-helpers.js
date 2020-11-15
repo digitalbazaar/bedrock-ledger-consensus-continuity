@@ -63,7 +63,7 @@ api.visualizationData = ({
   const creatorIndexMap = {};
   // find roots (no parents), index, and add root constraints
   history.events.forEach((e, i) => {
-    if(e._parents.length === 0) {
+    if(e._c.parents.length === 0) {
       _addRoot(e, i);
       creatorIndexMap[e.meta.continuity2017.creator] = i;
     }
@@ -89,7 +89,7 @@ api.visualizationData = ({
       isYCandidate: yCandidates.includes(e.eventHash),
       creatorName: creatorNameMap[e.meta.continuity2017.creator]
     });
-    e._parents.forEach(pe => {
+    e._c.parents.forEach(pe => {
       const pi = indexMap[pe.eventHash];
       data.links.push({
         source: pi,
@@ -210,7 +210,7 @@ api.testInputData = ({
   const creatorIndexMap = new Map();
   // find roots (no parents), index, and add root constraints
   history.events.forEach((e, i) => {
-    //if(e._parents.length === 0) {
+    //if(e._c.parents.length === 0) {
     // check for parentHashes not listed as eventHashes
     if(!e.event.parentHash.every(p => indexMap.has(p))) {
       _addRoot(e, i);
@@ -257,7 +257,7 @@ api.testInputData = ({
       isYCandidate: false,
       creatorName: creatorNameMap[e.meta.continuity2017.creator]
     });
-    //e._parents.forEach(pe => {
+    //e._c.parents.forEach(pe => {
     //console.log('XXX', historyId, creatorIndexMap);
     e.event.parentHash.forEach(pe => {
       if(!indexMap.has(pe)) {
@@ -387,8 +387,8 @@ api.testOutputDataForTimeline = ({
   //debugger;
   history.events.forEach(e => {
     const _votes = {};
-    if(e._votes) {
-      for(const [key, value] of e._votes) {
+    if(e._c.votes) {
+      for(const [key, value] of e._c.votes) {
         _votes[key] = typeof value === 'object' ? value.eventHash : value;
       }
     }
@@ -402,14 +402,14 @@ api.testOutputDataForTimeline = ({
       //isYCandidate: yCandidates.includes(e.eventHash),
       //creatorName: creatorNameMap[e.meta.continuity2017.creator],
       creatorName: e.meta.continuity2017.creator,
-      parents: eventsToIds(e._parents),
-      supporting: eventsToIds(e._supporting),
-      proposalEndorsement: eventsToIds(e._proposalEndorsement),
-      endorsesProposal: eventsToIds(e._endorsesProposal),
+      parents: eventsToIds(e._c.parents),
+      supporting: eventsToIds(e._c.supporting),
+      proposalEndorsement: eventsToIds(e._c.proposalEndorsement),
+      endorsesProposal: eventsToIds(e._c.endorsesProposal),
       votes: _votes,
-      decision: !!e._decision,
-      proposal: e._proposal ? [e._proposal.eventHash] : [],
-      treeParent: e._treeParent ? [e._treeParent.eventHash] : []
+      decision: e._c.decision,
+      proposal: e._c.proposal ? [e._c.proposal.eventHash] : [],
+      treeParent: e._c.treeParent ? [e._c.treeParent.eventHash] : []
     });
   });
 
@@ -519,10 +519,10 @@ api.visualizationDataTimeline = ({
       isY: allYs.includes(e.eventHash),
       isYCandidate: yCandidates.includes(e.eventHash),
       creatorName: creatorNameMap[e.meta.continuity2017.creator],
-      parents: eventsToIds(e._parents),
-      supporting: eventsToIds(e._supporting),
-      proposalEndorsement: eventsToIds(e._proposalEndorsement),
-      endorsesProposal: eventsToIds(e._endorsesProposal)
+      parents: eventsToIds(e._c.parents),
+      supporting: eventsToIds(e._c.supporting),
+      proposalEndorsement: eventsToIds(e._c.proposalEndorsement),
+      endorsesProposal: eventsToIds(e._c.endorsesProposal)
     });
   });
 

@@ -791,8 +791,16 @@ function _validateState({input, expectedState, nodeId}) {
   const {events} = input.history;
   events.forEach(event => {
     const {
-      eventHash, _supporting, _proposal, _votes, _electorEndorsement,
-      _endorsers, _proposalEndorsed, _proposalEndorsement, _endorsesProposal
+      eventHash,
+      _c: {
+        endorsers: _endorsers,
+        endorsesProposal: _endorsesProposal,
+        proposal: _proposal,
+        proposalEndorsed: _proposalEndorsed,
+        proposalEndorsement: _proposalEndorsement,
+        supporting: _supporting,
+        votes: _votes
+      }
     } = event;
     const expectedEventState = expectedState[eventHash];
     let exclude = new Set();
@@ -810,7 +818,7 @@ function _validateState({input, expectedState, nodeId}) {
     _validateTotalEndorsers({exclude, expectedEventState, _endorsers});
     // validate endorsements
     _validateEndorsements(
-      {exclude, expectedEventState, _electorEndorsement, _proposalEndorsement});
+      {exclude, expectedEventState, _proposalEndorsement});
     // validate endorsing event
     _validateEndorsingEvent({exclude, expectedEventState, _endorsesProposal});
     // validate detected forks
@@ -853,14 +861,10 @@ function _validateTotalEndorsers({expectedEventState, _endorsers, exclude}) {
 }
 
 function _validateEndorsements(
-  {expectedEventState, _electorEndorsement, _proposalEndorsement, exclude}) {
+  {expectedEventState, _proposalEndorsement, exclude}) {
   const skip = exclude.has('endorsement');
   if(expectedEventState && expectedEventState.endorsement && !skip) {
     // should specify the endorsing event
-    const electorEndorsements =
-      _electorEndorsement.map(({eventHash}) => eventHash);
-    electorEndorsements.should.have.same.members(
-      expectedEventState.endorsement);
     const proposalEndorsements =
       _proposalEndorsement.map(({eventHash}) => eventHash);
     proposalEndorsements.should.have.same.members(

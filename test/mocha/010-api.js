@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -292,21 +292,14 @@ describe('Continuity2017', () => {
             assertNoError(err);
             const mergeEventHash = results.addEvent.mergeHash;
             // inspect eventMap
-            // it should include keys for the regular event and merge event
+            // it should include keys for the merge event
             should.exist(result.eventMap);
             result.eventMap.should.be.an('object');
             const hashes = Object.keys(result.eventMap);
             hashes.should.have.length(1);
             hashes.should.have.same.members([mergeEventHash]);
-            // inspect the regular event
-            // it should have the merge event as its only child
             const mergeEvent = result.eventMap[mergeEventHash];
-            should.exist(mergeEvent._children);
-            mergeEvent._children.should.be.an('array');
-            mergeEvent._children.should.have.length(0);
-            should.exist(mergeEvent._parents);
-            mergeEvent._parents.should.be.an('array');
-            mergeEvent._parents.should.have.length(0);
+            should.exist(mergeEvent);
             callback();
           });
         }]
@@ -332,14 +325,7 @@ describe('Continuity2017', () => {
             hashes.should.have.same.members([mergeEventHash]);
             // inspect the merge event
             const mergeEvent = result.eventMap[mergeEventHash];
-            should.exist(mergeEvent._children);
-            const children = mergeEvent._children;
-            children.should.be.an('array');
-            children.should.have.length(0);
-            should.exist(mergeEvent._parents);
-            const parents = mergeEvent._parents;
-            parents.should.be.an('array');
-            parents.should.have.length(0);
+            should.exist(mergeEvent);
             const {parentHash} = mergeEvent.event;
             parentHash.should.have.same.members(
               [genesisMergeHash, ...regularEventHash]);
@@ -372,30 +358,16 @@ describe('Continuity2017', () => {
             // inspect the merge event
             // it should have one parent, the remote merge event
             const mergeEvent = result.eventMap[mergeEventHash];
-            should.exist(mergeEvent._children);
-            let children = mergeEvent._children;
-            children.should.be.an('array');
-            children.should.have.length(0);
-            should.exist(mergeEvent._parents);
-            let parents = mergeEvent._parents;
+            should.exist(mergeEvent._c.parents);
+            let parents = mergeEvent._c.parents;
             parents.should.be.an('array');
             parents.should.have.length(1);
             const parentHashes = parents.map(e => e.eventHash);
             parentHashes.should.have.same.members([remoteMergeHash]);
             // inspect remote merge event
             const remoteMergeEvent = result.eventMap[remoteMergeHash];
-            should.exist(remoteMergeEvent._children);
-            children = remoteMergeEvent._children;
-            children.should.be.an('array');
-            children.should.have.length(1);
-            const child0 = children[0];
-            child0.should.be.an('object');
-            should.exist(child0.eventHash);
-            should.exist(child0.event);
-            should.exist(child0.meta.continuity2017);
-            child0.eventHash.should.equal(mergeEventHash);
-            should.exist(remoteMergeEvent._parents);
-            parents = remoteMergeEvent._parents;
+            should.exist(remoteMergeEvent._c.parents);
+            parents = remoteMergeEvent._c.parents;
             parents.should.be.an('array');
             parents.should.have.length(0);
             callback();
@@ -426,24 +398,16 @@ describe('Continuity2017', () => {
               [mergeEventHash, ...remoteMergeHash]);
             // inspect local merge
             const mergeEvent = result.eventMap[mergeEventHash];
-            let children = mergeEvent._children;
-            children.should.have.length(0);
-            let parents = mergeEvent._parents;
+            let parents = mergeEvent._c.parents;
             parents.should.have.length(1);
             const parentHashes = parents.map(e => e.eventHash);
             parentHashes.should.have.same.members([remoteMergeHash[1]]);
             // inspect remote merge event 0
             const rme0 = result.eventMap[remoteMergeHash[0]];
-            children = rme0._children;
-            children.should.have.length(1);
-            children[0].eventHash.should.equal(remoteMergeHash[1]);
-            rme0._parents.should.have.length(0);
+            rme0._c.parents.should.have.length(0);
             // inspect remote merge event 1
             const rme1 = result.eventMap[remoteMergeHash[1]];
-            children = rme1._children;
-            children.should.have.length(1);
-            children[0].eventHash.should.equal(mergeEventHash);
-            parents = rme1._parents;
+            parents = rme1._c.parents;
             parents.should.have.length(1);
             parents[0].eventHash.should.equal(remoteMergeHash[0]);
             callback();
@@ -467,15 +431,10 @@ describe('Continuity2017', () => {
             hashes.should.have.same.members(remoteMergeHash);
             // inspect remote merge event 0
             const rme0 = result.eventMap[remoteMergeHash[0]];
-            let children = rme0._children;
-            children.should.have.length(1);
-            children[0].eventHash.should.equal(remoteMergeHash[1]);
-            rme0._parents.should.have.length(0);
+            rme0._c.parents.should.have.length(0);
             // inspect remote merge event 1
             const rme1 = result.eventMap[remoteMergeHash[1]];
-            children = rme1._children;
-            children.should.have.length(0);
-            const parents = rme1._parents;
+            const parents = rme1._c.parents;
             parents.should.have.length(1);
             parents[0].eventHash.should.equal(remoteMergeHash[0]);
             callback();
@@ -498,9 +457,7 @@ describe('Continuity2017', () => {
             hashes.should.have.length(1);
             hashes.should.have.same.members([regularEventHash]);
             const regularEvent = result.eventMap[regularEventHash];
-            const children = regularEvent._children;
-            children.should.have.length(0);
-            const parents = regularEvent._parents;
+            const parents = regularEvent._c.parents;
             parents.should.have.length(0);
             callback();
           });
@@ -524,9 +481,7 @@ describe('Continuity2017', () => {
             // it should have no parents or children
             regularEventHash.forEach(h => {
               const regularEvent = result.eventMap[h];
-              const children = regularEvent._children;
-              children.should.have.length(0);
-              const parents = regularEvent._parents;
+              const parents = regularEvent._c.parents;
               parents.should.have.length(0);
             });
             callback();
@@ -556,22 +511,15 @@ describe('Continuity2017', () => {
             // it should have no parents or children
             regularEventHash.forEach(h => {
               const regularEvent = result.eventMap[h];
-              const children = regularEvent._children;
-              children.should.have.length(0);
-              const parents = regularEvent._parents;
+              const parents = regularEvent._c.parents;
               parents.should.have.length(0);
             });
             // inspect remote merge event 0
             const rme0 = result.eventMap[remoteMergeHash[0]];
-            let children = rme0._children;
-            children.should.have.length(1);
-            children[0].eventHash.should.equal(remoteMergeHash[1]);
-            rme0._parents.should.have.length(0);
+            rme0._c.parents.should.have.length(0);
             // inspect remote merge event 1
             const rme1 = result.eventMap[remoteMergeHash[1]];
-            children = rme1._children;
-            children.should.have.length(0);
-            const parents = rme1._parents;
+            const parents = rme1._c.parents;
             parents.should.have.length(1);
             parents[0].eventHash.should.equal(remoteMergeHash[0]);
             callback();
