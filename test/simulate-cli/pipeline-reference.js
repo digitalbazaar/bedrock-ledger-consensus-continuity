@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const gossipStrategy = require('./gossip-strategy-reference');
+const gossipStrategy = require('./gossip-strategies/previous-peer');
 const mergeStrategy = require('./merge-strategy-reference');
 
 module.exports.name = 'pipeline-reference';
