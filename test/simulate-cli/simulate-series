@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const path = require('path');
+const workerpool = require('workerpool');
+const yargs = require('yargs');
+
+main().catch(console.error);
+
+async function main() {
+  yargs
+    .help('help', 'Show help.')
+    .option('nosend', {
+      describe: 'Do not send metrics.',
+    })
+    .option('pipelineJs', {
+      describe: 'Path to the pipeline.',
+      alias: 'p',
+      default: './pipeline-reference.js',
+    })
+    .option('user', {
+      describe: 'The user.',
+      alias: 'u',
+    })
+    .options('maxwitnesses', {
+      describe: 'Test up to the maximum number of witnesses.',
+      alias: 'm',
+      default: 22,
+    });
+
+  const {nosend, pipelineJs, user, maxwitnesses} = yargs.argv;
+  if(!(user)) {
+    throw new Error('Ensure proper options are specified. See --help.');
+  }
+
+  const run = Date.now();
+
+  const simulationPool = workerpool.pool(
+    path.join(__dirname, 'simulation-worker.js'));
+  const simulationWorker = await simulationPool.proxy();
+
+  const promises = [];
+  for(let i = 4; i <= maxwitnesses; ++i) {
+    if(i % 3 !== 1) {
+      continue;
+    }
+    const simulationOptions = {
+      nosend,
+      pipelineJs,
+      user,
+      run,
+      witnessCount: i
+    };
+    promises.push(simulationWorker.runSimulation(simulationOptions));
+  }
+
+  await Promise.all(promises);
+
+  simulationPool.terminate();
+}

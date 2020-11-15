@@ -14,7 +14,7 @@ module.exports.send = async function({payload}) {
     return;
   }
   const {client, collection} = await _initMongo();
-  await collection.insert(payload);
+  await collection.insertOne(payload);
   await _closeMongo({client});
 };
 
