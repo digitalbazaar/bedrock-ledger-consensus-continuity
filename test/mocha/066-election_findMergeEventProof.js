@@ -17,7 +17,7 @@ describe('Election API _findMergeEventProof', () => {
     helpers.prepareDatabase(mockData, done);
   });
   let _findMergeEventProof;
-  let _getElectorBranches;
+  let _getWitnessBranches;
   let genesisBlock;
   let getRecentHistory;
   let EventWriter;
@@ -37,7 +37,7 @@ describe('Election API _findMergeEventProof', () => {
           }
           consensusApi = result.api;
           getRecentHistory = consensusApi._events.getRecentHistory;
-          _getElectorBranches = consensusApi._election._getElectorBranches;
+          _getWitnessBranches = consensusApi._election._getWitnessBranches;
           _findMergeEventProof = consensusApi._election._findMergeEventProof;
           EventWriter = consensusApi._worker.EventWriter;
           callback();
@@ -143,9 +143,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
@@ -191,9 +191,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               callback(null, branches);
             }],
@@ -243,9 +243,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               callback(null, branches);
             }],
@@ -323,9 +323,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
@@ -386,9 +386,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
@@ -440,9 +440,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes.alpha.creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
@@ -485,9 +485,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
@@ -536,9 +536,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               callback(null, branches);
             }],
@@ -591,9 +591,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               callback(null, branches);
             }],
@@ -672,9 +672,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
@@ -736,9 +736,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes[i].creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
@@ -793,9 +793,9 @@ describe('Election API _findMergeEventProof', () => {
               creatorId: nodes.alpha.creatorId,
               ledgerNode, excludeLocalRegularEvents: true}, callback),
             proof: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const proof = _findMergeEventProof({
                 ledgerNode,
