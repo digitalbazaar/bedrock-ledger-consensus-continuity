@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const mongoClient = require('./mongo-client');
+// const mongoClient = require('./mongo-client');
 const promClient = require('./prometheus-client');
 const Simulator = require('../mocha/tools/Simulator');
 
