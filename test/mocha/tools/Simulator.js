@@ -116,7 +116,8 @@ class Simulator {
       timestamp,
       totalTimeSlices: tick,
       average: results,
-      gossipSessions
+      gossipSessions,
+      witnessCount: this.witnesses.size,
     };
   }
 
