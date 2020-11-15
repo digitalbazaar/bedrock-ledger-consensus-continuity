@@ -291,15 +291,13 @@ describe('Continuity2017', () => {
           }, (err, result) => {
             assertNoError(err);
             const mergeEventHash = results.addEvent.mergeHash;
-            // inspect eventMap
+            // inspect events
             // it should include keys for the merge event
-            should.exist(result.eventMap);
-            result.eventMap.should.be.an('object');
-            const hashes = Object.keys(result.eventMap);
-            hashes.should.have.length(1);
-            hashes.should.have.same.members([mergeEventHash]);
-            const mergeEvent = result.eventMap[mergeEventHash];
-            should.exist(mergeEvent);
+            should.exist(result.events);
+            result.events.should.be.an('array');
+            result.events.should.have.length(1);
+            should.exist(result.events[0].eventHash);
+            result.events[0].eventHash.should.equal(mergeEventHash);
             callback();
           });
         }]
@@ -320,11 +318,11 @@ describe('Continuity2017', () => {
             assertNoError(err);
             const mergeEventHash = results.addEvent.merge.meta.eventHash;
             const regularEventHash = Object.keys(results.addEvent.regular);
-            const hashes = Object.keys(result.eventMap);
+            const hashes = result.events.map(e => e.eventHash);
             hashes.should.have.length(1);
             hashes.should.have.same.members([mergeEventHash]);
             // inspect the merge event
-            const mergeEvent = result.eventMap[mergeEventHash];
+            const mergeEvent = result.events[0];
             should.exist(mergeEvent);
             const {parentHash} = mergeEvent.event;
             parentHash.should.have.same.members(
