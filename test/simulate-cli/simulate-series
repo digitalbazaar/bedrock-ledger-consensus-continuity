@@ -38,7 +38,10 @@ async function main() {
 
   const simulationPool = workerpool.pool(
     path.join(__dirname, 'simulation-worker.js'));
-  const simulationWorker = await simulationPool.proxy();
+
+  setInterval(() => {
+    console.log('WORKERPOOL STATUS', simulationPool.stats());
+  }, 3000);
 
   const promises = [];
   for(let i = 4; i <= maxwitnesses; ++i) {
@@ -52,7 +55,7 @@ async function main() {
       run,
       witnessCount: i
     };
-    promises.push(simulationWorker.runSimulation(simulationOptions));
+    promises.push(simulationPool.exec('runSimulation', [simulationOptions]));
   }
 
   await Promise.all(promises);
