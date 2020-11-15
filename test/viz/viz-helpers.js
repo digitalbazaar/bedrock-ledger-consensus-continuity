@@ -386,10 +386,11 @@ api.testOutputDataForTimeline = ({
   // process all events
   //debugger;
   history.events.forEach(e => {
-    const _votes = {};
-    if(e._c.votes) {
-      for(const [key, value] of e._c.votes) {
-        _votes[key] = typeof value === 'object' ? value.eventHash : value;
+    const _mostRecentWitnessAncestors = {};
+    if(e._c.mostRecentWitnessAncestors) {
+      for(const [key, value] of e._c.mostRecentWitnessAncestors) {
+        _mostRecentWitnessAncestors[key] =
+          typeof value === 'object' ? value.eventHash : value;
       }
     }
     data.nodes.push({
@@ -403,10 +404,10 @@ api.testOutputDataForTimeline = ({
       //creatorName: creatorNameMap[e.meta.continuity2017.creator],
       creatorName: e.meta.continuity2017.creator,
       parents: eventsToIds(e._c.parents),
-      supporting: eventsToIds(e._c.supporting),
+      support: eventsToIds(e._c.support),
       proposalEndorsement: eventsToIds(e._c.proposalEndorsement),
       endorsesProposal: eventsToIds(e._c.endorsesProposal),
-      votes: _votes,
+      mostRecentWitnessAncestors: _mostRecentWitnessAncestors,
       decision: e._c.decision,
       proposal: e._c.proposal ? [e._c.proposal.eventHash] : [],
       treeParent: e._c.treeParent ? [e._c.treeParent.eventHash] : []
@@ -520,7 +521,7 @@ api.visualizationDataTimeline = ({
       isYCandidate: yCandidates.includes(e.eventHash),
       creatorName: creatorNameMap[e.meta.continuity2017.creator],
       parents: eventsToIds(e._c.parents),
-      supporting: eventsToIds(e._c.supporting),
+      support: eventsToIds(e._c.support),
       proposalEndorsement: eventsToIds(e._c.proposalEndorsement),
       endorsesProposal: eventsToIds(e._c.endorsesProposal)
     });
