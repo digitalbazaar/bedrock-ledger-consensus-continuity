@@ -13,7 +13,7 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 /* eslint-disable no-unused-vars */
-describe.skip('Election API _getElectorBranches', () => {
+describe.skip('Election API _getWitnessBranches', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -120,7 +120,7 @@ describe.skip('Election API _getElectorBranches', () => {
         `${nodeLabel}: ${nodes[nodeLabel].storage.events.collection.s.name}`);
     });
     const getRecentHistory = consensusApi._events.getRecentHistory;
-    const _getElectorBranches = consensusApi._election._getElectorBranches;
+    const _getWitnessBranches = consensusApi._election._getWitnessBranches;
     const eventTemplate = mockData.events.alpha;
     async.auto({
       // add a regular event and merge on every node
@@ -145,9 +145,9 @@ describe.skip('Election API _getElectorBranches', () => {
           async.auto({
             history: callback => getRecentHistory({ledgerNode: n}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getElectorBranches({
+              const branches = _getWitnessBranches({
                 history: results.history,
-                electors
+                witnesses: electors
               });
               const peerId = peers[i];
               const keys = Object.keys(branches);
@@ -191,9 +191,9 @@ describe.skip('Election API _getElectorBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getElectorBranches({
+            const branches = _getWitnessBranches({
               history: results.history,
-              electors
+              witnesses: electors
             });
             const peerId = [peers.alpha, peers.beta];
             const keys = Object.keys(branches);
@@ -261,9 +261,9 @@ describe.skip('Election API _getElectorBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getElectorBranches({
+            const branches = _getWitnessBranches({
               history: results.history,
-              electors
+              witnesses: electors
             });
             const peerId = [peers.gamma, peers.delta];
             const keys = Object.keys(branches);
@@ -323,9 +323,9 @@ describe.skip('Election API _getElectorBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getElectorBranches({
+            const branches = _getWitnessBranches({
               history: results.history,
-              electors
+              witnesses: electors
             });
             // all electors should now be represented
             const peerId = electors;
@@ -435,9 +435,9 @@ describe.skip('Election API _getElectorBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getElectorBranches({
+            const branches = _getWitnessBranches({
               history: results.history,
-              electors
+              witnesses: electors
             });
             // all electors should now be represented
             const peerId = electors;
