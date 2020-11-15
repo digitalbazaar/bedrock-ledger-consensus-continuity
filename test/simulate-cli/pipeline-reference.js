@@ -4,7 +4,7 @@
 'use strict';
 
 const gossipStrategy = require('./gossip-strategies/previous-peer');
-const mergeStrategy = require('./merge-strategy-reference');
+const mergeStrategy = require('./merge-strategies/previous-peer');
 
 module.exports.name = 'pipeline-reference';
 module.exports.pipeline = async function() {
