@@ -883,7 +883,7 @@ function _validateDetectedForks({expectedEventState, _votes, exclude}) {
   const skip = exclude.has('detectFork');
   if(expectedEventState && expectedEventState.detectFork && !skip) {
     expectedEventState.detectFork.forEach(nodeId => {
-      _votes[nodeId].should.equal(false);
+      _votes.get(nodeId).should.equal(false);
     });
   }
 }

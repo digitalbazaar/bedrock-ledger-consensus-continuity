@@ -388,7 +388,7 @@ api.testOutputDataForTimeline = ({
   history.events.forEach(e => {
     const _votes = {};
     if(e._votes) {
-      for(const [key, value] of Object.entries(e._votes)) {
+      for(const [key, value] of e._votes) {
         _votes[key] = typeof value === 'object' ? value.eventHash : value;
       }
     }
