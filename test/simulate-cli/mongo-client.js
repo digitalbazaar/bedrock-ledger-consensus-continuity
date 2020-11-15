@@ -7,11 +7,12 @@ const {MongoClient} = require('mongodb');
 
 const mongoUrl = process.env.MONGODB_URL;
 
-if(!mongoUrl) {
-  // throw new Error('You must setup "process.env.MONGODB_URL".');
-}
-
 module.exports.send = async function({payload}) {
+  if(!mongoUrl) {
+    console.log(
+      '"process.env.MONGODB_URL" not defined, skipping send to mongo.');
+    return;
+  }
   const {client, collection} = await _initMongo();
   await collection.insert(payload);
   await _closeMongo({client});
