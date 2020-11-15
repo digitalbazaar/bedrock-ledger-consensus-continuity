@@ -10,7 +10,7 @@ module.exports.name = 'pipeline-reference';
 module.exports.pipeline = async function() {
   // const count = (((this.witnesses.size - 1) / 3 * 2) + 1);
   // const count = (this.witnesses.size - 1) / 3 * 2;
-  const count = 2;
+  const count = 1;
 
   for(let i = 0; i < count; i++) {
     // await this.run({type: 'merge', fn: mergeStrategy});
