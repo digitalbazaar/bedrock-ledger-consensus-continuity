@@ -42,6 +42,7 @@
     "lodash": "^4.17.4",
     "lru-cache": "^6.0.0",
     "request": "^2.81.0",
+    "rfdc": "^1.1.4",
     "uuid-random": "^1.3.2",
     "yallist": "^4.0.0"
   }
