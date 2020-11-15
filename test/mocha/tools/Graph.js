@@ -92,8 +92,6 @@ class Graph {
     }
 
     const event = {
-      _children: [],
-      _parents: [],
       eventHash,
       event: {
         parentHash: parents,
