@@ -11,16 +11,17 @@ module.exports.run = async function() {
 
   // always talk to the peer directly before you in line
   const localNodeId = parseInt(this.nodeId, 10);
-  let idx;
+  let peerId;
   if(localNodeId === 0) {
-    idx = peers.length - 1;
+    peerId = this.witnesses.size - 1;
   } else {
-    idx = localNodeId - 1;
+    peerId = localNodeId - 1;
   }
 
-  const peer = peers[idx]; // select random peer
+  const peer = peers.find(p => p.nodeId === peerId.toString());
 
   if(!peer) {
+    console.log('EXITING NO GOSSIP PEER');
     process.exit();
   }
 
