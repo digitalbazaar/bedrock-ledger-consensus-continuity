@@ -5,8 +5,8 @@
 
 const Simulator = require('../mocha/tools/Simulator');
 
-const PIPELINE_FILE = './pipelines/pipeline-reference.js';
-const WITNESS_COUNT = 31;
+const PIPELINE_FILE = './pipelines/doomsday-1.js';
+const WITNESS_COUNT = 4;
 
 const USER = 'add-user';
 

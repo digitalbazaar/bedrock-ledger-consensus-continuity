@@ -49,7 +49,9 @@ async function main() {
   }
 
   const simulationPool = workerpool.pool(
-    path.join(__dirname, 'simulation-worker.js'));
+    path.join(__dirname, 'simulation-worker.js'), {
+      maxWorkers: workerpool.cpus / 2
+    });
   const simulationWorker = await simulationPool.proxy();
 
   const promises = [];
