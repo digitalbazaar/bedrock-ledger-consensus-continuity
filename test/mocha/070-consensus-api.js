@@ -5,16 +5,16 @@
 
 const consensusApi =
   require('bedrock-ledger-consensus-continuity/lib/consensus');
+const Graph = require('./tools/Graph');
 
 const mockData = require('./mock.data');
 
 const {consensusInput} = mockData;
 
 /* eslint-disable no-unused-vars */
-describe('Consensus API findConsensus', () => {
+describe.only('Consensus API findConsensus', () => {
   describe('Figure 1.2', async () => {
     const {graph} = consensusInput['fig-1-2'];
-
     const nodes = ['1', '2', '3', '4'];
 
     const supportY1 = ['y1', 'y3', 'y4'];
@@ -107,7 +107,27 @@ describe('Consensus API findConsensus', () => {
     extendedTests.set('3', _node3ExtendedTest);
     extendedTests.set('4', _node4ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe(`Pre-Built DAG`, async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe(`Incrementally Built DAG`, async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        const additionalText = `@ ${e.eventHash}`;
+        g.mergeEvent(e);
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+
+        }
+      }
+    });
   });
   describe('Figure 1.4', async () => {
     const {graph} = consensusInput['fig-1-4'];
@@ -171,7 +191,27 @@ describe('Consensus API findConsensus', () => {
 
     extendedTests.set('1', _node1ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
   describe('Figure 1.5', async () => {
     const {graph} = consensusInput['fig-1-5'];
@@ -231,7 +271,26 @@ describe('Consensus API findConsensus', () => {
 
     extendedTests.set('pi', _nodePiExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
 
   });
   describe('Figure 1.6', async () => {
@@ -304,7 +363,27 @@ describe('Consensus API findConsensus', () => {
     extendedTests.set('2', _node2ExtendedTest);
     extendedTests.set('pi', _nodePiExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
   describe('Figure 1.7', async () => {
     const {graph} = consensusInput['fig-1-7'];
@@ -404,7 +483,27 @@ describe('Consensus API findConsensus', () => {
     extendedTests.set('1', _node1ExtendedTest);
     extendedTests.set('2', _node2ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
   describe('Figure 1.8', async () => {
     const {graph} = consensusInput['fig-1-8'];
@@ -484,7 +583,27 @@ describe('Consensus API findConsensus', () => {
 
     extendedTests.set('2', _node2ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
   describe('Figure 1.9', async () => {
     const {graph} = consensusInput['fig-1-9'];
@@ -557,7 +676,27 @@ describe('Consensus API findConsensus', () => {
     extendedTests.set('1', _node1ExtendedTest);
     extendedTests.set('2', _node2ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
   describe('Figure 1.10', async () => {
     const {graph} = consensusInput['fig-1-10'];
@@ -616,7 +755,27 @@ describe('Consensus API findConsensus', () => {
     extendedTests.set('1', _node1ExtendedTest);
     extendedTests.set('2', _node2ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
   describe('Figure 1.11', async () => {
     const {graph} = consensusInput['fig-1-11'];
@@ -687,7 +846,27 @@ describe('Consensus API findConsensus', () => {
 
     extendedTests.set('2', _node2ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
   describe('Figure 1.12', async () => {
     const {graph} = consensusInput['fig-1-12'];
@@ -751,40 +930,72 @@ describe('Consensus API findConsensus', () => {
     extendedTests.set('1', _node1ExtendedTest);
     extendedTests.set('2', _node2ExtendedTest);
 
-    _validateNodesState({nodes, graph, expectedState, extendedTests});
+    describe('Pre-Built DAG', async () => {
+      _validateNodesState({nodes, graph, expectedState, extendedTests});
+    });
+
+    describe('Incrementally Built DAG', async () => {
+      const g = new Graph();
+      const {events} = graph.transactionLog;
+      for(const {id, options} of graph.transactionLog.nodes) {
+        g.addNode(id, options);
+      }
+      for(const e of events) {
+        g.mergeEvent(e);
+        const additionalText = `@ ${e.eventHash}`;
+        if(e.eventHash === events[events.length - 1].eventHash) {
+          await _validateNodesState({
+            nodes, graph: g, expectedState, extendedTests, additionalText
+          });
+        }
+      }
+    });
+
   });
 });
 
-function _validateNodesState({
-  nodes, graph, expectedState, extendedTests = new Map()
+async function _validateNodesState({
+  nodes, graph, expectedState, extendedTests = new Map(), additionalText = ''
 } = {}) {
-  for(const nodeId of nodes) {
-    describe(`Node: ${nodeId}`, () => {
-      it('should validate state', async () => {
-        let result, err;
-        const input = {
-          ledgerNodeId: nodeId,
-          history: graph.getHistory({nodeId}),
-          electors: graph.getElectors(),
-          recoveryElectors: [],
-          mode: 'first'
-        };
-        try {
-          result = consensusApi.findConsensus(input);
-        } catch(e) {
-          err = e;
-        }
-        assertNoError(err);
-        should.exist(result);
-        _validateState({input, expectedState, nodeId});
+  return new Promise((res, rej) => {
+    try {
+      const promises = [];
+      for(const nodeId of nodes) {
+        const p = new Promise(res => {
+          describe(`Node: ${nodeId} ${additionalText}`, async () => {
+            it('should validate state', async () => {
+              let result, err;
+              const input = {
+                ledgerNodeId: nodeId,
+                history: graph.getHistory({nodeId}),
+                electors: graph.getElectors(),
+                recoveryElectors: [],
+                mode: 'first'
+              };
+              try {
+                result = consensusApi.findConsensus(input);
+              } catch(e) {
+                err = e;
+              }
+              assertNoError(err);
+              should.exist(result);
+              _validateState({input, expectedState, nodeId});
 
-        const _extendedTest = extendedTests.get(nodeId);
-        if(_extendedTest) {
-          _extendedTest({result, input});
-        }
-      });
-    });
-  }
+              const _extendedTest = extendedTests.get(nodeId);
+              if(_extendedTest) {
+                _extendedTest({result, input});
+              }
+              res();
+            });
+          });
+        });
+        promises.push(p);
+      }
+      Promise.all(promises).then(res).catch(rej);
+    } catch(e) {
+      rej(e);
+    }
+  });
 }
 
 function _validateState({input, expectedState, nodeId}) {
@@ -830,6 +1041,7 @@ function _validateState({input, expectedState, nodeId}) {
 function _validateSupport({expectedEventState, _support, exclude}) {
   const skip = exclude.has('support');
   if(expectedEventState && expectedEventState.support && !skip) {
+    // console.log({expectedEventState, _support});
     should.exist(_support);
     const support = _support.map(({eventHash}) => eventHash);
     support.should.have.same.members(expectedEventState.support);
