@@ -7,7 +7,7 @@ const delay = require('delay');
 const nsolid = require('nsolid');
 const Simulator = require('../mocha/tools/Simulator');
 
-const PIPELINE_FILE = './pipeline-reference.js';
+const PIPELINE_FILE = './pipelines/pipeline-reference.js';
 const WITNESS_COUNT = 31;
 
 const USER = 'add-user';
