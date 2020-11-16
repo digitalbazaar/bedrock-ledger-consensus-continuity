@@ -17,6 +17,7 @@ class Witness {
     this.graph = graph;
     this.outstandingMergeEvents = [];
     this.activityLog = [];
+    this.consensusState = {};
     this.hasConsensus = false;
     this.totalMergeEventsCreated = 0;
     this.seenPeers = new Set();
@@ -79,13 +80,14 @@ class Witness {
   }
 
   async getConsensusInput() {
-    const {nodeId: ledgerNodeId} = this;
+    const {nodeId: ledgerNodeId, consensusState: state} = this;
 
     const consensusInput = {
       ledgerNodeId,
       history: await this.getHistory(),
       electors: this.graph.getElectors(),
       recoveryElectors: [],
+      state,
       mode: 'first'
     };
 
