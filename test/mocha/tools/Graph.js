@@ -19,6 +19,10 @@ class Graph {
     this.nodes = new Map();
     this.bfsCache = new LRU({max: MAX_CACHE_SIZE});
     this.eventMap = new Map();
+    this.transactionLog = {
+      nodes: [],
+      events: []
+    };
   }
 
   static traverseBFS(options) {
@@ -37,6 +41,7 @@ class Graph {
       branch: yallist.create([])
     };
 
+    this.transactionLog.nodes.push({id, options});
     this.nodes.set(id, node);
 
     return this;
@@ -105,6 +110,8 @@ class Graph {
         }
       }
     };
+
+    this.transactionLog.events.push({eventHash, to, from, fork, treeHash});
     this.eventMap.set(eventHash, event);
 
     toBranch.push(eventHash);
