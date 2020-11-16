@@ -6,6 +6,7 @@
 const gossipStrategy = require('../gossip-strategies/previous-peer');
 const mergeStrategy = require('../merge-strategies/previous-peer');
 
+// NOTE: no spaces allowed, must be safe for prometheus metrics
 module.exports.name = 'pipeline-reference';
 module.exports.pipeline = async function() {
   // const count = (((this.witnesses.size - 1) / 3 * 2) + 1);
