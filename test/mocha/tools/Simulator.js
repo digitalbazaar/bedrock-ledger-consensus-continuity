@@ -9,6 +9,10 @@ const uuid = require('uuid-random');
 
 class Simulator {
   constructor({id, name, creator, run, witnessCount, pipeline, init} = {}) {
+    if((witnessCount - 1) % 3 !== 0) {
+      throw new Error(`Witness Count must equal "3f + 1".`);
+    }
+
     this.id = uuid();
     this.name = name || id;
     this.run = run || uuid();
@@ -108,6 +112,11 @@ class Simulator {
       return acc;
     }, baseResult);
 
+    const witnessCount = this.witnesses.size;
+
+    const f = (witnessCount - 1) / 3;
+    const targetMergeEvents = (9 * f) + 3;
+
     return {
       id,
       name,
@@ -115,9 +124,10 @@ class Simulator {
       creator,
       timestamp,
       totalTimeSlices: tick,
+      targetMergeEvents,
       average: results,
       gossipSessions,
-      witnessCount: this.witnesses.size,
+      witnessCount,
     };
   }
 
