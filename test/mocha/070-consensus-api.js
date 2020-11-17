@@ -12,7 +12,7 @@ const mockData = require('./mock.data');
 const {consensusInput} = mockData;
 
 /* eslint-disable no-unused-vars */
-describe.only('Consensus API findConsensus', () => {
+describe('Consensus API findConsensus', () => {
   describe('Figure 1.2', async () => {
     const {graph} = consensusInput['fig-1-2'];
     const nodes = ['1', '2', '3', '4'];
