@@ -179,7 +179,6 @@ describe('Consensus API findConsensus', () => {
 
     _runPreBuiltDAGTest({nodes, graph, expectedState, extendedTests});
     _runIncrementallyBuiltDAGTest({nodes, graph, expectedState, extendedTests});
-
   });
 
   describe('Figure 1.4', async () => {
@@ -876,6 +875,8 @@ function _runIncrementallyBuiltDAGTest(
     }
     describe(`Nodes`, () => {
       it(`should validate state`, async () => {
+        // preserve state outside of validation runs
+        const state = {};
         for(const e of events) {
           const {eventHash} = e;
           const expectedEventState = expectedState[eventHash] || {};
@@ -886,16 +887,16 @@ function _runIncrementallyBuiltDAGTest(
             const opts = {incremental: true, expectedEventState, nodeId};
             const shouldRun = _shouldRunIncrementalTest(opts);
             if(shouldRun) {
-              console.log(
-                `Node ${nodeId} @ ${eventHash}`,
-                `Seen By:`,
-                opts.expectedEventState._incremental.support.seenBy);
+              // console.log(
+              //   `Node ${nodeId} @ ${eventHash}`,
+              //   `Seen By:`,
+              //   opts.expectedEventState._incremental.support.seenBy);
               await _validate({
-                nodeId, graph: g, expectedState, incremental: {eventHash}
+                nodeId, graph: g, expectedState, incremental: {eventHash},
+                state
               });
             }
-            await _validate({nodeId, graph: g, expectedState});
-
+            await _validate({nodeId, graph: g, expectedState, state});
           }
         }
       });
@@ -904,7 +905,8 @@ function _runIncrementallyBuiltDAGTest(
 }
 
 function _validate({
-  nodeId, graph, expectedState, incremental, extendedTests = new Map()
+  nodeId, graph, expectedState, incremental, state = {},
+  extendedTests = new Map()
 }) {
   return new Promise(resolve => {
     let result, err;
@@ -912,8 +914,7 @@ function _validate({
       ledgerNodeId: nodeId,
       history: graph.getHistory({nodeId}),
       electors: graph.getElectors(),
-      recoveryElectors: [],
-      mode: 'first'
+      state
     };
     try {
       result = consensusApi.findConsensus(input);
