@@ -130,7 +130,16 @@ class Graph {
   getHistory({nodeId, extraEvents = []} = {}) {
     const node = this.nodes.get(nodeId);
 
-    const tail = node.branch.tail.value;
+    const tail = (node.branch.tail || {}).value;
+    if(!tail) {
+      return {
+        events: [],
+        localBranchHead: {
+          eventHash: '',
+          generation: -1
+        }
+      };
+    }
 
     const results = this._traverseBFS({tail});
 
