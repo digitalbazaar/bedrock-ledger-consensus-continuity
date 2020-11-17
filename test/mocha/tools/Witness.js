@@ -8,6 +8,15 @@ const consensusApi =
   require('bedrock-ledger-consensus-continuity/lib/consensus');
 const helpers = require('./helpers');
 
+const INITIAL_CONSENSUS_STATE = {
+  init: false,
+  eventMap: new Map(),
+  blockHeight: -1,
+  hashToMemo: new Map(),
+  symbolToMemo: new Map(),
+  supportCache: new Map()
+};
+
 class Witness {
   constructor({nodeId, pipeline, graph, witnesses}) {
     this.tickId = null;
@@ -17,7 +26,7 @@ class Witness {
     this.graph = graph;
     this.outstandingMergeEvents = [];
     this.activityLog = [];
-    this.consensusState = {};
+    this.consensusState = {...INITIAL_CONSENSUS_STATE};
     this.hasConsensus = false;
     this.totalMergeEventsCreated = 0;
     this.seenPeers = new Set();
