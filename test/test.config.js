@@ -31,3 +31,8 @@ config['https-agent'].rejectUnauthorized = false;
 
 // put jobs stuff in another redis database so db 0 can be flushed
 config.jobs.queueOptions.db = 1;
+
+if(process.env.CONTINUITY_EVENT_WORKER === 'false') {
+  console.log('****** DISABLED LOCAL GOSSIP EVENT WORKER! *******');
+  config['ledger-consensus-continuity'].gossip.batchProcess = false;
+}
