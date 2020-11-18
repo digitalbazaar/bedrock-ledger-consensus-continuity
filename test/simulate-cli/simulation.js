@@ -39,8 +39,8 @@ async function load({
   };
 
   const visualizer = {};
-  for(const elector of graph.getWitnesses()) {
-    const ledgerNodeId = elector.id;
+  for(const node of graph.nodes) {
+    const ledgerNodeId = node.id;
     visualizer[ledgerNodeId] = {
       ledgerNodeId,
       history: graph.getHistory({nodeId: ledgerNodeId}),
