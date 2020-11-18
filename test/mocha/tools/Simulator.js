@@ -8,10 +8,17 @@ const Node = require('./Node');
 const uuid = require('uuid-random');
 
 class Simulator {
-  constructor(
-    {id, name, creator, run, nodeCount, witnessCount, pipeline, init} = {}) {
+  constructor({
+    id, name, creator, run, witnessCount, nodeCount = witnessCount,
+    pipeline, init
+  } = {}) {
     if((witnessCount - 1) % 3 !== 0) {
       throw new Error(`Witness Count must equal "3f + 1".`);
+    }
+    if(nodeCount < witnessCount) {
+      throw new Error(
+        'Node count must not be less than "witnessCount"; it includes ' +
+        'witnesses.');
     }
 
     this.id = uuid();
@@ -135,7 +142,7 @@ class Simulator {
     };
   }
 
-  _defaultInitialization({witnessCount, nodeCount = witnessCount}) {
+  _defaultInitialization({nodeCount, witnessCount}) {
     for(let i = 0; i < nodeCount; i++) {
       const nodeId = this._nodeId(i);
 
@@ -152,7 +159,7 @@ class Simulator {
     }
   }
 
-  _createNodes({witnessCount, nodeCount = witnessCount, pipeline}) {
+  _createNodes({nodeCount, witnessCount, pipeline}) {
     // create nodes
     for(let i = 0; i < nodeCount; i++) {
       const nodeId = this._nodeId(i);

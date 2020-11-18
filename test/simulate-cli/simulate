@@ -29,19 +29,27 @@ async function main() {
       describe: 'The user.',
       alias: 'u',
     })
+    .option('nonWitnessCount', {
+      describe: 'Number of non-witness nodes.',
+      alias: 'n',
+      default: 0,
+    })
     .option('witnessCount', {
       describe: 'Number of witnesses.',
       alias: 'w',
       default: 4,
     });
 
-  const {nosend, pipelineJs, trials, user, witnessCount} = yargs.argv;
+  const {nosend, pipelineJs, trials, user, nonwitnessCount, witnessCount} =
+    yargs.argv;
   if(!(trials && user && witnessCount)) {
     throw new Error('Ensure proper options are specified. See --help.');
   }
 
   const run = Date.now();
-  const simulationOptions = {nosend, pipelineJs, user, witnessCount, run};
+  const simulationOptions = {
+    nosend, pipelineJs, user, nonwitnessCount, witnessCount, run
+  };
 
   if(trials === 1) {
     // do not use workerpool for a single trial, allows for profiling

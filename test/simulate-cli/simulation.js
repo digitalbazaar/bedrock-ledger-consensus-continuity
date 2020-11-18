@@ -11,6 +11,7 @@ async function load({
   nosend,
   pipelineJs,
   user,
+  nonwitnessCount = 0,
   witnessCount,
   run
 }) {
@@ -18,8 +19,9 @@ async function load({
   const pipelineApi = require(pipelineJs);
   const {pipeline, name} = pipelineApi;
 
+  const nodeCount = nonwitnessCount + witnessCount;
   const simulator = new Simulator({
-    name, creator, witnessCount, pipeline, run
+    name, creator, nodeCount, witnessCount, pipeline, run
   });
 
   const report = await simulator.start();
