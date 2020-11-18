@@ -7,6 +7,7 @@ const Simulator = require('../mocha/tools/Simulator');
 
 const PIPELINE_FILE = './pipelines/pipeline-reference.js';
 const WITNESS_COUNT = 31;
+const NODE_COUNT = WITNESS_COUNT;
 
 const USER = 'add-user';
 
@@ -16,7 +17,7 @@ async function load() {
   const {pipeline, name} = pipelineApi;
 
   const simulator = new Simulator({
-    name, creator, witnessCount: WITNESS_COUNT, pipeline
+    name, creator, nodeCount: NODE_COUNT, witnessCount: WITNESS_COUNT, pipeline
   });
 
   const report = await simulator.start();
