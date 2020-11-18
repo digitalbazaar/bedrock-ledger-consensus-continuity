@@ -18,8 +18,9 @@ const INITIAL_CONSENSUS_STATE = {
 };
 
 class Node {
-  constructor({nodeId, pipeline, graph, witnesses, isWitness}) {
+  constructor({nodeId, pipeline, graph, nodes, witnesses, isWitness}) {
     this.tickId = null;
+    this.nodes = nodes;
     this.witnesses = witnesses;
     this.nodeId = nodeId;
     this.isWitness = isWitness;
@@ -204,18 +205,30 @@ class Node {
   }
 
   async getPeers() {
-    const peers = new Map(this.witnesses);
+    const peers = new Map(this.nodes);
     peers.delete(this.nodeId);
     return Array.from(peers.values());
   }
 
   async getLocalPeers() {
     const peers = [];
+    for(const peerNodeId of this.seenPeers) {
+      peers.push(this.nodes.get(peerNodeId));
+    }
+    return peers;
+  }
 
+  async getWitnessPeers() {
+    const peers = new Map(this.witnesses);
+    peers.delete(this.nodeId);
+    return Array.from(peers.values());
+  }
+
+  async getLocalWitnessPeers() {
+    const peers = [];
     for(const peerNodeId of this.seenPeers) {
       peers.push(this.witnesses.get(peerNodeId));
     }
-
     return peers;
   }
 }
