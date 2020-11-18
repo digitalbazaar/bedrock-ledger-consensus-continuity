@@ -30,9 +30,7 @@ async function load({
   const input = {
     ledgerNodeId,
     history: graph.getHistory({nodeId: ledgerNodeId}),
-    electors: graph.getElectors(),
-    recoveryElectors: [],
-    mode: 'first'
+    electors: graph.getWitnesses()
   };
 
   const display = {
@@ -41,14 +39,12 @@ async function load({
   };
 
   const visualizer = {};
-  for(const elector of graph.getElectors()) {
+  for(const elector of graph.getWitnesses()) {
     const ledgerNodeId = elector.id;
     visualizer[ledgerNodeId] = {
       ledgerNodeId,
       history: graph.getHistory({nodeId: ledgerNodeId}),
-      electors: graph.getElectors(),
-      recoveryElectors: [],
-      mode: 'first'
+      electors: graph.getWitnesses()
     };
   }
 
