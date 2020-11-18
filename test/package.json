@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "redis-cli flushall && node --preserve-symlinks test test",
+    "test-event-worker": "CONTINUITY_EVENT_WORKER=false node --preserve-symlinks test test",
     "watch": "grunt watch"
   },
   "dependencies": {
@@ -14,7 +15,7 @@
     "bedrock-https-agent": "^2.0.0",
     "bedrock-identity": "^7.0.0",
     "bedrock-injector": "^1.0.0",
-    "bedrock-jobs": "^3.0.0",
+    "bedrock-jobs": "digitalbazaar/bedrock-jobs#upgrade-bull",
     "bedrock-jsonld-document-loader": "^1.0.0",
     "bedrock-key": "^4.0.0",
     "bedrock-ledger-agent": "^3.1.0",
@@ -33,7 +34,7 @@
     "bedrock-security-context": "^3.0.0",
     "bedrock-server": "^2.2.0",
     "bedrock-test": "^5.0.0",
-    "bedrock-validation": "^4.0.0",
+    "bedrock-validation": "digitalbazaar/bedrock-validation#serialize-false",
     "blessed": "^0.1.81",
     "denque": "^1.4.1",
     "grunt": "^1.0.1",
