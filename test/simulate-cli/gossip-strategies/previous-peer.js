@@ -13,7 +13,7 @@ module.exports.run = async function() {
   const localNodeId = parseInt(this.nodeId, 10);
   let peerId;
   if(localNodeId === 0) {
-    peerId = this.witnesses.size - 1;
+    peerId = this.nodes.size - 1;
   } else {
     peerId = localNodeId - 1;
   }
