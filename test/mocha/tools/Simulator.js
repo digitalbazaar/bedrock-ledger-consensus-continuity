@@ -147,12 +147,13 @@ class Simulator {
       const nodeId = this._nodeId(i);
 
       // create nodes in graph
-      this.graph.addNode(nodeId);
       const node = this.nodes.get(nodeId);
+      const {isWitness} = node;
+      this.graph.addNode(nodeId, {isWitness});
       // `y` means little `y` from the consensus algorithm, only witnesses
       // make these; `i` means initial event, for non-witnesses always make
       // one of these to get started as well
-      const eventHash = node.isWitness ? `y${nodeId}` : `i${nodeId}`;
+      const eventHash = isWitness ? `y${nodeId}` : `i${nodeId}`;
       this.graph.mergeEvent({eventHash, to: nodeId, from: []});
 
       node.totalMergeEventsCreated++;
