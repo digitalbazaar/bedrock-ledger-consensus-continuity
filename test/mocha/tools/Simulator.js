@@ -142,7 +142,7 @@ class Simulator {
     };
   }
 
-  _defaultInitialization({nodeCount, witnessCount}) {
+  _defaultInitialization({nodeCount}) {
     for(let i = 0; i < nodeCount; i++) {
       const nodeId = this._nodeId(i);
 
