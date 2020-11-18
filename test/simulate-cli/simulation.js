@@ -41,7 +41,7 @@ async function load({
   };
 
   const visualizer = {};
-  for(const node of graph.nodes) {
+  for(const node of graph.nodes.values()) {
     const ledgerNodeId = node.id;
     visualizer[ledgerNodeId] = {
       ledgerNodeId,
