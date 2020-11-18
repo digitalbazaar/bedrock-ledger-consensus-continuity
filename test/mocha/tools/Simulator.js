@@ -4,7 +4,7 @@
 'use strict';
 
 const Graph = require('./Graph');
-const Witness = require('./Witness');
+const Node = require('./Node');
 const uuid = require('uuid-random');
 
 class Simulator {
@@ -149,8 +149,9 @@ class Simulator {
       const nodeId = this._nodeId(i);
 
       // add witness to map
-      const witness = new Witness({
-        nodeId, pipeline, graph: this.graph, witnesses: this.witnesses
+      const witness = new Node({
+        nodeId, pipeline, graph: this.graph, witnesses: this.witnesses,
+        isWitness: true
       });
       this.witnesses.set(nodeId, witness);
     }

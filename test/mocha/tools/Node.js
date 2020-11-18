@@ -17,11 +17,12 @@ const INITIAL_CONSENSUS_STATE = {
   supportCache: new Map()
 };
 
-class Witness {
-  constructor({nodeId, pipeline, graph, witnesses}) {
+class Node {
+  constructor({nodeId, pipeline, graph, witnesses, isWitness}) {
     this.tickId = null;
     this.witnesses = witnesses;
     this.nodeId = nodeId;
+    this.isWitness = isWitness;
     this.pipeline = pipeline;
     this.graph = graph;
     this.outstandingMergeEvents = [];
@@ -225,4 +226,4 @@ function _eventHashMapper({eventHash}) {
   return eventHash;
 }
 
-module.exports = Witness;
+module.exports = Node;
