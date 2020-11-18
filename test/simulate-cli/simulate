@@ -29,7 +29,7 @@ async function main() {
       describe: 'The user.',
       alias: 'u',
     })
-    .option('nonWitnessCount', {
+    .option('nonwitnessCount', {
       describe: 'Number of non-witness nodes.',
       alias: 'n',
       default: 0,
