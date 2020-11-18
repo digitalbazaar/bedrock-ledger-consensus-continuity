@@ -94,7 +94,7 @@ class Witness {
     const consensusInput = {
       ledgerNodeId,
       history: await this.getHistory(),
-      electors: this.graph.getElectors(),
+      electors: this.graph.getWitnesses(),
       recoveryElectors: [],
       state,
       mode: 'first'

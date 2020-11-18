@@ -913,7 +913,7 @@ function _validate({
     const input = {
       ledgerNodeId: nodeId,
       history: graph.getHistory({nodeId}),
-      electors: graph.getElectors(),
+      electors: graph.getWitnesses(),
       state
     };
     try {
