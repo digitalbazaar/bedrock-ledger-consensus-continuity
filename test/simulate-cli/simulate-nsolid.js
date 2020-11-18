@@ -35,9 +35,7 @@ async function load() {
   const input = {
     ledgerNodeId,
     history: graph.getHistory({nodeId: ledgerNodeId}),
-    electors: graph.getElectors(),
-    recoveryElectors: [],
-    mode: 'first'
+    electors: graph.getWitnesses()
   };
 
   const display = {

@@ -30,14 +30,14 @@ class Graph {
   }
 
   addNode(id, options = {}) {
-    const {isElector = true} = options;
+    const {isWitness = true} = options;
     if(this.nodes.has(id)) {
       throw new Error(`Duplicate Error: Node with specified id exists "${id}"`);
     }
 
     const node = {
       id,
-      isElector,
+      isWitness,
       branch: yallist.create([])
     };
 
@@ -156,11 +156,10 @@ class Graph {
     return history;
   }
 
-  getElectors() {
-    const electors = [];
-    this.nodes.forEach(node => electors.push(node));
-
-    return electors.filter(({isElector}) => isElector).map(({id}) => ({id}));
+  getWitnesses() {
+    const witnesses = [];
+    this.nodes.forEach(node => witnesses.push(node));
+    return witnesses.filter(({isWitness}) => isWitness).map(({id}) => ({id}));
   }
 
   debug() {
