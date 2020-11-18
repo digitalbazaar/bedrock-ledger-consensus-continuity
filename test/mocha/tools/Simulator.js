@@ -167,7 +167,8 @@ class Simulator {
 
       // add node to map
       const node = new Node({
-        nodeId, pipeline, graph: this.graph, witnesses: this.witnesses,
+        nodeId, pipeline, graph: this.graph,
+        nodes: this.nodes, witnesses: this.witnesses,
         isWitness
       });
       this.nodes.set(nodeId, node);
