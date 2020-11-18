@@ -13,7 +13,7 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 /* eslint-disable no-unused-vars */
-describe.skip('Election API _getWitnessBranches', () => {
+describe.skip('Election API _getTails', () => {
   before(done => {
     helpers.prepareDatabase(mockData, done);
   });
@@ -120,7 +120,7 @@ describe.skip('Election API _getWitnessBranches', () => {
         `${nodeLabel}: ${nodes[nodeLabel].storage.events.collection.s.name}`);
     });
     const getRecentHistory = consensusApi._events.getRecentHistory;
-    const _getWitnessBranches = consensusApi._election._getWitnessBranches;
+    const _getTails = consensusApi._election._getTails;
     const eventTemplate = mockData.events.alpha;
     async.auto({
       // add a regular event and merge on every node
@@ -145,7 +145,7 @@ describe.skip('Election API _getWitnessBranches', () => {
           async.auto({
             history: callback => getRecentHistory({ledgerNode: n}, callback),
             branches: ['history', (results, callback) => {
-              const branches = _getWitnessBranches({
+              const branches = _getTails({
                 history: results.history,
                 witnesses: electors
               });
@@ -191,7 +191,7 @@ describe.skip('Election API _getWitnessBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getWitnessBranches({
+            const branches = _getTails({
               history: results.history,
               witnesses: electors
             });
@@ -261,7 +261,7 @@ describe.skip('Election API _getWitnessBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getWitnessBranches({
+            const branches = _getTails({
               history: results.history,
               witnesses: electors
             });
@@ -323,7 +323,7 @@ describe.skip('Election API _getWitnessBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getWitnessBranches({
+            const branches = _getTails({
               history: results.history,
               witnesses: electors
             });
@@ -435,7 +435,7 @@ describe.skip('Election API _getWitnessBranches', () => {
         async.auto({
           history: callback => getRecentHistory({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
-            const branches = _getWitnessBranches({
+            const branches = _getTails({
               history: results.history,
               witnesses: electors
             });
