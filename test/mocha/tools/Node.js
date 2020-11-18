@@ -96,9 +96,7 @@ class Node {
       ledgerNodeId,
       history: await this.getHistory(),
       electors: this.graph.getWitnesses(),
-      recoveryElectors: [],
-      state,
-      mode: 'first'
+      state
     };
 
     return consensusInput;
