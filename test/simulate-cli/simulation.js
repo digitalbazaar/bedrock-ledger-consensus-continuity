@@ -41,11 +41,10 @@ async function load({
   };
 
   const visualizer = {};
-  for(const node of graph.nodes.values()) {
-    const ledgerNodeId = node.id;
-    visualizer[ledgerNodeId] = {
-      ledgerNodeId,
-      history: graph.getHistory({nodeId: ledgerNodeId}),
+  for(const nodeId of graph.nodes.keys()) {
+    visualizer[nodeId] = {
+      ledgerNodeId: nodeId,
+      history: graph.getHistory({nodeId}),
       electors: graph.getWitnesses()
     };
   }

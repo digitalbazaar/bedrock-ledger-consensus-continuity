@@ -129,7 +129,6 @@ class Graph {
 
   getHistory({nodeId, extraEvents = []} = {}) {
     const node = this.nodes.get(nodeId);
-
     const tail = (node.branch.tail || {}).value;
     if(!tail) {
       return {
