@@ -1,14 +1,15 @@
 /*
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const _ = require('lodash');
 const async = require('async');
 const bedrock = require('bedrock');
-const brIdentity = require('bedrock-identity');
+//const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
+const {callbackify} = require('util');
 const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures');
@@ -419,7 +420,7 @@ api.createIdentity = function(userName) {
   return newIdentity;
 };
 
-api.flushCache = callback => cache.client.flushall(callback);
+api.flushCache = () => cache.client.flushall();
 
 api.nBlocks = ({
   consensusApi, nodes, operationOnWorkCycle = 'all', opTemplate,
@@ -512,17 +513,11 @@ api.removeCollections = function(collections, callback) {
 };
 
 api.prepareDatabase = function(mockData, callback) {
-  async.series([
-    callback => {
-      api.removeCollections([
-        'identity', 'eventLog', 'ledger', 'ledgerNode', 'continuity2017_key',
-        'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
-      ], callback);
-    },
-    callback => {
-      insertTestData(mockData, callback);
-    }
+  api.removeCollections([
+    'identity', 'eventLog', 'ledger', 'ledgerNode', 'continuity2017_key',
+    'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
   ], callback);
+  //await insertTestData(mockData);
 };
 
 api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
@@ -654,7 +649,7 @@ api.use = (plugin, callback) => {
 };
 
 // Insert identities and public keys used for testing into database
-function insertTestData(mockData, callback) {
+/*async function insertTestData(mockData) {
   async.forEachOf(mockData.identities, ({identity, meta}, key, callback) => {
     brIdentity.insert({actor: null, identity, meta}, callback);
   }, err => {
@@ -667,3 +662,4 @@ function insertTestData(mockData, callback) {
     callback();
   }, callback);
 }
+*/

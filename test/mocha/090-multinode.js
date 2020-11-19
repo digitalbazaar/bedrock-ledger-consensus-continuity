@@ -5,6 +5,7 @@
 
 const _ = require('lodash');
 const async = require('async');
+const {callbackify} = require('util');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
@@ -26,11 +27,10 @@ describe('Multinode', () => {
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     let genesisLedgerNode;
-    const mockIdentity = mockData.identities.regularUser;
     const {ledgerConfiguration} = mockData;
     before(done => {
       async.auto({
-        flushCache: callback => helpers.flushCache(callback),
+        flushCache: callback => callbackify(helpers.flushCache)(callback),
         clean: ['flushCache', (results, callback) =>
           helpers.removeCollections(['ledger', 'ledgerNode'], callback)],
         consensusPlugin: callback => helpers.use('Continuity2017', callback),
@@ -60,15 +60,14 @@ describe('Multinode', () => {
       });
     });
 
-    // add N - 1 more private nodes
+    // add N - 1 more nodes
     const peers = [];
     before(function(done) {
       this.timeout(120000);
       peers.push(genesisLedgerNode);
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
-          genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
+          genesisBlock: genesisRecord.block
         }, (err, ledgerNode) => {
           if(err) {
             return callback(err);
@@ -372,8 +371,7 @@ describe('Multinode', () => {
         this.timeout(120000);
         async.auto({
           addNode: callback => brLedgerNode.add(null, {
-            genesisBlock: genesisRecord.block,
-            owner: mockIdentity.identity.id
+            genesisBlock: genesisRecord.block
           }, (err, ledgerNode) => {
             if(err) {
               return callback(err);
