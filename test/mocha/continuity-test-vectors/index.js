@@ -4,7 +4,7 @@
 'use strict';
 
 const testVectors = {
-  // 'simulation-01': require('../../simulate-cli/simulate.js'),
+  'simulation-01': require('../../simulate-cli/simulate.js'),
   'fig-1-2': require('./figure-1-2'),
   'fig-1-4': require('./figure-1-4'),
   'fig-1-5': require('./figure-1-5'),

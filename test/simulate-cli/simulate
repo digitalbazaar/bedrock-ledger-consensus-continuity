@@ -28,6 +28,7 @@ async function main() {
     .option('user', {
       describe: 'The user.',
       alias: 'u',
+      demandOption: true
     })
     .option('nonwitnessCount', {
       describe: 'Number of non-witness nodes.',

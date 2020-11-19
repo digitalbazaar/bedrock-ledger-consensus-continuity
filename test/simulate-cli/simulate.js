@@ -5,9 +5,9 @@
 
 const Simulator = require('../mocha/tools/Simulator');
 
-const PIPELINE_FILE = './pipelines/pipeline-reference.js';
-const WITNESS_COUNT = 31;
-const NODE_COUNT = WITNESS_COUNT;
+const PIPELINE_FILE = './pipelines/timeout-or-witness-majority.js';
+const WITNESS_COUNT = 4;
+const NODE_COUNT = WITNESS_COUNT + 50;
 
 const USER = 'add-user';
 
