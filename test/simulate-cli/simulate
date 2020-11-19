@@ -25,14 +25,14 @@ async function main() {
       alias: 't',
       default: 1,
     })
-    .option('user', {
-      describe: 'The user.',
-      alias: 'u',
+    .option('name', {
+      describe: 'The test display name in Prometheus.',
+      alias: 'n',
       demandOption: true
     })
     .option('nonwitnessCount', {
       describe: 'Number of non-witness nodes.',
-      alias: 'n',
+      alias: 'o',
       default: 0,
     })
     .option('witnessCount', {
@@ -41,15 +41,12 @@ async function main() {
       default: 4,
     });
 
-  const {nosend, pipelineJs, trials, user, nonwitnessCount, witnessCount} =
+  const {nosend, pipelineJs, trials, name, nonwitnessCount, witnessCount} =
     yargs.argv;
-  if(!(trials && user && witnessCount)) {
-    throw new Error('Ensure proper options are specified. See --help.');
-  }
 
   const run = Date.now();
   const simulationOptions = {
-    nosend, pipelineJs, user, nonwitnessCount, witnessCount, run
+    nosend, pipelineJs, user: name, nonwitnessCount, witnessCount, run
   };
 
   if(trials === 1) {

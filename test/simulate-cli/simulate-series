@@ -17,24 +17,20 @@ async function main() {
     .option('pipelineJs', {
       describe: 'Path to the pipeline.',
       alias: 'p',
-      default: './reference.js',
+      default: './pipelines/reference.js',
     })
-    .option('user', {
-      describe: 'The user.',
-      alias: 'u',
+    .option('name', {
+      describe: 'The test display name in Prometheus.',
+      alias: 'n',
       demandOption: true
     })
-    .options('maxwitnesses', {
-      describe: 'Test up to the maximum number of witnesses.',
+    .options('failures', {
+      describe: 'Number of byzantine failures to protect against.',
       alias: 'm',
-      default: 22,
+      default: 7,
     });
 
-  const {nosend, pipelineJs, user, maxwitnesses} = yargs.argv;
-  if(!(user)) {
-    throw new Error('Ensure proper options are specified. See --help.');
-  }
-
+  const {nosend, pipelineJs, name, failures} = yargs.argv;
   const run = Date.now();
 
   const simulationPool = workerpool.pool(
@@ -45,16 +41,13 @@ async function main() {
   }, 3000);
 
   const promises = [];
-  for(let i = 4; i <= maxwitnesses; ++i) {
-    if(i % 3 !== 1) {
-      continue;
-    }
+  for(let f = 1; f <= failures; f++) {
     const simulationOptions = {
       nosend,
       pipelineJs,
-      user,
+      user: name,
       run,
-      witnessCount: i
+      witnessCount: (3 * f) + 1
     };
     promises.push(simulationPool.exec('runSimulation', [simulationOptions]));
   }
