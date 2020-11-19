@@ -17,11 +17,12 @@ async function main() {
     .option('pipelineJs', {
       describe: 'Path to the pipeline.',
       alias: 'p',
-      default: './pipeline-reference.js',
+      default: './reference.js',
     })
     .option('user', {
       describe: 'The user.',
       alias: 'u',
+      demandOption: true
     })
     .options('maxwitnesses', {
       describe: 'Test up to the maximum number of witnesses.',
