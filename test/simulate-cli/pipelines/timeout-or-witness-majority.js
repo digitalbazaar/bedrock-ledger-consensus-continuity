@@ -8,7 +8,7 @@ const mergeStrategy =
   require('../merge-strategies/timeout-or-witness-majority-merge');
 
 // NOTE: no spaces allowed, must be safe for prometheus metrics
-module.exports.name = 'non-zero-spam-cost';
+module.exports.name = 'timeout-or-witness-majority';
 module.exports.pipeline = async function() {
   const count = 1;
 
