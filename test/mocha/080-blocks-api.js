@@ -4,6 +4,7 @@
 'use strict';
 
 const async = require('async');
+const {callbackify} = require('util');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
@@ -28,7 +29,7 @@ describe('blocks API', () => {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
-      flush: helpers.flushCache,
+      flush: callbackify(helpers.flushCache),
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>

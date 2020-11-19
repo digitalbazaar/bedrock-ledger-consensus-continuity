@@ -6,6 +6,7 @@
 const _ = require('lodash');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
+const {callbackify} = require('util');
 
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -25,7 +26,7 @@ describe('Election API findConsensus', () => {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
-      flush: helpers.flushCache,
+      flush: callbackify(helpers.flushCache),
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
