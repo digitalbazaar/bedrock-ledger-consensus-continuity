@@ -5,6 +5,7 @@
 
 const _ = require('lodash');
 const async = require('async');
+const {callbackify} = require('util');
 const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -27,7 +28,7 @@ describe('Election API _findMergeEventProof', () => {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
-      flush: helpers.flushCache,
+      flush: callbackify(helpers.flushCache),
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>

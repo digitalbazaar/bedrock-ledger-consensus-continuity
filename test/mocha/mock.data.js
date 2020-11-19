@@ -1,27 +1,14 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const bedrock = require('bedrock');
 const config = bedrock.config;
 const constants = config.constants;
-const helpers = require('./helpers');
 
 const mock = {};
 module.exports = mock;
-
-const identities = mock.identities = {};
-
-const userName = 'regularUser';
-identities[userName] = {};
-identities[userName].identity = helpers.createIdentity(userName);
-identities[userName].meta = {
-  sysResourceRole: [{
-    sysRole: 'bedrock-ledger.test',
-    generateResource: 'id'
-  }]
-};
 
 const ledgerConfiguration = mock.ledgerConfiguration = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
@@ -134,7 +121,7 @@ mock.ldDocuments = {
     publicKey: [{
       id: mock.authorizedSignerUrl,
       type: 'Ed25519VerificationKey2018',
-      owner: mock.exampleIdentity,
+      controller: mock.exampleIdentity,
       publicKeyBase58: mock.groups.authorized.publicKey
     }]
   }
@@ -142,7 +129,7 @@ mock.ldDocuments = {
 mock.ldDocuments[mock.authorizedSignerUrl] = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'Ed25519VerificationKey2018',
-  owner: mock.exampleIdentity,
+  controller: mock.exampleIdentity,
   label: 'Signing Key 2',
   id: mock.authorizedSignerUrl,
   publicKeyBase58: mock.groups.authorized.publicKey

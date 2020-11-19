@@ -5,7 +5,6 @@
 
 const async = require('async');
 const bedrock = require('bedrock');
-const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const expect = global.chai.expect;
@@ -25,17 +24,14 @@ describe('Continuity2017', () => {
   let creator;
   let ledgerNode;
   beforeEach(done => {
-    const mockIdentity = mockData.identities.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       cleanCache: callback => cache.client.flushall(callback),
       clean: callback =>
         helpers.removeCollections(['ledger', 'ledgerNode'], callback),
-      actor: ['clean', (results, callback) => brIdentity.getCapabilities(
-        {actor: null, id: mockIdentity.identity.id}, callback)],
       consensusPlugin: callback => helpers.use('Continuity2017', callback),
-      ledgerNode: ['actor', (results, callback) => brLedgerNode.add(
-        results.actor, {ledgerConfiguration}, (err, ledgerNode) => {
+      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
+        null, {ledgerConfiguration}, (err, ledgerNode) => {
           if(err) {
             return callback(err);
           }

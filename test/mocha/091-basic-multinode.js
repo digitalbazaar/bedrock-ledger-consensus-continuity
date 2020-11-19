@@ -44,7 +44,6 @@ describe.skip('Multinode Basics', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    const mockIdentity = mockData.identities.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
     before(done => {
       async.auto({
@@ -80,13 +79,12 @@ describe.skip('Multinode Basics', () => {
       });
     });
 
-    // add N - 1 more private nodes
+    // add N - 1 more nodes
     before(function(done) {
       this.timeout(120000);
       async.times(nodeCount - 1, (i, callback) => {
         brLedgerNode.add(null, {
-          genesisBlock: genesisRecord.block,
-          owner: mockIdentity.identity.id
+          genesisBlock: genesisRecord.block
         }, (err, ledgerNode) => {
           if(err) {
             return callback(err);
