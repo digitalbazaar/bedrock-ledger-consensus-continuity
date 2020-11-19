@@ -3,6 +3,7 @@
 'use strict';
 
 const {load} = require('./simulation');
+const os = require('os');
 const path = require('path');
 const workerpool = require('workerpool');
 const yargs = require('yargs');
@@ -25,14 +26,14 @@ async function main() {
       alias: 't',
       default: 1,
     })
-    .option('name', {
-      describe: 'The test display name in Prometheus.',
-      alias: 'n',
-      demandOption: true
+    .option('user', {
+      describe: 'The username associated with the graph in Prometheus.',
+      alias: 'u',
+      default: os.userInfo().username
     })
     .option('nonwitnessCount', {
       describe: 'Number of non-witness nodes.',
-      alias: 'o',
+      alias: 'n',
       default: 0,
     })
     .option('witnessCount', {
@@ -41,12 +42,12 @@ async function main() {
       default: 4,
     });
 
-  const {nosend, pipelineJs, trials, name, nonwitnessCount, witnessCount} =
+  const {nosend, pipelineJs, trials, user, nonwitnessCount, witnessCount} =
     yargs.argv;
 
   const run = Date.now();
   const simulationOptions = {
-    nosend, pipelineJs, user: name, nonwitnessCount, witnessCount, run
+    nosend, pipelineJs, user, nonwitnessCount, witnessCount, run
   };
 
   if(trials === 1) {
