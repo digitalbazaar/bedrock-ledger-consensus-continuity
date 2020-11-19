@@ -19,6 +19,8 @@ module.exports.run = async function() {
     const peerHead = await this.getLocalPeerHead(peer);
 
     // merge event into history
+    // FIXME: Is this realistic?
+    // FIXME: Do we want to merge with as many as possible here?
     events.push({nodeId: peer.nodeId, eventHash: peerHead});
 
     return this.merge({events});
