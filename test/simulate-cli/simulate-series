@@ -2,6 +2,7 @@
 
 'use strict';
 
+const os = require('os');
 const path = require('path');
 const workerpool = require('workerpool');
 const yargs = require('yargs');
@@ -19,18 +20,18 @@ async function main() {
       alias: 'p',
       default: './pipelines/reference.js',
     })
-    .option('name', {
-      describe: 'The test display name in Prometheus.',
-      alias: 'n',
-      demandOption: true
+    .option('user', {
+      describe: 'The username associated with the graph in Prometheus.',
+      alias: 'u',
+      default: os.userInfo().username
     })
     .options('failures', {
       describe: 'Number of byzantine failures to protect against.',
-      alias: 'm',
+      alias: 'f',
       default: 7,
     });
 
-  const {nosend, pipelineJs, name, failures} = yargs.argv;
+  const {nosend, pipelineJs, user, failures} = yargs.argv;
   const run = Date.now();
 
   const simulationPool = workerpool.pool(
@@ -45,7 +46,7 @@ async function main() {
     const simulationOptions = {
       nosend,
       pipelineJs,
-      user: name,
+      user,
       run,
       witnessCount: (3 * f) + 1
     };
