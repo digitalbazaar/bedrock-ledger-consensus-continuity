@@ -143,7 +143,7 @@ describe.skip('Consensus Agent - Get History API', () => {
   */
   it('returns a local merge and a remote merge event ', done => {
     async.auto({
-      remoteEvents: callback => helpers.addRemoteEvents(
+      remoteEvents: callback => callbackify(helpers.addRemoteEvents)(
         {consensusApi, ledgerNode, mockData}, callback),
       history1: ['remoteEvents', (results, callback) =>
         getRecentHistory({ledgerNode}, callback)],
@@ -175,7 +175,7 @@ describe.skip('Consensus Agent - Get History API', () => {
     const getHistory = consensusApi._client.getHistory;
     async.auto({
       remoteEvents: callback => async.times(2, (i, callback) =>
-        helpers.addRemoteEvents(
+        callbackify(helpers.addRemoteEvents)(
           {consensusApi, ledgerNode, mockData}, callback), callback),
       history1: ['remoteEvents', (results, callback) =>
         getRecentHistory({ledgerNode}, callback)],
@@ -215,7 +215,7 @@ describe.skip('Consensus Agent - Get History API', () => {
   //   one from fictitious node
   it('returns merge events from three different nodes', done => {
     async.auto({
-      remoteEventsBeta: callback => helpers.addRemoteEvents(
+      remoteEventsBeta: callback => callbackify(helpers.addRemoteEvents)(
         {consensusApi, ledgerNode: ledgerNodeBeta, mockData}, callback),
       history1: ['remoteEventsBeta', (results, callback) =>
         getRecentHistory({ledgerNode: ledgerNodeBeta}, callback)],

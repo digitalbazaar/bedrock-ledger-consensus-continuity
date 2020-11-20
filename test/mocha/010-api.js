@@ -334,7 +334,7 @@ describe('Continuity2017', () => {
       const mergeBranches = consensusApi._events.mergeBranches;
       const getRecentHistory = consensusApi._events.getRecentHistory;
       async.auto({
-        remoteEvent: callback => helpers.addRemoteEvents(
+        remoteEvent: callback => callbackify(helpers.addRemoteEvents)(
           {consensusApi, ledgerNode, mockData}, callback),
         history1: ['remoteEvent', (results, callback) =>
           getRecentHistory({ledgerNode, link: true}, callback)],
@@ -376,7 +376,7 @@ describe('Continuity2017', () => {
       const getRecentHistory = consensusApi._events.getRecentHistory;
       async.auto({
         // 2 remote merge events from the same creator chained together
-        remoteEvent: callback => helpers.addRemoteEvents(
+        remoteEvent: callback => callbackify(helpers.addRemoteEvents)(
           {consensusApi, count: 2, ledgerNode, mockData}, callback),
         history1: ['remoteEvent', (results, callback) =>
           getRecentHistory({ledgerNode, link: true}, callback)],
@@ -415,7 +415,7 @@ describe('Continuity2017', () => {
       const getRecentHistory = consensusApi._events.getRecentHistory;
       async.auto({
         // 2 remote merge events from the same creator chained together
-        remoteEvent: callback => helpers.addRemoteEvents(
+        remoteEvent: callback => callbackify(helpers.addRemoteEvents)(
           {consensusApi, count: 2, ledgerNode, mockData}, callback),
         history: ['remoteEvent', (results, callback) => {
           getRecentHistory({ledgerNode, link: true}, (err, result) => {
@@ -492,7 +492,7 @@ describe('Continuity2017', () => {
         addEvent: callback => callbackify(helpers.addEvent)(
           {ledgerNode, count: 4, eventTemplate}, callback),
         // 2 remote merge events from the same creator chained together
-        remoteEvent: callback => helpers.addRemoteEvents(
+        remoteEvent: callback => callbackify(helpers.addRemoteEvents)(
           {consensusApi, count: 2, ledgerNode, mockData}, callback),
         history: ['addEvent', 'remoteEvent', (results, callback) => {
           getRecentHistory({ledgerNode, link: true}, (err, result) => {
