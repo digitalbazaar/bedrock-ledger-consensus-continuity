@@ -5,7 +5,6 @@
 
 module.exports.run = async function({witnessThreshold, peerThreshold}) {
   let events = [];
-  console.log({witnessThreshold, peerThreshold});
   const f = (this.witnesses.size - 1) / 3;
 
   // operation batch is full (10% chance)
@@ -14,7 +13,6 @@ module.exports.run = async function({witnessThreshold, peerThreshold}) {
   const mergeTimeout = Math.random() < 0.2;
 
   if(operationBatchFull || mergeTimeout) {
-    console.log({operationBatchFull, mergeTimeout});
     // any node should try to merge if operation batch is full or a merge
     // timeout occurs and a minimum threshold of witnesses are seen
     const minWitnessEvents = _getMinWitnessEvents(f, peerThreshold);
