@@ -39,7 +39,7 @@ class Node {
     await this.pipeline(this);
   }
 
-  async run({type, fn} = {}) {
+  async run({type, fn, args} = {}) {
     const EXPECTED_TYPES = new Set(['merge', 'gossip', 'consensus']);
     if(!EXPECTED_TYPES.has(type)) {
       throw new Error('Unexpected type.');
@@ -48,7 +48,7 @@ class Node {
     let details;
     if(type !== 'consensus') {
       fn = fn.bind(this);
-      details = await fn(this);
+      details = await fn(args);
     } else {
       details = await this.findConsensus();
     }
