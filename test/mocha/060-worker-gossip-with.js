@@ -252,7 +252,7 @@ describe.skip('Worker - _gossipWith', () => {
       addOperation: callback => nodes.alpha.operations.add(
         {operation: testEvent}, callback),
       remoteEvents: ['addOperation', (results, callback) =>
-        helpers.addRemoteEvents(
+        callbackify(helpers.addRemoteEvents)(
           {consensusApi, ledgerNode: nodes.alpha, mockData}, callback)],
       writer: ['remoteEvents', (results, callback) => {
         const eventWriter = new EventWriter({ledgerNode: nodes.alpha});

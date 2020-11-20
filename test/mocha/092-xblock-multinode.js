@@ -1,11 +1,12 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const _ = require('lodash');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
+const {callbackify} = require('util');
 const cache = require('bedrock-redis');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -238,13 +239,13 @@ describe('X Block Test', () => {
 
 function _addOperations({count}, callback) {
   async.auto({
-    alpha: callback => helpers.addOperation(
+    alpha: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.alpha, opTemplate}, callback),
-    beta: callback => helpers.addOperation(
+    beta: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.beta, opTemplate}, callback),
-    gamma: callback => helpers.addOperation(
+    gamma: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.gamma, opTemplate}, callback),
-    delta: callback => helpers.addOperation(
+    delta: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.delta, opTemplate}, callback),
   }, callback);
 }
