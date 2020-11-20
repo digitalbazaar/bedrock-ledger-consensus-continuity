@@ -3,7 +3,6 @@
  */
 'use strict';
 
-const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
