@@ -25,13 +25,18 @@ async function main() {
       alias: 'u',
       default: os.userInfo().username
     })
+    .option('nodeCountRatio', {
+      describe: 'Ratio of total nodes to witness nodes.',
+      alias: 'r',
+      default: 2,
+    })
     .options('failures', {
       describe: 'Number of byzantine failures to protect against.',
       alias: 'f',
-      default: 7,
+      default: 1,
     });
 
-  const {nosend, pipelineJs, user, failures} = yargs.argv;
+  const {nosend, pipelineJs, user, nodeCountRatio, failures} = yargs.argv;
   const run = Date.now();
 
   const simulationPool = workerpool.pool(
@@ -48,7 +53,8 @@ async function main() {
       pipelineJs,
       user,
       run,
-      witnessCount: (3 * f) + 1
+      witnessCount: (3 * f) + 1,
+      nonwitnessCount: Math.floor(((3 * f) + 1) * nodeCountRatio)
     };
     promises.push(simulationPool.exec('runSimulation', [simulationOptions]));
   }
