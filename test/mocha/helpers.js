@@ -344,7 +344,7 @@ api.nBlocks = async ({
   const recordIds = {};
   const targetBlockHashMap = {};
   let workCycle = 0;
-  while(Object.keys(targetBlockHashMap).length === Object.keys(nodes).length) {
+  while(Object.keys(targetBlockHashMap).length !== Object.keys(nodes).length) {
     const count = 1;
     workCycle++;
     let addOperation = true;
