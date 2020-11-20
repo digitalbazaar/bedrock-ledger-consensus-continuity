@@ -230,7 +230,7 @@ api.addRemoteEvents = async ({
 api.buildHistory = async ({consensusApi, historyId, mockData, nodes} = {}) => {
   const eventTemplate = mockData.events.alpha;
   const opTemplate = mockData.operations.alpha;
-  if(historyId === 'alpha') {
+  if(['alpha', 'beta', 'gamma'].includes(historyId)) {
     const results = await ledgerHistory[historyId]({
       api, consensusApi, eventTemplate, nodes, opTemplate
     });
