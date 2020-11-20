@@ -217,108 +217,90 @@ api.addRemoteEvents = async ({
   return results;
 };
 
-api.buildHistory = ({consensusApi, historyId, mockData, nodes}, callback) => {
+api.buildHistory = async ({consensusApi, historyId, mockData, nodes} = {}) => {
   const eventTemplate = mockData.events.alpha;
   const opTemplate = mockData.operations.alpha;
-  async.auto(
-    ledgerHistory[historyId]({
-      api, consensusApi, eventTemplate, nodes, opTemplate
-    }), (err, results) => {
-      if(err) {
-        return callback(err);
-      }
-      const copyMergeHashes = {};
-      const copyMergeHashesIndex = {};
-      Object.keys(results).forEach(key => {
-        if(key.startsWith('cp')) {
-          copyMergeHashes[key] = results[key].meta.eventHash;
-          copyMergeHashesIndex[results[key].meta.eventHash] = key;
+  return new Promise((resolve, reject) => {
+    async.auto(
+      ledgerHistory[historyId]({
+        api, consensusApi, eventTemplate, nodes, opTemplate
+      }), (err, results) => {
+        if(err) {
+          return reject(err);
         }
+        const copyMergeHashes = {};
+        const copyMergeHashesIndex = {};
+        Object.keys(results).forEach(key => {
+          if(key.startsWith('cp')) {
+            copyMergeHashes[key] = results[key].meta.eventHash;
+            copyMergeHashesIndex[results[key].meta.eventHash] = key;
+          }
+        });
+        const regularEvent = results.regularEvent;
+        resolve({copyMergeHashes, copyMergeHashesIndex, regularEvent});
       });
-      const regularEvent = results.regularEvent;
-      callback(null, {copyMergeHashes, copyMergeHashesIndex, regularEvent});
-    });
-};
-
-// from may be a single node or an array of nodes
-api.copyAndMerge = (
-  {consensusApi, from, nodes, to, useSnapshot = false}, callback) => {
-  const copyFrom = [].concat(from);
-  const merge = consensusApi._events.merge;
-  async.auto({
-    copy: callback => async.eachSeries(copyFrom, (f, callback) =>
-      api.copyEvents(
-        {from: nodes[f], to: nodes[to], useSnapshot}, callback), callback),
-    merge: ['copy', (results, callback) =>
-      merge({creatorId: nodes[to].creatorId, ledgerNode: nodes[to]}, callback)]
-  }, (err, results) => {
-    err ? callback(err) : callback(null, results.merge);
   });
 };
 
-const snapshot = {};
-api.copyEvents = ({from, to, useSnapshot = false}, callback) => {
-  async.auto({
-    events: callback => {
-      const collection = from.storage.events.collection;
-      if(useSnapshot && snapshot[collection.s.name]) {
-        return callback(null, snapshot[collection.s.name]);
-      }
-      // FIXME: use a more efficient query, the commented aggregate function
-      // is evidently missing some events.
-      collection.find({
-        'meta.consensus': false
-      }, {'meta.eventHash': 1}).sort({$natural: 1}).toArray(
-        (err, results) => {
-          if(err) {
-            return callback(err);
-          }
-          from.storage.events.getMany({
-            eventHashes: results.map(r => r.meta.eventHash)
-          }).toArray(callback);
-        });
-    },
-    diff: ['events', (results, callback) => {
-      const eventHashes = results.events.map(e => e.meta.eventHash);
-      to.storage.events.difference(eventHashes, (err, result) => {
-        if(err) {
-          return callback(err);
-        }
-        if(result.length === 0) {
-          // return callback(new BedrockError('Nothing to do.', 'AbortError'));
-          return callback(null, []);
-        }
-        const diffSet = new Set(result);
-        const events = results.events
-          .filter(e => diffSet.has(e.meta.eventHash));
-        return callback(null, events);
-      });
-    }],
-    add: ['diff', (results, callback) => {
-      const events = results.diff;
-      async.auto({
-        addEvents: callback => async.eachSeries(
-          events, (e, callback) => to.consensus._events._addTestEvent({
-            event: e.event, ledgerNode: to,
-          }, err => {
-            // ignore dup errors
-            if(err && err.name === 'DuplicateError') {
-              return callback();
-            }
-            callback(err);
-          }), callback),
-        write: ['addEvents', (results, callback) => {
-          to.eventWriter.write().then(() => callback(), callback);
-        }]
-      }, callback);
-    }]
-  }, callback);
+// from may be a single node or an array of nodes
+api.copyAndMerge = async ({
+  consensusApi, from, nodes, to, useSnapshot = false
+} = {}) => {
+  const copyFrom = [].concat(from);
+  for(const f of copyFrom) {
+    await api.copyEvents({from: nodes[f], to: nodes[to], useSnapshot});
+  }
+  return consensusApi._events.merge(
+    {creatorId: nodes[to].creatorId, ledgerNode: nodes[to]});
 };
 
-api.createEvent = (
-  {eventTemplate, eventNum, consensus = true, hash = true}, callback) => {
+const snapshot = {};
+api.copyEvents = async ({from, to, useSnapshot = false}) => {
+  // events
+  const collection = from.storage.events.collection;
+  let events;
+  if(useSnapshot && snapshot[collection.s.name]) {
+    events = snapshot[collection.s.name];
+  } else {
+    // FIXME: use a more efficient query, the commented aggregate function
+    // is evidently missing some events.
+    const results = await collection.find({
+      'meta.consensus': false
+    }, {'meta.eventHash': 1}).sort({$natural: 1}).toArray();
+    events = await from.storage.events.getMany({
+      eventHashes: results.map(r => r.meta.eventHash)
+    }).toArray();
+  }
+  // diff
+  const eventHashes = events.map(e => e.meta.eventHash);
+  const _diff = await to.storage.events.difference(eventHashes);
+  if(_diff.length === 0) {
+    // throw new BedrockError('Nothing to do.', 'AbortError');
+    return [];
+  }
+  const diffSet = new Set(_diff);
+  const diff = events.filter(e => diffSet.has(e.meta.eventHash));
+  // add
+  for(const e of diff) {
+    try {
+      await to.consensus._events._addTestEvent({
+        event: e.event, ledgerNode: to
+      });
+    } catch(err) {
+      // ignore dup errors
+      if(!(err && err.name === 'DuplicateError')) {
+        throw err;
+      }
+    }
+  }
+  // write
+  await to.eventWriter.write();
+};
+
+api.createEvent = async (
+  {eventTemplate, eventNum, consensus = true, hash = true} = {}) => {
   const events = [];
-  async.timesLimit(eventNum, 100, (i, callback) => {
+  for(let i = 0; i < eventNum; ++i) {
     const event = bedrock.util.clone(eventTemplate);
     event.id = `https://example.com/events/${uuid()}`;
     const meta = {};
@@ -328,17 +310,16 @@ api.createEvent = (
     }
     if(!hash) {
       events.push({event, meta});
-      return callback();
+      continue;
     }
-    api.testHasher(event, (err, result) => {
-      meta.eventHash = result;
-      events.push({event, meta});
-      callback();
-    });
-  }, err => callback(err, events));
+    // FIXME: make parallel
+    meta.eventHash = await api.testHasher(event);
+    events.push({event, meta});
+  }
+  return events;
 };
 
-api.createEventBasic = ({eventTemplate}) => {
+api.createEventBasic = ({eventTemplate} = {}) => {
   const event = bedrock.util.clone(eventTemplate);
   event.operation[0].record.id = 'https://example.com/events/' + uuid();
   return event;

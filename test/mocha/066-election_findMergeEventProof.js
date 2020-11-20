@@ -132,7 +132,7 @@ describe('Election API _findMergeEventProof', () => {
   it('ledger history alpha', done => {
     const report = {};
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         // NOTE: for ledger history alpha, all nodes should have the same view
@@ -181,7 +181,7 @@ describe('Election API _findMergeEventProof', () => {
   it('ledger history beta', done => {
     const report = {};
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'beta', mockData, nodes}, callback),
       testAlpha: ['build', (results, callback) => {
         const build = results.build;
@@ -233,7 +233,7 @@ describe('Election API _findMergeEventProof', () => {
     this.timeout(120000);
     const report = {};
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'gamma', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const build = results.build;
@@ -314,7 +314,7 @@ describe('Election API _findMergeEventProof', () => {
               callback();
             })]
       }, callback),
-      build: ['nodeEpsilon', (results, callback) => helpers.buildHistory(
+      build: ['nodeEpsilon', (results, callback) => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
       testAll: ['build', (results, callback) => {
         // NOTE: for ledger history alpha, all nodes should have the same view
@@ -377,7 +377,7 @@ describe('Election API _findMergeEventProof', () => {
       .filter(p => p !== peers.epsilon)
       .map(p => ({id: p}));
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'epsilon', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         // NOTE: for ledger history alpha, all nodes should have the same view
@@ -427,7 +427,7 @@ describe('Election API _findMergeEventProof', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
       event: ['build', (results, callback) => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback)],
