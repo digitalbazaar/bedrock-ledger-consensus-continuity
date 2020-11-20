@@ -534,7 +534,7 @@ describe('Continuity2017', () => {
         addEvent: callback => ledgerNode.consensus._events.add(
           testEvent, ledgerNode, callback),
         runWorker: ['addEvent', (results, callback) =>
-          consensusApi._worker._run(ledgerNode, err => {
+          callbackify(consensusApi._worker._run)({ledgerNode}, err => {
             callback(err);
           })],
         getLatest: ['runWorker', (results, callback) =>
@@ -578,7 +578,7 @@ describe('Continuity2017', () => {
         addEvent: ['getConfigBlock', (results, callback) =>
           ledgerNode.conseneus._events.add(testEvent, ledgerNode, callback)],
         runWorker: ['addEvent', (results, callback) =>
-          consensusApi._worker._run(ledgerNode, err => {
+          callbackify(consensusApi._worker._run)({ledgerNode}, err => {
             callback(err);
           })],
         getEventBlock: ['runWorker', (results, callback) =>
