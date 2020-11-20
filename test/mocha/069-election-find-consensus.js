@@ -180,7 +180,7 @@ describe('Election API findConsensus', () => {
     const getRecentHistory = consensusApi._events.getRecentHistory;
     const electors = _.values(peers).map(p => ({id: p}));
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
@@ -237,7 +237,7 @@ describe('Election API findConsensus', () => {
     const getRecentHistory = consensusApi._events.getRecentHistory;
     const electors = _.values(peers).map(p => ({id: p}));
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'beta', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
@@ -289,7 +289,7 @@ describe('Election API findConsensus', () => {
     const getRecentHistory = consensusApi._events.getRecentHistory;
     const electors = _.values(peers).map(p => ({id: p}));
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'gamma', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
@@ -368,7 +368,7 @@ describe('Election API findConsensus', () => {
           });
         }]
       }, callback),
-      build: ['nodeEpsilon', (results, callback) => helpers.buildHistory(
+      build: ['nodeEpsilon', (results, callback) => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
@@ -436,7 +436,7 @@ describe('Election API findConsensus', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      build: callback => helpers.buildHistory(
+      build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
       history: ['build', (results, callback) => {
         const {creatorId} = ledgerNode;

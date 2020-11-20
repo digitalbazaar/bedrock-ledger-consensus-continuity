@@ -179,7 +179,7 @@ describe.skip('Election API _getTails', () => {
         }, callback);
       }],
       // step 3
-      cp1: ['test1', (results, callback) => helpers.copyAndMerge({
+      cp1: ['test1', (results, callback) => callbackify(helpers.copyAndMerge)({
         consensusApi,
         from: nodes.alpha,
         to: nodes.beta
@@ -249,7 +249,7 @@ describe.skip('Election API _getTails', () => {
         }, callback);
       }],
       // step 4
-      cp2: ['test2', (results, callback) => helpers.copyAndMerge({
+      cp2: ['test2', (results, callback) => callbackify(helpers.copyAndMerge)({
         consensusApi,
         from: nodes.delta,
         to: nodes.gamma
@@ -309,7 +309,7 @@ describe.skip('Election API _getTails', () => {
       // snapshot gamma before copy
       ss1: ['test3', (results, callback) => helpers.snapshotEvents(
         {ledgerNode: nodes.gamma}, callback)],
-      cp3: ['ss1', (results, callback) => helpers.copyAndMerge({
+      cp3: ['ss1', (results, callback) => callbackify(helpers.copyAndMerge)({
         consensusApi,
         from: nodes.beta,
         to: nodes.gamma
@@ -419,7 +419,7 @@ describe.skip('Election API _getTails', () => {
         }, callback);
       }],
       // step 6
-      cp4: ['test4', (results, callback) => helpers.copyAndMerge({
+      cp4: ['test4', (results, callback) => callbackify(helpers.copyAndMerge)({
         consensusApi,
         from: nodes.gamma,
         to: nodes.beta,

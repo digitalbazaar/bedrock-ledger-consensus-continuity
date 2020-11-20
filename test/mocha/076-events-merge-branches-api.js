@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -213,7 +213,7 @@ describe('events.mergeBranches API', () => {
         {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
         callback),
       mergeBranches: ['eventBeta', (results, callback) => {
-        helpers.copyAndMerge(
+        callbackify(helpers.copyAndMerge)(
           {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
@@ -246,7 +246,7 @@ describe('events.mergeBranches API', () => {
           {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
           callback)],
       mergeBranches: ['betaEvent2', (results, callback) => {
-        helpers.copyAndMerge(
+        callbackify(helpers.copyAndMerge)(
           {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
@@ -279,7 +279,7 @@ describe('events.mergeBranches API', () => {
           {consensusApi, ledgerNode: nodes.beta, eventTemplate, opTemplate},
           callback)],
       mergeBranches: ['alphaEvent', 'betaEvent2', (results, callback) => {
-        helpers.copyAndMerge(
+        callbackify(helpers.copyAndMerge)(
           {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
             assertNoError(err);
             should.exist(result.event);
@@ -334,19 +334,21 @@ describe('events.mergeBranches API', () => {
       eventBeta: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
         callback),
-      eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
-      eventAlpha: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'gamma', nodes, to: 'alpha'}, (err, result) => {
-          assertNoError(err);
-          const gammaMergeHash = results.eventGamma.meta.eventHash;
-          const parentHash = result.event.parentHash;
-          parentHash.should.have.length(2);
-          parentHash.should.have.same.members(
-            [genesisMergeHash, gammaMergeHash]);
-          callback();
-        }
-      )]
+      eventGamma: ['eventBeta', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
+      eventAlpha: ['eventGamma', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'gamma', nodes, to: 'alpha'}, (err, result) => {
+            assertNoError(err);
+            const gammaMergeHash = results.eventGamma.meta.eventHash;
+            const parentHash = result.event.parentHash;
+            parentHash.should.have.length(2);
+            parentHash.should.have.same.members(
+              [genesisMergeHash, gammaMergeHash]);
+            callback();
+          }
+        )]
     }, done);
   });
   it('alpha properly merges events from beta and gamma II', done => {
@@ -356,21 +358,24 @@ describe('events.mergeBranches API', () => {
       eventBeta: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
         callback),
-      eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
-      eventBeta2: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
-      eventAlpha: ['eventBeta2', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
-          assertNoError(err);
-          const betaMergeHash2 = results.eventBeta2.meta.eventHash;
-          const parentHash = result.event.parentHash;
-          parentHash.should.have.length(2);
-          parentHash.should.have.same.members(
-            [genesisMergeHash, betaMergeHash2]);
-          callback();
-        }
-      )]
+      eventGamma: ['eventBeta', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
+      eventBeta2: ['eventGamma', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
+      eventAlpha: ['eventBeta2', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'beta', nodes, to: 'alpha'}, (err, result) => {
+            assertNoError(err);
+            const betaMergeHash2 = results.eventBeta2.meta.eventHash;
+            const parentHash = result.event.parentHash;
+            parentHash.should.have.length(2);
+            parentHash.should.have.same.members(
+              [genesisMergeHash, betaMergeHash2]);
+            callback();
+          }
+        )]
     }, done);
   });
   it('alpha properly merges events from beta and gamma III', done => {
@@ -380,18 +385,20 @@ describe('events.mergeBranches API', () => {
       eventBeta: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
         callback),
-      eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
+      eventGamma: ['eventBeta', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
       // beta has only merge event from gamma
-      eventBeta2: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
+      eventBeta2: ['eventGamma', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
       // add new regular event to gamma
       eventGamma2: ['eventGamma', (results, callback) =>
         callbackify(helpers.addEventAndMerge)(
           {consensusApi, eventTemplate, ledgerNode: nodes.gamma, opTemplate},
           callback)],
       eventAlpha: ['eventBeta2', 'eventGamma2', (results, callback) =>
-        helpers.copyAndMerge(
+        callbackify(helpers.copyAndMerge)(
           {consensusApi, from: ['beta', 'gamma'], nodes, to: 'alpha'},
           (err, result) => {
             assertNoError(err);
@@ -414,11 +421,13 @@ describe('events.mergeBranches API', () => {
       eventBeta: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
         callback),
-      eventGamma: ['eventBeta', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
+      eventGamma: ['eventBeta', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'beta', nodes, to: 'gamma'}, callback)],
       // beta has only merge event from gamma
-      eventBeta2: ['eventGamma', (results, callback) => helpers.copyAndMerge(
-        {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
+      eventBeta2: ['eventGamma', (results, callback) =>
+        callbackify(helpers.copyAndMerge)(
+          {consensusApi, from: 'gamma', nodes, to: 'beta'}, callback)],
       // add new regular event to gamma
       eventGamma2: ['eventGamma', (results, callback) =>
         callbackify(helpers.addEventAndMerge)(
@@ -428,7 +437,7 @@ describe('events.mergeBranches API', () => {
         {eventTemplate, count: 3, ledgerNode: nodes.alpha, opTemplate},
         callback),
       eventAlpha2: ['eventAlpha', 'eventBeta2', 'eventGamma2',
-        (results, callback) => helpers.copyAndMerge(
+        (results, callback) => callbackify(helpers.copyAndMerge)(
           {consensusApi, from: ['beta', 'gamma'], nodes, to: 'alpha'},
           (err, result) => {
             assertNoError(err);

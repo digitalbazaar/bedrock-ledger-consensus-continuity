@@ -60,7 +60,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
     it(`adds ${eventNum} events`, function(done) {
       this.timeout(120000);
       async.auto({
-        create: callback => helpers.createEvent(
+        create: callback => callbackify(helpers.createEvent)(
           {consensus: false, eventNum, eventTemplate: mockData.events.alpha},
           callback),
         add: ['create', (results, callback) => async.eachLimit(
