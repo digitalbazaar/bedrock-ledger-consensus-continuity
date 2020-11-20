@@ -163,9 +163,10 @@ class Node {
       }
     }
 
-    console.log('peerEvents:', peerEvents.length);
-    console.log('localPeerEventsLength:', localPeerEvents.size);
-    console.log('orderedLocalPeerEventsLength:', orderedLocalPeerEvents.length);
+    // console.log('peerEvents:', peerEvents.length);
+    // console.log('localPeerEventsLength:', localPeerEvents.size);
+    // console.log(
+    //  'orderedLocalPeerEventsLength:', orderedLocalPeerEvents.length);
     // console.log('orderedLocalPeerEvents:', orderedLocalPeerEvents);
 
     return orderedLocalPeerEvents[orderedLocalPeerEvents.length - 1];
