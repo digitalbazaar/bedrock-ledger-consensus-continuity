@@ -14,8 +14,8 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 describe('Election API _getAncestors', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
   let genesisMerge;
   let EventWriter;
@@ -27,7 +27,8 @@ describe('Election API _getAncestors', () => {
     async.auto({
       flush: callbackify(helpers.flushCache),
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {
@@ -135,7 +136,7 @@ describe('Election API _getAncestors', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      event1: callback => helpers.addEventAndMerge(
+      event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
       test: ['event1', async results => {
         const hashes = {
@@ -159,10 +160,11 @@ describe('Election API _getAncestors', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      event1: callback => helpers.addEventAndMerge(
+      event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
-      event2: ['event1', (results, callback) => helpers.addEventAndMerge(
-        {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback)],
+      event2: ['event1', (results, callback) =>
+        callbackify(helpers.addEventAndMerge)(
+          {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback)],
       test: ['event2', async results => {
         const hashes = {
           mergeEventHashes: [results.event2.mergeHash],
@@ -188,7 +190,7 @@ describe('Election API _getAncestors', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      event1: callback => helpers.addEventAndMerge(
+      event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
       cp1: ['event1', (results, callback) => helpers.copyAndMerge({
         consensusApi, from: 'alpha', nodes, to: 'beta'}, callback)],
@@ -224,7 +226,7 @@ describe('Election API _getAncestors', () => {
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     async.auto({
-      event1: callback => helpers.addEventAndMerge(
+      event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode}, callback),
       cp1: ['event1', (results, callback) => helpers.copyAndMerge({
         consensusApi,

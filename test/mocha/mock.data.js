@@ -135,29 +135,4 @@ mock.ldDocuments[mock.authorizedSignerUrl] = {
   publicKeyBase58: mock.groups.authorized.publicKey
 };
 
-/*
-const jsonld = bedrock.jsonld;
-const oldLoader = jsonld.documentLoader;
-jsonld.documentLoader = function(url, callback) {
-  if(Object.keys(mock.ldDocuments).includes(url)) {
-    return callback(null, {
-      contextUrl: null,
-      document: mock.ldDocuments[url],
-      documentUrl: url
-    });
-  }
-  // const regex = new RegExp(
-  //   'http://authorization.dev/dids' + '/(.*?)$');
-  // const didMatch = url.match(regex);
-  // if(didMatch && didMatch.length === 2 && didMatch[1] in mock.didDocuments) {
-  //   return callback(null, {
-  //     contextUrl: null,
-  //     document: mock.didDocuments[didMatch[1]],
-  //     documentUrl: url
-  //   });
-  // }
-  oldLoader(url, callback);
-};
-*/
-
 mock.consensusInput = require('./continuity-test-vectors');

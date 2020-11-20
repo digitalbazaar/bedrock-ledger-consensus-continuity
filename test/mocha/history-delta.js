@@ -1,11 +1,12 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
+const {callbackify} = require('util');
 
 // this history requires 5 nodes
 module.exports = ({api, consensusApi, eventTemplate, nodes, opTemplate}) => ({
   // add a regular event and merge on every node
-  regularEvent: callback => api.addEventMultiNode(
+  regularEvent: callback => callbackify(api.addEventMultiNode)(
     {consensusApi, eventTemplate, nodes, opTemplate}, callback),
   cpa: ['regularEvent', (results, callback) => api.copyAndMerge({
     consensusApi,

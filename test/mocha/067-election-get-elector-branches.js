@@ -1,11 +1,12 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const _ = require('lodash');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
+const {callbackify} = require('util');
 
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -14,8 +15,8 @@ let consensusApi;
 
 /* eslint-disable no-unused-vars */
 describe.skip('Election API _getTails', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
   let genesisMerge;
   let eventHash;
@@ -27,7 +28,8 @@ describe.skip('Election API _getTails', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {
@@ -127,7 +129,7 @@ describe.skip('Election API _getTails', () => {
       addEvent1: callback => {
         const events = {};
         async.eachOf(nodes, (n, i, callback) => {
-          helpers.addEventAndMerge(
+          callbackify(helpers.addEventAndMerge)(
             {consensusApi, eventTemplate, ledgerNode: n}, (err, result) => {
               if(err) {
                 return callback(err);

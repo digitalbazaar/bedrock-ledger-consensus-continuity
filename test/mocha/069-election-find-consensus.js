@@ -15,8 +15,8 @@ let consensusApi;
 
 /* eslint-disable no-unused-vars */
 describe('Election API findConsensus', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
   let genesisBlock;
   let EventWriter;
@@ -28,7 +28,8 @@ describe('Election API findConsensus', () => {
     async.auto({
       flush: callbackify(helpers.flushCache),
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {
@@ -120,7 +121,7 @@ describe('Election API findConsensus', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      event1: callback => helpers.addEventAndMerge(
+      event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
       history: ['event1', (results, callback) => getRecentHistory(
         {creatorId, ledgerNode}, callback)],
@@ -154,7 +155,7 @@ describe('Election API findConsensus', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      event1: callback => helpers.addEventAndMerge(
+      event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
       history: ['event1', (results, callback) => getRecentHistory(
         {creatorId, ledgerNode}, callback)],
@@ -441,7 +442,7 @@ describe('Election API findConsensus', () => {
         const {creatorId} = ledgerNode;
         getRecentHistory({creatorId, ledgerNode}, callback);
       }],
-      event: ['history', (results, callback) => helpers.addEvent(
+      event: ['history', (results, callback) => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback)],
       consensus: ['event', (results, callback) => {
         findConsensus({

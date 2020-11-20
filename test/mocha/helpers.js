@@ -6,10 +6,9 @@
 const _ = require('lodash');
 const async = require('async');
 const bedrock = require('bedrock');
-//const brIdentity = require('bedrock-identity');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
-const {callbackify} = require('util');
+const {callbackify, promisify} = require('util');
 const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures');
@@ -23,6 +22,8 @@ const ledgerHistory = {
   epsilon: require('./history-epsilon'),
 };
 
+const openCollections = promisify(database.openCollections);
+
 const api = {};
 module.exports = api;
 
@@ -33,131 +34,97 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 // test hashing function
 api.testHasher = brLedgerNode.consensus._hasher;
 
-api.addEvent = (
-  {count = 1, eventTemplate, ledgerNode, opTemplate}, callback) => {
+api.addEvent = async ({count = 1, eventTemplate, ledgerNode, opTemplate}) => {
   const events = {};
   const {creatorId} = ledgerNode;
   let operations;
-  async.timesSeries(count, (i, callback) => {
+  for(let i = 0; i < count; ++i) {
     const testEvent = bedrock.util.clone(eventTemplate);
     testEvent.basisBlockHeight = 1;
     const operation = bedrock.util.clone(opTemplate);
     const testRecordId = `https://example.com/event/${uuid()}`;
-    operation.creator = ledgerNode.creatorId;
     if(operation.type === 'CreateWebLedgerRecord') {
       operation.record.id = testRecordId;
     }
     if(operation.type === 'UpdateWebLedgerRecord') {
       operation.recordPatch.target = testRecordId;
     }
-    async.auto({
-      head: callback => ledgerNode.consensus._events.getHead(
-        {creatorId, ledgerNode}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          const {eventHash: headHash} = result;
-          testEvent.parentHash = [headHash];
-          testEvent.treeHash = headHash;
-          callback();
-        }),
-      operationHash: callback => hasher(operation, (err, opHash) => {
-        if(err) {
-          return callback(err);
-        }
-        testEvent.operationHash = [opHash];
-        callback(null, opHash);
-      }),
-      eventHash: ['head', 'operationHash', (results, callback) => hasher(
-        testEvent, callback)],
-      operation: ['eventHash', (results, callback) => {
-        const {eventHash, operationHash} = results;
-        operations = [{
-          meta: {
-            basisBlockHeight: 1,
-            operationHash,
-            recordId: ledgerNode.storage.driver.hash(testRecordId),
-          },
-          operation,
-        }];
-        ledgerNode.consensus.operations.write(
-          {eventHash, ledgerNode, operations}, callback);
-      }],
-      event: ['operation', (results, callback) => {
-        const {eventHash} = results;
-        ledgerNode.consensus._events.add(
-          {event: testEvent, eventHash, ledgerNode}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            result.operations = operations;
-            events[result.meta.eventHash] = result;
-            callback();
-          });
-      }]
-    }, callback);
-  }, err => callback(err, events));
+
+    const head = await ledgerNode.consensus._events.getHead({
+      creatorId, ledgerNode
+    });
+    const {eventHash: headHash} = head;
+    testEvent.parentHash = [headHash];
+    testEvent.treeHash = headHash;
+
+    testEvent.operationHash = [await hasher(operation)];
+
+    const eventHash = await hasher(testEvent);
+    operations = [{
+      meta: {
+        basisBlockHeight: 1,
+        operationHash: testEvent.operationHash,
+        recordId: ledgerNode.storage.driver.hash(testRecordId)
+      },
+      operation
+    }];
+    await ledgerNode.consensus.operations.write({
+      eventHash, ledgerNode, operations
+    });
+
+    const result = await ledgerNode.consensus._events.add({
+      event: testEvent, eventHash, ledgerNode
+    });
+
+    result.operations = operations;
+    events[result.meta.eventHash] = result;
+  }
+
+  return events;
 };
 
-api.addEventAndMerge = ({
+api.addEventAndMerge = async ({
   consensusApi, count = 1, eventTemplate, ledgerNode, opTemplate
-}, callback) => {
+}) => {
   if(!(consensusApi && eventTemplate && ledgerNode)) {
     throw new TypeError(
       '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
   }
   const events = {};
   const merge = consensusApi._events.merge;
-  async.auto({
-    addEvent: callback => api.addEvent(
-      {count, eventTemplate, ledgerNode, opTemplate}, (err, result) => {
-        if(err) {
-          return callback(err);
-        }
-        events.regular = result;
-        events.regularHashes = Object.keys(result);
-        callback();
-      }),
-    merge: ['addEvent', (results, callback) => merge(
-      {creatorId: ledgerNode.creatorId, ledgerNode}, (err, result) => {
-        if(err) {
-          return callback(err);
-        }
-        events.merge = result;
-        events.mergeHash = result.meta.eventHash;
-        events.allHashes = [events.mergeHash, ...events.regularHashes];
-        callback();
-      })]
-  }, err => callback(err, events));
+
+  events.regular = await api.addEvent({
+    count, eventTemplate, ledgerNode, opTemplate
+  });
+  events.regularHashes = Object.keys(events.regular);
+
+  events.merge = await merge({
+    creatorId: ledgerNode.creatorId, ledgerNode
+  });
+  events.mergeHash = events.merge.meta.eventHash;
+  events.allHashes = [events.mergeHash, ...events.regularHashes];
+
+  return events;
 };
 
-api.addEventMultiNode = (
-  {consensusApi, eventTemplate, nodes, opTemplate}, callback) => {
+api.addEventMultiNode = async ({
+  consensusApi, eventTemplate, nodes, opTemplate
+}) => {
   const rVal = {
     mergeHash: [],
     regularHash: []
   };
-  async.eachOfSeries(nodes, (ledgerNode, i, callback) => {
-    api.addEventAndMerge({
+  for(const name of Object.keys(nodes)) {
+    const ledgerNode = nodes[name];
+    rVal[name] = await api.addEventAndMerge({
       consensusApi, eventTemplate, ledgerNode, opTemplate
-    }, (err, result) => {
-      if(err) {
-        return callback(err);
-      }
-      rVal[i] = result;
-      callback();
     });
-  },
-  err => {
-    if(err) {
-      return callback(err);
-    }
-    Object.keys(nodes).forEach(k => {
-      rVal.regularHash.push(Object.keys(rVal[k].regular)[0]);
-      rVal.mergeHash.push(rVal[k].merge.meta.eventHash);
-    });
-    callback(null, rVal);
+  }
+  Object.keys(nodes).forEach(k => {
+    rVal.regularHash.push(Object.keys(rVal[k].regular)[0]);
+    rVal.mergeHash.push(rVal[k].merge.meta.eventHash);
   });
+  return rVal;
 };
 
 // this helper is for test that execute the consensus worker
@@ -412,14 +379,6 @@ api.createEventBasic = ({eventTemplate}) => {
   return event;
 };
 
-api.createIdentity = function(userName) {
-  const newIdentity = {
-    id: 'did:' + uuid(),
-    description: userName,
-  };
-  return newIdentity;
-};
-
 api.flushCache = () => cache.client.flushall();
 
 api.nBlocks = ({
@@ -498,26 +457,22 @@ api.nBlocks = ({
 };
 
 // collections may be a string or array
-api.removeCollections = function(collections, callback) {
+api.removeCollections = async function(collections) {
   const collectionNames = [].concat(collections);
-  database.openCollections(collectionNames, () => {
-    async.each(collectionNames, function(collectionName, callback) {
-      if(!database.collections[collectionName]) {
-        return callback();
-      }
-      database.collections[collectionName].remove({}, callback);
-    }, function(err) {
-      callback(err);
-    });
-  });
+  await openCollections(collectionNames);
+  for(const collectionName of collectionNames) {
+    if(!database.collections[collectionName]) {
+      return;
+    }
+    await database.collections[collectionName].remove({});
+  }
 };
 
-api.prepareDatabase = function(mockData, callback) {
-  api.removeCollections([
+api.prepareDatabase = async function() {
+  await api.removeCollections([
     'identity', 'eventLog', 'ledger', 'ledgerNode', 'continuity2017_key',
     'continuity2017_manifest', 'continuity2017_vote', 'continuity2017_voter'
-  ], callback);
-  //await insertTestData(mockData);
+  ]);
 };
 
 api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
@@ -638,6 +593,7 @@ api.snapshotEvents = ({ledgerNode}, callback) => {
   });
 };
 
+// FIXME: remove and use brLedgerNode directly in tests
 api.use = (plugin, callback) => {
   let p;
   try {
@@ -647,19 +603,3 @@ api.use = (plugin, callback) => {
   }
   callback(null, p);
 };
-
-// Insert identities and public keys used for testing into database
-/*async function insertTestData(mockData) {
-  async.forEachOf(mockData.identities, ({identity, meta}, key, callback) => {
-    brIdentity.insert({actor: null, identity, meta}, callback);
-  }, err => {
-    if(err) {
-      if(!database.isDuplicateError(err)) {
-        // duplicate error means test data is already loaded
-        return callback(err);
-      }
-    }
-    callback();
-  }, callback);
-}
-*/

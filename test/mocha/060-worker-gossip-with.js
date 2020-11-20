@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -15,8 +15,8 @@ const {util: {callbackify, uuid}} = bedrock;
 // FIXME: gossipWith API no longer records events into the redis cache,
 // these tests will need to be refactored
 describe.skip('Worker - _gossipWith', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
 
   let cacheKey;
@@ -38,7 +38,8 @@ describe.skip('Worker - _gossipWith', () => {
     async.auto({
       flush: callback => cache.client.flushall(callback),
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {
@@ -143,7 +144,7 @@ describe.skip('Worker - _gossipWith', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
-      addEvent: callback => helpers.addEventAndMerge({
+      addEvent: callback => callbackify(helpers.addEventAndMerge)({
         consensusApi, creatorId: peers.alpha, eventTemplate,
         ledgerNode: nodes.alpha, opTemplate
       }, callback),
@@ -293,7 +294,7 @@ describe.skip('Worker - _gossipWith', () => {
     const testNodes =
       {alpha: nodes.alpha, beta: nodes.beta, gamma: nodes.gamma};
     async.auto({
-      addEvent: callback => helpers.addEventMultiNode(
+      addEvent: callback => callbackify(helpers.addEventMultiNode)(
         {consensusApi, eventTemplate, nodes: testNodes, opTemplate}, callback),
       writeAll1: ['addEvent', (results, callback) =>
         async.each(testNodes, (ledgerNode, callback) =>
@@ -385,7 +386,7 @@ describe.skip('Worker - _gossipWith', () => {
       gamma: [genesisMergeHash]
     };
     async.auto({
-      addEvent: callback => helpers.addEventMultiNode({
+      addEvent: callback => callbackify(helpers.addEventMultiNode)({
         consensusApi, eventTemplate, nodes: testNodes, peers, opTemplate
       }, (err, result) => {
         generations.alpha.push(result.alpha.mergeHash);
@@ -411,7 +412,7 @@ describe.skip('Worker - _gossipWith', () => {
             callback();
           }),
         callback => _commitCache(nodes.beta, callback),
-        callback => helpers.addEventAndMerge({
+        callback => callbackify(helpers.addEventAndMerge)({
           consensusApi, creatorId: peers.beta, eventTemplate,
           ledgerNode: nodes.beta, opTemplate
         }, (err, result) => {
@@ -426,7 +427,7 @@ describe.skip('Worker - _gossipWith', () => {
             callback();
           }),
         callback => _commitCache(nodes.alpha, callback),
-        callback => helpers.addEventAndMerge({
+        callback => callbackify(helpers.addEventAndMerge)({
           consensusApi, creatorId: peers.alpha, eventTemplate,
           ledgerNode: nodes.alpha, opTemplate
         }, (err, result) => {
@@ -443,7 +444,7 @@ describe.skip('Worker - _gossipWith', () => {
           }),
         callback => _commitCache(nodes.gamma, callback),
         // gamma M2
-        callback => helpers.addEventAndMerge({
+        callback => callbackify(helpers.addEventAndMerge)({
           consensusApi, creatorId: peers.gamma, eventTemplate,
           ledgerNode: nodes.gamma, opTemplate
         }, (err, result) => {
