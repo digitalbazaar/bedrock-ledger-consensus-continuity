@@ -394,10 +394,12 @@ api.prepareDatabase = async function() {
   ]);
 };
 
-api.runWorkerCycle = async ({consensusApi, nodes, series = false}) => {
+api.runWorkerCycle = async (
+  {consensusApi, nodes, series = false, targetCyclesPerNode = 1}) => {
   const promises = [];
   for(const ledgerNode of nodes) {
-    const promise = _cycleNode({consensusApi, ledgerNode});
+    const promise = _cycleNode(
+      {consensusApi, ledgerNode, targetCycles: targetCyclesPerNode});
     if(series) {
       await promise;
     } else {
@@ -407,13 +409,13 @@ api.runWorkerCycle = async ({consensusApi, nodes, series = false}) => {
   await Promise.all(promises);
 };
 
-async function _cycleNode({consensusApi, ledgerNode} = {}) {
+async function _cycleNode({consensusApi, ledgerNode, targetCycles = 1} = {}) {
   if(ledgerNode.stop) {
     return;
   }
 
   try {
-    await consensusApi._worker._run({ledgerNode});
+    await consensusApi._worker._run({ledgerNode, targetCycles});
   } catch(err) {
     // if a config change is detected, do not run worker on that node again
     if(err && err.name === 'LedgerConfigurationChangeError') {
