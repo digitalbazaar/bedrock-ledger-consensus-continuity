@@ -31,21 +31,23 @@ async function main() {
       alias: 'u',
       default: os.userInfo().username
     })
-    .option('nonwitnessCount', {
-      describe: 'Number of non-witness nodes.',
+    .option('nodeCount', {
+      describe: 'Total node count.',
       alias: 'n',
-      default: 0,
-    })
-    .option('witnessCount', {
-      describe: 'Number of witnesses.',
-      alias: 'w',
       default: 4,
+    })
+    .options('failures', {
+      describe: 'Number of byzantine failures to protect against.',
+      alias: 'f',
+      default: 1,
     });
 
-  const {nosend, pipelineJs, trials, user, nonwitnessCount, witnessCount} =
+  const {nosend, pipelineJs, trials, user, nodeCount, failures} =
     yargs.argv;
 
   const run = Date.now();
+  const witnessCount = (3 * failures) + 1;
+  const nonwitnessCount = nodeCount - witnessCount;
   const simulationOptions = {
     nosend, pipelineJs, user, nonwitnessCount, witnessCount, run
   };
