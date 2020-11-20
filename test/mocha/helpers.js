@@ -413,7 +413,7 @@ async function _cycleNode({consensusApi, ledgerNode} = {}) {
   }
 
   try {
-    await consensusApi._worker._run(ledgerNode);
+    await consensusApi._worker._run({ledgerNode});
   } catch(err) {
     // if a config change is detected, do not run worker on that node again
     if(err && err.name === 'LedgerConfigurationChangeError') {
