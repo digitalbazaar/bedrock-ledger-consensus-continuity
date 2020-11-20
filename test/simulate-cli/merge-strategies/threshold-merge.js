@@ -6,7 +6,6 @@
 module.exports.run = async function({witnessThreshold, peerThreshold}) {
   let events = [];
   console.log({witnessThreshold, peerThreshold});
-  const outstandingMergeEvents = this.outstandingMergeEvents;
   const f = (this.witnesses.size - 1) / 3;
 
   // operation batch is full (10% chance)
@@ -14,78 +13,78 @@ module.exports.run = async function({witnessThreshold, peerThreshold}) {
   // merge timeout reached (20% chance)
   const mergeTimeout = Math.random() < 0.2;
 
-  // create a merge event if the operation batch is full or on a merge timeout
   if(operationBatchFull || mergeTimeout) {
-    let minWitnessEvents;
-    const witnesses = Array.from(this.witnesses.keys());
+    console.log({operationBatchFull, mergeTimeout});
+    // any node should try to merge if operation batch is full or a merge
+    // timeout occurs and a minimum threshold of witnesses are seen
+    const minWitnessEvents = _getMinWitnessEvents(f, peerThreshold);
+    const witnesses = new Map();
+    const localWitnessPeers = await this.getWitnessPeers();
+    localWitnessPeers.forEach(witness => {
+      witnesses.set(witness.nodeId, witness);
+    });
 
-    if(peerThreshold === '2f') {
-      minWitnessEvents = 2 * f;
-    } else if(peerThreshold === 'f+1') {
-      minWitnessEvents = f + 1;
-    } else if(peerThreshold === '1') {
-      minWitnessEvents = 1;
-    } else {
-      console.log('error: theshold-merge - unsupported peerThreshold:',
-        peerThreshold);
-      process.exit(1);
-    }
+    events = await _getWitnessEvents({node: this, witnesses, minWitnessEvents});
+  } else if(this.isWitness) {
+    // witness should merge if minimum threshold of other witness events seen
+    const minWitnessEvents = _getMinWitnessEvents(f, witnessThreshold);
+    const witnesses = new Map();
+    // remove current witness from list of available merge witnesses
+    const localWitnessPeers = (await this.getWitnessPeers())
+      .filter(witness => witness.nodeId !== this.nodeId);
+    localWitnessPeers.forEach(witness => {
+      witnesses.set(witness.nodeId, witness);
+    });
 
-    events = getWitnessEvents({
-      witnesses, minWitnessEvents, outstandingMergeEvents});
-
-    return this.merge({events});
+    events = await _getWitnessEvents({node: this, witnesses, minWitnessEvents});
   }
 
-  if(this.isWitness) {
-    const f = (this.witnesses.size - 1) / 3;
-    let minWitnessEvents;
-    const otherWitnesses = Array.from(this.witnesses.keys())
-      .filter(witness => witness !== this.nodeId);
-
-    if(witnessThreshold === '2f') {
-      minWitnessEvents = 2 * f;
-    } else if(witnessThreshold === 'f+1') {
-      minWitnessEvents = f + 1;
-    } else if(witnessThreshold === 'f+1') {
-      minWitnessEvents = f + 1;
-    } else {
-      console.log('error: theshold-merge - unsupported witnessThreshold:',
-        witnessThreshold);
-      process.exit(1);
-    }
-
-    console.log({f, minWitnessEvents, otherWitnesses});
-
-    events = getWitnessEvents({
-      witnesses: otherWitnesses, minWitnessEvents, outstandingMergeEvents});
+  if(events.length > 0) {
+    this.merge({events});
   }
 
-  return this.merge({events});
+  return;
 };
 
-function getWitnessEvents({
-  witnesses, minWitnessEvents, outstandingMergeEvents}) {
+function _getMinWitnessEvents(f, threshold) {
+  let minWitnessEvents = 0;
+
+  if(threshold === '2f') {
+    minWitnessEvents = 2 * f;
+  } else if(threshold === 'f') {
+    minWitnessEvents = f;
+  } else if(threshold === '1') {
+    minWitnessEvents = 1;
+  } else {
+    console.log('error: theshold-merge - unsupported witness threshold:',
+      threshold);
+    process.exit(1);
+  }
+
+  return minWitnessEvents;
+}
+
+async function _getWitnessEvents({node, witnesses, minWitnessEvents}) {
   let events = [];
   const witnessEvents = [];
-  const availableWitnesses = Array.from(witnesses);
 
   // try to find a minimum of required other witness events to merge
-  for(let i = 0;
-    witnessEvents.length < minWitnessEvents &&
-    i < outstandingMergeEvents.length; i++) {
-
-    const dbEvent = outstandingMergeEvents[i];
-    const creator = dbEvent.meta.continuity2017.creator;
-
-    if(availableWitnesses.includes(creator)) {
-      witnessEvents.push(
-        {nodeId: creator, eventHash: dbEvent.eventHash});
-      availableWitnesses.splice(availableWitnesses.indexOf(creator), 1);
+  for(const witnessId of witnesses.keys()) {
+    if(witnessEvents.length >= minWitnessEvents) {
+      // bail early if minWitnessEvents found
+      continue;
+    }
+    // see if the witness' head can be found
+    try {
+      const witness = witnesses.get(witnessId);
+      const witnessHead = await node.getLocalPeerHead(witness);
+      witnessEvents.push({nodeId: witnessId, eventHash: witnessHead});
+    } catch(err) {
+      // ignore inability to get local peer heads
     }
   }
 
-  // merge if we see exactly min witness events
+  // return the events if we hit the minimum witness threshold
   if(witnessEvents.length === minWitnessEvents) {
     events = witnessEvents;
   }
