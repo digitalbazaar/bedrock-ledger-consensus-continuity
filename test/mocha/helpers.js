@@ -230,42 +230,19 @@ api.addRemoteEvents = async ({
 api.buildHistory = async ({consensusApi, historyId, mockData, nodes} = {}) => {
   const eventTemplate = mockData.events.alpha;
   const opTemplate = mockData.operations.alpha;
-  if(['alpha', 'beta', 'gamma'].includes(historyId)) {
-    const results = await ledgerHistory[historyId]({
-      api, consensusApi, eventTemplate, nodes, opTemplate
-    });
-    const copyMergeHashes = {};
-    const copyMergeHashesIndex = {};
-    Object.keys(results).forEach(key => {
-      if(key.startsWith('cp')) {
-        copyMergeHashes[key] = results[key].meta.eventHash;
-        copyMergeHashesIndex[results[key].meta.eventHash] = key;
-      }
-    });
-    const regularEvent = results.regularEvent;
-    return {copyMergeHashes, copyMergeHashesIndex, regularEvent};
-  }
-
-  return new Promise((resolve, reject) => {
-    async.auto(
-      ledgerHistory[historyId]({
-        api, consensusApi, eventTemplate, nodes, opTemplate
-      }), (err, results) => {
-        if(err) {
-          return reject(err);
-        }
-        const copyMergeHashes = {};
-        const copyMergeHashesIndex = {};
-        Object.keys(results).forEach(key => {
-          if(key.startsWith('cp')) {
-            copyMergeHashes[key] = results[key].meta.eventHash;
-            copyMergeHashesIndex[results[key].meta.eventHash] = key;
-          }
-        });
-        const regularEvent = results.regularEvent;
-        resolve({copyMergeHashes, copyMergeHashesIndex, regularEvent});
-      });
+  const results = await ledgerHistory[historyId]({
+    api, consensusApi, eventTemplate, nodes, opTemplate
   });
+  const copyMergeHashes = {};
+  const copyMergeHashesIndex = {};
+  Object.keys(results).forEach(key => {
+    if(key.startsWith('cp')) {
+      copyMergeHashes[key] = results[key].meta.eventHash;
+      copyMergeHashesIndex[results[key].meta.eventHash] = key;
+    }
+  });
+  const regularEvent = results.regularEvent;
+  return {copyMergeHashes, copyMergeHashesIndex, regularEvent};
 };
 
 // from may be a single node or an array of nodes
