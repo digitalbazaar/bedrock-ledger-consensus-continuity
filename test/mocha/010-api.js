@@ -31,7 +31,8 @@ describe('Continuity2017', () => {
       clean: callback =>
         callbackify(helpers.removeCollections)(
           ['ledger', 'ledgerNode'], callback),
-      consensusPlugin: callback => helpers.use('Continuity2017', callback),
+      consensusPlugin: callback => callbackify(helpers.use)(
+        'Continuity2017', callback),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
         null, {ledgerConfiguration}, (err, ledgerNode) => {
           if(err) {

@@ -33,7 +33,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
         callbackify(helpers.removeCollections)(
           ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
+        callbackify(helpers.use)('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }

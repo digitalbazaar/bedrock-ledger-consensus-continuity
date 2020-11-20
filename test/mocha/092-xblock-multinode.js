@@ -63,8 +63,8 @@ describe('X Block Test', () => {
       this.timeout(TEST_TIMEOUT);
       async.auto({
         clean: callback => cache.client.flushall(callback),
-        consensusPlugin: ['clean', (results, callback) => helpers.use(
-          'Continuity2017', callback)],
+        consensusPlugin: ['clean', (results, callback) =>
+          callbackify(helpers.use)('Continuity2017', callback)],
         ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
@@ -191,8 +191,9 @@ describe('X Block Test', () => {
                 .should.be.true;
               callback(null, result);
             }),
-          settle: ['nBlocks', (results, callback) => helpers.settleNetwork(
-            {consensusApi, nodes: _.values(nodes)}, callback)],
+          settle: ['nBlocks', (results, callback) =>
+            callbackify(helpers.settleNetwork)(
+              {consensusApi, nodes: _.values(nodes)}, callback)],
           blockSummary: ['settle', (results, callback) =>
             _latestBlockSummary((err, result) => {
               if(err) {
@@ -279,7 +280,7 @@ function _nBlocks({consensusApi, targetBlockHeight}, callback) {
         }
         // in this test `nodes` is an object that needs to be converted to
         // an array for the helper
-        helpers.runWorkerCycle(
+        callbackify(helpers.runWorkerCycle)(
           {consensusApi, nodes: _.values(nodes), series: false}, callback);
       }],
       report: ['workCycle', (results, callback) => async.forEachOfSeries(

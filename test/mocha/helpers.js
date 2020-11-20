@@ -3,12 +3,11 @@
  */
 'use strict';
 
-const _ = require('lodash');
 const async = require('async');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
-const {callbackify, promisify} = require('util');
+const {promisify} = require('util');
 const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures');
@@ -148,6 +147,17 @@ api.addOperations = async ({count, nodes, opTemplate} = {}) => {
   const results = [];
   for(const ledgerNode of nodes) {
     results.push(await api.addOperation({count, ledgerNode, opTemplate}));
+  }
+  return results;
+};
+
+// returns a different data structure than `api.addOperations`
+api.addOperations2 = async ({count, nodes, opTemplate}) => {
+  const results = {};
+  for(const key in nodes) {
+    const ledgerNode = nodes[key];
+    const result = await api.addOperation({count, ledgerNode, opTemplate});
+    results[key] = result;
   }
   return results;
 };
@@ -327,79 +337,50 @@ api.createEventBasic = ({eventTemplate} = {}) => {
 
 api.flushCache = () => cache.client.flushall();
 
-api.nBlocks = ({
+api.nBlocks = async ({
   consensusApi, nodes, operationOnWorkCycle = 'all', opTemplate,
   targetBlockHeight
-}, callback) => {
+}) => {
   const recordIds = {};
   const targetBlockHashMap = {};
   let workCycle = 0;
-  async.until(() => {
-    return Object.keys(targetBlockHashMap).length ===
-      Object.keys(nodes).length;
-  }, callback => {
+  while(Object.keys(targetBlockHashMap).length === Object.keys(nodes).length) {
     const count = 1;
     workCycle++;
     let addOperation = true;
     if(operationOnWorkCycle === 'first' && workCycle > 1) {
       addOperation = false;
     }
-    async.auto({
-      operations: callback => {
-        if(!addOperation) {
-          return callback();
+    // add operations if requested
+    if(addOperation) {
+      const operations = await api.addOperations2({count, nodes, opTemplate});
+      // record the IDs for the records that were just added
+      for(const n in nodes) {
+        if(!recordIds[n]) {
+          recordIds[n] = [];
         }
-        api.addOperations2({count, nodes, opTemplate}, callback);
-      },
-      workCycle: ['operations', (results, callback) => {
-        // record the IDs for the records that were just added
-        if(addOperation) {
-          for(const n of Object.keys(nodes)) {
-            if(!recordIds[n]) {
-              recordIds[n] = [];
-            }
-            for(const opHash of Object.keys(results.operations[n])) {
-              recordIds[n].push(results.operations[n][opHash].record.id);
-            }
-          }
+        for(const opHash of Object.keys(operations[n])) {
+          recordIds[n].push(operations[n][opHash].record.id);
         }
-        // in this test `nodes` is an object that needs to be converted to
-        // an array for the helper
-        api.runWorkerCycle(
-          {consensusApi, nodes: _.values(nodes), series: false}, callback);
-      }],
-      report: ['workCycle', (results, callback) => async.forEachOfSeries(
-        nodes, (ledgerNode, i, callback) => {
-          ledgerNode.storage.blocks.getLatestSummary((err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            const {block} = result.eventBlock;
-            if(block.blockHeight >= targetBlockHeight) {
-              return ledgerNode.storage.blocks.getByHeight(
-                targetBlockHeight, (err, result) => {
-                  if(err) {
-                    return callback(err);
-                  }
-                  targetBlockHashMap[i] = result.meta.blockHash;
-                  callback();
-                });
-            }
-            callback();
-          });
-        }, callback)]
-    }, err => {
-      if(err) {
-        return callback(err);
       }
-      callback();
-    });
-  }, err => {
-    if(err) {
-      return callback(err);
     }
-    callback(null, {recordIds, targetBlockHashMap});
-  });
+    // run work cycle
+    // `nodes` is an object that needs to be converted to an array for helper
+    await api.runWorkerCycle(
+      {consensusApi, nodes: Object.values(nodes), series: false});
+    // report
+    for(const key in nodes) {
+      const ledgerNode = nodes[key];
+      const result = await ledgerNode.storage.blocks.getLatestSummary();
+      const {block} = result.eventBlock;
+      if(block.blockHeight >= targetBlockHeight) {
+        const result = await ledgerNode.storage.blocks.getByHeight(
+          targetBlockHeight);
+        targetBlockHashMap[key] = result.meta.blockHash;
+      }
+    }
+  }
+  return {recordIds, targetBlockHashMap};
 };
 
 // collections may be a string or array
@@ -421,18 +402,35 @@ api.prepareDatabase = async function() {
   ]);
 };
 
-api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
-  const func = series ? async.eachSeries : async.each;
-  func(nodes.filter(n => !n.stop), (ledgerNode, callback) =>
-    consensusApi._worker._run(ledgerNode, err => {
-      // if a config change is detected, do not run worker on that node again
-      if(err && err.name === 'LedgerConfigurationChangeError') {
-        ledgerNode.stop = true;
-        return callback();
-      }
-      callback(err);
-    }), callback);
+api.runWorkerCycle = async ({consensusApi, nodes, series = false}) => {
+  const promises = [];
+  for(const ledgerNode of nodes) {
+    const promise = _cycleNode({consensusApi, ledgerNode});
+    if(series) {
+      await promise;
+    } else {
+      promises.push(promise);
+    }
+  }
+  await Promise.all(promises);
 };
+
+async function _cycleNode({consensusApi, ledgerNode} = {}) {
+  if(ledgerNode.stop) {
+    return;
+  }
+
+  try {
+    await consensusApi._worker._run(ledgerNode);
+  } catch(err) {
+    // if a config change is detected, do not run worker on that node again
+    if(err && err.name === 'LedgerConfigurationChangeError') {
+      ledgerNode.stop = true;
+      return;
+    }
+    throw err;
+  }
+}
 
 /*
  * execute the worker cycle until there are no non-consensus
@@ -441,111 +439,66 @@ api.runWorkerCycle = ({consensusApi, nodes, series = false}, callback) => {
  * there will be various numbers of non-consensus events of type
  * `ContinuityMergeEvent` on a settled network.
  */
-api.settleNetwork = ({consensusApi, nodes, series = false}, callback) => {
-  async.doWhilst(callback => {
-    async.auto({
-      workCycle: callback => api.runWorkerCycle(
-        {consensusApi, nodes, series}, callback),
-      operationEvents: ['workCycle', (results, callback) => {
-        async.map(nodes, (ledgerNode, callback) => {
-          ledgerNode.storage.events.getCount({
-            consensus: false, type: 'WebLedgerOperationEvent'
-          }, callback);
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          // all nodes should have zero non-consensus regular events
-          callback(null, result.every(c => c === 0));
-        });
-      }],
-      configEvents: ['operationEvents', (results, callback) => {
-        async.map(nodes, (ledgerNode, callback) => {
-          ledgerNode.storage.events.getCount({
-            consensus: false, type: 'WebLedgerConfigurationEvent'
-          }, callback);
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          // all nodes should have zero non-consensus configuration events
-          callback(null, result.every(c => c === 0));
-        });
-      }],
-      // there are normal cases where the number of merge events on each node
-      // will not be equal. If there are no outstanding operation/configuration
-      // events, some merge events from other nodes may be left unmerged
-      // which results in those merge events not being gossiped across the
-      // entire network since they do not lend to acheiving consensus.
-      /*
-      mergeEvents: ['configEvents', (results, callback) => {
-        async.map(nodes, (ledgerNode, callback) => {
-          ledgerNode.storage.events.getCount({
-            consensus: false, type: 'ContinuityMergeEvent'
-          }, callback);
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          // all nodes should have an equal number of non-consensus merge events
-          callback(null, result.every(c => c === result[0]));
-        });
-      }],
-      */
-      blocks: ['configEvents', (results, callback) => {
-        async.map(nodes, (ledgerNode, callback) => {
-          ledgerNode.storage.blocks.getLatestSummary(callback);
-        }, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          const blockHeights = result.map(s => s.eventBlock.block.blockHeight);
-          // all nodes should have the same latest blockHeight
-          callback(null, blockHeights.every(b => b === blockHeights[0]));
-        });
-      }]
-    }, callback);
-  }, results => {
-    return !(results.operationEvents && results.configEvents && results.blocks);
-  }, callback);
+api.settleNetwork = async ({consensusApi, nodes, series = false} = {}) => {
+  while(true) {
+    await api.runWorkerCycle({consensusApi, nodes, series});
+
+    // all nodes should have zero non-consensus regular events
+    let promises = [];
+    for(const ledgerNode of nodes) {
+      promises.push(ledgerNode.storage.events.getCount({
+        consensus: false, type: 'WebLedgerOperationEvent'
+      }));
+    }
+    if((await Promise.all(promises)).some(c => c > 0)) {
+      continue;
+    }
+
+    // all nodes should have zero non-consensus configuration events
+    promises = [];
+    for(const ledgerNode of nodes) {
+      promises.push(ledgerNode.storage.events.getCount({
+        consensus: false, type: 'WebLedgerConfigurationEvent'
+      }));
+    }
+    if((await Promise.all(promises)).some(c => c > 0)) {
+      continue;
+    }
+
+    // all nodes should have the same latest blockHeight
+    promises = [];
+    for(const ledgerNode of nodes) {
+      promises.push(ledgerNode.storage.blocks.getLatestSummary());
+    }
+    const summaries = await Promise.all(promises);
+    const blockHeights = summaries.map(s => s.eventBlock.block.blockHeight);
+    if(blockHeights.every(b => b === blockHeights[0])) {
+      break;
+    }
+  }
 };
 
-api.snapshotEvents = ({ledgerNode}, callback) => {
+api.snapshotEvents = async ({ledgerNode}) => {
   const collection = ledgerNode.storage.events.collection;
   // FIXME: use a more efficient query, the commented aggregate function
   // is evidently missing some events.
-  collection.find({
+  const nonConsensusRecords = await collection.find({
     'meta.consensus': false
-  }).sort({$natural: 1}).toArray((err, result) => {
-    if(err) {
-      return callback(err);
+  }).sort({$natural: 1}).toArray();
+  const eventRecords = await ledgerNode.storage.events.getMany({
+    eventHashes: nonConsensusRecords.map(r => r.meta.eventHash)
+  }).toArray();
+  const mergeRecords = eventRecords.map(r => {
+    if(r.event.type !== 'WebLedgerOperationEvent') {
+      delete r.event.operation;
     }
-    ledgerNode.storage.events.getMany({
-      eventHashes: result.map(r => r.meta.eventHash)
-    }).toArray((err, results) => {
-      if(err) {
-        return err;
-      }
-      results = results.map(r => {
-        if(r.event.type !== 'WebLedgerOperationEvent') {
-          delete r.event.operation;
-        }
-        return r;
-      });
-      // make snapshot
-      snapshot[collection.s.name] = results;
-      callback(null, results);
-    });
+    return r;
   });
+  // make snapshot
+  snapshot[collection.s.name] = mergeRecords;
+  return mergeRecords;
 };
 
-// FIXME: remove and use brLedgerNode directly in tests
-api.use = (plugin, callback) => {
-  let p;
-  try {
-    p = brLedgerNode.use(plugin);
-  } catch(e) {
-    return callback(e);
-  }
-  callback(null, p);
+api.use = async plugin => {
+  return brLedgerNode.use(plugin);
 };

@@ -31,7 +31,7 @@ describe.skip('Election API _getTails', () => {
         callbackify(helpers.removeCollections)(
           ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
+        callbackify(helpers.use)('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -307,7 +307,7 @@ describe.skip('Election API _getTails', () => {
       }],
       // step 5
       // snapshot gamma before copy
-      ss1: ['test3', (results, callback) => helpers.snapshotEvents(
+      ss1: ['test3', (results, callback) => callbackify(helpers.snapshotEvents)(
         {ledgerNode: nodes.gamma}, callback)],
       cp3: ['ss1', (results, callback) => callbackify(helpers.copyAndMerge)({
         consensusApi,
