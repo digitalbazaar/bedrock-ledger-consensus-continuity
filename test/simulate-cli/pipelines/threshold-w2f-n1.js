@@ -5,17 +5,18 @@
 
 const gossipStrategy = require('../gossip-strategies/previous-peer');
 const mergeStrategy =
-  require('../merge-strategies/timeout-or-witness-majority-merge');
+  require('../merge-strategies/threshold-merge');
 
 // NOTE: no spaces allowed, must be safe for prometheus metrics
-module.exports.name = 'timeout-or-witness-majority';
+module.exports.name = 'threshold-w2f-n1';
 module.exports.pipeline = async function() {
   const count = 1;
 
   for(let i = 0; i < count; i++) {
     await this.run({type: 'gossip', fn: gossipStrategy.run});
   }
-  await this.run({type: 'merge', fn: mergeStrategy.run});
+  const mergeArgs = {witnessThreshold: '2f', peerThreshold: '1'};
+  await this.run({type: 'merge', fn: mergeStrategy.run, args: mergeArgs});
   const consensusResults = await this.run({type: 'consensus'});
   if(consensusResults.consensus) {
     console.log(`Found Consensus - Node ${this.nodeId}`);
