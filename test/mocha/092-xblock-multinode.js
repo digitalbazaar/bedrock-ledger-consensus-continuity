@@ -195,8 +195,10 @@ async function _nBlocks({consensusApi, targetBlockHeight}) {
     // run worker cycle
     // in this test `nodes` is an object that needs to be converted to
     // an array for the helper
-    await helpers.runWorkerCycle(
-      {consensusApi, nodes: Object.values(nodes), series: false});
+    await helpers.runWorkerCycle({
+      consensusApi, nodes: Object.values(nodes), series: false,
+      targetCyclesPerNode: 10
+    });
     // generate report
     for(const key in nodes) {
       const ledgerNode = nodes[key];
