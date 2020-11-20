@@ -1,7 +1,7 @@
 /*!
  * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
-module.exports = async function historyBeta(
+module.exports = async function historyGamma(
   {api, consensusApi, eventTemplate, nodes, opTemplate} = {}) {
   const results = {};
 
