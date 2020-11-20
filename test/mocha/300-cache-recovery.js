@@ -290,13 +290,13 @@ describe('Cache Recovery', () => {
 
 function _addOperations({count}, callback) {
   async.auto({
-    alpha: callback => helpers.addOperation(
+    alpha: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.alpha, opTemplate}, callback),
-    beta: callback => helpers.addOperation(
+    beta: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.beta, opTemplate}, callback),
-    gamma: callback => helpers.addOperation(
+    gamma: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.gamma, opTemplate}, callback),
-    delta: callback => helpers.addOperation(
+    delta: callback => callbackify(helpers.addOperation)(
       {count, ledgerNode: nodes.delta, opTemplate}, callback),
   }, callback);
 }

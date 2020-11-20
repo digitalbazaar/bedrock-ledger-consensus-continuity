@@ -161,7 +161,7 @@ describe('Multinode', () => {
         this.timeout(30000);
         const opTemplate = mockData.operations.alpha;
         async.auto({
-          addOperation: callback => helpers.addOperation(
+          addOperation: callback => callbackify(helpers.addOperation)(
             {ledgerNode: genesisLedgerNode, opTemplate}, callback),
           settleNetwork: ['addOperation', (results, callback) =>
             helpers.settleNetwork(
@@ -204,7 +204,7 @@ describe('Multinode', () => {
         this.timeout(210000);
         const opTemplate = mockData.operations.alpha;
         async.auto({
-          addOperation: callback => helpers.addOperations(
+          addOperation: callback => callbackify(helpers.addOperations)(
             {nodes: peers, opTemplate}, callback),
           settleNetwork: ['addOperation', (results, callback) =>
             helpers.settleNetwork(
