@@ -18,8 +18,8 @@ const mockData = require('./mock.data');
 const nodeCount = 10;
 
 describe('Multinode', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
 
   describe(`Consensus with ${nodeCount} Nodes`, () => {
@@ -32,7 +32,8 @@ describe('Multinode', () => {
       async.auto({
         flushCache: callback => callbackify(helpers.flushCache)(callback),
         clean: ['flushCache', (results, callback) =>
-          helpers.removeCollections(['ledger', 'ledgerNode'], callback)],
+          callbackify(helpers.removeCollections)(
+            ['ledger', 'ledgerNode'], callback)],
         consensusPlugin: callback => helpers.use('Continuity2017', callback),
         ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {

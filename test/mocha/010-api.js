@@ -4,6 +4,7 @@
 'use strict';
 
 const async = require('async');
+const {callbackify} = require('util');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
@@ -15,8 +16,8 @@ const mockData = require('./mock.data');
 const {util: {uuid}} = bedrock;
 
 describe('Continuity2017', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
   // get consensus plugin and create ledger node for use in each test
   let consensusApi;
@@ -28,7 +29,8 @@ describe('Continuity2017', () => {
     async.auto({
       cleanCache: callback => cache.client.flushall(callback),
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback => helpers.use('Continuity2017', callback),
       ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
         null, {ledgerConfiguration}, (err, ledgerNode) => {
@@ -278,7 +280,7 @@ describe('Continuity2017', () => {
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
-        addEvent: callback => helpers.addEventAndMerge(
+        addEvent: callback => callbackify(helpers.addEventAndMerge)(
           {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
         history: ['addEvent', (results, callback) => {
           getRecentHistory({
@@ -304,7 +306,7 @@ describe('Continuity2017', () => {
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
-        addEvent: callback => helpers.addEventAndMerge({
+        addEvent: callback => callbackify(helpers.addEventAndMerge)({
           consensusApi, count: 4, eventTemplate, ledgerNode, opTemplate
         }, callback),
         history: ['addEvent', (results, callback) => {
@@ -462,7 +464,7 @@ describe('Continuity2017', () => {
       const getRecentHistory = consensusApi._events.getRecentHistory;
       const eventTemplate = mockData.events.alpha;
       async.auto({
-        addEvent: callback => helpers.addEvent(
+        addEvent: callback => callbackify(helpers.addEvent)(
           {ledgerNode, count: 4, eventTemplate}, callback),
         history: ['addEvent', (results, callback) => {
           getRecentHistory({ledgerNode, link: true}, (err, result) => {
@@ -487,7 +489,7 @@ describe('Continuity2017', () => {
       const getRecentHistory = consensusApi._events.getRecentHistory;
       const eventTemplate = mockData.events.alpha;
       async.auto({
-        addEvent: callback => helpers.addEvent(
+        addEvent: callback => callbackify(helpers.addEvent)(
           {ledgerNode, count: 4, eventTemplate}, callback),
         // 2 remote merge events from the same creator chained together
         remoteEvent: callback => helpers.addRemoteEvents(

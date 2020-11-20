@@ -17,8 +17,8 @@ const {util: {uuid}} = bedrock;
 let consensusApi;
 
 describe('blocks API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
   let repairCache;
   let _cacheKey;
@@ -31,7 +31,8 @@ describe('blocks API', () => {
     async.auto({
       flush: callbackify(helpers.flushCache),
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {

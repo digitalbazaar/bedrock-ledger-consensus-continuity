@@ -14,12 +14,12 @@ api.alpha = (
   callback) => {
   const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
-    betaAddEvent1: callback => helpers.addEventAndMerge(
+    betaAddEvent1: callback => callbackify(helpers.addEventAndMerge)(
       {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
       callback),
     // add event on beta
     alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.alpha, opTemplate},
         callback)],
     // beta gossips with alpha
@@ -49,7 +49,7 @@ api.beta = ({
 }, callback) => {
   const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
-    gammaAddEvent1: callback => helpers.addEventAndMerge(
+    gammaAddEvent1: callback => callbackify(helpers.addEventAndMerge)(
       {consensusApi, eventTemplate, ledgerNode: nodes.gamma, opTemplate},
       callback),
     commitCache1: ['gammaAddEvent1', (results, callback) =>
@@ -60,12 +60,12 @@ api.beta = ({
         {ledgerNode: nodes.gamma, peer: peers.beta}, callback)],
     // beta adds and event and merges which includes events from gamma
     betaAddEvent1: ['gammaGossip1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
         callback)],
     // add event on beta
     alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.alpha, opTemplate},
         callback)],
     // beta gossips with alpha
@@ -109,13 +109,13 @@ api.gamma = (
   {consensusApi, eventTemplate, nodes, peers, previousResult}, callback) => {
   const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
-    deltaAddEvent1: callback => helpers.addEventAndMerge(
+    deltaAddEvent1: callback => callbackify(helpers.addEventAndMerge)(
       {consensusApi, eventTemplate, ledgerNode: nodes.delta}, callback),
     deltaGossip1: ['deltaAddEvent1', (results, callback) =>
       gossipWith(
         {ledgerNode: nodes.delta, peer: peers.gamma}, callback)],
     gammaAddEvent1: ['deltaGossip1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback)],
     // gamma gossips with beta
     gammaGossip1: ['gammaAddEvent1', (results, callback) =>
@@ -123,11 +123,11 @@ api.gamma = (
         {ledgerNode: nodes.gamma, peer: peers.beta}, callback)],
     // beta adds and event and merges which includes events from gamma
     betaAddEvent1: ['gammaGossip1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback)],
     // add event on beta
     alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback)],
     // beta gossips with alpha
     betaGossip1: ['alphaAddEvent1', (results, callback) =>
@@ -185,27 +185,27 @@ api.delta = (
   {consensusApi, eventTemplate, nodes, peers, previousResult}, callback) => {
   const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
-    deltaAddEvent1: callback => helpers.addEventAndMerge(
+    deltaAddEvent1: callback => callbackify(helpers.addEventAndMerge)(
       {consensusApi, eventTemplate, ledgerNode: nodes.delta}, callback),
     deltaGossip1: ['deltaAddEvent1', (results, callback) =>
       gossipWith({ledgerNode: nodes.delta, peer: peers.gamma}, callback)],
     gammaAddEvent1: ['deltaGossip1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.gamma}, callback)],
     // gamma gossips with beta
     gammaGossip1: ['gammaAddEvent1', (results, callback) =>
       gossipWith({ledgerNode: nodes.gamma, peer: peers.beta}, callback)],
     // beta adds and event and merges which includes events from gamma
     betaAddEvent1: ['gammaGossip1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.beta}, callback)],
     betaGossip1: ['betaAddEvent1', (results, callback) =>
       gossipWith({ledgerNode: nodes.beta, peer: peers.delta}, callback)],
     deltaAddEvent2: ['betaGossip1', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.delta}, callback)],
     alphaAddEvent1: ['deltaAddEvent2', (results, callback) =>
-      helpers.addEventAndMerge(
+      callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode: nodes.alpha}, callback)],
     // beta gossips with alpha
     deltaGossip2: ['alphaAddEvent1', (results, callback) =>

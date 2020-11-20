@@ -1,9 +1,10 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const async = require('async');
+const {callbackify} = require('util');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
@@ -14,8 +15,8 @@ const {util: {uuid}} = bedrock;
 
 // FIXME: these tests will need to supply `creatorHeads` in the request
 describe.skip('Consensus Agent - Get History API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
 
   let consensusApi;
@@ -35,7 +36,8 @@ describe.skip('Consensus Agent - Get History API', () => {
     testEvent.operation[0].record.id = testEventId;
     async.auto({
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {
