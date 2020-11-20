@@ -49,7 +49,8 @@ describe.skip('Multinode Basics', () => {
     before(done => {
       async.auto({
         clean: callback => helpers.fushCache(callback),
-        consensusPlugin: callback => helpers.use('Continuity2017', callback),
+        consensusPlugin: callback =>
+          callbackify(helpers.use)('Continuity2017', callback),
         ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {

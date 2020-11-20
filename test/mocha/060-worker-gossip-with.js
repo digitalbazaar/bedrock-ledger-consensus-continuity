@@ -41,7 +41,7 @@ describe.skip('Worker - _gossipWith', () => {
         callbackify(helpers.removeCollections)(
           ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
+        callbackify(helpers.use)('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }

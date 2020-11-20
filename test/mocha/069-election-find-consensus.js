@@ -31,7 +31,7 @@ describe('Election API findConsensus', () => {
         callbackify(helpers.removeCollections)(
           ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
+        callbackify(helpers.use)('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -368,8 +368,9 @@ describe('Election API findConsensus', () => {
           });
         }]
       }, callback),
-      build: ['nodeEpsilon', (results, callback) => callbackify(helpers.buildHistory)(
-        {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
+      build: ['nodeEpsilon', (results, callback) =>
+        callbackify(helpers.buildHistory)(
+          {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
