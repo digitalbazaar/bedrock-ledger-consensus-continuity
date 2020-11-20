@@ -8,6 +8,7 @@ module.exports = async function historyAlpha(
   // add a regular event and merge on every node
   results.regularEvent = await api.addEventMultiNode(
     {consensusApi, eventTemplate, nodes, opTemplate});
+
   [results.cpa, results.cbp] = await Promise.all([
     api.copyAndMerge({consensusApi, from: 'beta', nodes, to: 'alpha'}),
     api.copyAndMerge({consensusApi, from: 'gamma', nodes, to: 'delta'})

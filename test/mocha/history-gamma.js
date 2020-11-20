@@ -1,150 +1,81 @@
 /*!
  * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
-const {callbackify} = require('util');
+module.exports = async function historyBeta(
+  {api, consensusApi, eventTemplate, nodes, opTemplate} = {}) {
+  const results = {};
 
-module.exports = ({api, consensusApi, eventTemplate, nodes, opTemplate}) => ({
   // add a regular event and merge on every node
-  regularEvent: callback => callbackify(api.addEventMultiNode)(
-    {consensusApi, eventTemplate, nodes, opTemplate}, callback),
-  cpa: ['regularEvent', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'beta',
-    nodes,
-    to: 'alpha'
-  }, callback)],
-  cp1: ['cpa', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'alpha',
-    nodes,
-    to: 'beta'
-  }, callback)],
-  cpb: ['regularEvent', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'gamma',
-    nodes,
-    to: 'delta'
-  }, callback)],
-  cp2: ['cpb', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'delta',
-    nodes,
-    to: 'gamma'
-  }, callback)],
+  results.regularEvent = await api.addEventMultiNode(
+    {consensusApi, eventTemplate, nodes, opTemplate});
+
+  [results.cpa, results.cbp] = await Promise.all([
+    api.copyAndMerge({consensusApi, from: 'beta', nodes, to: 'alpha'}),
+    api.copyAndMerge({consensusApi, from: 'gamma', nodes, to: 'delta'})
+  ]);
+  [results.cp1, results.cp2] = await Promise.all([
+    api.copyAndMerge({consensusApi, from: 'alpha', nodes, to: 'beta'}),
+    api.copyAndMerge({consensusApi, from: 'delta', nodes, to: 'gamma'})
+  ]);
+
   // snapshot gamma before copy
-  ss1: ['cp1', 'cp2', (results, callback) => callbackify(api.snapshotEvents)(
-    {ledgerNode: nodes.gamma}, callback)],
-  cp3: ['ss1', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['beta', 'delta'],
-    nodes,
-    to: 'gamma'
-  }, callback)],
-  cp4: ['ss1', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['alpha', 'gamma'],
-    nodes,
-    to: 'beta',
-    useSnapshot: true
-  }, callback)],
+  results.ss1 = await api.snapshotEvents({ledgerNode: nodes.gamma});
+  [results.cp3, results.cp4] = await Promise.all([
+    api.copyAndMerge(
+      {consensusApi, from: ['beta', 'delta'], nodes, to: 'gamma'}),
+    api.copyAndMerge({
+      consensusApi, from: ['alpha', 'gamma'], nodes, to: 'beta',
+      useSnapshot: true
+    })
+  ]);
+
   // snapshot gamma before copy
-  ss2: ['cp3', 'cp4', (results, callback) => callbackify(api.snapshotEvents)(
-    {ledgerNode: nodes.gamma}, callback)],
-  cp5: ['ss2', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'beta',
-    nodes,
-    to: 'gamma'
-  }, callback)],
-  cp6: ['ss2', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'gamma',
-    nodes,
-    to: 'beta',
-    useSnapshot: true
-  }, callback)],
-  cp7: ['cp5', 'cp6', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['beta', 'gamma'],
-    nodes,
-    to: 'alpha'
-  }, callback)],
-  cp8: ['cp5', 'cp6', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['beta', 'gamma'],
-    nodes,
-    to: 'delta'
-  }, callback)],
-  cp9: ['cp7', 'cp8', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['alpha', 'delta'],
-    nodes,
-    to: 'beta'
-  }, callback)],
-  cp10: ['cp7', 'cp8', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['alpha', 'delta'],
-    nodes,
-    to: 'gamma'
-  }, callback)],
-  cp11: ['cp9', 'cp10', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['beta', 'gamma'],
-    nodes,
-    to: 'alpha'
-  }, callback)],
-  cp12: ['cp9', 'cp10', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['beta', 'gamma'],
-    nodes,
-    to: 'delta'
-  }, callback)],
-  cp13: ['cp11', 'cp12', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['alpha', 'delta'],
-    nodes,
-    to: 'beta'
-  }, callback)],
-  cp14: ['cp11', 'cp12', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['alpha', 'delta'],
-    nodes,
-    to: 'gamma'
-  }, callback)],
-  cp15: ['cp13', 'cp14', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['beta', 'gamma'],
-    nodes,
-    to: 'alpha'
-  }, callback)],
-  cp16: ['cp13', 'cp14', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['beta', 'gamma'],
-    nodes,
-    to: 'delta'
-  }, callback)],
-  cp17: ['cp15', 'cp16', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['alpha', 'delta'],
-    nodes,
-    to: 'beta'
-  }, callback)],
-  cp18: ['cp15', 'cp16', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: ['alpha', 'delta'],
-    nodes,
-    to: 'gamma'
-  }, callback)],
-  cp19: ['cp17', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'beta',
-    nodes,
-    to: 'alpha'
-  }, callback)],
-  cp20: ['cp18', (results, callback) => callbackify(api.copyAndMerge)({
-    consensusApi,
-    from: 'gamma',
-    nodes,
-    to: 'delta'
-  }, callback)],
-});
+  results.ss2 = await api.snapshotEvents({ledgerNode: nodes.gamma});
+  [results.cp5, results.cp6] = await Promise.all([
+    api.copyAndMerge({consensusApi, from: 'beta', nodes, to: 'gamma'}),
+    api.copyAndMerge(
+      {consensusApi, from: 'gamma', nodes, to: 'beta', useSnapshot: true})
+  ]);
+  [results.cp7, results.cp8] = await Promise.all([
+    api.copyAndMerge(
+      {consensusApi, from: ['beta', 'gamma'], nodes, to: 'alpha'}),
+    api.copyAndMerge(
+      {consensusApi, from: ['beta', 'gamma'], nodes, to: 'delta'})
+  ]);
+  [results.cp9, results.cp10] = await Promise.all([
+    api.copyAndMerge(
+      {consensusApi, from: ['alpha', 'delta'], nodes, to: 'beta'}),
+    api.copyAndMerge(
+      {consensusApi, from: ['alpha', 'delta'], nodes, to: 'gamma'})
+  ]);
+  [results.cp11, results.cp12] = await Promise.all([
+    api.copyAndMerge(
+      {consensusApi, from: ['beta', 'gamma'], nodes, to: 'alpha'}),
+    api.copyAndMerge(
+      {consensusApi, from: ['beta', 'gamma'], nodes, to: 'delta'})
+  ]);
+  [results.cp13, results.cp14] = await Promise.all([
+    api.copyAndMerge(
+      {consensusApi, from: ['alpha', 'delta'], nodes, to: 'beta'}),
+    api.copyAndMerge(
+      {consensusApi, from: ['alpha', 'delta'], nodes, to: 'gamma'})
+  ]);
+  [results.cp15, results.cp16] = await Promise.all([
+    api.copyAndMerge(
+      {consensusApi, from: ['beta', 'gamma'], nodes, to: 'alpha'}),
+    api.copyAndMerge(
+      {consensusApi, from: ['beta', 'gamma'], nodes, to: 'delta'})
+  ]);
+  [results.cp17, results.cp18] = await Promise.all([
+    api.copyAndMerge(
+      {consensusApi, from: ['alpha', 'delta'], nodes, to: 'beta'}),
+    api.copyAndMerge(
+      {consensusApi, from: ['alpha', 'delta'], nodes, to: 'gamma'})
+  ]);
+  [results.cp19, results.cp20] = await Promise.all([
+    api.copyAndMerge({consensusApi, from: 'beta', nodes, to: 'alpha'}),
+    api.copyAndMerge({consensusApi, from: 'gamma', nodes, to: 'delta'})
+  ]);
+
+  return results;
+};
