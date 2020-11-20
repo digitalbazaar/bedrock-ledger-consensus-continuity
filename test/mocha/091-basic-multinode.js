@@ -1,10 +1,11 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
+const {callbackify} = require('util');
 
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -31,12 +32,12 @@ const heads = {};
 
 /* eslint-disable no-unused-vars */
 describe.skip('Multinode Basics', () => {
-  before(done => {
+  before(async () => {
     if(blessedEnabled) {
       screen = blessed.screen({smartCSR: true});
       screen.key(['C-c'], (ch, key) => process.exit(0));
     }
-    helpers.prepareDatabase(mockData, done);
+    await helpers.prepareDatabase();
   });
 
   describe('Consensus with 2 Nodes', () => {
@@ -659,13 +660,13 @@ describe.skip('Multinode Basics', () => {
           ];
           tableHeadData = [['label'], [''], ['localHead']];
           async.auto({
-            alphaAddEvent1: callback => helpers.addEvent(
+            alphaAddEvent1: callback => callbackify(helpers.addEvent)(
               {count: 1, eventTemplate, ledgerNode: nodes.alpha}, callback),
-            betaAddEvent1: callback => helpers.addEvent(
+            betaAddEvent1: callback => callbackify(helpers.addEvent)(
               {count: 1, eventTemplate, ledgerNode: nodes.beta}, callback),
-            gammaAddEvent1: callback => helpers.addEvent(
+            gammaAddEvent1: callback => callbackify(helpers.addEvent)(
               {count: 1, eventTemplate, ledgerNode: nodes.gamma}, callback),
-            deltaAddEvent1: callback => helpers.addEvent(
+            deltaAddEvent1: callback => callbackify(helpers.addEvent)(
               {count: 1, eventTemplate, ledgerNode: nodes.delta}, callback),
             workCycle1: [
               'alphaAddEvent1', 'betaAddEvent1',

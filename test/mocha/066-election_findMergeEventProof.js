@@ -14,8 +14,8 @@ let consensusApi;
 
 /* eslint-disable no-unused-vars */
 describe('Election API _findMergeEventProof', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
   let _findMergeEventProof;
   let _getTails;
@@ -30,7 +30,8 @@ describe('Election API _findMergeEventProof', () => {
     async.auto({
       flush: callbackify(helpers.flushCache),
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {
@@ -428,7 +429,7 @@ describe('Election API _findMergeEventProof', () => {
     async.auto({
       build: callback => helpers.buildHistory(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
-      event: ['build', (results, callback) => helpers.addEvent(
+      event: ['build', (results, callback) => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback)],
       testAll: ['event', (results, callback) => {
         // NOTE: for ledger history alpha, all nodes should have the same view

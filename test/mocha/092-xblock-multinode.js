@@ -27,9 +27,9 @@ const peers = {};
 const heads = {};
 
 describe('X Block Test', () => {
-  before(function(done) {
+  before(async function() {
     this.timeout(TEST_TIMEOUT);
-    helpers.prepareDatabase(mockData, done);
+    await helpers.prepareDatabase();
   });
 
   const nodeCount = 6;
@@ -91,7 +91,7 @@ describe('X Block Test', () => {
       });
     });
 
-    // add N - 1 more private nodes
+    // add N - 1 more nodes
     before(function(done) {
       this.timeout(TEST_TIMEOUT);
       async.times(nodeCount - 1, (i, callback) => {

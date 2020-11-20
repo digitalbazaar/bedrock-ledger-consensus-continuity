@@ -1,9 +1,10 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const async = require('async');
+const {callbackify} = require('util');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
@@ -11,8 +12,8 @@ const mockData = require('./mock.data');
 const {util: {uuid}} = bedrock;
 
 describe.skip('Consensus Client - sendEvent API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    await helpers.prepareDatabase();
   });
 
   let consensusApi;
@@ -22,7 +23,8 @@ describe.skip('Consensus Client - sendEvent API', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {

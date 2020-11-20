@@ -1,9 +1,10 @@
 /*!
- * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
 const async = require('async');
+const {callbackify} = require('util');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const expect = global.chai.expect;
@@ -13,8 +14,8 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 describe('events API', () => {
-  before(done => {
-    helpers.prepareDatabase(mockData, done);
+  before(async () => {
+    helpers.prepareDatabase();
   });
   let repairCache;
   let _cacheKey;
@@ -25,7 +26,8 @@ describe('events API', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     async.auto({
       clean: callback =>
-        helpers.removeCollections(['ledger', 'ledgerNode'], callback),
+        callbackify(helpers.removeCollections)(
+          ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
         helpers.use('Continuity2017', (err, result) => {
           if(err) {
@@ -110,7 +112,7 @@ describe('events API', () => {
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
-        merge: callback => helpers.addEventAndMerge(
+        merge: callback => callbackify(helpers.addEventAndMerge)(
           {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
         repair: ['merge', (results, callback) => {
           const {mergeHash: eventHash} = results.merge;
@@ -137,7 +139,7 @@ describe('events API', () => {
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
-        merge: callback => helpers.addEventAndMerge(
+        merge: callback => callbackify(helpers.addEventAndMerge)(
           {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
         // recreate conditions that would exist if mongodb write had succeeded
         // but cache update had failed
@@ -187,7 +189,7 @@ describe('events API', () => {
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
-        merge: callback => helpers.addEventAndMerge(
+        merge: callback => callbackify(helpers.addEventAndMerge)(
           {consensusApi, count: 5, eventTemplate, ledgerNode, opTemplate},
           callback),
         // recreate conditions that would exist if mongodb write had succeeded
