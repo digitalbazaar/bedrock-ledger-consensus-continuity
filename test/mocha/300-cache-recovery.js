@@ -63,8 +63,8 @@ describe('Cache Recovery', () => {
       this.timeout(TEST_TIMEOUT);
       async.auto({
         clean: callback => cache.client.flushall(callback),
-        consensusPlugin: ['clean', (results, callback) => helpers.use(
-          'Continuity2017', callback)],
+        consensusPlugin: ['clean', (results, callback) =>
+          callbackify(helpers.use)('Continuity2017', callback)],
         ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
@@ -242,7 +242,7 @@ describe('Cache Recovery', () => {
             }
           })],
           settle: ['afterPrime', (results, callback) =>
-            helpers.settleNetwork(
+            callbackify(helpers.settleNetwork)(
               {consensusApi, nodes: _.values(nodes)}, callback)],
           blockSummary: ['settle', (results, callback) =>
             _latestBlockSummary((err, result) => {
@@ -403,7 +403,7 @@ function _nBlocks({consensusApi, targetBlockHeight}, callback) {
         }
         // in this test `nodes` is an object that needs to be converted to
         // an array for the helper
-        helpers.runWorkerCycle(
+        callbackify(helpers.runWorkerCycle)(
           {consensusApi, nodes: _.values(nodes), series: false}, callback);
       }],
       report: ['workCycle', (results, callback) => async.forEachOfSeries(

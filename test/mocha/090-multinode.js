@@ -34,7 +34,8 @@ describe('Multinode', () => {
         clean: ['flushCache', (results, callback) =>
           callbackify(helpers.removeCollections)(
             ['ledger', 'ledgerNode'], callback)],
-        consensusPlugin: callback => helpers.use('Continuity2017', callback),
+        consensusPlugin: callback =>
+          callbackify(helpers.use)('Continuity2017', callback),
         ledgerNode: ['clean', (results, callback) => {
           brLedgerNode.add(null, {ledgerConfiguration}, (err, ledgerNode) => {
             if(err) {
@@ -164,7 +165,7 @@ describe('Multinode', () => {
           addOperation: callback => callbackify(helpers.addOperation)(
             {ledgerNode: genesisLedgerNode, opTemplate}, callback),
           settleNetwork: ['addOperation', (results, callback) =>
-            helpers.settleNetwork(
+            callbackify(helpers.settleNetwork)(
               {consensusApi, nodes: peers, series: false}, callback)],
           getLatest: ['settleNetwork', (results, callback) =>
             async.map(peers, (ledgerNode, callback) =>
@@ -207,7 +208,7 @@ describe('Multinode', () => {
           addOperation: callback => callbackify(helpers.addOperations)(
             {nodes: peers, opTemplate}, callback),
           settleNetwork: ['addOperation', (results, callback) =>
-            helpers.settleNetwork(
+            callbackify(helpers.settleNetwork)(
               {consensusApi, nodes: peers, series: false}, callback)],
           test: ['settleNetwork', (results, callback) => {
             const recordIds = _extractRecordIds(results.addOperation);
@@ -346,7 +347,7 @@ describe('Multinode', () => {
           changeConfig: callback => genesisLedgerNode.config.change(
             {ledgerConfiguration}, callback),
           settleNetwork: ['changeConfig', (results, callback) =>
-            helpers.settleNetwork(
+            callbackify(helpers.settleNetwork)(
               {consensusApi, nodes: peers, series: false}, callback)],
           test: ['settleNetwork', (results, callback) => {
             async.map(peers, (ledgerNode, callback) =>
@@ -381,7 +382,7 @@ describe('Multinode', () => {
             callback();
           }),
           settleNetwork: ['addNode', (results, callback) =>
-            helpers.settleNetwork(
+            callbackify(helpers.settleNetwork)(
               {consensusApi, nodes: peers, series: false}, callback)],
           test: ['settleNetwork', (results, callback) => {
             async.map(peers, (ledgerNode, callback) =>

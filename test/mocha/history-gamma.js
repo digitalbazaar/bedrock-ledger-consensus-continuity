@@ -32,7 +32,7 @@ module.exports = ({api, consensusApi, eventTemplate, nodes, opTemplate}) => ({
     to: 'gamma'
   }, callback)],
   // snapshot gamma before copy
-  ss1: ['cp1', 'cp2', (results, callback) => api.snapshotEvents(
+  ss1: ['cp1', 'cp2', (results, callback) => callbackify(api.snapshotEvents)(
     {ledgerNode: nodes.gamma}, callback)],
   cp3: ['ss1', (results, callback) => callbackify(api.copyAndMerge)({
     consensusApi,
@@ -48,7 +48,7 @@ module.exports = ({api, consensusApi, eventTemplate, nodes, opTemplate}) => ({
     useSnapshot: true
   }, callback)],
   // snapshot gamma before copy
-  ss2: ['cp3', 'cp4', (results, callback) => api.snapshotEvents(
+  ss2: ['cp3', 'cp4', (results, callback) => callbackify(api.snapshotEvents)(
     {ledgerNode: nodes.gamma}, callback)],
   cp5: ['ss2', (results, callback) => callbackify(api.copyAndMerge)({
     consensusApi,

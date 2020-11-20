@@ -33,7 +33,7 @@ describe('Election API _findMergeEventProof', () => {
         callbackify(helpers.removeCollections)(
           ['ledger', 'ledgerNode'], callback),
       consensusPlugin: callback =>
-        helpers.use('Continuity2017', (err, result) => {
+        callbackify(helpers.use)('Continuity2017', (err, result) => {
           if(err) {
             return callback(err);
           }
@@ -314,8 +314,9 @@ describe('Election API _findMergeEventProof', () => {
               callback();
             })]
       }, callback),
-      build: ['nodeEpsilon', (results, callback) => callbackify(helpers.buildHistory)(
-        {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
+      build: ['nodeEpsilon', (results, callback) =>
+        callbackify(helpers.buildHistory)(
+          {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
       testAll: ['build', (results, callback) => {
         // NOTE: for ledger history alpha, all nodes should have the same view
         const build = results.build;
