@@ -18,6 +18,8 @@ const PROMETHEUS_JOB = 'continuity_simulation';
 
 /* eslint-disable max-len */
 const PROMETHEUS_METRIC_NAMES = new Map([
+  ['nodeCount', `${PROMETHEUS_NAMESPACE}_node_count`],
+  ['witnessCount', `${PROMETHEUS_NAMESPACE}_witness_count`],
   ['totalTimeSlices', `${PROMETHEUS_NAMESPACE}_time_slices_total`],
   ['consensusDuration', `${PROMETHEUS_NAMESPACE}_avg_consensus_duration_milliseconds`],
   ['totalMergeEvents', `${PROMETHEUS_NAMESPACE}_avg_merge_events_total`],
@@ -38,11 +40,11 @@ async function send({report}) {
 
 function createMetrics({report}) {
   const labelKeys = [
-    'id', 'name', 'run', 'creator', 'timestamp', 'witnessCount'
+    'id', 'name', 'run', 'creator', 'timestamp', 'witnessCount', 'nodeCount'
   ];
   const label = labelKeys.map(key => {
-    if(key === 'witnessCount') {
-      return `${key}="${report[key].toString().padStart(5, 0)}"`;
+    if(key === 'witnessCount' || key === 'nodeCount') {
+      return `${key}="${report[key].toString().padStart(3, 0)}"`;
     }
     return `${key}="${report[key]}"`;
   }).join(', ');
@@ -55,6 +57,8 @@ function createMetrics({report}) {
 
   prometheusData += _generateTimeSlicesMetric({report, label, suffix});
   prometheusData += _generateAveragesMetric({report, label, suffix});
+
+  console.log('PROMETHEUS DATA', prometheusData);
   // TODO: Capture gossip session data
   return prometheusData;
 }
