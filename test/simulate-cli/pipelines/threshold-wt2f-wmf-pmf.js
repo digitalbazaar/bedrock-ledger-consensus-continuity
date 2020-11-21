@@ -8,7 +8,7 @@ const mergeStrategy =
   require('../merge-strategies/threshold-merge');
 
 // NOTE: no spaces allowed, must be safe for prometheus metrics
-module.exports.name = 'threshold-wtf-wmf-ptf-pm1';
+module.exports.name = 'threshold-wt2f-wmf-pmf';
 module.exports.pipeline = async function() {
   const count = 2;
 
@@ -16,10 +16,10 @@ module.exports.pipeline = async function() {
     await this.run({type: 'gossip', fn: gossipStrategy.run});
   }
   const mergeArgs = {
-    witnessTargetThreshold: 'f',
+    witnessTargetThreshold: '2f',
     witnessMinimumThreshold: 'f',
-    peerTargetThreshold: 'f',
-    peerMinimumThreshold: '1'
+    peerMinimumThreshold: 'f',
+    operationReadyChance: 0.2
   };
   await this.run({type: 'merge', fn: mergeStrategy.run, args: mergeArgs});
   const consensusResults = await this.run({type: 'consensus'});
