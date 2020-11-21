@@ -5,15 +5,18 @@
 
 module.exports.run = async function({
   witnessTargetThreshold, witnessMinimumThreshold,
-  peerTargetThreshold, peerMinimumThreshold}) {
+  peerTargetThreshold, peerMinimumThreshold,
+  operationReadyChance = 0.2
+}) {
   const f = (this.witnesses.size - 1) / 3;
   const witnesses = new Map();
   let events = [];
   const localWitnessPeers = await this.getLocalWitnessPeers();
-  // operation batch is full (10% chance)
-  const operationBatchFull = Math.random() < 0.1;
-  // merge timeout reached (20% chance)
-  const mergeTimeout = Math.random() < 0.2;
+
+  // allowed to merge a pending operation if you meet a certain threshold;
+  // nodes are only supposed to do so when their operation batch is full
+  // or a merge timeout has been reached with a pending operation.
+  const operationReady = Math.random() < operationReadyChance;
 
   // build the witness map
   localWitnessPeers.forEach(witness => {
@@ -35,12 +38,11 @@ module.exports.run = async function({
   events = await _getWitnessEvents({
     node: this, witnesses, targetThreshold, minimumThreshold});
 
-  if((operationBatchFull || mergeTimeout) &&
-    events.length >= minimumThreshold) {
+  if(operationReady && events.length >= minimumThreshold) {
     // merge if the operation batch is full, merge timeout is reached, and
     // the minimum threshold for witness events is met
     this.merge({events});
-  } else if(events.length >= targetThreshold) {
+  } else if(this.isWitness && events.length >= targetThreshold) {
     // merge if the target threshold for witness events is met
     this.merge({events});
   }
