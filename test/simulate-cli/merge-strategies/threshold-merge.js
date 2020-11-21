@@ -5,8 +5,7 @@
 
 module.exports.run = async function({
   witnessTargetThreshold, witnessMinimumThreshold,
-  peerTargetThreshold, peerMinimumThreshold,
-  operationReadyChance = 0.2
+  peerMinimumThreshold, operationReadyChance = 0.2
 }) {
   const f = (this.witnesses.size - 1) / 3;
   const witnesses = new Map();
@@ -30,8 +29,8 @@ module.exports.run = async function({
     targetThreshold = _witnessFormulaToNumber(f, witnessTargetThreshold);
     minimumThreshold = _witnessFormulaToNumber(f, witnessMinimumThreshold);
   } else {
-    targetThreshold = _witnessFormulaToNumber(f, peerTargetThreshold);
     minimumThreshold = _witnessFormulaToNumber(f, peerMinimumThreshold);
+    targetThreshold = minimumThreshold;
   }
 
   // get the witness events to merge with
