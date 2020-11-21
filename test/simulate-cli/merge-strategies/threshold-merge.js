@@ -3,73 +3,81 @@
  */
 'use strict';
 
-module.exports.run = async function({witnessThreshold, peerThreshold}) {
-  let events = [];
+module.exports.run = async function({
+  witnessTargetThreshold, witnessMinimumThreshold,
+  peerTargetThreshold, peerMinimumThreshold}) {
   const f = (this.witnesses.size - 1) / 3;
-
+  const witnesses = new Map();
+  let events = [];
+  const localWitnessPeers = await this.getLocalWitnessPeers();
   // operation batch is full (10% chance)
   const operationBatchFull = Math.random() < 0.1;
   // merge timeout reached (20% chance)
   const mergeTimeout = Math.random() < 0.2;
 
-  if(operationBatchFull || mergeTimeout) {
-    // any node should try to merge if operation batch is full or a merge
-    // timeout occurs and a minimum threshold of witnesses are seen
-    const minWitnessEvents = _getMinWitnessEvents(f, peerThreshold);
-    const witnesses = new Map();
-    const localWitnessPeers = await this.getLocalWitnessPeers();
-    localWitnessPeers.forEach(witness => {
-      witnesses.set(witness.nodeId, witness);
-    });
+  // build the witness map
+  localWitnessPeers.forEach(witness => {
+    witnesses.set(witness.nodeId, witness);
+  });
 
-    events = await _getWitnessEvents({node: this, witnesses, minWitnessEvents});
-  } else if(this.isWitness) {
-    // witness should merge if minimum threshold of other witness events seen
-    const minWitnessEvents = _getMinWitnessEvents(f, witnessThreshold);
-    const witnesses = new Map();
-    // remove current witness from list of available merge witnesses
-    const localWitnessPeers = await this.getLocalWitnessPeers();
-    localWitnessPeers.forEach(witness => {
-      witnesses.set(witness.nodeId, witness);
-    });
-
-    events = await _getWitnessEvents({node: this, witnesses, minWitnessEvents});
+  // set the target/minimum thresholds depending on if witness or not
+  let targetThreshold;
+  let minimumThreshold;
+  if(this.isWitness) {
+    targetThreshold = _witnessFormulaToNumber(f, witnessTargetThreshold);
+    minimumThreshold = _witnessFormulaToNumber(f, witnessMinimumThreshold);
+  } else {
+    targetThreshold = _witnessFormulaToNumber(f, peerTargetThreshold);
+    minimumThreshold = _witnessFormulaToNumber(f, peerMinimumThreshold);
   }
 
-  if(events.length > 0) {
+  // get the witness events to merge with
+  events = await _getWitnessEvents({
+    node: this, witnesses, targetThreshold, minimumThreshold});
+
+  if((operationBatchFull || mergeTimeout) &&
+    events.length >= minimumThreshold) {
+    // merge if the operation batch is full, merge timeout is reached, and
+    // the minimum threshold for witness events is met
+    this.merge({events});
+  } else if(events.length >= targetThreshold) {
+    // merge if the target threshold for witness events is met
     this.merge({events});
   }
 
   return;
 };
 
-function _getMinWitnessEvents(f, threshold) {
-  let minWitnessEvents = 0;
+function _witnessFormulaToNumber(f, threshold) {
+  let thresholdWitnessEvents = 0;
 
   if(threshold === '2f') {
-    minWitnessEvents = 2 * f;
+    thresholdWitnessEvents = 2 * f;
   } else if(threshold === 'f') {
-    minWitnessEvents = f;
+    thresholdWitnessEvents = f;
   } else if(threshold === '1') {
-    minWitnessEvents = 1;
+    thresholdWitnessEvents = 1;
+  } else if(threshold === '0') {
+    thresholdWitnessEvents = 0;
   } else {
     console.log('error: theshold-merge - unsupported witness threshold:',
       threshold);
     process.exit(1);
   }
 
-  return minWitnessEvents;
+  return thresholdWitnessEvents;
 }
 
-async function _getWitnessEvents({node, witnesses, minWitnessEvents}) {
+async function _getWitnessEvents({
+  node, witnesses, targetThreshold, minimumThreshold}) {
   const witnessEvents = [];
   const witnessIds = Array.from(witnesses.keys());
   _shuffleArray(witnessIds);
 
   // try to find a minimum of required other witness events to merge
   for(const witnessId of witnessIds) {
-    if(witnessEvents.length >= minWitnessEvents) {
-      // bail early if minWitnessEvents found
+    if(witnessEvents.length >= targetThreshold) {
+      // bail early if targetThreshold found
       break;
     }
     // see if the witness' head can be found
@@ -83,7 +91,7 @@ async function _getWitnessEvents({node, witnesses, minWitnessEvents}) {
   }
 
   // return the events if we hit the minimum witness threshold
-  if(witnessEvents.length === minWitnessEvents) {
+  if(witnessEvents.length >= minimumThreshold) {
     return witnessEvents;
   }
 
