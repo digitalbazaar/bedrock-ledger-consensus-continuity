@@ -227,8 +227,13 @@ class Node {
 
   async getLocalWitnessPeers() {
     const peers = [];
+
     for(const peerNodeId of this.seenPeers) {
-      peers.push(this.witnesses.get(peerNodeId));
+      const peer = this.witnesses.get(peerNodeId);
+      if(!peer) {
+        continue;
+      }
+      peers.push(peer);
     }
     return peers;
   }
