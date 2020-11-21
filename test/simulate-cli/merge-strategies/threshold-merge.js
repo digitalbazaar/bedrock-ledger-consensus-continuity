@@ -17,7 +17,7 @@ module.exports.run = async function({witnessThreshold, peerThreshold}) {
     // timeout occurs and a minimum threshold of witnesses are seen
     const minWitnessEvents = _getMinWitnessEvents(f, peerThreshold);
     const witnesses = new Map();
-    const localWitnessPeers = await this.getWitnessPeers();
+    const localWitnessPeers = await this.getLocalWitnessPeers();
     localWitnessPeers.forEach(witness => {
       witnesses.set(witness.nodeId, witness);
     });
@@ -28,8 +28,7 @@ module.exports.run = async function({witnessThreshold, peerThreshold}) {
     const minWitnessEvents = _getMinWitnessEvents(f, witnessThreshold);
     const witnesses = new Map();
     // remove current witness from list of available merge witnesses
-    const localWitnessPeers = (await this.getWitnessPeers())
-      .filter(witness => witness.nodeId !== this.nodeId);
+    const localWitnessPeers = await this.getLocalWitnessPeers();
     localWitnessPeers.forEach(witness => {
       witnesses.set(witness.nodeId, witness);
     });
@@ -63,14 +62,15 @@ function _getMinWitnessEvents(f, threshold) {
 }
 
 async function _getWitnessEvents({node, witnesses, minWitnessEvents}) {
-  let events = [];
   const witnessEvents = [];
+  const witnessIds = Array.from(witnesses.keys());
+  _shuffleArray(witnessIds);
 
   // try to find a minimum of required other witness events to merge
-  for(const witnessId of witnesses.keys()) {
+  for(const witnessId of witnessIds) {
     if(witnessEvents.length >= minWitnessEvents) {
       // bail early if minWitnessEvents found
-      continue;
+      break;
     }
     // see if the witness' head can be found
     try {
@@ -84,8 +84,15 @@ async function _getWitnessEvents({node, witnesses, minWitnessEvents}) {
 
   // return the events if we hit the minimum witness threshold
   if(witnessEvents.length === minWitnessEvents) {
-    events = witnessEvents;
+    return witnessEvents;
   }
 
-  return events;
+  return [];
+}
+
+function _shuffleArray(array) {
+  for(let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
 }
