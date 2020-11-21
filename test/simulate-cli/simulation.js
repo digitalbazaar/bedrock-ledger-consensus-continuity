@@ -55,7 +55,7 @@ async function load({
       // mongoClient.send({payload: {report, visualizer}}),
     ]);
   }
-  console.log(report);
+  console.log('Simulation report', report);
   return {input, display, report};
 }
 

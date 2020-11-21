@@ -15,7 +15,7 @@ async function main() {
     .option('nosend', {
       describe: 'Do not send metrics.',
     })
-    .option('pipelineJs', {
+    .option('pipeline', {
       describe: 'Path to the pipeline.',
       alias: 'p',
       default: './pipelines/reference.js',
@@ -25,38 +25,56 @@ async function main() {
       alias: 'u',
       default: os.userInfo().username
     })
-    .option('nodeCountRatio', {
-      describe: 'Ratio of total nodes to witness nodes.',
-      alias: 'r',
-      default: 2,
+    .option('node-min', {
+      describe: 'Minimum nodes to simulate.',
+      alias: 'n',
+      default: 0,
     })
-    .options('failures', {
-      describe: 'Number of byzantine failures to protect against.',
+    .option('node-max', {
+      describe: 'Maximum non-witness nodes to simulate.',
+      alias: 'N',
+      default: 0,
+    })
+    .option('node-increment', {
+      describe: 'Non-witness node simulation step size.',
+      alias: 'i',
+      default: 10,
+    })
+    .options('f-min', {
+      describe: 'Minimum byzantine failures to simulate.',
       alias: 'f',
+      default: 1,
+    })
+    .options('f-max', {
+      describe: 'Maximum byzantine failures to simulate.',
+      alias: 'F',
       default: 1,
     });
 
-  const {nosend, pipelineJs, user, nodeCountRatio, failures} = yargs.argv;
+  const {nosend, pipeline, user, nodeMin, nodeMax, nodeIncrement,
+    fMin, fMax} = yargs.argv;
   const run = Date.now();
 
   const simulationPool = workerpool.pool(
     path.join(__dirname, 'simulation-worker.js'));
 
   setInterval(() => {
-    console.log('WORKERPOOL STATUS', simulationPool.stats());
+    console.log('Workerpool status', simulationPool.stats());
   }, 3000);
 
   const promises = [];
-  for(let f = 1; f <= failures; f++) {
-    const simulationOptions = {
-      nosend,
-      pipelineJs,
-      user,
-      run,
-      witnessCount: (3 * f) + 1,
-      nonwitnessCount: Math.floor(((3 * f) + 1) * nodeCountRatio)
-    };
-    promises.push(simulationPool.exec('runSimulation', [simulationOptions]));
+  for(let f = fMin; f <= fMax; f++) {
+    for(let n = nodeMin; n <= nodeMax; n += nodeIncrement) {
+      const simulationOptions = {
+        nosend,
+        pipelineJs: pipeline,
+        user,
+        run,
+        witnessCount: (3 * f) + 1,
+        nonwitnessCount: n
+      };
+      promises.push(simulationPool.exec('runSimulation', [simulationOptions]));
+    }
   }
 
   await Promise.all(promises);
