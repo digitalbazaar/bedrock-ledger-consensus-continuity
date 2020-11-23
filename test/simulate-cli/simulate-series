@@ -59,8 +59,17 @@ async function main() {
     path.join(__dirname, 'simulation-worker.js'));
 
   setInterval(() => {
-    console.log('Workerpool status', simulationPool.stats());
-  }, 3000);
+    const stats = simulationPool.stats();
+    const time = new Date().toLocaleTimeString();
+    if(stats.activeTasks < 1 && stats.pendingTasks < 1) {
+      console.log(`${time}: Simulation complete.`);
+      process.exit(1);
+    }
+    const totalTasks = stats.activeTasks + stats.pendingTasks;
+    const totalWorkers = stats.totalWorkers - stats.idleWorkers;
+    console.log(`${time}: ${stats.activeTasks}/${totalTasks} ` +
+      `active tasks using ${totalWorkers} workers.`);
+  }, 1000);
 
   const promises = [];
   for(let f = fMin; f <= fMax; f++) {
