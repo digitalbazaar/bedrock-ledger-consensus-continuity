@@ -54,9 +54,15 @@ class Node {
     }
     details = {...details, tick: this.tickId};
 
-    const activity = {type, details, nodeId: this.nodeId};
-
-    this.activityLog.push(activity);
+    if(Array.isArray(details)) {
+      details.forEach(detail => {
+        const activity = {type, details: detail, nodeId: this.nodeId};
+        this.activityLog.push(activity);
+      });
+    } else {
+      const activity = {type, details, nodeId: this.nodeId};
+      this.activityLog.push(activity);
+    }
 
     return details;
   }
