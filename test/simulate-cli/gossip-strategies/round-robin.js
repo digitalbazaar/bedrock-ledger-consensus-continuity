@@ -13,12 +13,13 @@ module.exports.run = async function({}) {
 
   // ensure gossip iteration is being tracked
   if(this.gossipCounter === undefined) {
-    this.gossipCounter = Math.floor(Math.random() * this.nodes.size);
+    this.gossipCounter = Math.floor(Math.random() * this.witnesses.size);
   } else {
     this.gossipCounter += 1;
   }
   // skip this node in witness selection
-  if(((localNodeId + this.gossipCounter) % this.nodes.size) === localNodeId) {
+  if(((localNodeId + this.gossipCounter) %
+    this.witnesses.size) === localNodeId) {
     this.gossipCounter += 1;
   }
 
@@ -32,7 +33,7 @@ module.exports.run = async function({}) {
   // generate Map of witnesses that have notified this peer
   const notificationWitnesses = new Map();
   witnessPeers.forEach(witness => {
-    const notified = (2 / this.nodes.size) < Math.random();
+    const notified = (2 / this.witnesses.size) < Math.random();
     if(notified) {
       notificationWitnesses.set(witness.nodeId, witness);
     }
@@ -50,7 +51,7 @@ module.exports.run = async function({}) {
 
   // merge round-robin witnesses
   const roundRobinWitness =
-    ((localNodeId + this.gossipCounter) % this.nodes.size).toString();
+    ((localNodeId + this.gossipCounter) % this.witnesses.size).toString();
   totalDownloadedEvents +=
     await _mergeNodeEvents(this, witnesses.get(roundRobinWitness));
   notificationWitnesses.delete(roundRobinWitness);
