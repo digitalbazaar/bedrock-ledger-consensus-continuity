@@ -94,6 +94,9 @@ class Simulator {
             acc += event.events;
           }
         });
+        if(typeof curr.details.events === 'number') {
+          acc += curr.details.events;
+        }
         return acc;
       }, 0);
 
