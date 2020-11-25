@@ -89,7 +89,11 @@ class Simulator {
       // calculate total gossip sessions
       const gossips = node.activityLog.filter(({type}) => type === 'gossip');
       const downloadedEventsTotal = gossips.reduce((acc, curr) => {
-        acc += curr.details.events;
+        Object.values(curr.details).forEach(event => {
+          if(typeof event === 'object') {
+            acc += event.events;
+          }
+        });
         return acc;
       }, 0);
 
