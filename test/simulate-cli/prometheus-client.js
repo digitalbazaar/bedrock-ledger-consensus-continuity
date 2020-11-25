@@ -58,7 +58,6 @@ function createMetrics({report}) {
   prometheusData += _generateTimeSlicesMetric({report, label, suffix});
   prometheusData += _generateAveragesMetric({report, label, suffix});
 
-  console.log('PROMETHEUS DATA', prometheusData);
   // TODO: Capture gossip session data
   return prometheusData;
 }
