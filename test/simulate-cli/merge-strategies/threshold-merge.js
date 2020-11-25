@@ -81,6 +81,17 @@ async function _getWitnessEvents({
   const witnessIds = Array.from(witnesses.keys());
   _shuffleArray(witnessIds);
 
+  // TODO: Implement merge caps
+  // For witnessess: when a witness makes a non-empty event, they do at least 1
+  // witness event, at least one non-witness, and then fill with 1 witness event
+  // (simulation only) and then fill with non-witnesses to reach the cap of 16 -
+  // 1(self)
+  //
+  // for 13 node network - do self, then 1 for another witness, 1 for another
+  // non-witness, then 13 remain ... so use next 6 slots for witnesses (if you
+  // have them) and then up to 7 more non-witnesses if you have them... then if
+  // you're still under the cap, add witnesses
+
   // try to find a minimum of required other witness events to merge
   for(const witnessId of witnessIds) {
     if(witnessEvents.length >= targetThreshold) {
