@@ -3,17 +3,20 @@
  */
 'use strict';
 
-const gossipStrategy = require('../gossip-strategies/reference');
-const mergeStrategy =
-  require('../merge-strategies/threshold-merge');
+const gossipStrategy = require('../gossip-strategies/round-robin');
+const mergeStrategy = require('../merge-strategies/threshold-merge');
 
 // NOTE: no spaces allowed, must be safe for prometheus metrics
-module.exports.name = 'threshold-wt2f-wm1-pm0-or020';
+module.exports.name = 'grr-mthreshold-wm1-pm0';
 module.exports.pipeline = async function() {
-  const count = 2;
+  const count = 1;
+
+  const gossipArgs = {
+    offset: 0
+  };
 
   for(let i = 0; i < count; i++) {
-    await this.run({type: 'gossip', fn: gossipStrategy.run});
+    await this.run({type: 'gossip', fn: gossipStrategy.run, args: gossipArgs});
   }
   const mergeArgs = {
     witnessTargetThreshold: '2f',

@@ -4,9 +4,9 @@
 'use strict';
 
 const gossipStrategy = require('../gossip-strategies/previous-peer');
-const mergeStrategy = require('../merge-strategies/merge-strategy-reference');
+const mergeStrategy = require('../merge-strategies/reference');
 
-module.exports.name = 'previous_gossip_reference_merge';
+module.exports.name = 'gpp-mreference';
 module.exports.pipeline = async function() {
   const count = 1;
 
