@@ -5,11 +5,13 @@
 
 module.exports.run = async function({
   witnessTargetThreshold, witnessMinimumThreshold,
-  peerMinimumThreshold, operationReadyChance = 0.2
+  peerMinimumThreshold, operationReadyChance = 0.2,
+  byzantineWitnesses = '0'
 }) {
   const f = (this.witnesses.size - 1) / 3;
   const witnesses = new Map();
   let events = [];
+  const byzantineWitnessCount = _formulaToNumber(f, byzantineWitnesses);
   const localWitnessPeers = await this.getLocalWitnessPeers();
 
   // allowed to merge a pending operation if you meet a certain threshold;
@@ -26,10 +28,10 @@ module.exports.run = async function({
   let targetThreshold;
   let minimumThreshold;
   if(this.isWitness) {
-    targetThreshold = _witnessFormulaToNumber(f, witnessTargetThreshold);
-    minimumThreshold = _witnessFormulaToNumber(f, witnessMinimumThreshold);
+    targetThreshold = _formulaToNumber(f, witnessTargetThreshold);
+    minimumThreshold = _formulaToNumber(f, witnessMinimumThreshold);
   } else {
-    minimumThreshold = _witnessFormulaToNumber(f, peerMinimumThreshold);
+    minimumThreshold = _formulaToNumber(f, peerMinimumThreshold);
     targetThreshold = minimumThreshold;
   }
 
@@ -38,6 +40,10 @@ module.exports.run = async function({
     node: this, witnesses, targetThreshold, minimumThreshold});
 
   if(operationReady && events.length >= minimumThreshold) {
+    // if this is a byzantine witness, create an empty merge, you jerk
+    if(parseInt(this.nodeId) < byzantineWitnessCount) {
+      events = [];
+    }
     // merge if the operation batch is full, merge timeout is reached, and
     // the minimum threshold for witness events is met
     this.merge({events});
@@ -49,24 +55,24 @@ module.exports.run = async function({
   return;
 };
 
-function _witnessFormulaToNumber(f, threshold) {
-  let thresholdWitnessEvents = 0;
+function _formulaToNumber(f, threshold) {
+  let number = 0;
 
   if(threshold === '2f') {
-    thresholdWitnessEvents = 2 * f;
+    number = 2 * f;
   } else if(threshold === 'f') {
-    thresholdWitnessEvents = f;
+    number = f;
   } else if(threshold === '1') {
-    thresholdWitnessEvents = 1;
+    number = 1;
   } else if(threshold === '0') {
-    thresholdWitnessEvents = 0;
+    number = 0;
   } else {
     console.log('error: theshold-merge - unsupported witness threshold:',
       threshold);
     process.exit(1);
   }
 
-  return thresholdWitnessEvents;
+  return number;
 }
 
 async function _getWitnessEvents({
