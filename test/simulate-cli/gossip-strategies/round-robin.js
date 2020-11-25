@@ -25,7 +25,6 @@ module.exports.run = async function({}) {
 
   // generate Map of witnesses
   const witnesses = new Map();
-  console.log(typeof this.getWitnessPeers());
   const witnessPeers = await this.getWitnessPeers();
   witnessPeers.forEach(
     witness => witnesses.set(witness.nodeId, witness));
@@ -104,7 +103,6 @@ async function _mergeWithNode({node, peers, randomMergeCount, gossipSessions}) {
 }
 
 async function _mergeNodeEvents(node, peer) {
-  console.log('_mergeNodeEvents', node.nodeId, '<-', peer.nodeId);
   // get different histories
   const nodeHistory = await node.getHistory();
   const peerHistory = await peer.getHistory();
@@ -133,8 +131,8 @@ async function _mergeNodeEvents(node, peer) {
   }, 0);
 
   const totalEvents = downloadedEventsTotal + downloadedEvents.length;
-  console.log(
-    `  gossip from ${peer.nodeId}: ${downloadedEvents.length}/${totalEvents}`);
+  console.log(`  gossip ${node.nodeId} <- ${peer.nodeId}:` +
+    ` ${downloadedEvents.length}/${totalEvents}`);
 
   return downloadedEvents.length;
 }
