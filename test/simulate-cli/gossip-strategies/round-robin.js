@@ -50,32 +50,32 @@ module.exports.run = async function({}) {
   const roundRobinWitness =
     (this.gossipCounter % this.witnesses.size).toString();
   totalDownloadedEvents +=
-    await _mergeNodeEvents(this, witnesses.get(roundRobinWitness));
+    await _gossipNodeEvents(this, witnesses.get(roundRobinWitness));
   notificationWitnesses.delete(roundRobinWitness);
   gossipSessions.push(
     {peer: roundRobinWitness, events: totalDownloadedEvents});
 
   // attempt to merge random notification witness
   let randomMergeCount = 0;
-  ({randomMergeCount, downloadedEvents} = await _mergeWithNode({node: this,
+  ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
     peers: notificationWitnesses, randomMergeCount, gossipSessions}));
   totalDownloadedEvents += downloadedEvents;
 
   // attempt to merge random notification peer
-  ({randomMergeCount, downloadedEvents} = await _mergeWithNode({node: this,
+  ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
     peers: notificationPeers, randomMergeCount, gossipSessions}));
   totalDownloadedEvents += downloadedEvents;
 
   // if not at least 2 random merges, try random peers that have notified
   if(randomMergeCount < 2) {
-    ({randomMergeCount, downloadedEvents} = await _mergeWithNode({node: this,
+    ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
       peers: notificationPeers, randomMergeCount, gossipSessions}));
     totalDownloadedEvents += downloadedEvents;
   }
 
   // if not at least 2 random merges, try random witnesses that have notified
   if(randomMergeCount < 2) {
-    ({randomMergeCount, downloadedEvents} = await _mergeWithNode({node: this,
+    ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
       peers: notificationWitnesses, randomMergeCount, gossipSessions}));
     totalDownloadedEvents += downloadedEvents;
   }
@@ -83,7 +83,7 @@ module.exports.run = async function({}) {
   return gossipSessions;
 };
 
-async function _mergeWithNode({node, peers, randomMergeCount, gossipSessions}) {
+async function _gossipWithNode({node, peers, randomMergeCount, gossipSessions}) {
   let updatedMergeCount = randomMergeCount;
   let downloadedEvents = 0;
 
@@ -91,7 +91,7 @@ async function _mergeWithNode({node, peers, randomMergeCount, gossipSessions}) {
     const allPeerIds = Array.from(peers.keys());
     const randomPeerId = allPeerIds[
       Math.floor(Math.random() * allPeerIds.length)];
-    downloadedEvents = await _mergeNodeEvents(node, peers.get(randomPeerId));
+    downloadedEvents = await _gossipNodeEvents(node, peers.get(randomPeerId));
     gossipSessions.push({peer: randomPeerId, events: downloadedEvents});
     peers.delete(randomPeerId);
     updatedMergeCount = randomMergeCount + 1;
@@ -100,7 +100,7 @@ async function _mergeWithNode({node, peers, randomMergeCount, gossipSessions}) {
   return {downloadedEvents, randomMergeCount: updatedMergeCount};
 }
 
-async function _mergeNodeEvents(node, peer) {
+async function _gossipNodeEvents(node, peer) {
   // get different histories
   const nodeHistory = await node.getHistory();
   const peerHistory = await peer.getHistory();
