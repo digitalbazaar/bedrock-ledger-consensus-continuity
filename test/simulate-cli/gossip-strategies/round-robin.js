@@ -6,7 +6,6 @@
 const _ = require('lodash');
 
 module.exports.run = async function({}) {
-  const localNodeId = parseInt(this.nodeId, 10);
   let downloadedEvents = 0;
   let totalDownloadedEvents = 0;
   const gossipSessions = [];
@@ -18,8 +17,7 @@ module.exports.run = async function({}) {
     this.gossipCounter += 1;
   }
   // skip this node in witness selection
-  if(((localNodeId + this.gossipCounter) %
-    this.witnesses.size) === localNodeId) {
+  if((this.gossipCounter % this.witnesses.size) === parseInt(this.nodeId, 10)) {
     this.gossipCounter += 1;
   }
 
@@ -50,7 +48,7 @@ module.exports.run = async function({}) {
 
   // merge round-robin witnesses
   const roundRobinWitness =
-    ((localNodeId + this.gossipCounter) % this.witnesses.size).toString();
+    (this.gossipCounter % this.witnesses.size).toString();
   totalDownloadedEvents +=
     await _mergeNodeEvents(this, witnesses.get(roundRobinWitness));
   notificationWitnesses.delete(roundRobinWitness);
