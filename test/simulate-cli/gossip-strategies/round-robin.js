@@ -34,7 +34,7 @@ module.exports.run = async function({}) {
     }
   });
 
-  // select the peers to gossip with
+  // select the peers to gossip with, ensuring at least 1 witness
   const roundRobinWitness = this.witnesses.get(
     (this.gossipCounter % this.witnesses.size).toString());
   peerNotifications.delete(roundRobinWitness.nodeId);
@@ -59,8 +59,10 @@ function _selectAndRemoveRandomPeer({peers}) {
   let selection = undefined;
   const allPeerIds = Array.from(peers.keys());
   if(allPeerIds.length > 0) {
+    // select a random peer
     const randomId = allPeerIds[Math.floor(Math.random() * allPeerIds.length)];
     selection = peers.get(randomId);
+    // remove the peer from future selection
     peers.delete(randomId);
   }
 
