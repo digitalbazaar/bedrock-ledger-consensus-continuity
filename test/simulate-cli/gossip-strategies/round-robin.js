@@ -6,8 +6,8 @@
 const _ = require('lodash');
 
 module.exports.run = async function({}) {
-  let downloadedEvents = 0;
   let totalDownloadedEvents = 0;
+  const gossipPeers = new Array(3);
   const gossipSessions = [];
 
   // ensure gossip iteration is being tracked
@@ -21,84 +21,50 @@ module.exports.run = async function({}) {
     this.gossipCounter += 1;
   }
 
-  // generate Map of witnesses
-  const witnesses = new Map();
-  const witnessPeers = await this.getWitnessPeers();
-  witnessPeers.forEach(
-    witness => witnesses.set(witness.nodeId, witness));
-
-  // generate Map of witnesses that have notified this peer
-  const notificationWitnesses = new Map();
-  witnessPeers.forEach(witness => {
+  // generate Map of peers that have notified this peer
+  const peerNotifications = new Map();
+  this.nodes.forEach(node => {
+    if(node.nodeId === this.nodeId) {
+      // skip if the node is the current node
+      return;
+    }
     const notified = (2 / this.witnesses.size) < Math.random();
     if(notified) {
-      notificationWitnesses.set(witness.nodeId, witness);
+      peerNotifications.set(node.nodeId, node);
     }
   });
 
-  // generate Map of non-witnesses that have notified this peer
-  const notificationPeers = new Map();
-  const peers = await this.getPeers();
-  peers.forEach(peer => {
-    const notified = (2 / this.nodes.size) < Math.random();
-    if(notified && !witnesses.has(peer.nodeId)) {
-      notificationPeers.set(peer.nodeId, peer);
+  // select the peers to gossip with
+  const roundRobinWitness = this.witnesses.get(
+    (this.gossipCounter % this.witnesses.size).toString());
+  peerNotifications.delete(roundRobinWitness.nodeId);
+  const randomPeer1 = _selectAndRemoveRandomPeer({peers: peerNotifications});
+  const randomPeer2 = _selectAndRemoveRandomPeer({peers: peerNotifications});
+  gossipPeers.push(randomPeer1);
+  gossipPeers.push(randomPeer2);
+  gossipPeers.push(roundRobinWitness);
+
+  // gossip with selected peers that have notified this peer
+  for(const peer of gossipPeers) {
+    if(peer) {
+      totalDownloadedEvents += await _gossipNodeEvents(this, peer);
+      gossipSessions.push({peer: peer.nodeId, events: totalDownloadedEvents});
     }
-  });
-
-  // gossip with round-robin witnesses
-  const roundRobinWitness =
-    (this.gossipCounter % this.witnesses.size).toString();
-  totalDownloadedEvents +=
-    await _gossipNodeEvents(this, witnesses.get(roundRobinWitness));
-  notificationWitnesses.delete(roundRobinWitness);
-  gossipSessions.push(
-    {peer: roundRobinWitness, events: totalDownloadedEvents});
-
-  // attempt to gossip with random notification witness
-  let randomMergeCount = 0;
-  ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
-    peers: notificationWitnesses, randomMergeCount, gossipSessions}));
-  totalDownloadedEvents += downloadedEvents;
-
-  // attempt to gossip with random notification peer
-  ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
-    peers: notificationPeers, randomMergeCount, gossipSessions}));
-  totalDownloadedEvents += downloadedEvents;
-
-  // if not at least 2 random gossip withs, try random peers that have notified
-  if(randomMergeCount < 2) {
-    ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
-      peers: notificationPeers, randomMergeCount, gossipSessions}));
-    totalDownloadedEvents += downloadedEvents;
-  }
-
-  // if not at least 2 random gossips, try random witnesses that have notified
-  if(randomMergeCount < 2) {
-    ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
-      peers: notificationWitnesses, randomMergeCount, gossipSessions}));
-    totalDownloadedEvents += downloadedEvents;
   }
 
   return gossipSessions;
 };
 
-async function _gossipWithNode({
-  node, peers, randomMergeCount, gossipSessions}) {
-  let updatedMergeCount = randomMergeCount;
-  let downloadedEvents = 0;
-
-  if(peers.size > 0) {
-    const allPeerIds = Array.from(peers.keys());
-    const randomPeerId = allPeerIds[
-      Math.floor(Math.random() * allPeerIds.length)];
-    downloadedEvents = await _gossipNodeEvents(node, peers.get(randomPeerId));
-    gossipSessions.push({peer: randomPeerId, events: downloadedEvents});
-    peers.delete(randomPeerId);
-    updatedMergeCount = randomMergeCount + 1;
+function _selectAndRemoveRandomPeer({peers}) {
+  let selection = undefined;
+  const allPeerIds = Array.from(peers.keys());
+  if(allPeerIds.length > 0) {
+    const randomId = allPeerIds[Math.floor(Math.random() * allPeerIds.length)];
+    selection = peers.get(randomId);
+    peers.delete(randomId);
   }
 
-  return {downloadedEvents, randomMergeCount: updatedMergeCount};
+  return selection;
 }
 
 async function _gossipNodeEvents(node, peer) {
