@@ -7,7 +7,7 @@ const gossipStrategy = require('../gossip-strategies/max-delta');
 const mergeStrategy = require('../merge-strategies/threshold-merge');
 
 // NOTE: no spaces allowed, must be safe for prometheus metrics
-module.exports.name = 'grr-mthreshold-wm1-pm0';
+module.exports.name = 'gmaxdelta-mthreshold-wm1-pm0';
 module.exports.pipeline = async function() {
   const count = 1;
 
