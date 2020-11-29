@@ -46,7 +46,7 @@ module.exports.run = async function({}) {
     }
   });
 
-  // merge round-robin witnesses
+  // gossip with round-robin witnesses
   const roundRobinWitness =
     (this.gossipCounter % this.witnesses.size).toString();
   totalDownloadedEvents +=
@@ -55,25 +55,25 @@ module.exports.run = async function({}) {
   gossipSessions.push(
     {peer: roundRobinWitness, events: totalDownloadedEvents});
 
-  // attempt to merge random notification witness
+  // attempt to gossip with random notification witness
   let randomMergeCount = 0;
   ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
     peers: notificationWitnesses, randomMergeCount, gossipSessions}));
   totalDownloadedEvents += downloadedEvents;
 
-  // attempt to merge random notification peer
+  // attempt to gossip with random notification peer
   ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
     peers: notificationPeers, randomMergeCount, gossipSessions}));
   totalDownloadedEvents += downloadedEvents;
 
-  // if not at least 2 random merges, try random peers that have notified
+  // if not at least 2 random gossip withs, try random peers that have notified
   if(randomMergeCount < 2) {
     ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
       peers: notificationPeers, randomMergeCount, gossipSessions}));
     totalDownloadedEvents += downloadedEvents;
   }
 
-  // if not at least 2 random merges, try random witnesses that have notified
+  // if not at least 2 random gossips, try random witnesses that have notified
   if(randomMergeCount < 2) {
     ({randomMergeCount, downloadedEvents} = await _gossipWithNode({node: this,
       peers: notificationWitnesses, randomMergeCount, gossipSessions}));
@@ -83,7 +83,8 @@ module.exports.run = async function({}) {
   return gossipSessions;
 };
 
-async function _gossipWithNode({node, peers, randomMergeCount, gossipSessions}) {
+async function _gossipWithNode({
+  node, peers, randomMergeCount, gossipSessions}) {
   let updatedMergeCount = randomMergeCount;
   let downloadedEvents = 0;
 
