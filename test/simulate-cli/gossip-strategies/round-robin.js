@@ -28,7 +28,7 @@ module.exports.run = async function({}) {
       // skip if the node is the current node
       return;
     }
-    const notified = (2 / this.witnesses.size) < Math.random();
+    const notified = (2 / this.nodes.size) < Math.random();
     if(notified) {
       peerNotifications.set(node.nodeId, node);
     }
