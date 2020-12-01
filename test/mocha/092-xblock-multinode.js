@@ -151,7 +151,8 @@ describe('X Block Test', () => {
           const ledgerNode = nodes[key];
           const result = await ledgerNode.storage.blocks.getLatestSummary();
           summaries[key] = {
-            blockCollection: ledgerNode.storage.blocks.collection.s.name,
+            blockCollection:
+              ledgerNode.storage.blocks.collection.collectionName,
             blockHeight: result.eventBlock.block.blockHeight,
             blockHash: result.eventBlock.meta.blockHash,
             previousBlockHash: result.eventBlock.block.previousBlockHash

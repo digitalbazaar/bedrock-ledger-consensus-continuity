@@ -38,21 +38,22 @@ describe.skip('Election API _getTails', () => {
           consensusApi = result.api;
           callback();
         }),
-      ledgerNode: ['clean', (results, callback) => brLedgerNode.add(
-        null, {ledgerConfiguration}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.alpha = result;
-          callback(null, result);
-        })],
+      ledgerNode: ['clean', (results, callback) =>
+        callbackify(brLedgerNode.add)(
+          null, {ledgerConfiguration}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            nodes.alpha = result;
+            callback(null, result);
+          })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        consensusApi._voters.get(nodes.alpha.id, (err, result) => {
+        callbackify(consensusApi._voters.get)(nodes.alpha.id, (err, result) => {
           callback(null, result.id);
         });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
-        consensusApi._events.getHead({
+        callbackify(consensusApi._events.getHead)({
           creatorId: results.creatorId,
           ledgerNode: nodes.alpha
         }, (err, result) => {
@@ -64,36 +65,39 @@ describe.skip('Election API _getTails', () => {
         });
       }],
       genesisBlock: ['ledgerNode', (results, callback) =>
-        nodes.alpha.blocks.getGenesis((err, result) => {
+        callbackify(nodes.alpha.blocks.getGenesis)((err, result) => {
           if(err) {
             return callback(err);
           }
           callback(null, result.genesisBlock.block);
         })],
-      nodeBeta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.beta = result;
-          callback(null, result);
-        })],
-      nodeGamma: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.gamma = result;
-          callback(null, result);
-        })],
-      nodeDelta: ['genesisBlock', (results, callback) => brLedgerNode.add(
-        null, {genesisBlock: results.genesisBlock}, (err, result) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes.delta = result;
-          callback(null, result);
-        })],
+      nodeBeta: ['genesisBlock', (results, callback) =>
+        callbackify(brLedgerNode.add)(
+          null, {genesisBlock: results.genesisBlock}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            nodes.beta = result;
+            callback(null, result);
+          })],
+      nodeGamma: ['genesisBlock', (results, callback) =>
+        callbackify(brLedgerNode.add)(
+          null, {genesisBlock: results.genesisBlock}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            nodes.gamma = result;
+            callback(null, result);
+          })],
+      nodeDelta: ['genesisBlock', (results, callback) =>
+        callbackify(brLedgerNode.add)(
+          null, {genesisBlock: results.genesisBlock}, (err, result) => {
+            if(err) {
+              return callback(err);
+            }
+            nodes.delta = result;
+            callback(null, result);
+          })],
       // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps
       // nodeEpsilon: ['genesisBlock', (results, callback) => brLedgerNode.add(
       //   null, {genesisBlock: results.genesisBlock}, (err, result) => {
@@ -105,7 +109,7 @@ describe.skip('Election API _getTails', () => {
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
         async.eachOf(nodes, (n, i, callback) =>
-          consensusApi._voters.get(n.id, (err, result) => {
+          callbackify(consensusApi._voters.get)(n.id, (err, result) => {
             if(err) {
               return callback(err);
             }
@@ -146,7 +150,8 @@ describe.skip('Election API _getTails', () => {
         const electors = _.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (n, i, callback) => {
           async.auto({
-            history: callback => getRecentHistory({ledgerNode: n}, callback),
+            history: callback =>
+              callbackify(getRecentHistory)({ledgerNode: n}, callback),
             branches: ['history', (results, callback) => {
               const branches = _getTails({
                 history: results.history,
@@ -192,7 +197,8 @@ describe.skip('Election API _getTails', () => {
         const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.beta;
         async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback =>
+            callbackify(getRecentHistory)({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,
@@ -262,7 +268,8 @@ describe.skip('Election API _getTails', () => {
         const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.gamma;
         async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback =>
+            callbackify(getRecentHistory)({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,
@@ -324,7 +331,8 @@ describe.skip('Election API _getTails', () => {
         const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.gamma;
         async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback =>
+            callbackify(getRecentHistory)({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,
@@ -436,7 +444,8 @@ describe.skip('Election API _getTails', () => {
         const electors = _.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.beta;
         async.auto({
-          history: callback => getRecentHistory({ledgerNode}, callback),
+          history: callback =>
+            callbackify(getRecentHistory)({ledgerNode}, callback),
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,

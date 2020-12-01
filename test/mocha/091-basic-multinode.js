@@ -66,60 +66,51 @@ describe.skip('Multinode Basics', () => {
     });
 
     // add N - 1 more nodes
-    before(function(done) {
+    before(async function() {
       this.timeout(120000);
-      async.times(nodeCount - 1, (i, callback) => {
-        brLedgerNode.add(null, {
+      for(let i = 0; i < nodeCount - 1; ++i) {
+        const ledgerNode = await brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block
-        }, (err, ledgerNode) => {
-          if(err) {
-            return callback(err);
-          }
-          nodes[nodeLabels[i]] = ledgerNode;
-          callback();
         });
-      }, done);
+        nodes[nodeLabels[i]] = ledgerNode;
+      }
     });
 
     // populate peers and init heads
-    before(done => async.eachOf(nodes, (ledgerNode, i, callback) =>
-      consensusApi._voters.get(ledgerNode.id, (err, result) => {
+    before(async () => {
+      let i = 0;
+      for(const ledgerNode of nodes) {
+        const result = await consensusApi._voters.get(
+          {ledgerNode: ledgerNode.id});
         peers[i] = result.id;
         heads[i] = [];
-        callback();
-      }), done));
+        i++;
+      }
+    });
 
     describe('Check Genesis Block', () => {
-      it('should have the proper information', done => {
+      it('should have the proper information', async () => {
         const blockHashes = [];
-        async.auto({
-          getLatest: callback => async.each(nodes, (ledgerNode, callback) =>
-            ledgerNode.storage.blocks.getLatest((err, result) => {
-              assertNoError(err);
-              const eventBlock = result.eventBlock;
-              should.exist(eventBlock.block);
-              eventBlock.block.blockHeight.should.equal(0);
-              eventBlock.block.event.should.be.an('array');
-              eventBlock.block.event.should.have.length(1);
-              const event = eventBlock.block.event[0];
-              // TODO: signature is dynamic... needs a better check
-              delete event.signature;
-              event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
-              should.exist(eventBlock.meta);
-              should.exist(eventBlock.block.consensusProof);
-              const consensusProof = eventBlock.block.consensusProof;
-              consensusProof.should.be.an('array');
-              consensusProof.should.have.length(1);
-              // FIXME: make assertions about the contents of consensusProof
-              // console.log('8888888', JSON.stringify(eventBlock, null, 2));
-              blockHashes.push(eventBlock.meta.blockHash);
-              callback();
-            }), callback),
-          testHash: ['getLatest', (results, callback) => {
-            blockHashes.every(h => h === blockHashes[0]).should.be.true;
-            callback();
-          }]
-        }, done);
+        for(const ledgerNode of peers) {
+          const result = await ledgerNode.storage.blocks.getLatest();
+          const eventBlock = result.eventBlock;
+          should.exist(eventBlock.block);
+          eventBlock.block.blockHeight.should.equal(0);
+          eventBlock.block.event.should.be.an('array');
+          // genesis config and genesis merge events
+          eventBlock.block.event.should.have.length(2);
+          const event = eventBlock.block.event[0];
+          event.type.should.equal('WebLedgerConfigurationEvent');
+          const {ledgerConfiguration} = mockData;
+          event.ledgerConfiguration.should.eql(ledgerConfiguration);
+          should.exist(eventBlock.meta);
+          should.exist(eventBlock.block.consensusProof);
+          const consensusProof = eventBlock.block.consensusProof;
+          consensusProof.should.be.an('array');
+          consensusProof.should.have.length(1);
+          blockHashes.push(eventBlock.meta.blockHash);
+        }
+        blockHashes.every(h => h === blockHashes[0]).should.be.true;
       });
     });
     /*

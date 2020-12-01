@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -9,7 +9,7 @@ const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const {config} = bedrock;
-const hasher = brLedgerNode.consensus._hasher;
+const hasher = callbackify(brLedgerNode.consensus._hasher);
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 const {util: {uuid}} = bedrock;
@@ -30,10 +30,10 @@ describe('blocks API', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     await helpers.flushCache();
     await helpers.removeCollections(['ledger', 'ledgerNode']);
-    const consensusPlugin = helpers.use('Continuity2017');
+    const consensusPlugin = await helpers.use('Continuity2017');
     consensusApi = consensusPlugin.api;
     _cacheKey = consensusApi._cache.cacheKey;
-    repairCache = consensusApi._blocks.repairCache;
+    repairCache = callbackify(consensusApi._blocks.repairCache);
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     const alphaVoter = await consensusApi._voters.get(
       {ledgerNodeId: nodes.alpha.id});

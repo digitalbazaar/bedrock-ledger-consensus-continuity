@@ -21,7 +21,7 @@ describe('Election API _getAncestors', () => {
   let EventWriter;
   const nodes = {};
   const peers = {};
-  beforeEach(function(done) {
+  beforeEach(async function() {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
     await helpers.flushCache();

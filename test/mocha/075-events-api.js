@@ -25,10 +25,10 @@ describe('events API', () => {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
     await helpers.removeCollections(['ledger', 'ledgerNode']);
-    const consensusPlugin = helpers.use('Continuity2017');
+    const consensusPlugin = await helpers.use('Continuity2017');
     consensusApi = consensusPlugin.api;
     _cacheKey = consensusApi._cache.cacheKey;
-    repairCache = consensusApi._events.repairCache;
+    repairCache = callbackify(consensusApi._events.repairCache);
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     // FIXME is this used anywhere? I might have made a mistake
     // in the refactoring
