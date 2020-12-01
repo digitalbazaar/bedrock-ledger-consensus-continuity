@@ -4,7 +4,6 @@
 'use strict';
 
 const async = require('async');
-const {callbackify} = require('util');
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const hasher = brLedgerNode.consensus._hasher;
