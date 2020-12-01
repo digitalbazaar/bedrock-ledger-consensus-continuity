@@ -7,12 +7,10 @@
 - **BREAKING**: Use `bedrock-ledger-storage-mongodb`: ^4.0.0.
 - Update numerous mongodb calls to match mongo driver 3.5 api.
 - Increment engines.node to >= 12.
-- Switched from `req.user.identity.id` to `req.user.account.id` for owner.
-- Changed helpers.prepareDatabase so it is async.
-- Numerous test before blocks are now async.
 
 ### Removed
 - **BREAKING**: Dependency on `bedrock-identity`.
+- **BREAKING**: Removed `mode` and recovery mode options.
 
 ### Added
 - A one minute timeout to tests.
