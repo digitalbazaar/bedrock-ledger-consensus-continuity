@@ -163,7 +163,7 @@ describe('Multinode', () => {
         }
       });
     }); // end Operations
-    describe.skip('Ledger Configuration', () => {
+    describe('Ledger Configuration', () => {
       // add a config event on the genesis node, settle the network, ensure
       // that new config is in effect on all nodes
       it('ValidationError on missing ledger property', async () => {
@@ -297,7 +297,7 @@ describe('Multinode', () => {
         }
       });
     });
-    describe.skip('Reinitialize Nodes', () => {
+    describe('Reinitialize Nodes', () => {
       // the nodes should load with a new consensus method
       it('nodes should have new consensus method', async () => {
         const nodeIds = peers.map(n => n.id);
