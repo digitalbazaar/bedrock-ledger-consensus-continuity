@@ -1,12 +1,10 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 const bedrock = require('bedrock');
 const {jsonLdDocumentLoader} = require('bedrock-jsonld-document-loader');
 require('bedrock-ledger-consensus-continuity');
 require('bedrock-ledger-consensus-continuity-es-most-recent-participants');
-require('bedrock-ledger-consensus-continuity-es-most-recent-participants-' +
-  'with-recovery');
 require('bedrock-ledger-storage-mongodb');
 
 // initialize a mock alternate consensus method used in testing

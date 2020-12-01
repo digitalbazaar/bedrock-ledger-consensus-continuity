@@ -21,17 +21,6 @@ const ledgerConfiguration = mock.ledgerConfiguration = {
   sequence: 0,
 };
 
-mock.ledgerConfigurationRecovery = {
-  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
-  type: 'WebLedgerConfiguration',
-  ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
-  consensusMethod: 'Continuity2017',
-  electorSelectionMethod: {
-    type: 'MostRecentParticipantsWithRecovery',
-  },
-  sequence: 0
-};
-
 const operations = mock.operations = {};
 operations.alpha = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,

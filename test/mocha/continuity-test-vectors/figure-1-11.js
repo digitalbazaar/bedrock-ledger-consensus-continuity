@@ -131,9 +131,7 @@ const ledgerNodeId = '2';
 const input = {
   ledgerNodeId,
   history: graph.getHistory({nodeId: ledgerNodeId}),
-  electors: graph.getWitnesses(),
-  recoveryElectors: [],
-  mode: 'first'
+  electors: graph.getWitnesses()
 };
 
 const display = {
