@@ -12,9 +12,6 @@
 - **BREAKING**: Dependency on `bedrock-identity`.
 - **BREAKING**: Removed `mode` and recovery mode options.
 
-### Added
-- A one minute timeout to tests.
-
 ## 7.0.1 - 2020-10-08
 
 ### Fixed
