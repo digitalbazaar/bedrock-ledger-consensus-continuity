@@ -262,8 +262,8 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
   // events
   const collection = from.storage.events.collection;
   let events;
-  if(useSnapshot && snapshot[collection.s.name]) {
-    events = snapshot[collection.s.name];
+  if(useSnapshot && snapshot[collection.collectionName]) {
+    events = snapshot[collection.collectionName];
   } else {
     // FIXME: use a more efficient query, the commented aggregate function
     // is evidently missing some events.
@@ -488,25 +488,10 @@ api.snapshotEvents = async ({ledgerNode}) => {
     return r;
   });
   // make snapshot
-  snapshot[collection.s.name] = mergeRecords;
+  snapshot[collection.collectionName] = mergeRecords;
   return mergeRecords;
 };
 
 api.use = async plugin => {
   return brLedgerNode.use(plugin);
 };
-
-// Insert identities and public keys used for testing into database
-async function insertTestData(mockData) {
-  for(const key in mockData.accounts) {
-    try {
-      const {account, meta} = mockData.accounts[key];
-      await brAccount.insert({actor: null, account, meta});
-    } catch(err) {
-      if(!(err.name === 'DuplicateError')) {
-        // duplicate error means test data is already loaded
-        throw err;
-      }
-    }
-  }
-}

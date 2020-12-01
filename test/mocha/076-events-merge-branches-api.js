@@ -25,9 +25,9 @@ describe('events.mergeBranches API', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     await helpers.flushCache();
     await helpers.removeCollections(['ledger', 'ledgerNode']);
-    const consensusPlugin = helpers.use('Continuity2017');
+    const consensusPlugin = await helpers.use('Continuity2017');
     consensusApi = consensusPlugin.api;
-    merge = consensusApi._events.merge;
+    merge = callbackify(consensusApi._events.merge);
     EventWriter = consensusApi._worker.EventWriter;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     const {id: ledgerNodeId} = nodes.alpha;

@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2019 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -27,7 +27,7 @@ describe('Election API findConsensus', () => {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     await helpers.flushCache();
     await helpers.removeCollections(['ledger', 'ledgerNode']);
-    const plugin = helpers.use('Continuity2017');
+    const plugin = await helpers.use('Continuity2017');
     consensusApi = plugin.api;
     EventWriter = consensusApi._worker.EventWriter;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});

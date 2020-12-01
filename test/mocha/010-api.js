@@ -6,7 +6,6 @@
 const async = require('async');
 const {callbackify} = require('util');
 const bedrock = require('bedrock');
-const brAccount = require('bedrock-account');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const expect = global.chai.expect;
@@ -26,18 +25,14 @@ describe('Continuity2017', () => {
   let creator;
   let ledgerNode;
   beforeEach(async function() {
-    const mockAccount = mockData.accounts.regularUser;
     const ledgerConfiguration = mockData.ledgerConfiguration;
     // start by flushing redis
     await cache.client.flushall();
     // remove the collections so we have fresh test data
     await helpers.removeCollections(['ledger', 'ledgerNode']);
-    // get the actor for the ledger owner account
-    const actor = await brAccount.getCapabilities(
-      {id: mockAccount.account.id});
     // get the consensusPlugin that registered by this library
     const consensusPlugin = brLedgerNode.use('Continuity2017');
-    ledgerNode = await brLedgerNode.add(actor, {ledgerConfiguration});
+    ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
     expect(ledgerNode, 'Expected ledgerNode to be ok').to.be.ok;
     // the consensusApi is defined by this library
     consensusApi = consensusPlugin.api;
@@ -145,111 +140,87 @@ describe('Continuity2017', () => {
   }); // end add operation API
 
   describe('private add event API', () => {
-    it('should add a regular local event', done => {
+    it('should add a regular local event', async () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       const {creatorId} = ledgerNode;
-      async.auto({
-        head: callback => ledgerNode.consensus._events.getHead(
-          {creatorId, ledgerNode}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            const {eventHash: headHash} = result;
-            testEvent.parentHash = [headHash];
-            testEvent.treeHash = headHash;
-            callback();
-          }),
-        operationHash: callback => hasher(operation, (err, opHash) => {
-          if(err) {
-            return callback(err);
-          }
-          testEvent.operationHash = [opHash];
-          callback(null, opHash);
-        }),
-        eventHash: ['head', 'operationHash', (results, callback) => hasher(
-          testEvent, callback)],
-        operation: ['eventHash', (results, callback) => {
-          const {eventHash, operationHash} = results;
-          const operations = [{
-            meta: {operationHash},
-            operation,
-          }];
-          ledgerNode.consensus.operations.write(
-            {eventHash, ledgerNode, operations}, callback);
-        }],
-        addEvent: ['operation', (results, callback) =>
-          ledgerNode.consensus._events.add(
-            {event: testEvent, eventHash: results.eventHash, ledgerNode},
-            (err, result) => {
-              const {eventHash} = results;
-              assertNoError(err);
-              should.exist(result.event);
-              const event = result.event;
-              should.exist(event.type);
-              event.type.should.equal('WebLedgerOperationEvent');
-              should.exist(event.treeHash);
-              event.treeHash.should.equal(genesisMergeHash);
-              should.exist(result.meta);
-              const meta = result.meta;
-              should.exist(meta.continuity2017);
-              should.exist(meta.continuity2017.creator);
-              should.exist(meta.continuity2017.type);
-              const {creator: eventCreator, type} = meta.continuity2017;
-              eventCreator.should.be.a('string');
-              eventCreator.should.equal(creator.id);
-              type.should.be.a('string');
-              type.should.equal('r');
-              should.exist(meta.eventHash);
-              meta.eventHash.should.be.a('string');
-              meta.eventHash.should.equal(eventHash);
-              should.exist(meta.created);
-              meta.created.should.be.a('number');
-              should.exist(meta.updated);
-              meta.updated.should.be.a('number');
-              callback();
-            })],
-        test: ['addEvent', (results, callback) => {
-          // get event and test operation
-          const {eventHash} = results;
-          ledgerNode.storage.events.get(eventHash, (err, result) => {
-            assertNoError(err);
-            // test event
-            should.exist(result.event);
-            const {event} = result;
-            should.exist(event.type);
-            event.type.should.equal('WebLedgerOperationEvent');
-            should.exist(event.treeHash);
-            event.treeHash.should.equal(genesisMergeHash);
-            // test operation
-            should.exist(event.operation);
-            const {operation: op} = event;
-            op.should.be.an('array');
-            op.should.have.length(1);
-            op[0].should.eql(operation);
-            // test meta
-            should.exist(result.meta);
-            const meta = result.meta;
-            should.exist(meta.continuity2017);
-            should.exist(meta.continuity2017.creator);
-            should.exist(meta.continuity2017.type);
-            const {creator: eventCreator, type} = meta.continuity2017;
-            eventCreator.should.be.a('string');
-            eventCreator.should.equal(creator.id);
-            type.should.be.a('string');
-            type.should.equal('r');
-            should.exist(meta.eventHash);
-            meta.eventHash.should.be.a('string');
-            meta.eventHash.should.equal(eventHash);
-            should.exist(meta.created);
-            meta.created.should.be.a('number');
-            should.exist(meta.updated);
-            meta.updated.should.be.a('number');
-            callback();
-          });
-        }]
-      }, done);
+      const headResult = await ledgerNode.consensus._events.getHead(
+        {creatorId, ledgerNode});
+      const {eventHash: headHash} = headResult;
+      testEvent.parentHash = [headHash];
+      testEvent.treeHash = headHash;
+
+      const operationHash = await hasher(operation);
+      testEvent.operationHash = [operationHash];
+
+      const eventHash = await hasher(testEvent);
+      const operations = [{
+        meta: {operationHash},
+        operation,
+      }];
+      await ledgerNode.consensus.operations.write(
+        {eventHash, ledgerNode, operations});
+
+      let result = await ledgerNode.consensus._events.add(
+        {event: testEvent, eventHash, ledgerNode});
+      should.exist(result.event);
+      let event = result.event;
+      should.exist(event.type);
+      event.type.should.equal('WebLedgerOperationEvent');
+      should.exist(event.treeHash);
+      event.treeHash.should.equal(genesisMergeHash);
+      should.exist(result.meta);
+      let meta = result.meta;
+      should.exist(meta.continuity2017);
+      should.exist(meta.continuity2017.creator);
+      should.exist(meta.continuity2017.type);
+      let {creator: eventCreator, type} = meta.continuity2017;
+      eventCreator.should.be.a('string');
+      eventCreator.should.equal(creator.id);
+      type.should.be.a('string');
+      type.should.equal('r');
+      should.exist(meta.eventHash);
+      meta.eventHash.should.be.a('string');
+      meta.eventHash.should.equal(eventHash);
+      should.exist(meta.created);
+      meta.created.should.be.a('number');
+      should.exist(meta.updated);
+      meta.updated.should.be.a('number');
+
+      // get event and test operation
+      result = await ledgerNode.storage.events.get(eventHash);
+      // test event
+      should.exist(result.event);
+      event = result.event;
+      should.exist(event.type);
+      event.type.should.equal('WebLedgerOperationEvent');
+      should.exist(event.treeHash);
+      event.treeHash.should.equal(genesisMergeHash);
+      // test operation
+      should.exist(event.operation);
+      const {operation: op} = event;
+      op.should.be.an('array');
+      op.should.have.length(1);
+      op[0].should.eql(operation);
+      // test meta
+      should.exist(result.meta);
+      meta = result.meta;
+      should.exist(meta.continuity2017);
+      should.exist(meta.continuity2017.creator);
+      should.exist(meta.continuity2017.type);
+      ({creator: eventCreator, type} = meta.continuity2017);
+      eventCreator.should.be.a('string');
+      eventCreator.should.equal(creator.id);
+      type.should.be.a('string');
+      type.should.equal('r');
+      should.exist(meta.eventHash);
+      meta.eventHash.should.be.a('string');
+      meta.eventHash.should.equal(eventHash);
+      should.exist(meta.created);
+      meta.created.should.be.a('number');
+      should.exist(meta.updated);
+      meta.updated.should.be.a('number');
     });
   }); // end add event API
 
@@ -263,7 +234,7 @@ describe('Continuity2017', () => {
         addEvent: callback => callbackify(helpers.addEventAndMerge)(
           {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
         history: ['addEvent', (results, callback) => {
-          getRecentHistory({
+          callbackify(getRecentHistory)({
             creatorId: ledgerNode.creatorId,
             ledgerNode
           }, (err, result) => {
@@ -290,7 +261,7 @@ describe('Continuity2017', () => {
           consensusApi, count: 4, eventTemplate, ledgerNode, opTemplate
         }, callback),
         history: ['addEvent', (results, callback) => {
-          getRecentHistory({
+          callbackify(getRecentHistory)({
             creatorId: ledgerNode.creatorId, ledgerNode
           }, (err, result) => {
             assertNoError(err);
@@ -311,8 +282,9 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('history includes 1 remote merge and 1 local merge event', done => {
-      const mergeBranches = consensusApi._events.mergeBranches;
-      const getRecentHistory = consensusApi._events.getRecentHistory;
+      const mergeBranches = callbackify(consensusApi._events.mergeBranches);
+      const getRecentHistory = callbackify(
+        consensusApi._events.getRecentHistory);
       async.auto({
         remoteEvent: callback => callbackify(helpers.addRemoteEvents)(
           {consensusApi, ledgerNode, mockData}, callback),
@@ -352,8 +324,9 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('contains two remote merge and one local merge event', done => {
-      const mergeBranches = consensusApi._events.mergeBranches;
-      const getRecentHistory = consensusApi._events.getRecentHistory;
+      const mergeBranches = callbackify(consensusApi._events.mergeBranches);
+      const getRecentHistory = callbackify(
+        consensusApi._events.getRecentHistory);
       async.auto({
         // 2 remote merge events from the same creator chained together
         remoteEvent: callback => callbackify(helpers.addRemoteEvents)(
@@ -392,7 +365,8 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('contains two remote merge events before a local merge', done => {
-      const getRecentHistory = consensusApi._events.getRecentHistory;
+      const getRecentHistory = callbackify(
+        consensusApi._events.getRecentHistory);
       async.auto({
         // 2 remote merge events from the same creator chained together
         remoteEvent: callback => callbackify(helpers.addRemoteEvents)(
@@ -419,7 +393,8 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('history includes one local event before local merge', done => {
-      const getRecentHistory = consensusApi._events.getRecentHistory;
+      const getRecentHistory = callbackify(
+        consensusApi._events.getRecentHistory);
       const testEvent = bedrock.util.clone(mockData.events.alpha);
       testEvent.operation[0].record.id = `https://example.com/event/${uuid()}`;
       async.auto({
@@ -441,7 +416,8 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('history includes 4 local events before a local merge', done => {
-      const getRecentHistory = consensusApi._events.getRecentHistory;
+      const getRecentHistory = callbackify(
+        consensusApi._events.getRecentHistory);
       const eventTemplate = mockData.events.alpha;
       async.auto({
         addEvent: callback => callbackify(helpers.addEvent)(
@@ -466,7 +442,8 @@ describe('Continuity2017', () => {
       }, done);
     });
     it.skip('includes 4 LEs and 2 RMEs before local merge', done => {
-      const getRecentHistory = consensusApi._events.getRecentHistory;
+      const getRecentHistory = callbackify(
+        consensusApi._events.getRecentHistory);
       const eventTemplate = mockData.events.alpha;
       async.auto({
         addEvent: callback => callbackify(helpers.addEvent)(
@@ -561,18 +538,18 @@ describe('Continuity2017', () => {
             callback(err);
           })],
         getEventBlock: ['runWorker', (results, callback) =>
-          ledgerNode.storage.blocks.getLatest((err, result) => {
+          callbackify(ledgerNode.storage.blocks.getLatest)((err, result) => {
             should.not.exist(err);
             const eventBlock = result.eventBlock;
             should.exist(eventBlock.block);
             const block = eventBlock.block;
             async.auto({
-              compactRecord: callback => bedrock.jsonld.compact(
+              compactRecord: callback => callbackify(bedrock.jsonld.compact)(
                 block.event[0].operation[0],
                 block.event[0].operation[0].record['@context'],
                 (err, compacted) => callback(err, compacted)),
               compactBlock: ['compactInput', (results, callback) =>
-                jsonld.compact(
+                callbackify(jsonld.compact)(
                   block, block['@context'], (err, compacted) => {
                     should.not.exist(err);
                     // use record compacted with its own context

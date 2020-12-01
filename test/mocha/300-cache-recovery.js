@@ -5,9 +5,7 @@
 
 const _ = require('lodash');
 const brLedgerNode = require('bedrock-ledger-node');
-const async = require('async');
 const cache = require('bedrock-redis');
-const {callbackify} = require('util');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
@@ -76,72 +74,53 @@ describe('Cache Recovery', () => {
     });
 
     // add N - 1 more private nodes
-    before(function(done) {
+    before(async function() {
       this.timeout(TEST_TIMEOUT);
-      async.times(nodeCount - 1, (i, callback) => {
-        brLedgerNode.add(null, {
+      for(let i = 0; i < nodeCount - 1; ++i) {
+        const ledgerNode = await brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block
-        }, (err, ledgerNode) => {
-          assertNoError(err);
-          nodes[nodeLabels[i]] = ledgerNode;
-          callback();
         });
-      }, err => {
-        assertNoError(err);
-        done();
-      });
+        nodes[nodeLabels[i]] = ledgerNode;
+      }
     });
 
     // populate peers and init heads
-    before(function(done) {
+    before(async function() {
       this.timeout(TEST_TIMEOUT);
-      async.eachOf(nodes, (ledgerNode, i, callback) =>
-        consensusApi._voters.get(
-          {ledgerNodeId: ledgerNode.id}, (err, result) => {
-            assertNoError(err);
-            peers[i] = result.id;
-            ledgerNode._peerId = result.id;
-            heads[i] = [];
-            callback();
-          }),
-      err => {
-        assertNoError(err);
-        done();
-      });
+      let i = 0;
+      for(const ledgerNode of nodes) {
+        const result = await consensusApi._voters.get(
+          {ledgerNodeId: ledgerNode.id});
+        peers[i] = result.id;
+        ledgerNode._peerId = result.id;
+        heads[i] = [];
+        i++;
+      }
     });
 
     describe('Check Genesis Block', () => {
-      it('should have the proper information', done => {
+      it('should have the proper information', async () => {
         const blockHashes = [];
-        async.auto({
-          getLatest: callback => async.each(nodes, (ledgerNode, callback) =>
-            ledgerNode.storage.blocks.getLatest((err, result) => {
-              assertNoError(err);
-              const eventBlock = result.eventBlock;
-              should.exist(eventBlock.block);
-              eventBlock.block.blockHeight.should.equal(0);
-              eventBlock.block.event.should.be.an('array');
-              eventBlock.block.event.should.have.length(2);
-              const event = eventBlock.block.event[0];
-              // TODO: signature is dynamic... needs a better check
-              delete event.signature;
-              delete event.proof;
-              event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
-              should.exist(eventBlock.meta);
-              should.exist(eventBlock.block.consensusProof);
-              const consensusProof = eventBlock.block.consensusProof;
-              consensusProof.should.be.an('array');
-              consensusProof.should.have.length(1);
-              // FIXME: make assertions about the contents of consensusProof
-              // console.log('8888888', JSON.stringify(eventBlock, null, 2));
-              blockHashes.push(eventBlock.meta.blockHash);
-              callback();
-            }), callback),
-          testHash: ['getLatest', (results, callback) => {
-            blockHashes.every(h => h === blockHashes[0]).should.be.true;
-            callback();
-          }]
-        }, done);
+        for(const ledgerNode of peers) {
+          const result = ledgerNode.storage.blocks.getLatest();
+          const eventBlock = result.eventBlock;
+          should.exist(eventBlock.block);
+          eventBlock.block.blockHeight.should.equal(0);
+          eventBlock.block.event.should.be.an('array');
+          // genesis config and genesis merge events
+          eventBlock.block.event.should.have.length(2);
+          const event = eventBlock.block.event[0];
+          event.type.should.equal('WebLedgerConfigurationEvent');
+          const {ledgerConfiguration} = mockData;
+          event.ledgerConfiguration.should.eql(ledgerConfiguration);
+          should.exist(eventBlock.meta);
+          should.exist(eventBlock.block.consensusProof);
+          const consensusProof = eventBlock.block.consensusProof;
+          consensusProof.should.be.an('array');
+          consensusProof.should.have.length(1);
+          blockHashes.push(eventBlock.meta.blockHash);
+        }
+        blockHashes.every(h => h === blockHashes[0]).should.be.true;
       });
     });
 
@@ -158,131 +137,97 @@ describe('Cache Recovery', () => {
     const targetBlockHeight = 10;
 
     describe(`${targetBlockHeight} Blocks`, () => {
-      it('makes many more blocks', function(done) {
+      it('makes many more blocks', async function() {
         this.timeout(0);
-        let childlessBeforePrime;
-        let outstandingMergeEventsBeforePrime;
-        async.auto({
-          nBlocks: callback => _nBlocks(
-            {consensusApi, targetBlockHeight}, (err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              console.log(
-                'targetBlockHashMap',
-                JSON.stringify(result, null, 2));
-              _.values(result.targetBlockHashMap)
-                .every(h => h === result.targetBlockHashMap.alpha)
-                .should.be.true;
-              callback(null, result);
-            }),
-          // inspect outstandingMerge key
-          inspectCache: ['nBlocks', callbackify(async () => {
-            outstandingMergeEventsBeforePrime =
-              await _inspectOutstandingMergeEvents({nodes});
-          })],
-          // inspect childess hash key
-          inspectCache2: ['inspectCache', callbackify(async () => {
-            childlessBeforePrime = await _inspectChildless({nodes});
-          })],
-          flushCache: ['inspectCache2', callbackify(async () => {
-            const keysBefore = await cache.client.keys('*');
-            keysBefore.should.be.an('array');
-            keysBefore.should.have.length.gt(0);
-            await cache.client.flushdb();
-            const keys = await cache.client.keys('*');
-            keys.should.be.an('array');
-            keys.should.have.length(0);
-          })],
-          primeCache: ['flushCache', callbackify(async () => {
-            for(const nodeLabel in nodes) {
-              const ledgerNode = nodes[nodeLabel];
-              await ledgerNode.consensus._cache.prime.primeAll({ledgerNode});
-            }
-          })],
-          afterPrime: ['primeCache', callbackify(async () => {
-            // compare childless before/after prime
-            const childlessAfterPrime = await _inspectChildless({nodes});
-            for(const nodeLabel in childlessAfterPrime) {
-              childlessAfterPrime[nodeLabel].childless.should.have.same.members(
-                childlessBeforePrime[nodeLabel].childless);
-              childlessAfterPrime[nodeLabel].localChildless
-                .should.have.same.members(
-                  childlessBeforePrime[nodeLabel].localChildless);
-            }
+        const nBlocks = await _nBlocks({consensusApi, targetBlockHeight});
+        console.log(
+          'targetBlockHashMap',
+          JSON.stringify(nBlocks, null, 2));
+        Object.values(nBlocks.targetBlockHashMap)
+          .every(h => h === nBlocks.targetBlockHashMap.alpha)
+          .should.be.true;
+        // inspect outstandingMerge key
+        const outstandingMergeEventsBeforePrime =
+          await _inspectOutstandingMergeEvents({nodes});
+        // inspect childless hash key
+        const childlessBeforePrime = await _inspectChildless({nodes});
 
-            // compare outstanding merge events and block height before/after
-            // prime
-            const outstandingMergeEventsAfterPrime =
-              await _inspectOutstandingMergeEvents({nodes});
-            for(const nodeLabel in outstandingMergeEventsAfterPrime) {
-              const {blockHeight, eventHashes} =
-                outstandingMergeEventsAfterPrime[nodeLabel];
-              blockHeight.should.equal(
-                outstandingMergeEventsBeforePrime[nodeLabel].blockHeight);
-              eventHashes.should.have.same.members(
-                outstandingMergeEventsBeforePrime[nodeLabel].eventHashes);
-            }
-          })],
-          settle: ['afterPrime', (results, callback) =>
-            callbackify(helpers.settleNetwork)(
-              {consensusApi, nodes: _.values(nodes)}, callback)],
-          blockSummary: ['settle', (results, callback) =>
-            _latestBlockSummary((err, result) => {
-              if(err) {
-                return callback(err);
-              }
-              const summaries = {};
-              Object.keys(result).forEach(k => {
-                summaries[k] = {
-                  blockCollection: nodes[k].storage.blocks.
-                    collection.collectionName,
-                  blockHeight: result[k].eventBlock.block.blockHeight,
-                  blockHash: result[k].eventBlock.meta.blockHash,
-                  previousBlockHash: result[k].eventBlock.block
-                    .previousBlockHash,
-                };
-              });
-              console.log('Finishing block summaries:', JSON.stringify(
-                summaries, null, 2));
-              _.values(summaries).forEach(b => {
-                b.blockHeight.should.equal(summaries.alpha.blockHeight);
-                b.blockHash.should.equal(summaries.alpha.blockHash);
-              });
-              callback();
-            })],
-          state: ['blockSummary', (results, callback) => {
-            const allRecordIds = [].concat(..._.values(
-              results.nBlocks.recordIds));
-            console.log(`Total operation count: ${allRecordIds.length}`);
-            async.eachSeries(allRecordIds, (recordId, callback) => {
-              nodes.alpha.records.get({recordId}, err => {
-                // just need to ensure that there is no NotFoundError
-                assertNoError(err);
-                callback();
-              });
-            }, callback);
-          }]
-        }, err => {
-          assertNoError(err);
-          done();
+        const keysBefore = await cache.client.keys('*');
+        keysBefore.should.be.an('array');
+        keysBefore.should.have.length.gt(0);
+        await cache.client.flushdb();
+        const keys = await cache.client.keys('*');
+        keys.should.be.an('array');
+        keys.should.have.length(0);
+
+        for(const nodeLabel in nodes) {
+          const ledgerNode = nodes[nodeLabel];
+          await ledgerNode.consensus._cache.prime.primeAll({ledgerNode});
+        }
+
+        // compare childless before/after prime
+        const childlessAfterPrime = await _inspectChildless({nodes});
+        for(const nodeLabel in childlessAfterPrime) {
+          childlessAfterPrime[nodeLabel].childless.should.have.same.members(
+            childlessBeforePrime[nodeLabel].childless);
+          childlessAfterPrime[nodeLabel].localChildless
+            .should.have.same.members(
+              childlessBeforePrime[nodeLabel].localChildless);
+        }
+
+        // compare outstanding merge events and block height before/after
+        // prime
+        const outstandingMergeEventsAfterPrime =
+          await _inspectOutstandingMergeEvents({nodes});
+        for(const nodeLabel in outstandingMergeEventsAfterPrime) {
+          const {blockHeight, eventHashes} =
+            outstandingMergeEventsAfterPrime[nodeLabel];
+          blockHeight.should.equal(
+            outstandingMergeEventsBeforePrime[nodeLabel].blockHeight);
+          eventHashes.should.have.same.members(
+            outstandingMergeEventsBeforePrime[nodeLabel].eventHashes);
+        }
+
+        await helpers.settleNetwork(
+          {consensusApi, nodes: Object.values(nodes)});
+        const summaryMap = await _latestBlockSummary();
+
+        const summaries = {};
+        for(const k in summaryMap) {
+          const summary = summaryMap[k];
+          summaries[k] = {
+            blockCollection: nodes[k].storage.blocks.collection.collectionName,
+            blockHeight: summary.eventBlock.block.blockHeight,
+            blockHash: summary.eventBlock.meta.blockHash,
+            previousBlockHash: summary.eventBlock.block.previousBlockHash
+          };
+        }
+        console.log('Finishing block summaries:', JSON.stringify(
+          summaries, null, 2));
+        Object.values(summaries).forEach(b => {
+          b.blockHeight.should.equal(summaries.alpha.blockHeight);
+          b.blockHash.should.equal(summaries.alpha.blockHash);
         });
+
+        const allRecordIds = [].concat(..._.values(nBlocks.recordIds));
+        console.log(`Total operation count: ${allRecordIds.length}`);
+        for(const recordId of allRecordIds) {
+          await nodes.alpha.records.get({recordId});
+          // just need to ensure that there is no NotFoundError
+        }
       });
     }); // end one block
   });
 });
 
-function _addOperations({count}, callback) {
-  async.auto({
-    alpha: callback => callbackify(helpers.addOperation)(
-      {count, ledgerNode: nodes.alpha, opTemplate}, callback),
-    beta: callback => callbackify(helpers.addOperation)(
-      {count, ledgerNode: nodes.beta, opTemplate}, callback),
-    gamma: callback => callbackify(helpers.addOperation)(
-      {count, ledgerNode: nodes.gamma, opTemplate}, callback),
-    delta: callback => callbackify(helpers.addOperation)(
-      {count, ledgerNode: nodes.delta, opTemplate}, callback),
-  }, callback);
+async function _addOperations({count}) {
+  const [alpha, beta, gamma, delta] = await Promise.all([
+    helpers.addOperation({count, ledgerNode: nodes.alpha, opTemplate}),
+    helpers.addOperation({count, ledgerNode: nodes.beta, opTemplate}),
+    helpers.addOperation({count, ledgerNode: nodes.gamma, opTemplate}),
+    helpers.addOperation({count, ledgerNode: nodes.delta, opTemplate})
+  ]);
+  return {alpha, beta, gamma, delta};
 }
 
 async function _inspectChildless({nodes}) {
@@ -358,68 +303,46 @@ async function _inspectOutstandingMergeEvents({nodes}) {
   return report;
 }
 
-function _latestBlockSummary(callback) {
+async function _latestBlockSummary() {
   const blocks = {};
-  async.eachOf(nodes, (ledgerNode, nodeName, callback) => {
-    ledgerNode.storage.blocks.getLatestSummary((err, result) => {
-      blocks[nodeName] = result;
-      callback();
-    });
-  }, err => callback(err, blocks));
+  for(const nodeName in nodes) {
+    const ledgerNode = nodes[nodeName];
+    const result = await ledgerNode.storage.blocks.getLatestSummary();
+    blocks[nodeName] = result;
+  }
+  return blocks;
 }
 
-function _nBlocks({consensusApi, targetBlockHeight}, callback) {
+async function _nBlocks({consensusApi, targetBlockHeight}) {
   const recordIds = {alpha: [], beta: [], gamma: [], delta: []};
   const targetBlockHashMap = {};
-  async.until(() => {
-    return Object.keys(targetBlockHashMap).length ===
-      Object.keys(nodes).length;
-  }, callback => {
+  while(Object.keys(targetBlockHashMap).length !==
+    Object.keys(nodes).length) {
     const count = 1;
-    async.auto({
-      operations: callback => _addOperations({count}, callback),
-      workCycle: ['operations', (results, callback) => {
-        // record the IDs for the records that were just added
-        for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
-          for(const opHash of Object.keys(results.operations[n])) {
-            recordIds[n].push(results.operations[n][opHash].record.id);
-          }
-        }
-        // in this test `nodes` is an object that needs to be converted to
-        // an array for the helper
-        callbackify(helpers.runWorkerCycle)(
-          {consensusApi, nodes: _.values(nodes), series: false}, callback);
-      }],
-      report: ['workCycle', (results, callback) => async.forEachOfSeries(
-        nodes, (ledgerNode, i, callback) => {
-          ledgerNode.storage.blocks.getLatestSummary((err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            const {block} = result.eventBlock;
-            if(block.blockHeight >= targetBlockHeight) {
-              return ledgerNode.storage.blocks.getByHeight(
-                targetBlockHeight, (err, result) => {
-                  if(err) {
-                    return callback(err);
-                  }
-                  targetBlockHashMap[i] = result.meta.blockHash;
-                  callback();
-                });
-            }
-            callback();
-          });
-        }, callback)]
-    }, err => {
-      if(err) {
-        return callback(err);
+    const operations = await _addOperations(count);
+
+    // record the IDs for the records that were just added
+    for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
+      for(const opHash of Object.keys(operations[n])) {
+        recordIds[n].push(operations[n][opHash].record.id);
       }
-      callback();
-    });
-  }, err => {
-    if(err) {
-      return callback(err);
     }
-    callback(null, {recordIds, targetBlockHashMap});
-  });
+
+    // in this test `nodes` is an object that needs to be converted to
+    // an array for the helper
+    await helpers.runWorkerCycle(
+      {consensusApi, nodes: Object.values(nodes), series: false});
+    // report
+    for(const key in nodes) {
+      const ledgerNode = nodes[key];
+      const result = await ledgerNode.storage.blocks.getLatestSummary();
+      const {block} = result.eventBlock;
+      if(block.blockHeight >= targetBlockHeight) {
+        const result = await ledgerNode.storage.blocks.getByHeight(
+          targetBlockHeight);
+        targetBlockHashMap[key] = result.meta.blockHash;
+      }
+    }
+  }
+  return {recordIds, targetBlockHashMap};
 }
