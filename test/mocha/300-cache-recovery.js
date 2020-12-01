@@ -56,7 +56,7 @@ describe('Cache Recovery', () => {
 
     // get consensus plugin and create genesis ledger node
     let consensusApi;
-    const ledgerConfiguration = mockData.ledgerConfigurationRecovery;
+    const ledgerConfiguration = mockData.ledgerConfiguration;
     before(async function() {
       this.timeout(TEST_TIMEOUT);
       await cache.client.flushall();
@@ -87,22 +87,22 @@ describe('Cache Recovery', () => {
     // populate peers and init heads
     before(async function() {
       this.timeout(TEST_TIMEOUT);
-      let i = 0;
-      for(const ledgerNode of nodes) {
+      for(const nodeName in nodes) {
+        const ledgerNode = nodes[nodeName];
         const result = await consensusApi._voters.get(
           {ledgerNodeId: ledgerNode.id});
-        peers[i] = result.id;
+        peers[nodeName] = result.id;
         ledgerNode._peerId = result.id;
-        heads[i] = [];
-        i++;
+        heads[nodeName] = [];
       }
     });
 
     describe('Check Genesis Block', () => {
       it('should have the proper information', async () => {
         const blockHashes = [];
-        for(const ledgerNode of peers) {
-          const result = ledgerNode.storage.blocks.getLatest();
+        for(const nodeName in nodes) {
+          const ledgerNode = nodes[nodeName];
+          const result = await ledgerNode.storage.blocks.getLatest();
           const eventBlock = result.eventBlock;
           should.exist(eventBlock.block);
           eventBlock.block.blockHeight.should.equal(0);
