@@ -13,7 +13,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe('Election API _getAncestors', () => {
+describe('Consensus API _getAncestors', () => {
   before(async () => {
     await helpers.prepareDatabase();
   });
@@ -54,7 +54,7 @@ describe('Election API _getAncestors', () => {
   });
   it('gets no events', async () => {
     // the genesisMerge already has consensus
-    const getAncestors = consensusApi._election._getAncestors;
+    const getAncestors = consensusApi._consensus._getAncestors;
     const hashes = {mergeEventHashes: [], parentHashes: [genesisMerge]};
     const result = await getAncestors({ledgerNode: nodes.alpha, hashes});
     should.exist(result);
@@ -62,7 +62,7 @@ describe('Election API _getAncestors', () => {
     result.should.have.length(0);
   });
   it('gets two events', done => {
-    const getAncestors = consensusApi._election._getAncestors;
+    const getAncestors = consensusApi._consensus._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -86,7 +86,7 @@ describe('Election API _getAncestors', () => {
     }, done);
   });
   it('gets four events', done => {
-    const getAncestors = consensusApi._election._getAncestors;
+    const getAncestors = consensusApi._consensus._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -116,7 +116,7 @@ describe('Election API _getAncestors', () => {
     }, done);
   });
   it('gets 4 events involving 2 nodes', done => {
-    const getAncestors = consensusApi._election._getAncestors;
+    const getAncestors = consensusApi._consensus._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -153,7 +153,7 @@ describe('Election API _getAncestors', () => {
   // FIXME: this test likely needs to be removed, the returned data structure
   // no longer matches the assertions
   it.skip('gets 4 events without duplicates', done => {
-    const getAncestors = consensusApi._election._getAncestors;
+    const getAncestors = consensusApi._consensus._getAncestors;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     async.auto({

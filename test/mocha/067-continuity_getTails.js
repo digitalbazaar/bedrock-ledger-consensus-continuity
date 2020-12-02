@@ -3,7 +3,6 @@
  */
 'use strict';
 
-const _ = require('lodash');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
 const {callbackify} = require('util');
@@ -14,7 +13,7 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 /* eslint-disable no-unused-vars */
-describe.skip('Election API _getTails', () => {
+describe.skip('Continuity API _getTails', () => {
   before(async () => {
     await helpers.prepareDatabase();
   });
@@ -127,7 +126,7 @@ describe.skip('Election API _getTails', () => {
           collection.collectionName}`);
     });
     const getRecentHistory = consensusApi._events.getRecentHistory;
-    const _getTails = consensusApi._election._continuity._getTails;
+    const _getTails = consensusApi._consensus._continuity._getTails;
     const eventTemplate = mockData.events.alpha;
     async.auto({
       // add a regular event and merge on every node
@@ -145,9 +144,9 @@ describe.skip('Election API _getTails', () => {
         }, err => callback(err, events));
       },
       test1: ['addEvent1', (results, callback) => {
-        // all peers are electors
+        // all peers are witnesses
         const addEvent = results.addEvent1;
-        const electors = _.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers).map(p => ({id: p}));
         async.eachOfSeries(nodes, (n, i, callback) => {
           async.auto({
             history: callback =>
@@ -155,7 +154,7 @@ describe.skip('Election API _getTails', () => {
             branches: ['history', (results, callback) => {
               const branches = _getTails({
                 history: results.history,
-                witnesses: electors
+                witnesses
               });
               const peerId = peers[i];
               const keys = Object.keys(branches);
@@ -194,7 +193,7 @@ describe.skip('Election API _getTails', () => {
         // test beta
         const addEvent = results.addEvent1;
         const cp1 = results.cp1;
-        const electors = _.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.beta;
         async.auto({
           history: callback =>
@@ -202,7 +201,7 @@ describe.skip('Election API _getTails', () => {
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,
-              witnesses: electors
+              witnesses
             });
             const peerId = [peers.alpha, peers.beta];
             const keys = Object.keys(branches);
@@ -265,7 +264,7 @@ describe.skip('Election API _getTails', () => {
         // test gamma
         const addEvent = results.addEvent1;
         const cp2 = results.cp2;
-        const electors = _.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.gamma;
         async.auto({
           history: callback =>
@@ -273,7 +272,7 @@ describe.skip('Election API _getTails', () => {
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,
-              witnesses: electors
+              witnesses
             });
             const peerId = [peers.gamma, peers.delta];
             const keys = Object.keys(branches);
@@ -328,7 +327,7 @@ describe.skip('Election API _getTails', () => {
         const cp1 = results.cp1;
         const cp2 = results.cp2;
         const cp3 = results.cp3;
-        const electors = _.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.gamma;
         async.auto({
           history: callback =>
@@ -336,13 +335,13 @@ describe.skip('Election API _getTails', () => {
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,
-              witnesses: electors
+              witnesses
             });
-            // all electors should now be represented
-            const peerId = electors;
+            // all witnesses should now be represented
+            const peerId = witnesses;
             const keys = Object.keys(branches);
             keys.should.have.length(4);
-            keys.should.have.same.members(_.values(peers));
+            keys.should.have.same.members(Object.values(peers));
             // inspect gamma tail
             const tailGamma = branches[peers.gamma];
             tailGamma.should.have.length(1);
@@ -441,7 +440,7 @@ describe.skip('Election API _getTails', () => {
         const cp2 = results.cp2;
         const cp3 = results.cp3;
         const cp4 = results.cp4;
-        const electors = _.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers).map(p => ({id: p}));
         const ledgerNode = nodes.beta;
         async.auto({
           history: callback =>
@@ -449,13 +448,13 @@ describe.skip('Election API _getTails', () => {
           branches: ['history', (results, callback) => {
             const branches = _getTails({
               history: results.history,
-              witnesses: electors
+              witnesses
             });
-            // all electors should now be represented
-            const peerId = electors;
+            // all witnesses should now be represented
+            const peerId = witnesses;
             const keys = Object.keys(branches);
             keys.should.have.length(4);
-            keys.should.have.same.members(_.values(peers));
+            keys.should.have.same.members(Object.values(peers));
             // inspect gamma tail
             const tailGamma = branches[peers.gamma];
             tailGamma.should.have.length(1);
