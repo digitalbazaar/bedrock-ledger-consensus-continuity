@@ -165,7 +165,7 @@ describe('Election API findConsensus', () => {
                 copyMergeHashes.cp7,
                 copyMergeHashes.cp8
               ]);
-              // proofReport({
+              // createReport({
               //   copyMergeHashes,
               //   copyMergeHashesIndex,
               //   consensusProofHash: result.consensusProofHash,
@@ -217,7 +217,7 @@ describe('Election API findConsensus', () => {
                 copyMergeHashes.cp7,
                 copyMergeHashes.cp8
               ]);
-              // proofReport({
+              // createReport({
               //   copyMergeHashes,
               //   copyMergeHashesIndex,
               //   consensusProofHash: result.consensusProofHash,
@@ -269,7 +269,7 @@ describe('Election API findConsensus', () => {
                 copyMergeHashes.cp7,
                 copyMergeHashes.cp8
               ]);
-              // proofReport({
+              // createReport({
               //   copyMergeHashes,
               //   copyMergeHashesIndex,
               //   consensusProofHash: result.consensusProofHash,
@@ -359,7 +359,7 @@ describe('Election API findConsensus', () => {
                 copyMergeHashes.cp7,
                 copyMergeHashes.cp8
               ]);
-              // proofReport({
+              // createReport({
               //   copyMergeHashes,
               //   copyMergeHashesIndex,
               //   consensusProofHash: result.consensusProofHash,
@@ -417,7 +417,7 @@ describe('Election API findConsensus', () => {
             copyMergeHashes.cp7,
             copyMergeHashes.cp8
           ]);
-          // proofReport({
+          // createReport({
           //   copyMergeHashes,
           //   copyMergeHashesIndex,
           //   consensusProofHash: result.consensusProofHash,
@@ -429,9 +429,9 @@ describe('Election API findConsensus', () => {
   });
 });
 
-function proofReport(
+function createReport(
   {copyMergeHashes, copyMergeHashesIndex, consensusProofHash}) {
   console.log(
-    'REPORTED PROOF',
+    'CONSENSUS REPORT',
     consensusProofHash.map(c => copyMergeHashesIndex[c]));
 }

@@ -32,7 +32,7 @@ async function load({
   const input = {
     ledgerNodeId,
     history: graph.getHistory({nodeId: ledgerNodeId}),
-    electors: graph.getWitnesses()
+    witnesses: graph.getWitnesses()
   };
 
   const display = {
@@ -45,7 +45,7 @@ async function load({
     visualizer[nodeId] = {
       ledgerNodeId: nodeId,
       history: graph.getHistory({nodeId}),
-      electors: graph.getWitnesses()
+      witnesses: graph.getWitnesses()
     };
   }
 

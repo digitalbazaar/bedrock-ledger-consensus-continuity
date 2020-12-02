@@ -10,11 +10,11 @@ const mockData = require('./mock.data');
 let consensusApi;
 
 /* eslint-disable no-unused-vars */
-describe('Election API _findMergeEventProof', () => {
+describe('Continuity API _findConsensusSet', () => {
   before(async () => {
     await helpers.prepareDatabase();
   });
-  let _findMergeEventProof;
+  let _findConsensusSet;
   let _getTails;
   let genesisBlock;
   let getRecentHistory;
@@ -27,8 +27,8 @@ describe('Election API _findMergeEventProof', () => {
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     ({api: consensusApi} = await helpers.use('Continuity2017'));
     getRecentHistory = consensusApi._events.getRecentHistory;
-    _getTails = consensusApi._election._getTails;
-    _findMergeEventProof = consensusApi._election._findMergeEventProof;
+    _getTails = consensusApi._election._continuity._getTails;
+    _findConsensusSet = consensusApi._election._continuity._findConsensusSet;
     EventWriter = consensusApi._worker.EventWriter;
 
     // add genesis node
@@ -74,21 +74,21 @@ describe('Election API _findMergeEventProof', () => {
         ledgerNode, excludeLocalRegularEvents: true
       });
       const {tails, witnessTails} = _getTails({history, witnesses});
-      const proof = _findMergeEventProof({
+      const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
       });
       // try {
-      //   report[i] = proofReport({
-      //     proof,
+      //   report[i] = createReport({
+      //     result,
       //     copyMergeHashes: build.copyMergeHashes,
       //     copyMergeHashesIndex: build.copyMergeHashesIndex});
       // } catch(e) {
-      //   report[i] = 'NO PROOF';
+      //   report[i] = 'NONE';
       // }
-      const allXs = proof.consensus.map(p => p.x.eventHash);
+      const allXs = result.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
-      const allYs = proof.consensus.map(p => p.y.eventHash);
+      const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
     }
@@ -108,21 +108,21 @@ describe('Election API _findMergeEventProof', () => {
         ledgerNode, excludeLocalRegularEvents: true
       });
       const {tails, witnessTails} = _getTails({history, witnesses});
-      const proof = _findMergeEventProof({
+      const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
       });
       // try {
-      //   report[i] = proofReport({
-      //     proof,
+      //   report[i] = createReport({
+      //     result,
       //     copyMergeHashes: build.copyMergeHashes,
       //     copyMergeHashesIndex: build.copyMergeHashesIndex});
       // } catch(e) {
-      //   report[i] = 'NO PROOF';
+      //   report[i] = 'NONE';
       // }
-      const allXs = proof.consensus.map(p => p.x.eventHash);
+      const allXs = result.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
-      const allYs = proof.consensus.map(p => p.y.eventHash);
+      const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
     }
@@ -142,27 +142,27 @@ describe('Election API _findMergeEventProof', () => {
         ledgerNode, excludeLocalRegularEvents: true
       });
       const {tails, witnessTails} = _getTails({history, witnesses});
-      const proof = _findMergeEventProof({
+      const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
       });
       // try {
-      //   report[i] = proofReport({
-      //     proof,
+      //   report[i] = createReport({
+      //     result,
       //     copyMergeHashes: build.copyMergeHashes,
       //     copyMergeHashesIndex: build.copyMergeHashesIndex});
       // } catch(e) {
-      //   report[i] = 'NO PROOF';
+      //   report[i] = 'NONE';
       // }
-      const allXs = proof.consensus.map(p => p.x.eventHash);
+      const allXs = result.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
-      const allYs = proof.consensus.map(p => p.y.eventHash);
+      const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
     }
     // console.log('FINAL REPORT', JSON.stringify(report, null, 2));
   });
-  // involves 4 elector nodes and one non-elector
+  // involves 4 witness nodes and one non-witness
   it('ledger history delta produces same as alpha result', async function() {
     this.timeout(120000);
     const report = {};
@@ -189,28 +189,28 @@ describe('Election API _findMergeEventProof', () => {
           ledgerNode, excludeLocalRegularEvents: true
         });
         const {tails, witnessTails} = _getTails({history, witnesses});
-        const proof = _findMergeEventProof({
+        const result = _findConsensusSet({
           ledgerNode, history, tails, witnessTails, witnesses
         });
         // try {
-        //   report[i] = proofReport({
-        //     proof,
+        //   report[i] = createReport({
+        //     result,
         //     copyMergeHashes: build.copyMergeHashes,
         //     copyMergeHashesIndex: build.copyMergeHashesIndex});
         // } catch(e) {
-        //   report[i] = 'NO PROOF';
+        //   report[i] = 'NONE';
         // }
-        const allXs = proof.consensus.map(p => p.x.eventHash);
+        const allXs = result.consensus.map(p => p.x.eventHash);
         allXs.should.have.length(4);
         const mergeHashes = [
           build.regularEvent.alpha.mergeHash,
           build.regularEvent.beta.mergeHash,
           build.regularEvent.gamma.mergeHash,
           build.regularEvent.delta.mergeHash
-          // exclude epsilon (non-elector)
+          // exclude epsilon (non-witness)
         ];
         allXs.should.have.same.members(mergeHashes);
-        const allYs = proof.consensus.map(p => p.y.eventHash);
+        const allYs = result.consensus.map(p => p.y.eventHash);
         allYs.should.have.length(4);
         allYs.should.have.same.members(mergeHashes);
       }
@@ -238,28 +238,28 @@ describe('Election API _findMergeEventProof', () => {
         ledgerNode, excludeLocalRegularEvents: true
       });
       const {tails, witnessTails} = _getTails({history, witnesses});
-      const proof = _findMergeEventProof({
+      const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
       });
       // try {
-      //   report[i] = proofReport({
-      //     proof,
+      //   report[i] = createReport({
+      //     result,
       //     copyMergeHashes: build.copyMergeHashes,
       //     copyMergeHashesIndex: build.copyMergeHashesIndex});
       // } catch(e) {
-      //   report[i] = 'NO PROOF';
+      //   report[i] = 'NONE';
       // }
-      const allXs = proof.consensus.map(p => p.x.eventHash);
+      const allXs = result.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
-      const allYs = proof.consensus.map(p => p.y.eventHash);
+      const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
     }
     // console.log('FINAL REPORT', JSON.stringify(report, null, 2));
   });
-  // add regular event on alpha before running findMergeEventProof on alpha
-  it('add regular local event before getting proof', async function() {
+  // add regular event on alpha before running findConsensusSet on alpha
+  it('add regular local event before getting consensus', async function() {
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -277,21 +277,21 @@ describe('Election API _findMergeEventProof', () => {
         ledgerNode, excludeLocalRegularEvents: true
       });
       const {tails, witnessTails} = _getTails({history, witnesses});
-      const proof = _findMergeEventProof({
+      const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
       });
       // try {
-      //   report[i] = proofReport({
-      //     proof,
+      //   report[i] = createReport({
+      //     result,
       //     copyMergeHashes: build.copyMergeHashes,
       //     copyMergeHashesIndex: build.copyMergeHashesIndex});
       // } catch(e) {
-      //   report[i] = 'NO PROOF';
+      //   report[i] = 'NONE';
       // }
-      const allXs = proof.consensus.map(p => p.x.eventHash);
+      const allXs = result.consensus.map(p => p.x.eventHash);
       allXs.should.have.length(4);
       allXs.should.have.same.members(build.regularEvent.mergeHash);
-      const allYs = proof.consensus.map(p => p.y.eventHash);
+      const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
     }
@@ -299,10 +299,10 @@ describe('Election API _findMergeEventProof', () => {
   });
 });
 
-function proofReport({proof, copyMergeHashes, copyMergeHashesIndex}) {
-  const allXs = proof.consensus.map(p => p.x.eventHash);
-  const allYs = proof.consensus.map(p => p.y.eventHash);
-  const yCandidates = proof.yCandidates.map(c => c.eventHash);
+function createReport({result, copyMergeHashes, copyMergeHashesIndex}) {
+  const allXs = result.consensus.map(p => p.x.eventHash);
+  const allYs = result.consensus.map(p => p.y.eventHash);
+  const yCandidates = result.yCandidates.map(c => c.eventHash);
   // console.log('COPYHASHES', JSON.stringify(copyMergeHashes, null, 2));
   console.log('XXXXXXXXX', allXs);
   console.log('YYYYYYYYY', allYs);

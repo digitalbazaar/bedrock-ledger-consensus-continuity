@@ -306,7 +306,7 @@ const ledgerNodeId = '2';
 const input = {
   ledgerNodeId,
   history: graph.getHistory({nodeId: ledgerNodeId}),
-  electors: graph.getWitnesses()
+  witnesses: graph.getWitnesses()
 };
 
 const display = {
