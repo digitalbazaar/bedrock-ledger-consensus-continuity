@@ -52,7 +52,7 @@ describe.skip('Continuity API _getTails', () => {
         });
       }],
       genesisMerge: ['creatorId', (results, callback) => {
-        callbackify(consensusApi._events.getHead)({
+        callbackify(consensusApi._history.getHead)({
           creatorId: results.creatorId,
           ledgerNode: nodes.alpha
         }, (err, result) => {
@@ -125,7 +125,7 @@ describe.skip('Continuity API _getTails', () => {
         `${nodeLabel}: ${nodes[nodeLabel].storage.events.
           collection.collectionName}`);
     });
-    const getRecentHistory = consensusApi._events.getRecentHistory;
+    const getRecentHistory = consensusApi._history.getRecent;
     const _getTails = consensusApi._consensus._continuity._getTails;
     const eventTemplate = mockData.events.alpha;
     async.auto({

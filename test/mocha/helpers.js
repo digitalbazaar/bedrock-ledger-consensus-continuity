@@ -48,7 +48,7 @@ api.addEvent = async ({
       operation.recordPatch.target = testRecordId;
     }
 
-    const head = await ledgerNode.consensus._events.getHead({
+    const head = await ledgerNode.consensus._history.getHead({
       creatorId, ledgerNode
     });
     const {eventHash: headHash} = head;
@@ -174,7 +174,7 @@ api.addRemoteEvents = async ({
     // use a valid keypair from mocks
     const keyPair = mockData.groups.authorized;
     // NOTE: using the local branch head for treeHash of the remote merge event
-    const head = await consensusApi._events.getHead({
+    const head = await consensusApi._history.getHead({
       // unknown creator will yield genesis merge event
       creatorId,
       ledgerNode
