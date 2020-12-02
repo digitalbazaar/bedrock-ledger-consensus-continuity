@@ -114,7 +114,7 @@ describe('Multinode', () => {
     describe('Block 1', () => {
       // add a single op to genesis node, genesis node will be sole elector
       it('should add an operation and achieve consensus', async function() {
-        this.timeout(30000);
+        this.timeout(60000);
         const opTemplate = mockData.operations.alpha;
         await helpers.addOperation(
           {ledgerNode: genesisLedgerNode, opTemplate});
@@ -149,7 +149,7 @@ describe('Multinode', () => {
       // add an operation on all peers, settle and ensure that all records are
       // available via the records API
       it('add an operation on all nodes + achieve consensus', async function() {
-        this.timeout(30000);
+        this.timeout(60000);
         const opTemplate = mockData.operations.alpha;
         const results = await helpers.addOperations({nodes: peers, opTemplate});
         await helpers.settleNetwork(
@@ -264,7 +264,7 @@ describe('Multinode', () => {
         error.message.should.equal(`Invalid configuration 'sequence' value.`);
       });
       it('add a ledger config and achieve consensus', async function() {
-        this.timeout(30000);
+        this.timeout(60000);
         const ledgerConfiguration = bedrock.util.clone(
           mockData.ledgerConfiguration);
         ledgerConfiguration.creator = genesisLedgerNode._peerId;
