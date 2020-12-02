@@ -34,8 +34,8 @@ describe('X Block Test', () => {
 
     // override elector selection to force cycling and 3f+1
     before(() => {
-      const electorSelectionApi = brLedgerNode.use('MostRecentParticipants');
-      electorSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
+      const witnessSelectionApi = brLedgerNode.use('MostRecentParticipants');
+      witnessSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
         const candidates = [];
         for(const p of Object.keys(peers)) {
           candidates.push({id: peers[p]});

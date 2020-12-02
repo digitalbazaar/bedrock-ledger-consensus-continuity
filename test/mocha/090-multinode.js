@@ -65,8 +65,8 @@ describe('Multinode', () => {
     // override elector selection to force cycling and 3f+1
     before(() => {
       let candidates;
-      const electorSelectionApi = brLedgerNode.use('MostRecentParticipants');
-      electorSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
+      const witnessSelectionApi = brLedgerNode.use('MostRecentParticipants');
+      witnessSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
         if(!candidates) {
           candidates = [];
           for(const peer of peers) {
