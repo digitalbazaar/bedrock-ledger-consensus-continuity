@@ -284,9 +284,7 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
   // add
   for(const e of diff) {
     try {
-      await to.consensus._events._addTestEvent({
-        event: e.event, ledgerNode: to
-      });
+      await _addTestEvent({event: e.event, ledgerNode: to});
     } catch(err) {
       // ignore dup errors
       if(!(err && err.name === 'DuplicateError')) {
@@ -492,3 +490,15 @@ api.snapshotEvents = async ({ledgerNode}) => {
 api.use = async plugin => {
   return brLedgerNode.use(plugin);
 };
+
+async function _addTestEvent({event, ledgerNode}) {
+  const ledgerNodeId = ledgerNode.id;
+  const {_cache, _peerEvents} = ledgerNode.consensus;
+  const eventMap = new Map();
+  const {event: processedEvent, meta} =
+    await _peerEvents.createPeerEventRecord({event, eventMap, ledgerNode});
+  await _cache.events.setEventGossip(
+    {event, eventHash: meta.eventHash, ledgerNodeId, meta});
+  await _cache.events.addPeerEvent(
+    {event: processedEvent, ledgerNodeId, meta});
+}
