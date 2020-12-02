@@ -26,7 +26,7 @@ describe('Continuity API _findConsensusSet', () => {
     await helpers.flushCache();
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     ({api: consensusApi} = await helpers.use('Continuity2017'));
-    getRecentHistory = consensusApi._events.getRecentHistory;
+    getRecentHistory = consensusApi._history.getRecent;
     _getTails = consensusApi._consensus._continuity._getTails;
     _findConsensusSet = consensusApi._consensus._continuity._findConsensusSet;
     EventWriter = consensusApi._worker.EventWriter;

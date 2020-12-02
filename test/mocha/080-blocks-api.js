@@ -39,7 +39,7 @@ describe('blocks API', () => {
       {ledgerNodeId: nodes.alpha.id});
     const {id: creatorId} = alphaVoter;
     const ledgerNode = nodes.alpha;
-    genesisMergeHash = await consensusApi._events.getHead(
+    genesisMergeHash = await consensusApi._history.getHead(
       {creatorId, ledgerNode});
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     const genesisBlock = _genesisBlock.block;

@@ -35,7 +35,7 @@ describe('Consensus API _getAncestors', () => {
       {ledgerNodeId: nodes.alpha.id});
     const creatorId = voter.id;
     nodes.alpha.creatorId = creatorId;
-    const eventHead = await consensusApi._events.getHead(
+    const eventHead = await consensusApi._history.getHead(
       {creatorId, ledgerNode});
     genesisMerge = eventHead.eventHash;
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();

@@ -34,7 +34,7 @@ describe('events.mergeBranches API', () => {
     const alphaVoter = await consensusApi._peers.get({ledgerNodeId});
     const {id: creatorId} = alphaVoter;
     const ledgerNode = nodes.alpha;
-    const headEvent = await consensusApi._events.getHead(
+    const headEvent = await consensusApi._history.getHead(
       {creatorId, ledgerNode});
     genesisMergeHash = headEvent.eventHash;
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();

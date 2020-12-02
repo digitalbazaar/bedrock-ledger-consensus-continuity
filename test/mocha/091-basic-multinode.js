@@ -683,7 +683,7 @@ describe.skip('Multinode Basics', () => {
               // get each peers own head
               peerHead: callback => async.eachOfSeries(
                 nodes, (ledgerNode, iNode, callback) =>
-                  consensusApi._events.getHead({
+                  consensusApi._history.getHead({
                     creatorId: peers[iNode],
                     ledgerNode
                   }, (err, result) => {
@@ -785,7 +785,7 @@ describe.skip('Multinode Basics', () => {
                       // has for all the other nodes
                       async.eachOfSeries(
                         nodes, (ledgerNode, iNode, callback) =>
-                          consensusApi._events.getHead({
+                          consensusApi._history.getHead({
                             creatorId: peers[iNode],
                             ledgerNode
                           }, (err, result) => {
