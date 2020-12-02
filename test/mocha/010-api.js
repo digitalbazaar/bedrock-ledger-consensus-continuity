@@ -36,7 +36,7 @@ describe('Continuity2017', () => {
     expect(ledgerNode, 'Expected ledgerNode to be ok').to.be.ok;
     // the consensusApi is defined by this library
     consensusApi = consensusPlugin.api;
-    creator = await consensusApi._voters.get(
+    creator = await consensusApi._peers.get(
       {ledgerNodeId: ledgerNode.id});
     ledgerNode.creatorId = creator.id;
     const eventHead = await consensusApi._events.getHead({

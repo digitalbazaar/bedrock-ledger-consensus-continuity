@@ -34,7 +34,7 @@ describe('Continuity API _findConsensusSet', () => {
     // add genesis node
     const ledgerConfiguration = mockData.ledgerConfiguration;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const {id: creatorId} = await consensusApi._voters.get(
+    const {id: creatorId} = await consensusApi._peers.get(
       {ledgerNodeId: nodes.alpha.id});
 
     // get genesis block
@@ -53,7 +53,7 @@ describe('Continuity API _findConsensusSet', () => {
       const {id: ledgerNodeId} = ledgerNode;
       // attach eventWriter to the node
       ledgerNode.eventWriter = new EventWriter({ledgerNode});
-      const {id} = await consensusApi._voters.get({ledgerNodeId});
+      const {id} = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = id;
       ledgerNode.creatorId = id;
       helpers.peersReverse[id] = key;
@@ -173,7 +173,7 @@ describe('Continuity API _findConsensusSet', () => {
       // add node epsilon for this test and remove it afterwards
       nodes.epsilon = await brLedgerNode.add(null, {genesisBlock});
       nodes.epsilon.eventWriter = new EventWriter({ledgerNode: nodes.epsilon});
-      const {id} = await consensusApi._voters.get(
+      const {id} = await consensusApi._peers.get(
         {ledgerNodeId: nodes.epsilon.id});
       peers.epsilon = id;
       nodes.epsilon.creatorId = id;

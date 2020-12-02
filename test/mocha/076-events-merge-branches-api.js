@@ -31,7 +31,7 @@ describe('events.mergeBranches API', () => {
     EventWriter = consensusApi._worker.EventWriter;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     const {id: ledgerNodeId} = nodes.alpha;
-    const alphaVoter = await consensusApi._voters.get({ledgerNodeId});
+    const alphaVoter = await consensusApi._peers.get({ledgerNodeId});
     const {id: creatorId} = alphaVoter;
     const ledgerNode = nodes.alpha;
     const headEvent = await consensusApi._events.getHead(
@@ -47,7 +47,7 @@ describe('events.mergeBranches API', () => {
       // attach eventWriter to the node
       ledgerNode.eventWriter = new EventWriter({ledgerNode});
       const {id: ledgerNodeId} = ledgerNode;
-      const voter = await consensusApi._voters.get({ledgerNodeId});
+      const voter = await consensusApi._peers.get({ledgerNodeId});
       ledgerNode.creatorId = voter.id;
       peers[key] = voter.id;
     }
