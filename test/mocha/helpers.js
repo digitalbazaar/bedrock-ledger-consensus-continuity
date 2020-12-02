@@ -6,7 +6,6 @@
 const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
-const {promisify} = require('util');
 const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
 const jsigs = require('jsonld-signatures');
@@ -19,8 +18,6 @@ const ledgerHistory = {
   delta: require('./history-delta'),
   epsilon: require('./history-epsilon'),
 };
-
-const openCollections = promisify(database.openCollections);
 
 const api = {};
 module.exports = api;
@@ -380,7 +377,7 @@ api.nBlocks = async ({
 // collections may be a string or array
 api.removeCollections = async function(collections) {
   const collectionNames = [].concat(collections);
-  await openCollections(collectionNames);
+  await database.openCollections(collectionNames);
   for(const collectionName of collectionNames) {
     await database.collections[collectionName].deleteMany({});
   }
