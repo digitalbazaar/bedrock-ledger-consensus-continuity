@@ -3,8 +3,8 @@
  */
 'use strict';
 
-const consensusApi =
-  require('bedrock-ledger-consensus-continuity/lib/consensus');
+const continuityApi =
+  require('bedrock-ledger-consensus-continuity/lib/continuity');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -50,7 +50,7 @@ async function main() {
     });
 
     //console.log('INPUT', input);
-    const consensusResult = consensusApi.findConsensus(input);
+    const consensusResult = continuityApi.findConsensus(input);
     //console.log('RESULT', consensusResult);
     const outputResult = await vizHelpers.saveTestOutputDataForTimeline({
       directory: outputDirectory,

@@ -4,8 +4,8 @@
 'use strict';
 
 const _ = require('lodash');
-const consensusApi =
-  require('bedrock-ledger-consensus-continuity/lib/consensus');
+const continuityApi =
+  require('bedrock-ledger-consensus-continuity/lib/continuity');
 const helpers = require('./helpers');
 
 const INITIAL_CONSENSUS_STATE = {
@@ -71,7 +71,7 @@ class Node {
     const consensusInput = await this.getConsensusInput();
 
     const timer = helpers.getTimer();
-    const result = await consensusApi.findConsensus(consensusInput);
+    const result = await continuityApi.findConsensus(consensusInput);
     const consensusDuration = timer.elapsed();
 
     const nodeHistory = await this.getHistory();
@@ -102,7 +102,7 @@ class Node {
     const consensusInput = {
       ledgerNodeId,
       history: await this.getHistory(),
-      electors: this.graph.getWitnesses(),
+      witnesses: this.graph.getWitnesses(),
       state
     };
 

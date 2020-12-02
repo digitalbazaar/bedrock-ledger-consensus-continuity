@@ -3,8 +3,8 @@
  */
 'use strict';
 
-const consensusApi =
-  require('bedrock-ledger-consensus-continuity/lib/consensus');
+const continuityApi =
+  require('bedrock-ledger-consensus-continuity/lib/continuity');
 const Graph = require('./tools/Graph');
 
 const mockData = require('./mock.data');
@@ -12,7 +12,7 @@ const mockData = require('./mock.data');
 const {consensusInput} = mockData;
 
 /* eslint-disable no-unused-vars */
-describe('Consensus API findConsensus', () => {
+describe('Continuity API findConsensus', () => {
   describe('Figure 1.2', async () => {
     const {graph} = consensusInput['fig-1-2'];
     const nodes = ['1', '2', '3', '4'];
@@ -913,11 +913,11 @@ function _validate({
     const input = {
       ledgerNodeId: nodeId,
       history: graph.getHistory({nodeId}),
-      electors: graph.getWitnesses(),
+      witnesses: graph.getWitnesses(),
       state
     };
     try {
-      result = consensusApi.findConsensus(input);
+      result = continuityApi.findConsensus(input);
     } catch(e) {
       err = e;
     }
