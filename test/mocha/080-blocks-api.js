@@ -35,7 +35,7 @@ describe('blocks API', () => {
     _cacheKey = consensusApi._cache.cacheKey;
     repairCache = callbackify(consensusApi._blocks.repairCache);
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const alphaVoter = await consensusApi._voters.get(
+    const alphaVoter = await consensusApi._peers.get(
       {ledgerNodeId: nodes.alpha.id});
     const {id: creatorId} = alphaVoter;
     const ledgerNode = nodes.alpha;
@@ -49,7 +49,7 @@ describe('blocks API', () => {
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const {id: ledgerNodeId} = ledgerNode;
-      const voter = await consensusApi._voters.get({ledgerNodeId});
+      const voter = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = voter.id;
     }
     // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps

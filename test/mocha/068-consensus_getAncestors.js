@@ -31,7 +31,7 @@ describe('Consensus API _getAncestors', () => {
     EventWriter = consensusApi._worker.EventWriter;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     const ledgerNode = nodes.alpha;
-    const voter = await consensusApi._voters.get(
+    const voter = await consensusApi._peers.get(
       {ledgerNodeId: nodes.alpha.id});
     const creatorId = voter.id;
     nodes.alpha.creatorId = creatorId;
@@ -47,7 +47,7 @@ describe('Consensus API _getAncestors', () => {
       const ledgerNode = nodes[key];
       ledgerNode.eventWriter = new EventWriter({ledgerNode});
       const {id: ledgerNodeId} = ledgerNode;
-      const voter = await consensusApi._voters.get({ledgerNodeId});
+      const voter = await consensusApi._peers.get({ledgerNodeId});
       ledgerNode.creatorId = voter.id;
       peers[key] = voter.id;
     }

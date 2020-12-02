@@ -56,7 +56,7 @@ describe('Multinode', () => {
     // populate peers ids
     before(async function() {
       for(const ledgerNode of peers) {
-        const result = await consensusApi._voters.get(
+        const result = await consensusApi._peers.get(
           {ledgerNodeId: ledgerNode.id});
         ledgerNode._peerId = result.id;
       }

@@ -32,7 +32,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
     const consensusPlugin = await helpers.use('Continuity2017');
     consensusApi = consensusPlugin.api;
     ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
-    const voter = await consensusApi._voters.get({ledgerNodeId: ledgerNode.id});
+    const voter = await consensusApi._peers.get({ledgerNodeId: ledgerNode.id});
     voterId = voter.id;
   });
   describe('Preparation', () => {

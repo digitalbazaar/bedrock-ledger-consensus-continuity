@@ -89,7 +89,7 @@ describe('Cache Recovery', () => {
       this.timeout(TEST_TIMEOUT);
       for(const nodeName in nodes) {
         const ledgerNode = nodes[nodeName];
-        const result = await consensusApi._voters.get(
+        const result = await consensusApi._peers.get(
           {ledgerNodeId: ledgerNode.id});
         peers[nodeName] = result.id;
         ledgerNode._peerId = result.id;

@@ -32,7 +32,7 @@ describe('events API', () => {
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     // FIXME is this used anywhere? I might have made a mistake
     // in the refactoring
-    // const voter = await consensusApi._voters.get(
+    // const voter = await consensusApi._peers.get(
     //  {ledgerNodeId: nodes.alpha.id});
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     const genesisBlock = _genesisBlock.block;
@@ -42,7 +42,7 @@ describe('events API', () => {
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const {id: ledgerNodeId} = ledgerNode;
-      const voter = await consensusApi._voters.get({ledgerNodeId});
+      const voter = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = voter.id;
       ledgerNode.creatorId = voter.id;
     }

@@ -80,7 +80,7 @@ describe.skip('Multinode Basics', () => {
     before(async () => {
       let i = 0;
       for(const ledgerNode of nodes) {
-        const result = await consensusApi._voters.get(
+        const result = await consensusApi._peers.get(
           {ledgerNode: ledgerNode.id});
         peers[i] = result.id;
         heads[i] = [];

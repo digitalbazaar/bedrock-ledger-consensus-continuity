@@ -47,7 +47,7 @@ describe.skip('Continuity API _getTails', () => {
             callback(null, result);
           })],
       creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        callbackify(consensusApi._voters.get)(nodes.alpha.id, (err, result) => {
+        callbackify(consensusApi._peers.get)(nodes.alpha.id, (err, result) => {
           callback(null, result.id);
         });
       }],
@@ -108,7 +108,7 @@ describe.skip('Continuity API _getTails', () => {
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
         async.eachOf(nodes, (n, i, callback) =>
-          callbackify(consensusApi._voters.get)(n.id, (err, result) => {
+          callbackify(consensusApi._peers.get)(n.id, (err, result) => {
             if(err) {
               return callback(err);
             }
