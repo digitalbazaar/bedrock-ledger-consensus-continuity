@@ -89,14 +89,13 @@ api.addEventAndMerge = async ({
       '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
   }
   const events = {};
-  const merge = consensusApi._events.merge;
 
   events.regular = await api.addEvent({
     count, eventTemplate, ledgerNode, opTemplate
   });
   events.regularHashes = Object.keys(events.regular);
 
-  events.merge = await merge({
+  events.merge = await consensusApi._worker.merge({
     creatorId: ledgerNode.creatorId, ledgerNode
   });
   events.mergeHash = events.merge.meta.eventHash;
@@ -250,7 +249,7 @@ api.copyAndMerge = async ({
   for(const f of copyFrom) {
     await api.copyEvents({from: nodes[f], to: nodes[to], useSnapshot});
   }
-  return consensusApi._events.merge(
+  return consensusApi._worker.merge(
     {creatorId: nodes[to].creatorId, ledgerNode: nodes[to]});
 };
 
