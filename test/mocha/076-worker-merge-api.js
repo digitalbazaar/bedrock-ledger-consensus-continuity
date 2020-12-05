@@ -74,8 +74,11 @@ describe('events.mergeBranches API', () => {
         merge({creatorId, ledgerNode}, (err, result) => {
           assertNoError(err);
           const eventHash = Object.keys(results.addEvent)[0];
-          should.exist(result.event);
-          const event = result.event;
+          should.exist(result);
+          should.exist(result.record);
+          const {record} = result;
+          should.exist(record.event);
+          const event = record.event;
           should.exist(event.type);
           event.type.should.equal('ContinuityMergeEvent');
           should.exist(event.treeHash);
@@ -85,8 +88,8 @@ describe('events.mergeBranches API', () => {
           parentHash.should.be.an('array');
           parentHash.should.have.length(2);
           parentHash.should.have.same.members([eventHash, event.treeHash]);
-          should.exist(result.meta);
-          const meta = result.meta;
+          should.exist(record.meta);
+          const meta = record.meta;
           should.exist(meta.continuity2017);
           should.exist(meta.continuity2017.creator);
           const eventCreator = meta.continuity2017.creator;
@@ -134,8 +137,10 @@ describe('events.mergeBranches API', () => {
       mergeBranches: ['addEvent', (results, callback) => {
         merge({creatorId, ledgerNode}, (err, result) => {
           assertNoError(err);
-          should.exist(result.event);
-          const event = result.event;
+          should.exist(result.record);
+          const {record} = result;
+          should.exist(record.event);
+          const event = record.event;
           event.treeHash.should.equal(genesisMergeHash);
           should.exist(event.parentHash);
           const parentHash = event.parentHash;
