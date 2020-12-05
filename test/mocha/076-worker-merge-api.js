@@ -103,7 +103,7 @@ describe('events.mergeBranches API', () => {
       }]
     }, done);
   });
-  it('returns `null` if no events since last merge', done => {
+  it('returns `null` record if no events since last merge', done => {
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -116,7 +116,9 @@ describe('events.mergeBranches API', () => {
       mergeBranches2: ['mergeBranches1', (results, callback) => merge(
         {creatorId, ledgerNode}, (err, result) => {
           assertNoError();
-          should.equal(result, null);
+          should.exist(result);
+          should.equal(result.merged, false);
+          should.equal(result.record, null);
           callback();
         })]
     }, done);
