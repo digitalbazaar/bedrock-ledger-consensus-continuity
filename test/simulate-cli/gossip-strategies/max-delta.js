@@ -7,47 +7,50 @@ const _ = require('lodash');
 
 module.exports.run = async function() {
   let totalDownloadedEvents = 0;
-  const gossipPeers = new Array(3);
   const gossipSessions = [];
 
   // generate array of peers that have notified this peer
-  const peerDeltas = new Array();
-  for(const peer of this.nodes.values()) {
-    if(peer.nodeId === this.nodeId) {
-      // skip if the node is the current node
-      continue;
-    }
-    const notified = (2 / this.nodes.size) < Math.random();
-    if(notified) {
-      const delta = await _getDelta(this, peer);
-      if(delta > 0) {
-        peerDeltas.push({delta, peer});
-      }
-    }
-  }
+  const notificationPeers = await _getNotificationPeers(this);
 
-  // sort notitifcations by max delta
-  peerDeltas.sort((a, b) => b.delta - a.delta);
-
+  // initialize the peer delta list
+  const peerDeltas =
+    notificationPeers.map(peer => new Object({delta: 0, peer}));
   // select the peers to gossip with, ensuring at least 1 witness
-  const maxDeltaWitness =
-    _selectAndRemoveMaxDelta({peerDeltas, witness: true});
-  const maxDeltaPeer1 = _selectAndRemoveMaxDelta({peerDeltas});
-  const maxDeltaPeer2 = _selectAndRemoveMaxDelta({peerDeltas});
-  gossipPeers.push(maxDeltaPeer1);
-  gossipPeers.push(maxDeltaPeer2);
-  gossipPeers.push(maxDeltaWitness);
-
-  // gossip with selected peers that have notified this peer
-  for(const peer of gossipPeers) {
+  let needWitness = true;
+  // try to gossip with one witness and two other peers that maximize info
+  let i = 0;
+  do {
+    // gossip with select peer that has notified this peer
+    await _recalculatePeerDeltas(this, peerDeltas);
+    const peer = _selectAndRemoveMaxDelta({peerDeltas, witness: needWitness});
     if(peer) {
       totalDownloadedEvents += await _gossipNodeEvents(this, peer);
       gossipSessions.push({peer: peer.nodeId, events: totalDownloadedEvents});
     }
-  }
+
+    needWitness = false;
+    i++;
+  } while(i < 3);
 
   return gossipSessions;
 };
+
+async function _getNotificationPeers(node) {
+  const peers = [];
+
+  for(const peer of node.nodes.values()) {
+    if(peer.nodeId === node.nodeId) {
+      // skip if the node is the current node
+      continue;
+    }
+    const notified = (2 / node.nodes.size) < Math.random();
+    if(notified) {
+      peers.push(peer);
+    }
+  }
+
+  return peers;
+}
 
 function _selectAndRemoveMaxDelta({peerDeltas, witness}) {
   let selection = undefined;
@@ -63,13 +66,17 @@ function _selectAndRemoveMaxDelta({peerDeltas, witness}) {
     }
   }
 
-  // attempt to select the greatest information delta
+  // attempt to select the greatest information delta if no selection yet
   if(selection === undefined) {
     for(let i = 0; i < peerDeltas.length; i++) {
       if(peerDeltas[i] !== undefined) {
-        selection = peerDeltas[i].peer;
-        delete peerDeltas[i];
-        break;
+        if(peerDeltas[i].delta > 0) {
+          selection = peerDeltas[i].peer;
+          delete peerDeltas[i];
+          break;
+        } else {
+          delete peerDeltas[i];
+        }
       }
     }
   }
@@ -90,6 +97,17 @@ async function _getDelta(node, peer) {
   const diff = _.difference(peerEvents, nodeEvents);
 
   return diff.length;
+}
+
+async function _recalculatePeerDeltas(node, peerDeltas) {
+  for(const peerDelta of peerDeltas) {
+    if(peerDelta) {
+      peerDelta.delta = await _getDelta(node, peerDelta.peer);
+    }
+  }
+
+  // sort notifications by max delta
+  peerDeltas.sort((a, b) => b.delta - a.delta);
 }
 
 async function _gossipNodeEvents(node, peer) {
@@ -121,8 +139,12 @@ async function _gossipNodeEvents(node, peer) {
   }, 0);
 
   const totalEvents = downloadedEventsTotal + downloadedEvents.length;
-  console.log(`  gossip ${node.nodeId} <- ${peer.nodeId}:` +
-    ` ${downloadedEvents.length}/${totalEvents}`);
+  let logMessage = `  gossip ${node.nodeId} <- ${peer.nodeId}`;
+  if(peer.isWitness) {
+    logMessage += ' (witness)';
+  }
+  logMessage += `: ${downloadedEvents.length}/${totalEvents}`;
+  console.log(logMessage);
 
   return downloadedEvents.length;
 }
