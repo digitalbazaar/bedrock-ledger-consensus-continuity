@@ -158,7 +158,7 @@ class Graph {
   getWitnesses() {
     const witnesses = [];
     this.nodes.forEach(node => witnesses.push(node));
-    return witnesses.filter(({isWitness}) => isWitness).map(({id}) => ({id}));
+    return witnesses.filter(({isWitness}) => isWitness).map(({id}) => id);
   }
 
   debug() {

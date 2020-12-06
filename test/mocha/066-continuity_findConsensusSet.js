@@ -66,7 +66,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'alpha', mockData, nodes});
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are witnesses
-    const witnesses = Object.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -100,7 +100,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'beta', mockData, nodes});
     // NOTE: for ledger history beta, all nodes should have the same view
     // all peers are witnesses
-    const witnesses = Object.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -134,7 +134,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'gamma', mockData, nodes});
     // NOTE: for ledger history gamma, all nodes should have the same view
     // all peers are witnesses
-    const witnesses = Object.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -167,7 +167,7 @@ describe('Continuity API _findConsensusSet', () => {
     this.timeout(120000);
     const report = {};
     // all peers except epsilon are witnesses (epsilon not added yet)
-    const witnesses = Object.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
 
     try {
       // add node epsilon for this test and remove it afterwards
@@ -230,7 +230,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'epsilon', mockData, nodes});
     // all peers are witnesses (epsilon is not a peer anymore here and
     // the peer name is only coincidentally the same as the history name)
-    const witnesses = Object.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -269,7 +269,7 @@ describe('Continuity API _findConsensusSet', () => {
       {ledgerNode, eventTemplate, opTemplate});
 
     // all peers are witnesses
-    const witnesses = Object.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({

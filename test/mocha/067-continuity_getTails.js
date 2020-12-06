@@ -146,7 +146,7 @@ describe.skip('Continuity API _getTails', () => {
       test1: ['addEvent1', (results, callback) => {
         // all peers are witnesses
         const addEvent = results.addEvent1;
-        const witnesses = Object.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers);
         async.eachOfSeries(nodes, (n, i, callback) => {
           async.auto({
             history: callback =>
@@ -193,7 +193,7 @@ describe.skip('Continuity API _getTails', () => {
         // test beta
         const addEvent = results.addEvent1;
         const cp1 = results.cp1;
-        const witnesses = Object.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers);
         const ledgerNode = nodes.beta;
         async.auto({
           history: callback =>
@@ -264,7 +264,7 @@ describe.skip('Continuity API _getTails', () => {
         // test gamma
         const addEvent = results.addEvent1;
         const cp2 = results.cp2;
-        const witnesses = Object.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers);
         const ledgerNode = nodes.gamma;
         async.auto({
           history: callback =>
@@ -327,7 +327,7 @@ describe.skip('Continuity API _getTails', () => {
         const cp1 = results.cp1;
         const cp2 = results.cp2;
         const cp3 = results.cp3;
-        const witnesses = Object.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers);
         const ledgerNode = nodes.gamma;
         async.auto({
           history: callback =>
@@ -440,7 +440,7 @@ describe.skip('Continuity API _getTails', () => {
         const cp2 = results.cp2;
         const cp3 = results.cp3;
         const cp4 = results.cp4;
-        const witnesses = Object.values(peers).map(p => ({id: p}));
+        const witnesses = Object.values(peers);
         const ledgerNode = nodes.beta;
         async.auto({
           history: callback =>

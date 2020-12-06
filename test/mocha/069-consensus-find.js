@@ -63,7 +63,7 @@ describe('Consensus API find', () => {
     const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
-    const witnesses = [{id: peers.alpha}];
+    const witnesses = [peers.alpha];
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
@@ -94,9 +94,7 @@ describe('Consensus API find', () => {
     const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
-    const witnesses = [
-      {id: peers.alpha}, {id: peers.beta},
-      {id: peers.gamma}, {id: peers.delta}];
+    const witnesses = [peers.alpha, peers.beta, peers.gamma, peers.delta];
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
@@ -122,7 +120,7 @@ describe('Consensus API find', () => {
     this.timeout(120000);
     const findConsensus = callbackify(consensusApi._consensus.find);
     const getRecentHistory = callbackify(consensusApi._history.getRecent);
-    const witnesses = _.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
@@ -178,7 +176,7 @@ describe('Consensus API find', () => {
     this.timeout(120000);
     const findConsensus = callbackify(consensusApi._consensus.find);
     const getRecentHistory = callbackify(consensusApi._history.getRecent);
-    const witnesses = _.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'beta', mockData, nodes}, callback),
@@ -229,7 +227,7 @@ describe('Consensus API find', () => {
     this.timeout(120000);
     const findConsensus = callbackify(consensusApi._consensus.find);
     const getRecentHistory = callbackify(consensusApi._history.getRecent);
-    const witnesses = _.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'gamma', mockData, nodes}, callback),
@@ -281,9 +279,7 @@ describe('Consensus API find', () => {
     const findConsensus = callbackify(consensusApi._consensus.find);
     const getRecentHistory = callbackify(consensusApi._history.getRecent);
     // all peers except epsilon are witnesses
-    const witnesses = _.values(peers)
-      .filter(p => p !== peers.epsilon)
-      .map(p => ({id: p}));
+    const witnesses = Object.values(peers).filter(p => p !== peers.epsilon);
     async.auto({
       // add node epsilon for this test and remove it afterwards
       nodeEpsilon: callback => async.auto({
@@ -373,7 +369,7 @@ describe('Consensus API find', () => {
     const findConsensus = callbackify(consensusApi._consensus.find);
     const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const ledgerNode = nodes.alpha;
-    const witnesses = _.values(peers).map(p => ({id: p}));
+    const witnesses = Object.values(peers);
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
