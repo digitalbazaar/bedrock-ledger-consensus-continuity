@@ -97,6 +97,7 @@ api.addEventAndMerge = async ({
 
   const {record} = await consensusApi._worker.merge({
     creatorId: ledgerNode.creatorId, ledgerNode,
+    basisBlockHeight: 0,
     nonEmptyThreshold: 0, emptyThreshold: 1
   });
   events.merge = record;
@@ -253,6 +254,7 @@ api.copyAndMerge = async ({
   }
   const {record} = await consensusApi._worker.merge({
     creatorId: nodes[to].creatorId, ledgerNode: nodes[to],
+    basisBlockHeight: 0,
     nonEmptyThreshold: 0, emptyThreshold: 1
   });
   return record;

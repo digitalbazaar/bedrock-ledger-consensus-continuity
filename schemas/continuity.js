@@ -35,10 +35,16 @@ const mergeEventProof = {
 const continuityMergeEvent = {
   title: 'Continuity2017 ContinuityMergeEvent',
   additionalProperties: false,
-  required: ['@context', 'parentHash', 'proof', 'treeHash', 'type'],
+  required: [
+    '@context', 'basisBlockHeight', 'parentHash', 'proof', 'treeHash', 'type'
+  ],
   type: 'object',
   properties: {
     '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    basisBlockHeight: {
+      type: 'integer',
+      minimum: 0,
+    },
     parentHash: {
       type: 'array',
       items: {

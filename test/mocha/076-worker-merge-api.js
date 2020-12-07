@@ -71,39 +71,42 @@ describe('events.mergeBranches API', () => {
       addEvent: callback => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback),
       mergeBranches: ['addEvent', (results, callback) => {
-        merge({creatorId, ledgerNode, nonEmptyThreshold: 0, emptyThreshold: 1},
-          (err, result) => {
-            assertNoError(err);
-            const eventHash = Object.keys(results.addEvent)[0];
-            should.exist(result);
-            should.exist(result.record);
-            const {record} = result;
-            should.exist(record.event);
-            const event = record.event;
-            should.exist(event.type);
-            event.type.should.equal('ContinuityMergeEvent');
-            should.exist(event.treeHash);
-            event.treeHash.should.equal(genesisMergeHash);
-            should.exist(event.parentHash);
-            const parentHash = event.parentHash;
-            parentHash.should.be.an('array');
-            parentHash.should.have.length(2);
-            parentHash.should.have.same.members([eventHash, event.treeHash]);
-            should.exist(record.meta);
-            const meta = record.meta;
-            should.exist(meta.continuity2017);
-            should.exist(meta.continuity2017.creator);
-            const eventCreator = meta.continuity2017.creator;
-            eventCreator.should.be.a('string');
-            eventCreator.should.equal(peers.alpha);
-            should.exist(meta.eventHash);
-            meta.eventHash.should.be.a('string');
-            should.exist(meta.created);
-            meta.created.should.be.a('number');
-            should.exist(meta.updated);
-            meta.updated.should.be.a('number');
-            callback();
-          });
+        merge({
+          creatorId, ledgerNode,
+          basisBlockHeight: 0,
+          nonEmptyThreshold: 0, emptyThreshold: 1
+        }, (err, result) => {
+          assertNoError(err);
+          const eventHash = Object.keys(results.addEvent)[0];
+          should.exist(result);
+          should.exist(result.record);
+          const {record} = result;
+          should.exist(record.event);
+          const event = record.event;
+          should.exist(event.type);
+          event.type.should.equal('ContinuityMergeEvent');
+          should.exist(event.treeHash);
+          event.treeHash.should.equal(genesisMergeHash);
+          should.exist(event.parentHash);
+          const parentHash = event.parentHash;
+          parentHash.should.be.an('array');
+          parentHash.should.have.length(2);
+          parentHash.should.have.same.members([eventHash, event.treeHash]);
+          should.exist(record.meta);
+          const meta = record.meta;
+          should.exist(meta.continuity2017);
+          should.exist(meta.continuity2017.creator);
+          const eventCreator = meta.continuity2017.creator;
+          eventCreator.should.be.a('string');
+          eventCreator.should.equal(peers.alpha);
+          should.exist(meta.eventHash);
+          meta.eventHash.should.be.a('string');
+          should.exist(meta.created);
+          meta.created.should.be.a('number');
+          should.exist(meta.updated);
+          meta.updated.should.be.a('number');
+          callback();
+        });
       }]
     }, done);
   });
@@ -116,18 +119,22 @@ describe('events.mergeBranches API', () => {
       addEvent: callback => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback),
       mergeBranches1: ['addEvent', (results, callback) =>
-        merge(
-          {creatorId, ledgerNode, nonEmptyThreshold: 0, emptyThreshold: 1},
-          callback)],
-      mergeBranches2: ['mergeBranches1', (results, callback) => merge(
-        {creatorId, ledgerNode, nonEmptyThreshold: 0, emptyThreshold: 1},
-        (err, result) => {
-          assertNoError();
-          should.exist(result);
-          should.equal(result.merged, false);
-          should.equal(result.record, null);
-          callback();
-        })]
+        merge({
+          creatorId, ledgerNode,
+          basisBlockHeight: 0,
+          nonEmptyThreshold: 0, emptyThreshold: 1
+        }, callback)],
+      mergeBranches2: ['mergeBranches1', (results, callback) => merge({
+        creatorId, ledgerNode,
+        basisBlockHeight: 0,
+        nonEmptyThreshold: 0, emptyThreshold: 1
+      }, (err, result) => {
+        assertNoError();
+        should.exist(result);
+        should.equal(result.merged, false);
+        should.equal(result.record, null);
+        callback();
+      })]
     }, done);
   });
   it('collects five local events', done => {
@@ -139,24 +146,26 @@ describe('events.mergeBranches API', () => {
       addEvent: callback => callbackify(helpers.addEvent)(
         {eventTemplate, count: 5, ledgerNode, opTemplate}, callback),
       mergeBranches: ['addEvent', (results, callback) => {
-        merge(
-          {creatorId, ledgerNode,nonEmptyThreshold: 0, emptyThreshold: 1},
-          (err, result) => {
-            assertNoError(err);
-            should.exist(result.record);
-            const {record} = result;
-            should.exist(record.event);
-            const event = record.event;
-            event.treeHash.should.equal(genesisMergeHash);
-            should.exist(event.parentHash);
-            const parentHash = event.parentHash;
-            parentHash.should.be.an('array');
-            parentHash.should.have.length(6);
-            const regularEventHash = Object.keys(results.addEvent);
-            parentHash.should.have.same.members(
-              [event.treeHash, ...regularEventHash]);
-            callback();
-          });
+        merge({
+          creatorId, ledgerNode,
+          basisBlockHeight: 0,
+          nonEmptyThreshold: 0, emptyThreshold: 1
+        }, (err, result) => {
+          assertNoError(err);
+          should.exist(result.record);
+          const {record} = result;
+          should.exist(record.event);
+          const event = record.event;
+          event.treeHash.should.equal(genesisMergeHash);
+          should.exist(event.parentHash);
+          const parentHash = event.parentHash;
+          parentHash.should.be.an('array');
+          parentHash.should.have.length(6);
+          const regularEventHash = Object.keys(results.addEvent);
+          parentHash.should.have.same.members(
+            [event.treeHash, ...regularEventHash]);
+          callback();
+        });
       }]
     }, done);
   });
