@@ -95,8 +95,10 @@ api.addEventAndMerge = async ({
   });
   events.regularHashes = Object.keys(events.regular);
 
-  const {record} = await consensusApi._worker.merge(
-    {creatorId: ledgerNode.creatorId, ledgerNode});
+  const {record} = await consensusApi._worker.merge({
+    creatorId: ledgerNode.creatorId, ledgerNode,
+    nonEmptyThreshold: 0, emptyThreshold: 1
+  });
   events.merge = record;
   events.mergeHash = events.merge.meta.eventHash;
   events.allHashes = [events.mergeHash, ...events.regularHashes];
@@ -249,8 +251,10 @@ api.copyAndMerge = async ({
   for(const f of copyFrom) {
     await api.copyEvents({from: nodes[f], to: nodes[to], useSnapshot});
   }
-  const {record} = await consensusApi._worker.merge(
-    {creatorId: nodes[to].creatorId, ledgerNode: nodes[to]});
+  const {record} = await consensusApi._worker.merge({
+    creatorId: nodes[to].creatorId, ledgerNode: nodes[to],
+    nonEmptyThreshold: 0, emptyThreshold: 1
+  });
   return record;
 };
 
