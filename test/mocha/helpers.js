@@ -97,8 +97,7 @@ api.addEventAndMerge = async ({
 
   const {record} = await consensusApi._worker.merge({
     creatorId: ledgerNode.creatorId, ledgerNode,
-    basisBlockHeight: 0,
-    nonEmptyThreshold: 0, emptyThreshold: 1
+    basisBlockHeight: 0
   });
   events.merge = record;
   events.mergeHash = events.merge.meta.eventHash;
@@ -255,6 +254,8 @@ api.copyAndMerge = async ({
   const {record} = await consensusApi._worker.merge({
     creatorId: nodes[to].creatorId, ledgerNode: nodes[to],
     basisBlockHeight: 0,
+    // this function is only used to unit test hard-coded histories for
+    // creating a single block so these thresholds are disabled here
     nonEmptyThreshold: 0, emptyThreshold: 1
   });
   return record;

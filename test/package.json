@@ -20,7 +20,7 @@
     "bedrock-ledger-agent": "github:digitalbazaar/bedrock-ledger-agent#upgrade-bedrock-mongodb-7",
     "bedrock-ledger-consensus-continuity": "file:..",
     "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^2.0.0",
-    "bedrock-ledger-consensus-continuity-storage": "^3.0.0",
+    "bedrock-ledger-consensus-continuity-storage": "github:digitalbazaar/bedrock-ledger-consensus-continuity-storage#merge-event-updates",
     "bedrock-ledger-context": "^15.0.0",
     "bedrock-ledger-node": "^11.0.0",
     "bedrock-ledger-storage-mongodb": "^4.0.0",
