@@ -62,11 +62,11 @@ describe('Continuity API _findConsensusSet', () => {
 
   it('ledger history alpha', async function() {
     const report = {};
-    const build = await helpers.buildHistory(
-      {consensusApi, historyId: 'alpha', mockData, nodes});
     // NOTE: for ledger history alpha, all nodes should have the same view
     // all peers are witnesses
     const witnesses = Object.values(peers);
+    const build = await helpers.buildHistory(
+      {consensusApi, historyId: 'alpha', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -96,11 +96,11 @@ describe('Continuity API _findConsensusSet', () => {
   });
   it('ledger history beta', async function() {
     const report = {};
-    const build = await helpers.buildHistory(
-      {consensusApi, historyId: 'beta', mockData, nodes});
     // NOTE: for ledger history beta, all nodes should have the same view
     // all peers are witnesses
     const witnesses = Object.values(peers);
+    const build = await helpers.buildHistory(
+      {consensusApi, historyId: 'beta', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -130,11 +130,11 @@ describe('Continuity API _findConsensusSet', () => {
   });
   it('ledger history gamma', async function() {
     const report = {};
-    const build = await helpers.buildHistory(
-      {consensusApi, historyId: 'gamma', mockData, nodes});
     // NOTE: for ledger history gamma, all nodes should have the same view
     // all peers are witnesses
     const witnesses = Object.values(peers);
+    const build = await helpers.buildHistory(
+      {consensusApi, historyId: 'gamma', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -180,7 +180,7 @@ describe('Continuity API _findConsensusSet', () => {
       helpers.peersReverse[id] = 'epsilon';
 
       const build = await helpers.buildHistory(
-        {consensusApi, historyId: 'delta', mockData, nodes});
+        {consensusApi, historyId: 'delta', mockData, nodes, witnesses});
 
       for(const key in nodes) {
         const ledgerNode = nodes[key];
@@ -226,11 +226,11 @@ describe('Continuity API _findConsensusSet', () => {
   });
   it('ledger history epsilon', async function() {
     const report = {};
-    const build = await helpers.buildHistory(
-      {consensusApi, historyId: 'epsilon', mockData, nodes});
     // all peers are witnesses (epsilon is not a peer anymore here and
     // the peer name is only coincidentally the same as the history name)
     const witnesses = Object.values(peers);
+    const build = await helpers.buildHistory(
+      {consensusApi, historyId: 'epsilon', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
@@ -263,13 +263,13 @@ describe('Continuity API _findConsensusSet', () => {
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
+    // all peers are witnesses
+    const witnesses = Object.values(peers);
     const build = await helpers.buildHistory(
-      {consensusApi, historyId: 'alpha', mockData, nodes});
+      {consensusApi, historyId: 'alpha', mockData, nodes, witnesses});
     const event = await helpers.addEvent(
       {ledgerNode, eventTemplate, opTemplate});
 
-    // all peers are witnesses
-    const witnesses = Object.values(peers);
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const history = await getRecentHistory({
