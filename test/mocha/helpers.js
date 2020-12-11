@@ -97,7 +97,9 @@ api.addEventAndMerge = async ({
 
   const {record} = await consensusApi._worker.merge({
     creatorId: ledgerNode.creatorId, ledgerNode,
-    basisBlockHeight: 0
+    basisBlockHeight: 0,
+    // for simple tests, use these thresholds
+    nonEmptyThreshold: 0, emptyThreshold: 1
   });
   events.merge = record;
   events.mergeHash = events.merge.meta.eventHash;
@@ -107,7 +109,7 @@ api.addEventAndMerge = async ({
 };
 
 api.addEventMultiNode = async ({
-  consensusApi, eventTemplate, nodes, opTemplate
+  consensusApi, eventTemplate, nodes, witnesses, opTemplate
 } = {}) => {
   const rVal = {
     mergeHash: [],
@@ -116,7 +118,7 @@ api.addEventMultiNode = async ({
   for(const name of Object.keys(nodes)) {
     const ledgerNode = nodes[name];
     rVal[name] = await api.addEventAndMerge({
-      consensusApi, eventTemplate, ledgerNode, opTemplate
+      consensusApi, eventTemplate, ledgerNode, opTemplate, witnesses
     });
   }
   Object.keys(nodes).forEach(k => {
@@ -255,8 +257,8 @@ api.copyAndMerge = async ({
     creatorId: nodes[to].creatorId, ledgerNode: nodes[to],
     basisBlockHeight: 0,
     // this function is only used to unit test hard-coded histories for
-    // creating a single block so these thresholds are disabled here
-    nonEmptyThreshold: 0, emptyThreshold: 1
+    // creating a single block so these thresholds are set here
+    nonEmptyThreshold: 0, emptyThreshold: 0
   });
   return record;
 };
