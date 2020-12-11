@@ -21,7 +21,7 @@
     "bedrock-ledger-consensus-continuity": "file:..",
     "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^2.0.0",
     "bedrock-ledger-consensus-continuity-storage": "github:digitalbazaar/bedrock-ledger-consensus-continuity-storage#merge-event-updates",
-    "bedrock-ledger-context": "^15.0.0",
+    "bedrock-ledger-context": "^16.0.0",
     "bedrock-ledger-node": "^11.0.0",
     "bedrock-ledger-storage-mongodb": "github:digitalbazaar/bedrock-ledger-storage-mongodb#include-merge-height",
     "bedrock-mongodb": "^8.1.0",
