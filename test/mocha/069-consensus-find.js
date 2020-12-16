@@ -3,7 +3,6 @@
  */
 'use strict';
 
-const _ = require('lodash');
 const brLedgerNode = require('bedrock-ledger-node');
 const async = require('async');
 const {callbackify} = require('util');
