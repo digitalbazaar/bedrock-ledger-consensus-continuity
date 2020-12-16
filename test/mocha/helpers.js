@@ -301,8 +301,8 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
       }
     }
   }
-  // write
-  await to.worker.eventWriter.write();
+  // flush writer
+  await to.worker.peerEventWriter.flush();
 };
 
 api.createEvent = async (
@@ -508,6 +508,6 @@ async function _addTestEvent({event, ledgerNode}) {
     await _peerEvents.createPeerEventRecord({event, eventMap, ledgerNode});
   await _cache.events.setEventGossip(
     {event, eventHash: meta.eventHash, ledgerNodeId, meta});
-  await _cache.events.addPeerEvent(
-    {event: processedEvent, ledgerNodeId, meta});
+  // use `worker` that has been attached to `ledgerNode` in tests
+  await ledgerNode.worker.peerEventWriter.add({event: processedEvent, meta});
 }
