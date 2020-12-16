@@ -302,7 +302,7 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
     }
   }
   // write
-  await to.eventWriter.write();
+  await to.worker.eventWriter.write();
 };
 
 api.createEvent = async (

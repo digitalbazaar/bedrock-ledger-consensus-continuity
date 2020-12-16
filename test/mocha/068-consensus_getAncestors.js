@@ -18,7 +18,7 @@ describe('Consensus API _getAncestors', () => {
     await helpers.prepareDatabase();
   });
   let genesisMerge;
-  let EventWriter;
+  let Worker;
   const nodes = {};
   const peers = {};
   beforeEach(async function() {
@@ -28,7 +28,7 @@ describe('Consensus API _getAncestors', () => {
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     const plugin = await helpers.use('Continuity2017');
     consensusApi = plugin.api;
-    EventWriter = consensusApi._worker.EventWriter;
+    Worker = consensusApi._worker.Worker;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     const ledgerNode = nodes.alpha;
     const voter = await consensusApi._peers.get(
@@ -45,7 +45,8 @@ describe('Consensus API _getAncestors', () => {
     nodes.delta = await brLedgerNode.add(null, {genesisBlock});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
-      ledgerNode.eventWriter = new EventWriter({ledgerNode});
+      // attach worker to the node to emulate a work session used by `helpers`
+      ledgerNode.worker = new Worker({session: {ledgerNode}});
       const {id: ledgerNodeId} = ledgerNode;
       const voter = await consensusApi._peers.get({ledgerNodeId});
       ledgerNode.creatorId = voter.id;

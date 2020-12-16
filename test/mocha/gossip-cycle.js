@@ -262,6 +262,5 @@ api.delta = (
 }; // end delta
 
 function _commitCache(ledgerNode, callback) {
-  // ledgerNode.eventWriter
-  ledgerNode.eventWriter.write().then(() => callback(), callback);
+  ledgerNode.worker.eventWriter.write().then(() => callback(), callback);
 }

@@ -18,7 +18,7 @@ describe('Consensus API find', () => {
     await helpers.prepareDatabase();
   });
   let genesisBlock;
-  let EventWriter;
+  let Worker;
   const nodes = {};
   const peers = {};
   beforeEach(async function() {
@@ -28,7 +28,7 @@ describe('Consensus API find', () => {
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     const plugin = await helpers.use('Continuity2017');
     consensusApi = plugin.api;
-    EventWriter = consensusApi._worker.EventWriter;
+    Worker = consensusApi._worker.Worker;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     const {id: ledgerNodeId} = nodes.alpha;
     const _voter = await consensusApi._peers.get({ledgerNodeId});
@@ -39,7 +39,8 @@ describe('Consensus API find', () => {
     nodes.delta = await brLedgerNode.add(null, {genesisBlock});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
-      ledgerNode.eventWriter = new EventWriter({ledgerNode});
+      // attach worker to the node to emulate a work session used by `helpers`
+      ledgerNode.worker = new Worker({session: {ledgerNode}});
       const {id: ledgerNodeId} = ledgerNode;
       const voter = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = voter.id;
@@ -293,8 +294,9 @@ describe('Consensus API find', () => {
         creator: ['ledgerNode', (results, callback) => {
           const ledgerNode = nodes.epsilon;
           const {id: ledgerNodeId} = ledgerNode;
-          // attach eventWriter to the node
-          ledgerNode.eventWriter = new EventWriter({ledgerNode});
+          // attach worker to the node to emulate a work session used by
+          // `helpers`
+          ledgerNode.worker = new Worker({session: {ledgerNode}});
           consensusApi._peers.get({ledgerNodeId}, (err, result) => {
             if(err) {
               return callback(err);

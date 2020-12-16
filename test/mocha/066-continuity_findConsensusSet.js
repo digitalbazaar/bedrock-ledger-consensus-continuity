@@ -18,7 +18,7 @@ describe('Continuity API _findConsensusSet', () => {
   let _getTails;
   let genesisBlock;
   let getRecentHistory;
-  let EventWriter;
+  let Worker;
   const nodes = {};
   const peers = {};
   beforeEach(async function() {
@@ -29,7 +29,7 @@ describe('Continuity API _findConsensusSet', () => {
     getRecentHistory = consensusApi._history.getRecent;
     _getTails = consensusApi._consensus._continuity._getTails;
     _findConsensusSet = consensusApi._consensus._continuity._findConsensusSet;
-    EventWriter = consensusApi._worker.EventWriter;
+    Worker = consensusApi._worker.Worker;
 
     // add genesis node
     const ledgerConfiguration = mockData.ledgerConfiguration;
@@ -51,8 +51,8 @@ describe('Continuity API _findConsensusSet', () => {
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const {id: ledgerNodeId} = ledgerNode;
-      // attach eventWriter to the node
-      ledgerNode.eventWriter = new EventWriter({ledgerNode});
+      // attach worker to the node to emulate a work session used by `helpers`
+      ledgerNode.worker = new Worker({session: {ledgerNode}});
       const {id} = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = id;
       ledgerNode.creatorId = id;
@@ -172,7 +172,8 @@ describe('Continuity API _findConsensusSet', () => {
     try {
       // add node epsilon for this test and remove it afterwards
       nodes.epsilon = await brLedgerNode.add(null, {genesisBlock});
-      nodes.epsilon.eventWriter = new EventWriter({ledgerNode: nodes.epsilon});
+      // attach worker to the node to emulate a work session used by `helpers`
+      nodes.epsilon.worker = new Worker({session: {ledgerNode: nodes.epsilon}});
       const {id} = await consensusApi._peers.get(
         {ledgerNodeId: nodes.epsilon.id});
       peers.epsilon = id;
