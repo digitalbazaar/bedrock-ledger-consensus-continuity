@@ -232,33 +232,26 @@ describe('Continuity2017', () => {
   // FIXME: this API changed and tests need to be updated accordingly
   describe('getRecentHistory API', () => {
     it('history includes one local event and one local merge event', done => {
-      const {getRecent: getRecentHistory} = consensusApi._history;
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
         addEvent: callback => callbackify(helpers.addEventAndMerge)(
           {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
         history: ['addEvent', (results, callback) => {
-          callbackify(getRecentHistory)({
-            creatorId: ledgerNode.creatorId,
-            ledgerNode
-          }, (err, result) => {
-            assertNoError(err);
-            const mergeEventHash = results.addEvent.mergeHash;
-            // inspect events
-            // it should include keys for the merge event
-            should.exist(result.events);
-            result.events.should.be.an('array');
-            result.events.should.have.length(1);
-            should.exist(result.events[0].eventHash);
-            result.events[0].eventHash.should.equal(mergeEventHash);
-            callback();
-          });
+          const result = ledgerNode.worker.getRecentHistory();
+          const mergeEventHash = results.addEvent.mergeHash;
+          // inspect events
+          // it should include keys for the merge event
+          should.exist(result.events);
+          result.events.should.be.an('array');
+          result.events.should.have.length(1);
+          should.exist(result.events[0].eventHash);
+          result.events[0].eventHash.should.equal(mergeEventHash);
+          callback();
         }]
       }, done);
     });
     it('history includes 4 local events and one local merge event', done => {
-      const getRecentHistory = consensusApi._history.getRecent;
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
@@ -266,23 +259,19 @@ describe('Continuity2017', () => {
           consensusApi, count: 4, eventTemplate, ledgerNode, opTemplate
         }, callback),
         history: ['addEvent', (results, callback) => {
-          callbackify(getRecentHistory)({
-            creatorId: ledgerNode.creatorId, ledgerNode
-          }, (err, result) => {
-            assertNoError(err);
-            const mergeEventHash = results.addEvent.merge.meta.eventHash;
-            const regularEventHash = Object.keys(results.addEvent.regular);
-            const hashes = result.events.map(e => e.eventHash);
-            hashes.should.have.length(1);
-            hashes.should.have.same.members([mergeEventHash]);
-            // inspect the merge event
-            const mergeEvent = result.events[0];
-            should.exist(mergeEvent);
-            const {parentHash} = mergeEvent.event;
-            parentHash.should.have.same.members(
-              [genesisMergeHash, ...regularEventHash]);
-            callback();
-          });
+          const result = ledgerNode.worker.getRecentHistory();
+          const mergeEventHash = results.addEvent.merge.meta.eventHash;
+          const regularEventHash = Object.keys(results.addEvent.regular);
+          const hashes = result.events.map(e => e.eventHash);
+          hashes.should.have.length(1);
+          hashes.should.have.same.members([mergeEventHash]);
+          // inspect the merge event
+          const mergeEvent = result.events[0];
+          should.exist(mergeEvent);
+          const {parentHash} = mergeEvent.event;
+          parentHash.should.have.same.members(
+            [genesisMergeHash, ...regularEventHash]);
+          callback();
         }]
       }, done);
     });

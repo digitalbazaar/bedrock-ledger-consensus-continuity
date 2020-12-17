@@ -60,7 +60,6 @@ describe('Consensus API find', () => {
   it('single node consensus', done => {
     // the genesisMerge already has consensus
     const findConsensus = callbackify(consensusApi._consensus.find);
-    const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
     const witnesses = [peers.alpha];
@@ -69,8 +68,8 @@ describe('Consensus API find', () => {
     async.auto({
       event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
-      history: ['event1', (results, callback) => getRecentHistory(
-        {creatorId, ledgerNode}, callback)],
+      history: ['event1', (results, callback) =>
+        callback(null, ledgerNode.worker.getRecentHistory())],
       consensus: ['history', (results, callback) => {
         findConsensus({
           witnesses, ledgerNode, history: results.history
@@ -91,7 +90,6 @@ describe('Consensus API find', () => {
   });
   it('properly does not reach consensus with four witnesses', done => {
     const findConsensus = callbackify(consensusApi._consensus.find);
-    const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
     const witnesses = [peers.alpha, peers.beta, peers.gamma, peers.delta];
@@ -100,8 +98,8 @@ describe('Consensus API find', () => {
     async.auto({
       event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
-      history: ['event1', (results, callback) => getRecentHistory(
-        {creatorId, ledgerNode}, callback)],
+      history: ['event1', (results, callback) =>
+        callback(null, ledgerNode.worker.getRecentHistory())],
       consensus: ['history', (results, callback) => {
         findConsensus({
           witnesses, ledgerNode, history: results.history
@@ -119,7 +117,6 @@ describe('Consensus API find', () => {
   it.skip('ledger history alpha', function(done) {
     this.timeout(120000);
     const findConsensus = callbackify(consensusApi._consensus.find);
-    const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
@@ -129,8 +126,7 @@ describe('Consensus API find', () => {
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
           history: callback => {
-            const {creatorId} = ledgerNode;
-            getRecentHistory({creatorId, ledgerNode}, callback);
+            callback(null, ledgerNode.worker.getRecentHistory());
           },
           consensus: ['history', (results, callback) => {
             findConsensus({
@@ -175,7 +171,6 @@ describe('Consensus API find', () => {
   it.skip('ledger history beta', function(done) {
     this.timeout(120000);
     const findConsensus = callbackify(consensusApi._consensus.find);
-    const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
@@ -185,8 +180,7 @@ describe('Consensus API find', () => {
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
           history: callback => {
-            const {creatorId} = ledgerNode;
-            getRecentHistory({creatorId, ledgerNode}, callback);
+            callback(null, ledgerNode.worker.getRecentHistory());
           },
           consensus: ['history', (results, callback) => {
             findConsensus({
@@ -226,7 +220,6 @@ describe('Consensus API find', () => {
   it.skip('ledger history gamma', function(done) {
     this.timeout(120000);
     const findConsensus = callbackify(consensusApi._consensus.find);
-    const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
@@ -236,8 +229,7 @@ describe('Consensus API find', () => {
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
           history: callback => {
-            const {creatorId} = ledgerNode;
-            getRecentHistory({creatorId, ledgerNode}, callback);
+            callback(null, ledgerNode.worker.getRecentHistory());
           },
           consensus: ['history', (results, callback) => {
             findConsensus({
@@ -277,7 +269,6 @@ describe('Consensus API find', () => {
   it.skip('ledger history delta', function(done) {
     this.timeout(120000);
     const findConsensus = callbackify(consensusApi._consensus.find);
-    const getRecentHistory = callbackify(consensusApi._history.getRecent);
     // all peers except epsilon are witnesses
     const witnesses = Object.values(peers).filter(p => p !== peers.epsilon);
     async.auto({
@@ -314,8 +305,7 @@ describe('Consensus API find', () => {
           results.build;
         async.each(nodes, (ledgerNode, callback) => async.auto({
           history: callback => {
-            const {creatorId} = ledgerNode;
-            getRecentHistory({creatorId, ledgerNode}, callback);
+            callback(null, ledgerNode.worker.getRecentHistory());
           },
           consensus: ['history', (results, callback) => {
             findConsensus({
@@ -368,7 +358,6 @@ describe('Consensus API find', () => {
   });
   it.skip('add regular event with no merge before findConsensus', done => {
     const findConsensus = callbackify(consensusApi._consensus.find);
-    const getRecentHistory = callbackify(consensusApi._history.getRecent);
     const ledgerNode = nodes.alpha;
     const witnesses = Object.values(peers);
     const eventTemplate = mockData.events.alpha;
@@ -377,8 +366,7 @@ describe('Consensus API find', () => {
       build: callback => callbackify(helpers.buildHistory)(
         {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
       history: ['build', (results, callback) => {
-        const {creatorId} = ledgerNode;
-        getRecentHistory({creatorId, ledgerNode}, callback);
+        callback(null, ledgerNode.worker.getRecentHistory());
       }],
       event: ['history', (results, callback) => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback)],

@@ -17,7 +17,6 @@ describe('Continuity API _findConsensusSet', () => {
   let _findConsensusSet;
   let _getTails;
   let genesisBlock;
-  let getRecentHistory;
   let Worker;
   const nodes = {};
   const peers = {};
@@ -26,7 +25,6 @@ describe('Continuity API _findConsensusSet', () => {
     await helpers.flushCache();
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     ({api: consensusApi} = await helpers.use('Continuity2017'));
-    getRecentHistory = consensusApi._history.getRecent;
     _getTails = consensusApi._consensus._continuity._getTails;
     _findConsensusSet = consensusApi._consensus._continuity._findConsensusSet;
     Worker = consensusApi._worker.Worker;
@@ -69,8 +67,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'alpha', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
-      const history = await getRecentHistory(
-        {creatorId: ledgerNode.creatorId, ledgerNode});
+      const history = ledgerNode.worker.getRecentHistory();
       const {tails, witnessTails} = _getTails({history, witnesses});
       const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
@@ -101,8 +98,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'beta', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
-      const history = await getRecentHistory(
-        {creatorId: ledgerNode.creatorId, ledgerNode});
+      const history = ledgerNode.worker.getRecentHistory();
       const {tails, witnessTails} = _getTails({history, witnesses});
       const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
@@ -133,8 +129,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'gamma', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
-      const history = await getRecentHistory(
-        {creatorId: ledgerNode.creatorId, ledgerNode});
+      const history = ledgerNode.worker.getRecentHistory();
       const {tails, witnessTails} = _getTails({history, witnesses});
       const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
@@ -179,8 +174,7 @@ describe('Continuity API _findConsensusSet', () => {
 
       for(const key in nodes) {
         const ledgerNode = nodes[key];
-        const history = await getRecentHistory(
-          {creatorId: ledgerNode.creatorId, ledgerNode});
+        const history = ledgerNode.worker.getRecentHistory();
         const {tails, witnessTails} = _getTails({history, witnesses});
         const result = _findConsensusSet({
           ledgerNode, history, tails, witnessTails, witnesses
@@ -226,8 +220,7 @@ describe('Continuity API _findConsensusSet', () => {
       {consensusApi, historyId: 'epsilon', mockData, nodes, witnesses});
     for(const key in nodes) {
       const ledgerNode = nodes[key];
-      const history = await getRecentHistory(
-        {creatorId: ledgerNode.creatorId, ledgerNode});
+      const history = ledgerNode.worker.getRecentHistory();
       const {tails, witnessTails} = _getTails({history, witnesses});
       const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
@@ -263,8 +256,7 @@ describe('Continuity API _findConsensusSet', () => {
 
     for(const key in nodes) {
       const ledgerNode = nodes[key];
-      const history = await getRecentHistory(
-        {creatorId: ledgerNode.creatorId, ledgerNode});
+      const history = ledgerNode.worker.getRecentHistory();
       const {tails, witnessTails} = _getTails({history, witnesses});
       const result = _findConsensusSet({
         ledgerNode, history, tails, witnessTails, witnesses
