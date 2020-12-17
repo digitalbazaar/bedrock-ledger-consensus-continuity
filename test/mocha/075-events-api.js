@@ -19,6 +19,7 @@ describe('events API', () => {
   });
   let repairCache;
   let _cacheKey;
+  let Worker;
   const nodes = {};
   const peers = {};
   beforeEach(async function() {
@@ -27,6 +28,7 @@ describe('events API', () => {
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     const consensusPlugin = await helpers.use('Continuity2017');
     consensusApi = consensusPlugin.api;
+    Worker = consensusApi._worker.Worker;
     _cacheKey = consensusApi._cache.cacheKey;
     repairCache = callbackify(consensusApi._events.repairCache);
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
@@ -42,6 +44,7 @@ describe('events API', () => {
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       const {id: ledgerNodeId} = ledgerNode;
+      ledgerNode.worker = new Worker({session: {ledgerNode}});
       const voter = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = voter.id;
       ledgerNode.creatorId = voter.id;

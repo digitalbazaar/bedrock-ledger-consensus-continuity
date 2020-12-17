@@ -24,6 +24,7 @@ describe('Multinode', () => {
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     let genesisLedgerNode;
+    let Worker;
     const {ledgerConfiguration} = mockData;
     before(async function() {
       await helpers.flushCache();
@@ -31,6 +32,7 @@ describe('Multinode', () => {
       const consensusPlugin = await helpers.use('Continuity2017');
       genesisLedgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
       consensusApi = consensusPlugin.api;
+      Worker = consensusApi._worker.Worker;
     });
 
     // get genesis record (block + meta)
@@ -174,7 +176,9 @@ describe('Multinode', () => {
         delete ledgerConfiguration.ledger;
         let error;
         try {
-          await genesisLedgerNode.config.change({ledgerConfiguration});
+          const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+          await genesisLedgerNode.config.change(
+            {ledgerConfiguration, worker});
         } catch(e) {
           error = e;
         }
@@ -191,7 +195,9 @@ describe('Multinode', () => {
         ledgerConfiguration.ledger = 'https://example.com/invalidLedger';
         let error;
         try {
-          await genesisLedgerNode.config.change({ledgerConfiguration});
+          const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+          await genesisLedgerNode.config.change(
+            {ledgerConfiguration, worker});
         } catch(e) {
           error = e;
         }
@@ -206,7 +212,9 @@ describe('Multinode', () => {
         ledgerConfiguration.sequence = 1;
         let error;
         try {
-          await genesisLedgerNode.config.change({ledgerConfiguration});
+          const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+          await genesisLedgerNode.config.change(
+            {ledgerConfiguration, worker});
         } catch(e) {
           error = e;
         }
@@ -223,7 +231,9 @@ describe('Multinode', () => {
         ledgerConfiguration.sequence = 1;
         let error;
         try {
-          await genesisLedgerNode.config.change({ledgerConfiguration});
+          const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+          await genesisLedgerNode.config.change(
+            {ledgerConfiguration, worker});
         } catch(e) {
           error = e;
         }
@@ -238,7 +248,9 @@ describe('Multinode', () => {
         delete ledgerConfiguration.sequence;
         let error;
         try {
-          await genesisLedgerNode.config.change({ledgerConfiguration});
+          const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+          await genesisLedgerNode.config.change(
+            {ledgerConfiguration, worker});
         } catch(e) {
           error = e;
         }
@@ -255,7 +267,9 @@ describe('Multinode', () => {
         ledgerConfiguration.sequence = 5;
         let error;
         try {
-          await genesisLedgerNode.config.change({ledgerConfiguration});
+          const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+          await genesisLedgerNode.config.change(
+            {ledgerConfiguration, worker});
         } catch(e) {
           error = e;
         }
@@ -270,7 +284,13 @@ describe('Multinode', () => {
         ledgerConfiguration.creator = genesisLedgerNode._peerId;
         ledgerConfiguration.sequence = 1;
         ledgerConfiguration.consensusMethod = 'Continuity9000';
-        await genesisLedgerNode.config.change({ledgerConfiguration});
+        // FIXME: this should not use a `worker` here, instead the ledger
+        // configuration should be added to a queue when calling `.change`
+        // once that is updated, remove `worker` and rely on settling
+        // the network to create the event and apply the change
+        const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+        await genesisLedgerNode.config.change(
+          {ledgerConfiguration, worker});
         await helpers.settleNetwork(
           {consensusApi, nodes: peers, series: false});
         for(const ledgerNode of peers) {

@@ -72,6 +72,7 @@ describe('events.mergeBranches API', () => {
         {ledgerNode, eventTemplate, opTemplate}, callback),
       mergeBranches: ['addEvent', (results, callback) => {
         merge({
+          worker: ledgerNode.worker,
           creatorId, ledgerNode,
           basisBlockHeight: 0,
           nonEmptyThreshold: 0, emptyThreshold: 1
@@ -120,11 +121,13 @@ describe('events.mergeBranches API', () => {
         {ledgerNode, eventTemplate, opTemplate}, callback),
       mergeBranches1: ['addEvent', (results, callback) =>
         merge({
+          worker: ledgerNode.worker,
           creatorId, ledgerNode,
           basisBlockHeight: 0,
           nonEmptyThreshold: 0, emptyThreshold: 1
         }, callback)],
       mergeBranches2: ['mergeBranches1', (results, callback) => merge({
+        worker: ledgerNode.worker,
         creatorId, ledgerNode,
         basisBlockHeight: 0,
         nonEmptyThreshold: 0, emptyThreshold: 1
@@ -147,6 +150,7 @@ describe('events.mergeBranches API', () => {
         {eventTemplate, count: 5, ledgerNode, opTemplate}, callback),
       mergeBranches: ['addEvent', (results, callback) => {
         merge({
+          worker: ledgerNode.worker,
           creatorId, ledgerNode,
           basisBlockHeight: 0,
           nonEmptyThreshold: 0, emptyThreshold: 1

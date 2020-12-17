@@ -29,9 +29,14 @@ api.average = arr => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
 // test hashing function
 api.testHasher = brLedgerNode.consensus._hasher;
 
+// this function is presumed to be called when no work session is running
+// for the ledger node
 api.addEvent = async ({
   count = 1, eventTemplate, ledgerNode, opTemplate
 } = {}) => {
+  // Note: this must be added in the tests to emulate a work session
+  const {worker} = ledgerNode;
+
   const events = {};
   const {creatorId} = ledgerNode;
   let operations;
@@ -48,6 +53,7 @@ api.addEvent = async ({
       operation.recordPatch.target = testRecordId;
     }
 
+    // FIXME: get the head from the worker instead
     const head = await ledgerNode.consensus._history.getHead({
       creatorId, ledgerNode
     });
@@ -70,8 +76,9 @@ api.addEvent = async ({
       eventHash, ledgerNode, operations
     });
 
+    // FIXME: call worker.addLocalRegularEvent instead
     const result = await ledgerNode.consensus._events.add({
-      event: testEvent, eventHash, ledgerNode
+      event: testEvent, eventHash, ledgerNode, worker
     });
 
     result.operations = operations;
@@ -91,11 +98,15 @@ api.addEventAndMerge = async ({
   const events = {};
 
   events.regular = await api.addEvent({
-    count, eventTemplate, ledgerNode, opTemplate
+    count, eventTemplate, ledgerNode, opTemplate,
+    // Note: this must be added in the tests to emulate a work session
+    worker: ledgerNode.worker
   });
   events.regularHashes = Object.keys(events.regular);
 
   const {record} = await consensusApi._worker.merge({
+    // Note: this must be added in the tests to emulate a work session
+    worker: ledgerNode.worker,
     creatorId: ledgerNode.creatorId, ledgerNode,
     basisBlockHeight: 0,
     // for simple tests, use these thresholds
@@ -254,6 +265,8 @@ api.copyAndMerge = async ({
     await api.copyEvents({from: nodes[f], to: nodes[to], useSnapshot});
   }
   const {record} = await consensusApi._worker.merge({
+    // Note: this must be added in the tests to emulate a work session
+    worker: nodes[to].worker,
     creatorId: nodes[to].creatorId, ledgerNode: nodes[to],
     basisBlockHeight: 0,
     // this function is only used to unit test hard-coded histories for

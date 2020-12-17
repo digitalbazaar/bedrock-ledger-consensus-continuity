@@ -24,6 +24,7 @@ describe('Continuity2017', () => {
   let genesisMergeHash;
   let creator;
   let ledgerNode;
+  let Worker;
   beforeEach(async function() {
     const ledgerConfiguration = mockData.ledgerConfiguration;
     // start by flushing redis
@@ -36,6 +37,9 @@ describe('Continuity2017', () => {
     expect(ledgerNode, 'Expected ledgerNode to be ok').to.be.ok;
     // the consensusApi is defined by this library
     consensusApi = consensusPlugin.api;
+    Worker = consensusApi._worker.Worker;
+    // attach worker to the node to emulate a work session used by `helpers`
+    ledgerNode.worker = new Worker({session: {ledgerNode}});
     creator = await consensusApi._peers.get(
       {ledgerNodeId: ledgerNode.id});
     ledgerNode.creatorId = creator.id;
@@ -93,7 +97,8 @@ describe('Continuity2017', () => {
         error = e;
       }
       // first operation succeeds
-      await ledgerNode.consensus._events.create({ledgerNode});
+      await ledgerNode.consensus._events.create(
+        {ledgerNode, worker: ledgerNode.worker});
       assertNoError(error);
       try {
         await ledgerNode.operations.add({operation});
@@ -163,7 +168,7 @@ describe('Continuity2017', () => {
         {eventHash, ledgerNode, operations});
 
       let result = await ledgerNode.consensus._events.add(
-        {event: testEvent, eventHash, ledgerNode});
+        {event: testEvent, eventHash, ledgerNode, worker: ledgerNode.worker});
       should.exist(result.event);
       let event = result.event;
       should.exist(event.type);
@@ -526,7 +531,7 @@ describe('Continuity2017', () => {
               });
           }),
         addEvent: ['getConfigBlock', (results, callback) =>
-          ledgerNode.conseneus._events.add(testEvent, ledgerNode, callback)],
+          ledgerNode.consensus._events.add(testEvent, ledgerNode, callback)],
         runWorker: ['addEvent', (results, callback) =>
           callbackify(consensusApi._worker._run)({ledgerNode}, err => {
             callback(err);
