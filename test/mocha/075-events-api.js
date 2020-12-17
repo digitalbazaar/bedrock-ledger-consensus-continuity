@@ -7,7 +7,6 @@ const async = require('async');
 const {callbackify} = require('util');
 const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
-const expect = global.chai.expect;
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
 
@@ -77,7 +76,7 @@ describe('events API', () => {
             // this set of results indicates that no events were removed
             // see `/lib/cache/events.addLocalMergeEvent` for the redis
             // transaction that is executed that returns this result
-            updateCache.should.eql([0, 0, 'OK', 'OK', 1, 0, 'OK']);
+            updateCache.should.eql(['OK', 'OK', 1, 0, 'OK']);
             callback();
           });
         }]
@@ -88,8 +87,6 @@ describe('events API', () => {
       // NOTE: creatorID is added to ledgerNode object in tests only
       const {creatorId} = ledgerNode;
       const ledgerNodeId = ledgerNode.id;
-      const childlessKey = _cacheKey.childless(ledgerNodeId);
-      const localChildlessKey = _cacheKey.localChildless(ledgerNodeId);
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
@@ -98,16 +95,13 @@ describe('events API', () => {
         // recreate conditions that would exist if mongodb write had succeeded
         // but cache update had failed
         rebuildCache: ['merge', (results, callback) => {
-          const {mergeHash: eventHash, regularHashes} = results.merge;
+          const {mergeHash: eventHash} = results.merge;
 
           const outstandingMergeEventKey = _cacheKey.outstandingMergeEvent(
             {eventHash, ledgerNodeId});
           const headKey = _cacheKey.head({creatorId, ledgerNodeId});
           const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
-          const parentHashes = [...regularHashes];
           cache.client.multi()
-            .sadd(childlessKey, parentHashes)
-            .sadd(localChildlessKey, regularHashes)
             .del(outstandingMergeEventKey, headKey)
             .srem(outstandingMergeKey, outstandingMergeEventKey)
             .exec(callback);
@@ -119,15 +113,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([1, 1, 'OK', 'OK', 1, 1, 'OK']);
-            callback();
-          });
-        }],
-        test: ['repair', (results, callback) => {
-          // childlessKey should not exist (empty)
-          cache.client.get(childlessKey, (err, result) => {
-            assertNoError(err);
-            expect(result).to.be.null;
+            updateCache.should.eql(['OK', 'OK', 1, 1, 'OK']);
             callback();
           });
         }]
@@ -138,8 +124,6 @@ describe('events API', () => {
       // NOTE: creatorID is added to ledgerNode object in tests only
       const {creatorId} = ledgerNode;
       const ledgerNodeId = ledgerNode.id;
-      const childlessKey = _cacheKey.childless(ledgerNodeId);
-      const localChildlessKey = _cacheKey.localChildless(ledgerNodeId);
       const eventTemplate = mockData.events.alpha;
       const opTemplate = mockData.operations.alpha;
       async.auto({
@@ -149,16 +133,13 @@ describe('events API', () => {
         // recreate conditions that would exist if mongodb write had succeeded
         // but cache update had failed
         rebuildCache: ['merge', (results, callback) => {
-          const {mergeHash: eventHash, regularHashes} = results.merge;
+          const {mergeHash: eventHash} = results.merge;
 
           const outstandingMergeEventKey = _cacheKey.outstandingMergeEvent(
             {eventHash, ledgerNodeId});
           const headKey = _cacheKey.head({creatorId, ledgerNodeId});
           const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
-          const parentHashes = [...regularHashes];
           cache.client.multi()
-            .sadd(childlessKey, parentHashes)
-            .sadd(localChildlessKey, regularHashes)
             .del(outstandingMergeEventKey, headKey)
             .srem(outstandingMergeKey, outstandingMergeEventKey)
             .exec(callback);
@@ -170,15 +151,7 @@ describe('events API', () => {
             const {updateCache} = result;
             updateCache.should.be.an('array');
             // this set of results indicates that the cache was updated properly
-            updateCache.should.eql([5, 5, 'OK', 'OK', 1, 1, 'OK']);
-            callback();
-          });
-        }],
-        test: ['repair', (results, callback) => {
-          // childlessKey should not exist (empty)
-          cache.client.get(childlessKey, (err, result) => {
-            assertNoError(err);
-            expect(result).to.be.null;
+            updateCache.should.eql(['OK', 'OK', 1, 1, 'OK']);
             callback();
           });
         }]

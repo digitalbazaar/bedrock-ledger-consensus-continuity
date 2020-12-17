@@ -149,8 +149,6 @@ describe('Cache Recovery', () => {
         // inspect outstandingMerge key
         const outstandingMergeEventsBeforePrime =
           await _inspectOutstandingMergeEvents({nodes});
-        // inspect childless hash key
-        const childlessBeforePrime = await _inspectChildless({nodes});
 
         const keysBefore = await cache.client.keys('*');
         keysBefore.should.be.an('array');
@@ -163,16 +161,6 @@ describe('Cache Recovery', () => {
         for(const nodeLabel in nodes) {
           const ledgerNode = nodes[nodeLabel];
           await ledgerNode.consensus._cache.prime.primeAll({ledgerNode});
-        }
-
-        // compare childless before/after prime
-        const childlessAfterPrime = await _inspectChildless({nodes});
-        for(const nodeLabel in childlessAfterPrime) {
-          childlessAfterPrime[nodeLabel].childless.should.have.same.members(
-            childlessBeforePrime[nodeLabel].childless);
-          childlessAfterPrime[nodeLabel].localChildless
-            .should.have.same.members(
-              childlessBeforePrime[nodeLabel].localChildless);
         }
 
         // compare outstanding merge events and block height before/after
@@ -228,33 +216,6 @@ async function _addOperations({count}) {
     helpers.addOperation({count, ledgerNode: nodes.delta, opTemplate})
   ]);
   return {alpha, beta, gamma, delta};
-}
-
-async function _inspectChildless({nodes}) {
-  const report = {};
-  for(const nodeLabel in nodes) {
-    const ledgerNode = nodes[nodeLabel];
-    const ledgerNodeId = ledgerNode.id;
-    const {consensus: {_cache: {cacheKey: _cacheKey}}} = ledgerNode;
-    const childlessKey = _cacheKey.childless(ledgerNodeId);
-    const localChildlessKey = _cacheKey.localChildless(ledgerNodeId);
-    const childlessKeys = await cache.client.smembers(childlessKey);
-    const localChildlessKeys = await cache.client.smembers(localChildlessKey);
-    const childlessHashesCache = [];
-    const localChildlessHashesCache = [];
-    for(const key of childlessKeys) {
-      childlessHashesCache.push(key.substr(key.lastIndexOf('|') + 1));
-    }
-    for(const key of localChildlessKeys) {
-      localChildlessHashesCache.push(key.substr(key.lastIndexOf('|') + 1));
-    }
-    const {childless, localChildless} = await ledgerNode.consensus._cache.prime
-      .getChildlessEvents({ledgerNode});
-    childlessHashesCache.should.have.same.members(childless);
-    localChildlessHashesCache.should.have.same.members(localChildless);
-    report[nodeLabel] = {childless, localChildless};
-  }
-  return report;
 }
 
 async function _inspectOutstandingMergeEvents({nodes}) {
