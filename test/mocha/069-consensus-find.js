@@ -121,7 +121,7 @@ describe('Consensus API find', () => {
     const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
-        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
+        {historyId: 'alpha', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
@@ -175,7 +175,7 @@ describe('Consensus API find', () => {
     const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
-        {consensusApi, historyId: 'beta', mockData, nodes}, callback),
+        {historyId: 'beta', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
@@ -224,7 +224,7 @@ describe('Consensus API find', () => {
     const witnesses = Object.values(peers);
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
-        {consensusApi, historyId: 'gamma', mockData, nodes}, callback),
+        {historyId: 'gamma', mockData, nodes}, callback),
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
@@ -301,7 +301,7 @@ describe('Consensus API find', () => {
       }, callback),
       build: ['nodeEpsilon', (results, callback) =>
         callbackify(helpers.buildHistory)(
-          {consensusApi, historyId: 'delta', mockData, nodes}, callback)],
+          {historyId: 'delta', mockData, nodes}, callback)],
       testAll: ['build', (results, callback) => {
         const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
           results.build;
@@ -366,7 +366,7 @@ describe('Consensus API find', () => {
     const opTemplate = mockData.operations.alpha;
     async.auto({
       build: callback => callbackify(helpers.buildHistory)(
-        {consensusApi, historyId: 'alpha', mockData, nodes}, callback),
+        {historyId: 'alpha', mockData, nodes}, callback),
       history: ['build', (results, callback) => {
         callback(null, ledgerNode.worker.getRecentHistory());
       }],
