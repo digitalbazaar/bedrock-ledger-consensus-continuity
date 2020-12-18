@@ -134,7 +134,7 @@ describe.skip('Continuity API _getTails', () => {
         const events = {};
         async.eachOf(nodes, (n, i, callback) => {
           callbackify(helpers.addEventAndMerge)(
-            {consensusApi, eventTemplate, ledgerNode: n}, (err, result) => {
+            {eventTemplate, ledgerNode: n}, (err, result) => {
               if(err) {
                 return callback(err);
               }
@@ -185,7 +185,6 @@ describe.skip('Continuity API _getTails', () => {
       }],
       // step 3
       cp1: ['test1', (results, callback) => callbackify(helpers.copyAndMerge)({
-        consensusApi,
         from: nodes.alpha,
         to: nodes.beta
       }, callback)],
@@ -256,7 +255,6 @@ describe.skip('Continuity API _getTails', () => {
       }],
       // step 4
       cp2: ['test2', (results, callback) => callbackify(helpers.copyAndMerge)({
-        consensusApi,
         from: nodes.delta,
         to: nodes.gamma
       }, callback)],
@@ -317,7 +315,6 @@ describe.skip('Continuity API _getTails', () => {
       ss1: ['test3', (results, callback) => callbackify(helpers.snapshotEvents)(
         {ledgerNode: nodes.gamma}, callback)],
       cp3: ['ss1', (results, callback) => callbackify(helpers.copyAndMerge)({
-        consensusApi,
         from: nodes.beta,
         to: nodes.gamma
       }, callback)],
@@ -428,7 +425,6 @@ describe.skip('Continuity API _getTails', () => {
       }],
       // step 6
       cp4: ['test4', (results, callback) => callbackify(helpers.copyAndMerge)({
-        consensusApi,
         from: nodes.gamma,
         to: nodes.beta,
         useSnapshot: true

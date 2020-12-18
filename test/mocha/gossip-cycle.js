@@ -15,12 +15,12 @@ api.alpha = (
   const gossipWith = callbackify(consensusApi._gossip.gossipWith);
   async.auto({
     betaAddEvent1: callback => callbackify(helpers.addEventAndMerge)(
-      {consensusApi, eventTemplate, ledgerNode: nodes.beta, opTemplate},
+      {eventTemplate, ledgerNode: nodes.beta, opTemplate},
       callback),
     // add event on beta
     alphaAddEvent1: ['betaAddEvent1', (results, callback) =>
       callbackify(helpers.addEventAndMerge)(
-        {consensusApi, eventTemplate, ledgerNode: nodes.alpha, opTemplate},
+        {eventTemplate, ledgerNode: nodes.alpha, opTemplate},
         callback)],
     // beta gossips with alpha
     betaGossip1: ['alphaAddEvent1', (results, callback) =>

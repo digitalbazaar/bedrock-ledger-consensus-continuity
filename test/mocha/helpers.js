@@ -89,11 +89,10 @@ api.addEvent = async ({
 };
 
 api.addEventAndMerge = async ({
-  consensusApi, count = 1, eventTemplate, ledgerNode, opTemplate
+  count = 1, eventTemplate, ledgerNode, opTemplate
 } = {}) => {
-  if(!(consensusApi && eventTemplate && ledgerNode)) {
-    throw new TypeError(
-      '`consensusApi`, `eventTemplate`, and `ledgerNode` are required.');
+  if(!(eventTemplate && ledgerNode)) {
+    throw new TypeError('"eventTemplate", and "ledgerNode" are required.');
   }
   const events = {};
 
@@ -104,9 +103,8 @@ api.addEventAndMerge = async ({
   });
   events.regularHashes = Object.keys(events.regular);
 
-  const {record} = await consensusApi._worker.merge({
-    // Note: this must be added in the tests to emulate a work session
-    worker: ledgerNode.worker,
+  // Note: `worker` must be added in the tests to emulate a work session
+  const {record} = await ledgerNode.worker._merge({
     basisBlockHeight: 0,
     // for simple tests, use these thresholds
     nonEmptyThreshold: 0, emptyThreshold: 1
@@ -119,7 +117,7 @@ api.addEventAndMerge = async ({
 };
 
 api.addEventMultiNode = async ({
-  consensusApi, eventTemplate, nodes, witnesses, opTemplate
+  eventTemplate, nodes, witnesses, opTemplate
 } = {}) => {
   const rVal = {
     mergeHash: [],
@@ -128,7 +126,7 @@ api.addEventMultiNode = async ({
   for(const name of Object.keys(nodes)) {
     const ledgerNode = nodes[name];
     rVal[name] = await api.addEventAndMerge({
-      consensusApi, eventTemplate, ledgerNode, opTemplate, witnesses
+      eventTemplate, ledgerNode, opTemplate, witnesses
     });
   }
   Object.keys(nodes).forEach(k => {
@@ -256,16 +254,13 @@ api.buildHistory = async ({consensusApi, historyId, mockData, nodes} = {}) => {
 };
 
 // from may be a single node or an array of nodes
-api.copyAndMerge = async ({
-  consensusApi, from, nodes, to, useSnapshot = false
-} = {}) => {
+api.copyAndMerge = async ({from, nodes, to, useSnapshot = false} = {}) => {
   const copyFrom = [].concat(from);
   for(const f of copyFrom) {
     await api.copyEvents({from: nodes[f], to: nodes[to], useSnapshot});
   }
-  const {record} = await consensusApi._worker.merge({
-    // Note: this must be added in the tests to emulate a work session
-    worker: nodes[to].worker,
+  // Note: `worker` must be added in the tests to emulate a work session
+  const {record} = await nodes[to].worker._merge({
     basisBlockHeight: 0,
     // this function is only used to unit test hard-coded histories for
     // creating a single block so these thresholds are set here

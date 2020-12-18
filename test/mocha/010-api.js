@@ -237,7 +237,7 @@ describe('Continuity2017', () => {
       const opTemplate = mockData.operations.alpha;
       async.auto({
         addEvent: callback => callbackify(helpers.addEventAndMerge)(
-          {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
+          {eventTemplate, ledgerNode, opTemplate}, callback),
         history: ['addEvent', (results, callback) => {
           const result = ledgerNode.worker.getRecentHistory();
           const mergeEventHash = results.addEvent.mergeHash;
@@ -257,7 +257,7 @@ describe('Continuity2017', () => {
       const opTemplate = mockData.operations.alpha;
       async.auto({
         addEvent: callback => callbackify(helpers.addEventAndMerge)({
-          consensusApi, count: 4, eventTemplate, ledgerNode, opTemplate
+          count: 4, eventTemplate, ledgerNode, opTemplate
         }, callback),
         history: ['addEvent', (results, callback) => {
           const result = ledgerNode.worker.getRecentHistory();
