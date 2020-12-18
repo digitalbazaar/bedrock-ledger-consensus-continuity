@@ -67,14 +67,12 @@ describe('events.mergeBranches API', () => {
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     const ledgerNode = nodes.alpha;
-    const {creatorId} = ledgerNode;
     async.auto({
       addEvent: callback => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback),
       mergeBranches: ['addEvent', (results, callback) => {
         merge({
           worker: ledgerNode.worker,
-          creatorId, ledgerNode,
           basisBlockHeight: 0,
           nonEmptyThreshold: 0, emptyThreshold: 1
         }, (err, result) => {
@@ -116,20 +114,17 @@ describe('events.mergeBranches API', () => {
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     const opTemplate = mockData.operations.alpha;
-    const {creatorId} = ledgerNode;
     async.auto({
       addEvent: callback => callbackify(helpers.addEvent)(
         {ledgerNode, eventTemplate, opTemplate}, callback),
       mergeBranches1: ['addEvent', (results, callback) =>
         merge({
           worker: ledgerNode.worker,
-          creatorId, ledgerNode,
           basisBlockHeight: 0,
           nonEmptyThreshold: 0, emptyThreshold: 1
         }, callback)],
       mergeBranches2: ['mergeBranches1', (results, callback) => merge({
         worker: ledgerNode.worker,
-        creatorId, ledgerNode,
         basisBlockHeight: 0,
         nonEmptyThreshold: 0, emptyThreshold: 1
       }, (err, result) => {
@@ -145,14 +140,12 @@ describe('events.mergeBranches API', () => {
     const eventTemplate = mockData.events.alpha;
     const ledgerNode = nodes.alpha;
     const opTemplate = mockData.operations.alpha;
-    const {creatorId} = ledgerNode;
     async.auto({
       addEvent: callback => callbackify(helpers.addEvent)(
         {eventTemplate, count: 5, ledgerNode, opTemplate}, callback),
       mergeBranches: ['addEvent', (results, callback) => {
         merge({
           worker: ledgerNode.worker,
-          creatorId, ledgerNode,
           basisBlockHeight: 0,
           nonEmptyThreshold: 0, emptyThreshold: 1
         }, (err, result) => {

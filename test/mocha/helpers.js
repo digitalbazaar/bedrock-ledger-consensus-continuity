@@ -107,7 +107,6 @@ api.addEventAndMerge = async ({
   const {record} = await consensusApi._worker.merge({
     // Note: this must be added in the tests to emulate a work session
     worker: ledgerNode.worker,
-    creatorId: ledgerNode.creatorId, ledgerNode,
     basisBlockHeight: 0,
     // for simple tests, use these thresholds
     nonEmptyThreshold: 0, emptyThreshold: 1
@@ -267,7 +266,6 @@ api.copyAndMerge = async ({
   const {record} = await consensusApi._worker.merge({
     // Note: this must be added in the tests to emulate a work session
     worker: nodes[to].worker,
-    creatorId: nodes[to].creatorId, ledgerNode: nodes[to],
     basisBlockHeight: 0,
     // this function is only used to unit test hard-coded histories for
     // creating a single block so these thresholds are set here
