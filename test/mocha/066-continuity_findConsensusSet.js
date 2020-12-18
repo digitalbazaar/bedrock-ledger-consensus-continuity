@@ -51,6 +51,7 @@ describe('Continuity API _findConsensusSet', () => {
       const {id: ledgerNodeId} = ledgerNode;
       // attach worker to the node to emulate a work session used by `helpers`
       ledgerNode.worker = new Worker({session: {ledgerNode}});
+      await ledgerNode.worker._init();
       const {id} = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = id;
       ledgerNode.creatorId = id;
@@ -163,6 +164,7 @@ describe('Continuity API _findConsensusSet', () => {
       nodes.epsilon = await brLedgerNode.add(null, {genesisBlock});
       // attach worker to the node to emulate a work session used by `helpers`
       nodes.epsilon.worker = new Worker({session: {ledgerNode: nodes.epsilon}});
+      await nodes.epsilon.worker._init();
       const {id} = await consensusApi._peers.get(
         {ledgerNodeId: nodes.epsilon.id});
       peers.epsilon = id;

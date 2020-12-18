@@ -44,6 +44,7 @@ describe('events API', () => {
       const ledgerNode = nodes[key];
       const {id: ledgerNodeId} = ledgerNode;
       ledgerNode.worker = new Worker({session: {ledgerNode}});
+      await ledgerNode.worker._init();
       const voter = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = voter.id;
       ledgerNode.creatorId = voter.id;

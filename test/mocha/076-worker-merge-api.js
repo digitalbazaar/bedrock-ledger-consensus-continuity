@@ -46,6 +46,7 @@ describe('events.mergeBranches API', () => {
       const ledgerNode = nodes[key];
       // attach worker to the node to emulate a work session used by `helpers`
       ledgerNode.worker = new Worker({session: {ledgerNode}});
+      await ledgerNode.worker._init();
       const {id: ledgerNodeId} = ledgerNode;
       const voter = await consensusApi._peers.get({ledgerNodeId});
       ledgerNode.creatorId = voter.id;
