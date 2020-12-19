@@ -69,11 +69,9 @@ describe('blocks API', () => {
       const hashes = [genesisMergeHash.eventHash];
       const ledgerNodeId = nodes.alpha.id;
       const blockHeightKey = _cacheKey.blockHeight(ledgerNodeId);
-      const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
       const eventKeys = hashes.map(eventHash => _cacheKey.event(
         {eventHash, ledgerNodeId}));
       const multi = cache.client.multi();
-      multi.sadd(outstandingMergeKey, eventKeys);
       multi.set(blockHeightKey, 0);
       eventKeys.forEach(k => multi.set(k, JSON.stringify({test: 'string'})));
       multi.exec(done);
@@ -84,17 +82,10 @@ describe('blocks API', () => {
       const ledgerNode = nodes.alpha;
       async.auto({
         prepare: callback => {
-          const hashes = [genesisMergeHash.eventHash];
           const ledgerNodeId = nodes.alpha.id;
           const blockHeightKey = _cacheKey.blockHeight(ledgerNodeId);
-          const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
-          const outstandingMergeEventKeys = hashes.map(eventHash =>
-            _cacheKey.outstandingMergeEvent({eventHash, ledgerNodeId}));
           const multi = cache.client.multi();
-          multi.sadd(outstandingMergeKey, outstandingMergeEventKeys);
           multi.set(blockHeightKey, 0);
-          outstandingMergeEventKeys.forEach(k => multi.set(
-            k, JSON.stringify({test: 'string'})));
           multi.exec(callback);
         },
         repair: ['prepare', (results, callback) => repairCache(
@@ -102,12 +93,10 @@ describe('blocks API', () => {
             assertNoError(err);
             should.exist(result.cache);
             result.cache.should.be.an('array');
-            result.cache.should.have.length(3);
+            result.cache.should.have.length(1);
             // redis indicates that
-            //   1 item removed from set
-            //   1 key removed
             //   result of blockHeight increment was 1
-            result.cache.should.eql([1, 1, 1]);
+            result.cache.should.eql([1]);
             callback();
           })]
       }, done);
@@ -145,17 +134,10 @@ describe('blocks API', () => {
           }, callback);
         }, callback),
         cache: ['events', (results, callback) => {
-          const hashes = results.events.map(e => e.eventHash);
           const ledgerNodeId = nodes.alpha.id;
           const blockHeightKey = _cacheKey.blockHeight(ledgerNodeId);
-          const outstandingMergeKey = _cacheKey.outstandingMerge(ledgerNodeId);
-          const outstandingMergeEventKeys = hashes.map(eventHash =>
-            _cacheKey.outstandingMergeEvent({eventHash, ledgerNodeId}));
           const multi = cache.client.multi();
-          multi.sadd(outstandingMergeKey, outstandingMergeEventKeys);
           multi.set(blockHeightKey, 499);
-          outstandingMergeEventKeys.forEach(k => multi.set(
-            k, JSON.stringify({test: 'string'})));
           multi.exec(callback);
         }],
         repair: ['cache', (results, callback) => repairCache(
@@ -163,12 +145,10 @@ describe('blocks API', () => {
             assertNoError(err);
             should.exist(result.cache);
             result.cache.should.be.an('array');
-            result.cache.should.have.length(3);
+            result.cache.should.have.length(1);
             // redis indicates that
-            //   5 items removed from set
-            //   5 keys removed
             //   result of blockHeight increment was 500
-            result.cache.should.eql([5, 5, 500]);
+            result.cache.should.eql([500]);
             callback();
           })]
       }, done);

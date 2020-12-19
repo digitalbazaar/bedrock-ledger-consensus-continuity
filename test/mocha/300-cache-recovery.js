@@ -146,9 +146,6 @@ describe('Cache Recovery', () => {
         Object.values(nBlocks.targetBlockHashMap)
           .every(h => h === nBlocks.targetBlockHashMap.alpha)
           .should.be.true;
-        // inspect outstandingMerge key
-        const outstandingMergeEventsBeforePrime =
-          await _inspectOutstandingMergeEvents({nodes});
 
         const keysBefore = await cache.client.keys('*');
         keysBefore.should.be.an('array');
@@ -161,19 +158,6 @@ describe('Cache Recovery', () => {
         for(const nodeLabel in nodes) {
           const ledgerNode = nodes[nodeLabel];
           await ledgerNode.consensus._cache.prime.primeAll({ledgerNode});
-        }
-
-        // compare outstanding merge events and block height before/after
-        // prime
-        const outstandingMergeEventsAfterPrime =
-          await _inspectOutstandingMergeEvents({nodes});
-        for(const nodeLabel in outstandingMergeEventsAfterPrime) {
-          const {blockHeight, eventHashes} =
-            outstandingMergeEventsAfterPrime[nodeLabel];
-          blockHeight.should.equal(
-            outstandingMergeEventsBeforePrime[nodeLabel].blockHeight);
-          eventHashes.should.have.same.members(
-            outstandingMergeEventsBeforePrime[nodeLabel].eventHashes);
         }
 
         await helpers.settleNetwork(
@@ -216,52 +200,6 @@ async function _addOperations({count}) {
     helpers.addOperation({count, ledgerNode: nodes.delta, opTemplate})
   ]);
   return {alpha, beta, gamma, delta};
-}
-
-async function _inspectOutstandingMergeEvents({nodes}) {
-  const report = {};
-  for(const nodeLabel in nodes) {
-    report[nodeLabel] = {};
-    const ledgerNode = nodes[nodeLabel];
-    const ledgerNodeId = ledgerNode.id;
-
-    // test blockHeight
-    const cacheBlockHeight = await ledgerNode.consensus._cache.blocks
-      .blockHeight(ledgerNodeId);
-    // get blockHeight from latestSummary
-    const {eventBlock: {block: {blockHeight}}} = await ledgerNode
-      .storage.blocks.getLatestSummary();
-    cacheBlockHeight.should.equal(blockHeight);
-    report[nodeLabel].blockHeight = blockHeight;
-
-    const {consensus: {_cache: {cacheKey: _cacheKey}}} = ledgerNode;
-    const outstandingMergeKey = _cacheKey.outstandingMerge(
-      ledgerNodeId);
-    const keys = await cache.client.smembers(outstandingMergeKey);
-    keys.every(k => k.startsWith('ome')).should.be.true;
-    if(keys.length > 0) {
-      const keyPrefix = keys[0].substr(0, keys[0].lastIndexOf('|') + 1);
-      const eventKeysInCache = await cache.client.keys(`${keyPrefix}*`);
-      eventKeysInCache.should.have.same.members(keys);
-    }
-
-    const eventHashes = [];
-    for(const key of keys) {
-      eventHashes.push(key.substr(key.lastIndexOf('|') + 1));
-    }
-    // get events from mongodb
-    const result = await ledgerNode.storage.events.collection.find({
-      'meta.continuity2017.type': 'm',
-      'meta.consensus': false
-    }).project({
-      _id: 0,
-      'meta.eventHash': 1,
-    }).toArray();
-    const mongoEventHashes = result.map(r => r.meta.eventHash);
-    eventHashes.should.have.same.members(mongoEventHashes);
-    report[nodeLabel].eventHashes = eventHashes;
-  }
-  return report;
 }
 
 async function _latestBlockSummary() {
