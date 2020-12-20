@@ -8,7 +8,6 @@ const brLedgerNode = require('bedrock-ledger-node');
 const cache = require('bedrock-redis');
 const database = require('bedrock-mongodb');
 const hasher = brLedgerNode.consensus._hasher;
-const jsigs = require('jsonld-signatures');
 const {util: {uuid}} = bedrock;
 
 const ledgerHistory = {
