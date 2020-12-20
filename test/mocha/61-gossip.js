@@ -4,14 +4,14 @@
 'use strict';
 
 const {config, util: {BedrockError}} = require('bedrock');
-const {_gossip: gossip} = require('bedrock-ledger-consensus-continuity');
+const {_client} = require('bedrock-ledger-consensus-continuity');
 
-describe('gossip _getNeeded API', () => {
+describe('client getEvents API', () => {
   it('properly handles ECONNREFUSED', async () => {
     let error;
     try {
-      await gossip._getNeeded({
-        needed: ['abc'],
+      await _client.getEvents({
+        eventHashes: ['abc'],
         peerId: 'https://127.0.0.1:3333'
       });
     } catch(e) {
@@ -25,8 +25,8 @@ describe('gossip _getNeeded API', () => {
   it('properly handles a 404 error', async () => {
     let error;
     try {
-      await gossip._getNeeded({
-        needed: ['abc'],
+      await _client.getEvents({
+        eventHashes: ['abc'],
         peerId: config.server.baseUri,
       });
     } catch(e) {
