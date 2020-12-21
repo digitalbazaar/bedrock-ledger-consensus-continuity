@@ -243,7 +243,7 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
     }
   }
   // flush writer
-  await to.worker.writeEvents();
+  await to.worker.writePeerEvents();
 };
 
 api.createEvent = async (
