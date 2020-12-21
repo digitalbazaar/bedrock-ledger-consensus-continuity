@@ -44,7 +44,7 @@ describe('events.mergeBranches API', () => {
       const ledgerNode = nodes[key];
       // attach worker to the node to emulate a work session used by `helpers`
       ledgerNode.worker = new Worker({session: {ledgerNode}});
-      await ledgerNode.worker._init();
+      await ledgerNode.worker.init();
       const {id: ledgerNodeId} = ledgerNode;
       const voter = await consensusApi._peers.get({ledgerNodeId});
       ledgerNode.creatorId = voter.id;
@@ -67,7 +67,7 @@ describe('events.mergeBranches API', () => {
     const ledgerNode = nodes.alpha;
     const addedEvents = await helpers.addEvent(
       {ledgerNode, eventTemplate, opTemplate});
-    const result = await ledgerNode.worker._merge(
+    const result = await ledgerNode.worker.merge(
       {basisBlockHeight: 0, nonEmptyThreshold: 0, emptyThreshold: 1});
     const eventHash = Object.keys(addedEvents)[0];
     should.exist(result);
@@ -103,9 +103,9 @@ describe('events.mergeBranches API', () => {
     const ledgerNode = nodes.alpha;
     const opTemplate = mockData.operations.alpha;
     await helpers.addEvent({ledgerNode, eventTemplate, opTemplate});
-    await ledgerNode.worker._merge(
+    await ledgerNode.worker.merge(
       {basisBlockHeight: 0, nonEmptyThreshold: 0, emptyThreshold: 1});
-    const result = await ledgerNode.worker._merge(
+    const result = await ledgerNode.worker.merge(
       {basisBlockHeight: 0, nonEmptyThreshold: 0, emptyThreshold: 1});
     should.exist(result);
     should.equal(result.merged, false);
@@ -117,7 +117,7 @@ describe('events.mergeBranches API', () => {
     const opTemplate = mockData.operations.alpha;
     const addedEvents = await helpers.addEvent(
       {eventTemplate, count: 5, ledgerNode, opTemplate});
-    const result = await ledgerNode.worker._merge(
+    const result = await ledgerNode.worker.merge(
       {basisBlockHeight: 0, nonEmptyThreshold: 0, emptyThreshold: 1});
     should.exist(result.record);
     const {record} = result;

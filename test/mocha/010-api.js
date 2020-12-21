@@ -40,7 +40,7 @@ describe('Continuity2017', () => {
     Worker = consensusApi._worker.Worker;
     // attach worker to the node to emulate a work session used by `helpers`
     ledgerNode.worker = new Worker({session: {ledgerNode}});
-    await ledgerNode.worker._init();
+    await ledgerNode.worker.init();
     creator = await consensusApi._peers.get(
       {ledgerNodeId: ledgerNode.id});
     ledgerNode.creatorId = creator.id;

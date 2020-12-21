@@ -177,7 +177,7 @@ describe('Multinode', () => {
         let error;
         try {
           const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
-          await worker._init();
+          await worker.init();
           genesisLedgerNode.worker = worker;
           await genesisLedgerNode.config.change(
             {ledgerConfiguration, worker});
@@ -198,7 +198,7 @@ describe('Multinode', () => {
         let error;
         try {
           const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
-          await worker._init();
+          await worker.init();
           genesisLedgerNode.worker = worker;
           await genesisLedgerNode.config.change(
             {ledgerConfiguration, worker});
@@ -217,7 +217,7 @@ describe('Multinode', () => {
         let error;
         try {
           const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
-          await worker._init();
+          await worker.init();
           genesisLedgerNode.worker = worker;
           await genesisLedgerNode.config.change(
             {ledgerConfiguration, worker});
@@ -238,7 +238,7 @@ describe('Multinode', () => {
         let error;
         try {
           const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
-          await worker._init();
+          await worker.init();
           genesisLedgerNode.worker = worker;
           await genesisLedgerNode.config.change(
             {ledgerConfiguration, worker});
@@ -257,7 +257,7 @@ describe('Multinode', () => {
         let error;
         try {
           const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
-          await worker._init();
+          await worker.init();
           genesisLedgerNode.worker = worker;
           await genesisLedgerNode.config.change(
             {ledgerConfiguration, worker});
@@ -278,7 +278,7 @@ describe('Multinode', () => {
         let error;
         try {
           const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
-          await worker._init();
+          await worker.init();
           genesisLedgerNode.worker = worker;
           await genesisLedgerNode.config.change(
             {ledgerConfiguration, worker});
@@ -301,7 +301,7 @@ describe('Multinode', () => {
         // once that is updated, remove `worker` and rely on settling
         // the network to create the event and apply the change
         const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
-        await worker._init();
+        await worker.init();
         genesisLedgerNode.worker = worker;
         await genesisLedgerNode.config.change(
           {ledgerConfiguration, worker});

@@ -103,7 +103,7 @@ api.addEventAndMerge = async ({
   events.regularHashes = Object.keys(events.regular);
 
   // Note: `worker` must be added in the tests to emulate a work session
-  const {record} = await ledgerNode.worker._merge({
+  const {record} = await ledgerNode.worker.merge({
     basisBlockHeight: 0,
     // for simple tests, use these thresholds
     nonEmptyThreshold: 0, emptyThreshold: 1
@@ -194,7 +194,7 @@ api.copyAndMerge = async ({from, nodes, to, useSnapshot = false} = {}) => {
     await api.copyEvents({from: nodes[f], to: nodes[to], useSnapshot});
   }
   // Note: `worker` must be added in the tests to emulate a work session
-  const {record} = await nodes[to].worker._merge({
+  const {record} = await nodes[to].worker.merge({
     basisBlockHeight: 0,
     // this function is only used to unit test hard-coded histories for
     // creating a single block so these thresholds are set here
@@ -242,7 +242,7 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
     }
   }
   // flush writer
-  await to.worker.peerEventWriter.flush();
+  await to.worker.writeEvents();
 };
 
 api.createEvent = async (
