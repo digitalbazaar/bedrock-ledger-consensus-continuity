@@ -46,10 +46,14 @@ const gossip = {
   }, {
     type: 'object',
     // FIXME: `creatorHeads` is old, remove
-    required: ['blockHeight', 'peerId', 'peerHeads', 'creatorHeads'],
+    // `blockOrder` is optional
+    required: ['blockHeight', 'peerId', 'peerHeads'],//, 'creatorHeads'],
     additionalProperties: false,
     properties: {
       blockHeight: {
+        type: 'number'
+      },
+      blockOrder: {
         type: 'number'
       },
       peerId,
@@ -70,9 +74,9 @@ const gossip = {
       // FIXME: allow a "continuation" `eventHash` -- we know that any
       // events before `eventHash` needn't be sent
       // FIXME: remove creator heads
-      creatorHeads: {
+      /*creatorHeads: {
         type: 'object'
-      }
+      }*/
     }
   }]
 };
