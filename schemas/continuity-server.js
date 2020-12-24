@@ -67,6 +67,8 @@ const gossip = {
           additionalProperties: false*/
         }
       },
+      // FIXME: allow a "continuation" `eventHash` -- we know that any
+      // events before `eventHash` needn't be sent
       // FIXME: remove creator heads
       creatorHeads: {
         type: 'object'
