@@ -45,13 +45,32 @@ const gossip = {
     }
   }, {
     type: 'object',
-    required: ['creatorHeads', 'peerId'],
+    // FIXME: `creatorHeads` is old, remove
+    required: ['blockHeight', 'peerId', 'peerHeads', 'creatorHeads'],
     additionalProperties: false,
     properties: {
-      creatorHeads: {
-        type: 'object',
+      blockHeight: {
+        type: 'number'
       },
       peerId,
+      peerHeads: {
+        type: 'array',
+        maxItems: 1000,
+        items: {
+          // FIXME: add more validation rules to shape of peer heads
+          type: 'object'/*,
+          properties: {
+            creator,
+            generation,
+            eventHash
+          },
+          additionalProperties: false*/
+        }
+      },
+      // FIXME: remove creator heads
+      creatorHeads: {
+        type: 'object'
+      }
     }
   }]
 };
