@@ -37,7 +37,6 @@ api.addEvent = async ({
   const {worker} = ledgerNode;
 
   const events = {};
-  const {creatorId} = ledgerNode;
   let operations;
   for(let i = 0; i < count; ++i) {
     const testEvent = bedrock.util.clone(eventTemplate);
@@ -52,11 +51,7 @@ api.addEvent = async ({
       operation.recordPatch.target = testRecordId;
     }
 
-    // FIXME: get the head from the worker instead
-    const head = await ledgerNode.consensus._history.getHead({
-      creatorId, ledgerNode
-    });
-    const {eventHash: headHash} = head;
+    const {eventHash: headHash} = worker.head;
     testEvent.parentHash = [headHash];
     testEvent.treeHash = headHash;
 

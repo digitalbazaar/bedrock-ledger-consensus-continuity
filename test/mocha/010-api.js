@@ -44,11 +44,7 @@ describe('Continuity2017', () => {
     creator = await consensusApi._peers.get(
       {ledgerNodeId: ledgerNode.id});
     ledgerNode.creatorId = creator.id;
-    const eventHead = await consensusApi._history.getHead({
-      creatorId: creator.id,
-      ledgerNode
-    });
-    genesisMergeHash = eventHead.eventHash;
+    genesisMergeHash = ledgerNode.worker.head.eventHash;
   });
 
   describe('add operation API', () => {
@@ -150,10 +146,7 @@ describe('Continuity2017', () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
       const testEvent = bedrock.util.clone(mockData.events.alpha);
-      const {creatorId} = ledgerNode;
-      const headResult = await ledgerNode.consensus._history.getHead(
-        {creatorId, ledgerNode});
-      const {eventHash: headHash} = headResult;
+      const {eventHash: headHash} = ledgerNode.worker.head;
       testEvent.parentHash = [headHash];
       testEvent.treeHash = headHash;
 

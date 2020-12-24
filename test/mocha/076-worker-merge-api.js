@@ -28,13 +28,6 @@ describe('events.mergeBranches API', () => {
     consensusApi = consensusPlugin.api;
     Worker = consensusApi._worker.Worker;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const {id: ledgerNodeId} = nodes.alpha;
-    const alphaVoter = await consensusApi._peers.get({ledgerNodeId});
-    const {id: creatorId} = alphaVoter;
-    const ledgerNode = nodes.alpha;
-    const headEvent = await consensusApi._history.getHead(
-      {creatorId, ledgerNode});
-    genesisMergeHash = headEvent.eventHash;
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     const genesisBlock = _genesisBlock.block;
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
@@ -59,6 +52,7 @@ describe('events.mergeBranches API', () => {
     //     nodes.epsilon = result;
     //     callback(null, result);
     //   })],
+    genesisMergeHash = nodes.alpha.worker.head.eventHash;
   });
 
   it('collects one local event', async () => {

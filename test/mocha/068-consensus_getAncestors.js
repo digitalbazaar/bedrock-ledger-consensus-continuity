@@ -30,14 +30,10 @@ describe('Consensus API _getAncestors', () => {
     consensusApi = plugin.api;
     Worker = consensusApi._worker.Worker;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const ledgerNode = nodes.alpha;
     const voter = await consensusApi._peers.get(
       {ledgerNodeId: nodes.alpha.id});
     const creatorId = voter.id;
     nodes.alpha.creatorId = creatorId;
-    const eventHead = await consensusApi._history.getHead(
-      {creatorId, ledgerNode});
-    genesisMerge = eventHead.eventHash;
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     const genesisBlock = _genesisBlock.block;
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
@@ -53,6 +49,7 @@ describe('Consensus API _getAncestors', () => {
       ledgerNode.creatorId = voter.id;
       peers[key] = voter.id;
     }
+    genesisMerge = nodes.alpha.worker.head.eventHash;
   });
   it('gets no events', async () => {
     // the genesisMerge already has consensus

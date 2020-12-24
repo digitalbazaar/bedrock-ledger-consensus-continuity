@@ -32,53 +32,38 @@ const peerId = {
 
 const gossip = {
   title: 'Continuity Gossip',
-  // ensure that `headsOnly` and `creatorHeads` are mutually exclusive
-  anyOf: [{
-    type: 'object',
-    required: ['headsOnly', 'peerId'],
-    additionalProperties: false,
-    properties: {
-      headsOnly: {
-        type: 'boolean',
-      },
-      peerId,
-    }
-  }, {
-    type: 'object',
-    // FIXME: `creatorHeads` is old, remove
-    // `blockOrder` is optional
-    required: ['blockHeight', 'peerId', 'peerHeads'],//, 'creatorHeads'],
-    additionalProperties: false,
-    properties: {
-      blockHeight: {
-        type: 'number'
-      },
-      blockOrder: {
-        type: 'number'
-      },
-      peerId,
-      peerHeads: {
-        type: 'array',
-        maxItems: 1000,
-        items: {
-          // FIXME: add more validation rules to shape of peer heads
-          type: 'object'/*,
-          properties: {
-            creator,
-            generation,
-            eventHash
+  type: 'object',
+  // `blockOrder` is optional
+  required: ['blockHeight', 'peerId', 'peerHeads'],
+  additionalProperties: false,
+  properties: {
+    blockHeight: {
+      type: 'number'
+    },
+    blockOrder: {
+      type: 'number'
+    },
+    peerId,
+    peerHeads: {
+      type: 'array',
+      maxItems: 1000,
+      items: {
+        type: 'object',
+        properties: {
+          creator: {
+            type: 'string'
           },
-          additionalProperties: false*/
-        }
-      },
-      // FIXME: allow a "continuation" `eventHash` -- we know that any
-      // events before `eventHash` needn't be sent
-      // FIXME: remove creator heads
-      /*creatorHeads: {
-        type: 'object'
-      }*/
+          generation: {
+            type: 'number'
+          },
+          eventHash: {
+            type: 'string'
+          }
+        },
+        additionalProperties: false
+      }
     }
-  }]
+  }
 };
 
 const notification = {
