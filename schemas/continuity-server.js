@@ -40,7 +40,7 @@ const gossip = {
     blockHeight: {
       type: 'number'
     },
-    blockOrder: {
+    eventIndex: {
       type: 'number'
     },
     peerId,
