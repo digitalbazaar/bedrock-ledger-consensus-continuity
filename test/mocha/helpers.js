@@ -437,13 +437,10 @@ api.use = async plugin => {
 };
 
 async function _addTestEvent({event, ledgerNode}) {
-  const ledgerNodeId = ledgerNode.id;
-  const {_cache, _peerEvents} = ledgerNode.consensus;
+  const {_peerEvents} = ledgerNode.consensus;
   const eventMap = new Map();
   const {event: processedEvent, meta} =
     await _peerEvents.createPeerEventRecord({event, eventMap, ledgerNode});
-  await _cache.events.setEventGossip(
-    {event, eventHash: meta.eventHash, ledgerNodeId, meta});
   // use `worker` that has been attached to `ledgerNode` in tests
   await ledgerNode.worker.peerEventWriter.add({event: processedEvent, meta});
 }
