@@ -9,18 +9,18 @@ const {config, util: {BedrockError}} = require('bedrock');
 describe('Client API', () => {
   describe('notifyPeer', () => {
     it('throws a NetworkError on connection refused', async () => {
-      const callerId = 'foo';
-      const peerId = 'https://127.0.0.1';
+      const localPeerId = 'foo';
+      const remotePeerId = 'https://127.0.0.1';
       let err;
       try {
-        await _client.notifyPeer({callerId, peerId});
+        await _client.notifyPeer({localPeerId, remotePeerId});
       } catch(e) {
         err = e;
       }
       should.exist(err);
       err.name.should.equal('NetworkError');
-      err.details.should.have.property('callerId');
-      err.details.should.have.property('peerId');
+      err.details.should.have.property('localPeerId');
+      err.details.should.have.property('remotePeerId');
       err.should.have.property('cause');
       err.cause.should.have.property('details');
       err.cause.details.should.have.property('address');
