@@ -33,14 +33,14 @@ const peerId = {
 const gossip = {
   title: 'Continuity Gossip',
   type: 'object',
-  // `blockOrder` is optional
+  // `blockEventCount` is optional
   required: ['blockHeight', 'peerId', 'peerHeads'],
   additionalProperties: false,
   properties: {
     blockHeight: {
       type: 'number'
     },
-    eventIndex: {
+    blockEventCount: {
       type: 'number'
     },
     peerId,
