@@ -235,30 +235,6 @@ const webLedgerEvents = {
   ]
 };
 
-const event = {
-  title: 'Continuity2017 Event',
-  required: ['callerId', 'event', 'eventHash', 'mergeHash'],
-  type: 'object',
-  properties: {
-    callerId: {
-      type: 'string'
-    },
-    event: {
-      anyOf: [
-        webLedgerOperationEvent,
-        webLedgerConfigurationEvent,
-        continuityMergeEvent
-      ]
-    },
-    eventHash: {
-      type: 'string'
-    },
-    mergeHash: {
-      type: 'string'
-    },
-  },
-};
-
 // all the other properties of operations have been validated at the ledgerNode
 // layer
 const localOperation = {
@@ -274,7 +250,6 @@ const localOperation = {
   }
 };
 
-module.exports.event = () => event;
 module.exports.continuityGenesisMergeEvent = () => continuityGenesisMergeEvent;
 module.exports.genesisConfigurationEvent = () => genesisConfigurationEvent;
 module.exports.genesisLedgerConfiguration = () => genesisLedgerConfiguration;
