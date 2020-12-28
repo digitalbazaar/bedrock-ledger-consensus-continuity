@@ -48,7 +48,9 @@ const gossip = {
     },
     peerId,
     peerHeads: {
+      title: 'Continuity Gossip Peer Heads',
       type: 'array',
+      required: ['creator', 'generation', 'eventHash'],
       maxItems: 1000,
       items: {
         type: 'object',
