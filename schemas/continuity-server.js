@@ -34,9 +34,12 @@ const gossip = {
   title: 'Continuity Gossip',
   type: 'object',
   // `blockEventCount` is optional
-  required: ['blockHeight', 'peerId', 'peerHeads'],
+  required: ['basisBlockHeight', 'blockHeight', 'peerId', 'peerHeads'],
   additionalProperties: false,
   properties: {
+    basisBlockHeight: {
+      type: 'number'
+    },
     blockHeight: {
       type: 'number'
     },
