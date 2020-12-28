@@ -47,12 +47,13 @@ describe('Multinode', () => {
     before(async function() {
       this.timeout(120000);
       peers.push(genesisLedgerNode);
+      const promises = [];
       for(let i = 0; i < nodeCount - 1; ++i) {
-        const ledgerNode = await brLedgerNode.add(null, {
+        promises.push(brLedgerNode.add(null, {
           genesisBlock: genesisRecord.block
-        });
-        peers.push(ledgerNode);
+        }));
       }
+      peers.push(...await Promise.all(promises));
     });
 
     // populate peers ids
