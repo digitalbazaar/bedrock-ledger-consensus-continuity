@@ -1,7 +1,0 @@
-{
-  "name": "event-worker",
-  "version": "1.0.0",
-  "scripts": {
-    "start": "node --preserve-symlinks index.js"
-  }
-}
