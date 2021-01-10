@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -13,7 +13,7 @@ const mockData = require('./mock.data');
 
 let consensusApi;
 
-describe('Consensus API _getAncestors', () => {
+describe('History API _addNonConsensusAncestorHashes', () => {
   before(async () => {
     await helpers.prepareDatabase();
   });
@@ -53,7 +53,7 @@ describe('Consensus API _getAncestors', () => {
   });
   it('gets no events', async () => {
     // the genesisMerge already has consensus
-    const getAncestors = consensusApi._consensus._getAncestors;
+    const getAncestors = consensusApi._history._addNonConsensusAncestorHashes;
     const hashes = {mergeEventHashes: [], parentHashes: [genesisMerge]};
     const result = await getAncestors({ledgerNode: nodes.alpha, hashes});
     should.exist(result);
@@ -61,7 +61,7 @@ describe('Consensus API _getAncestors', () => {
     result.should.have.length(0);
   });
   it('gets two events', done => {
-    const getAncestors = consensusApi._consensus._getAncestors;
+    const getAncestors = consensusApi._history._addNonConsensusAncestorHashes;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -85,7 +85,7 @@ describe('Consensus API _getAncestors', () => {
     }, done);
   });
   it('gets four events', done => {
-    const getAncestors = consensusApi._consensus._getAncestors;
+    const getAncestors = consensusApi._history._addNonConsensusAncestorHashes;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -115,7 +115,7 @@ describe('Consensus API _getAncestors', () => {
     }, done);
   });
   it('gets 4 events involving 2 nodes', done => {
-    const getAncestors = consensusApi._consensus._getAncestors;
+    const getAncestors = consensusApi._history._addNonConsensusAncestorHashes;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -152,7 +152,7 @@ describe('Consensus API _getAncestors', () => {
   // FIXME: this test likely needs to be removed, the returned data structure
   // no longer matches the assertions
   it.skip('gets 4 events without duplicates', done => {
-    const getAncestors = consensusApi._consensus._getAncestors;
+    const getAncestors = consensusApi._history._addNonConsensusAncestorHashes;
     const ledgerNode = nodes.alpha;
     const eventTemplate = mockData.events.alpha;
     async.auto({

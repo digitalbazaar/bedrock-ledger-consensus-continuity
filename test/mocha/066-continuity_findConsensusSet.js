@@ -25,8 +25,8 @@ describe('Continuity API _findConsensusSet', () => {
     await helpers.flushCache();
     await helpers.removeCollections(['ledger', 'ledgerNode']);
     ({api: consensusApi} = await helpers.use('Continuity2017'));
-    _getTails = consensusApi._consensus._continuity._getTails;
-    _findConsensusSet = consensusApi._consensus._continuity._findConsensusSet;
+    _getTails = consensusApi._continuity._getTails;
+    _findConsensusSet = consensusApi._continuity._findConsensusSet;
     Worker = consensusApi._worker.Worker;
 
     // add genesis node

@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -60,22 +60,17 @@ describe('Consensus API find', () => {
   });
   it('single node consensus', done => {
     // the genesisMerge already has consensus
-    const findConsensus = callbackify(consensusApi._consensus.find);
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
-    const witnesses = [peers.alpha];
+    ledgerNode.worker.consensusState.witnesses = [peers.alpha];
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
       event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
-      history: ['event1', (results, callback) =>
-        callback(null, ledgerNode.worker.getRecentHistory())],
-      consensus: ['history', (results, callback) => {
-        findConsensus({
-          witnesses, ledgerNode, history: results.history
-        }, (err, result) => {
-          assertNoError(err);
+      consensus: ['event1', (results, callback) => {
+        ledgerNode.worker._findConsensus().then(result => {
+          should.exist(result);
           result.consensusProofHash.should.have.length(1);
           result.consensusProofHash[0].should.equal(
             results.event1.mergeHash);
@@ -85,281 +80,31 @@ describe('Consensus API find', () => {
             results.event1.merge.meta.eventHash
           ]);
           callback();
-        });
+        }, callback);
       }]
     }, done);
   });
   it('properly does not reach consensus with four witnesses', done => {
-    const findConsensus = callbackify(consensusApi._consensus.find);
     const ledgerNode = nodes.alpha;
     const {creatorId} = ledgerNode;
     const witnesses = [peers.alpha, peers.beta, peers.gamma, peers.delta];
+    ledgerNode.worker.consensusState.witnesses = witnesses;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
       event1: callback => callbackify(helpers.addEventAndMerge)(
         {consensusApi, eventTemplate, ledgerNode, opTemplate}, callback),
-      history: ['event1', (results, callback) =>
-        callback(null, ledgerNode.worker.getRecentHistory())],
-      consensus: ['history', (results, callback) => {
-        findConsensus({
-          witnesses, ledgerNode, history: results.history
-        }, (err, result) => {
-          assertNoError(err);
+      consensus: ['event1', (results, callback) => {
+        ledgerNode.worker._findConsensus().then(result => {
           should.exist(result);
           result.consensus.should.equal(false);
           callback();
-        });
-      }]
-    }, done);
-  });
-  // disabled from here down until these can be updated to work with `first`
-  // mode instead of old `firstWithConsensusProof`
-  it.skip('ledger history alpha', function(done) {
-    this.timeout(120000);
-    const findConsensus = callbackify(consensusApi._consensus.find);
-    const witnesses = Object.values(peers);
-    async.auto({
-      build: callback => callbackify(helpers.buildHistory)(
-        {historyId: 'alpha', mockData, nodes}, callback),
-      testAll: ['build', (results, callback) => {
-        const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
-          results.build;
-        async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => {
-            callback(null, ledgerNode.worker.getRecentHistory());
-          },
-          consensus: ['history', (results, callback) => {
-            findConsensus({
-              witnesses, ledgerNode, history: results.history
-            }, (err, result) => {
-              assertNoError(err);
-              should.exist(result);
-              should.exist(result.eventHash);
-              result.eventHash.should.be.an('array');
-              result.eventHash.should.have.length(8);
-              result.eventHash.should.have.same.members([
-                ...regularEvent.regularHash,
-                ...regularEvent.mergeHash
-              ]);
-              should.exist(result.consensusProofHash);
-              result.consensusProofHash.should.be.an('array');
-              result.consensusProofHash.should.have.length(10);
-              result.consensusProofHash.should.have.same.members([
-                copyMergeHashes.cpa,
-                copyMergeHashes.cpb,
-                copyMergeHashes.cp1,
-                copyMergeHashes.cp2,
-                copyMergeHashes.cp3,
-                copyMergeHashes.cp4,
-                copyMergeHashes.cp5,
-                copyMergeHashes.cp6,
-                copyMergeHashes.cp7,
-                copyMergeHashes.cp8
-              ]);
-              // createReport({
-              //   copyMergeHashes,
-              //   copyMergeHashesIndex,
-              //   consensusProofHash: result.consensusProofHash,
-              // });
-              callback();
-            });
-          }]
-        }, callback), callback);
-      }]
-    }, done);
-  });
-  it.skip('ledger history beta', function(done) {
-    this.timeout(120000);
-    const findConsensus = callbackify(consensusApi._consensus.find);
-    const witnesses = Object.values(peers);
-    async.auto({
-      build: callback => callbackify(helpers.buildHistory)(
-        {historyId: 'beta', mockData, nodes}, callback),
-      testAll: ['build', (results, callback) => {
-        const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
-          results.build;
-        async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => {
-            callback(null, ledgerNode.worker.getRecentHistory());
-          },
-          consensus: ['history', (results, callback) => {
-            findConsensus({
-              witnesses, ledgerNode, history: results.history
-            }, (err, result) => {
-              assertNoError(err);
-              result.eventHash.should.have.length(8);
-              result.eventHash.should.have.same.members([
-                ...regularEvent.regularHash,
-                ...regularEvent.mergeHash
-              ]);
-              result.consensusProofHash.should.have.length(10);
-              result.consensusProofHash.should.have.same.members([
-                copyMergeHashes.cpa,
-                copyMergeHashes.cpb,
-                copyMergeHashes.cp1,
-                copyMergeHashes.cp2,
-                copyMergeHashes.cp3,
-                copyMergeHashes.cp4,
-                copyMergeHashes.cp5,
-                copyMergeHashes.cp6,
-                copyMergeHashes.cp7,
-                copyMergeHashes.cp8
-              ]);
-              // createReport({
-              //   copyMergeHashes,
-              //   copyMergeHashesIndex,
-              //   consensusProofHash: result.consensusProofHash,
-              // });
-              callback();
-            });
-          }]
-        }, callback), callback);
-      }]
-    }, done);
-  });
-  it.skip('ledger history gamma', function(done) {
-    this.timeout(120000);
-    const findConsensus = callbackify(consensusApi._consensus.find);
-    const witnesses = Object.values(peers);
-    async.auto({
-      build: callback => callbackify(helpers.buildHistory)(
-        {historyId: 'gamma', mockData, nodes}, callback),
-      testAll: ['build', (results, callback) => {
-        const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
-          results.build;
-        async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => {
-            callback(null, ledgerNode.worker.getRecentHistory());
-          },
-          consensus: ['history', (results, callback) => {
-            findConsensus({
-              witnesses, ledgerNode, history: results.history
-            }, (err, result) => {
-              assertNoError(err);
-              result.eventHash.should.have.length(8);
-              result.eventHash.should.have.same.members([
-                ...regularEvent.regularHash,
-                ...regularEvent.mergeHash
-              ]);
-              result.consensusProofHash.should.have.length(10);
-              result.consensusProofHash.should.have.same.members([
-                copyMergeHashes.cpa,
-                copyMergeHashes.cpb,
-                copyMergeHashes.cp1,
-                copyMergeHashes.cp2,
-                copyMergeHashes.cp3,
-                copyMergeHashes.cp4,
-                copyMergeHashes.cp5,
-                copyMergeHashes.cp6,
-                copyMergeHashes.cp7,
-                copyMergeHashes.cp8
-              ]);
-              // createReport({
-              //   copyMergeHashes,
-              //   copyMergeHashesIndex,
-              //   consensusProofHash: result.consensusProofHash,
-              // });
-              callback();
-            });
-          }]
-        }, callback), callback);
-      }]
-    }, done);
-  });
-  it.skip('ledger history delta', function(done) {
-    this.timeout(120000);
-    const findConsensus = callbackify(consensusApi._consensus.find);
-    // all peers except epsilon are witnesses
-    const witnesses = Object.values(peers).filter(p => p !== peers.epsilon);
-    async.auto({
-      // add node epsilon for this test and remove it afterwards
-      nodeEpsilon: callback => async.auto({
-        ledgerNode: callback => brLedgerNode.add(
-          null, {genesisBlock}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            nodes.epsilon = result;
-            callback();
-          }),
-        creator: ['ledgerNode', (results, callback) => {
-          const ledgerNode = nodes.epsilon;
-          const {id: ledgerNodeId} = ledgerNode;
-          // attach worker to the node to emulate a work session used by
-          // `helpers`
-          ledgerNode.worker = new Worker({session: {ledgerNode}});
-          //await ledgerNode.worker.init();
-          consensusApi._peers.get({ledgerNodeId}, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            ledgerNode.creatorId = result.id;
-            callback();
-          });
-        }]
-      }, callback),
-      build: ['nodeEpsilon', (results, callback) =>
-        callbackify(helpers.buildHistory)(
-          {historyId: 'delta', mockData, nodes}, callback)],
-      testAll: ['build', (results, callback) => {
-        const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
-          results.build;
-        async.each(nodes, (ledgerNode, callback) => async.auto({
-          history: callback => {
-            callback(null, ledgerNode.worker.getRecentHistory());
-          },
-          consensus: ['history', (results, callback) => {
-            findConsensus({
-              witnesses, ledgerNode, history: results.history
-            }, (err, result) => {
-              assertNoError(err);
-              should.exist(result);
-              should.exist(result.eventHash);
-              result.eventHash.should.be.an('array');
-              result.eventHash.should.have.length(8);
-              result.eventHash.should.have.same.members([
-                regularEvent.alpha.regularHashes[0],
-                regularEvent.beta.regularHashes[0],
-                regularEvent.gamma.regularHashes[0],
-                regularEvent.delta.regularHashes[0],
-                regularEvent.alpha.mergeHash,
-                regularEvent.beta.mergeHash,
-                regularEvent.gamma.mergeHash,
-                regularEvent.delta.mergeHash
-                // exclude epsilon (non-elector)
-              ]);
-              result.consensusProofHash.should.have.length(10);
-              result.consensusProofHash.should.have.same.members([
-                copyMergeHashes.cpa,
-                copyMergeHashes.cpb,
-                copyMergeHashes.cp1,
-                copyMergeHashes.cp2,
-                copyMergeHashes.cp3,
-                copyMergeHashes.cp4,
-                copyMergeHashes.cp5,
-                copyMergeHashes.cp6,
-                copyMergeHashes.cp7,
-                copyMergeHashes.cp8
-              ]);
-              // createReport({
-              //   copyMergeHashes,
-              //   copyMergeHashesIndex,
-              //   consensusProofHash: result.consensusProofHash,
-              // });
-              callback();
-            });
-          }]
-        }, callback), callback);
-      }],
-      cleanup: ['testAll', (results, callback) => {
-        delete nodes.epsilon;
-        callback();
+        }, callback);
       }]
     }, done);
   });
   it.skip('add regular event with no merge before findConsensus', done => {
-    const findConsensus = callbackify(consensusApi._consensus.find);
+    const findConsensus = callbackify(consensusApi._worker._findConsensus);
     const ledgerNode = nodes.alpha;
     const witnesses = Object.values(peers);
     const eventTemplate = mockData.events.alpha;

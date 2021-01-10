@@ -126,7 +126,7 @@ describe.skip('Continuity API _getTails', () => {
           collection.collectionName}`);
     });
     const getRecentHistory = consensusApi._history.getRecent;
-    const _getTails = consensusApi._consensus._continuity._getTails;
+    const _getTails = consensusApi._continuity._getTails;
     const eventTemplate = mockData.events.alpha;
     async.auto({
       // add a regular event and merge on every node
