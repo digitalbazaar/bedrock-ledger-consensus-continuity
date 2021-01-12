@@ -32,7 +32,7 @@ describe('Continuity API _findConsensusSet', () => {
     // add genesis node
     const ledgerConfiguration = mockData.ledgerConfiguration;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const {id: creatorId} = await consensusApi._peers.get(
+    const {id: peerId} = await consensusApi._peers.get(
       {ledgerNodeId: nodes.alpha.id});
 
     // get genesis block
@@ -54,7 +54,7 @@ describe('Continuity API _findConsensusSet', () => {
       await ledgerNode.worker.init();
       const {id} = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = id;
-      ledgerNode.creatorId = id;
+      ledgerNode.peerId = id;
       helpers.peersReverse[id] = key;
     }
   });
@@ -168,7 +168,7 @@ describe('Continuity API _findConsensusSet', () => {
       const {id} = await consensusApi._peers.get(
         {ledgerNodeId: nodes.epsilon.id});
       peers.epsilon = id;
-      nodes.epsilon.creatorId = id;
+      nodes.epsilon.peerId = id;
       helpers.peersReverse[id] = 'epsilon';
 
       const build = await helpers.buildHistory(

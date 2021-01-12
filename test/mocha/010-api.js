@@ -43,7 +43,7 @@ describe('Continuity2017', () => {
     await ledgerNode.worker.init();
     creator = await consensusApi._peers.get(
       {ledgerNodeId: ledgerNode.id});
-    ledgerNode.creatorId = creator.id;
+    ledgerNode.peerId = creator.id;
     genesisMergeHash = ledgerNode.worker.head.eventHash;
   });
 
@@ -51,7 +51,7 @@ describe('Continuity2017', () => {
     it('should add an operation', async () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
-      operation.creator = ledgerNode.creatorId;
+      operation.creator = ledgerNode.peerId;
       let error;
       try {
         await ledgerNode.operations.add({operation});
@@ -63,7 +63,7 @@ describe('Continuity2017', () => {
     it('DuplicateError on a duplicate operation in cache', async () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
-      operation.creator = ledgerNode.creatorId;
+      operation.creator = ledgerNode.peerId;
       let error;
       try {
         await ledgerNode.operations.add({operation});
@@ -86,7 +86,7 @@ describe('Continuity2017', () => {
     it('DuplicateError on a duplicate operation in db', async () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
-      operation.creator = ledgerNode.creatorId;
+      operation.creator = ledgerNode.peerId;
       let error;
       try {
         await ledgerNode.operations.add({operation});
@@ -126,7 +126,7 @@ describe('Continuity2017', () => {
     it('ValidationError an operation with incorrect creator', async () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
-      operation.creator = 'SomeInvalidCreatorId';
+      operation.creator = 'SomeInvalidPeerId';
       let error;
       try {
         await ledgerNode.operations.add({operation});

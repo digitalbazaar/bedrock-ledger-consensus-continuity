@@ -72,7 +72,7 @@ api.visualizationData = ({
   // map from creator to node name
   const creatorNameMap = {};
   Object.keys(nodes).forEach(name => {
-    creatorNameMap[nodes[name].creatorId] = name;
+    creatorNameMap[nodes[name].peerId] = name;
   });
 
   // process all events
@@ -222,7 +222,7 @@ api.testInputData = ({
   // map from creator to node name
   const creatorNameMap = {};
   //Object.keys(nodes).forEach(name => {
-  //  creatorNameMap[nodes[name].creatorId] = name;
+  //  creatorNameMap[nodes[name].peerId] = name;
   //});
   // FIXME: current 'input' tests have simple creator names
   // find all creator names
@@ -380,7 +380,7 @@ api.testOutputDataForTimeline = ({
   // map from creator to node name
   //const creatorNameMap = {};
   //Object.keys(nodes).forEach(name => {
-  //  creatorNameMap[nodes[name].creatorId] = name;
+  //  creatorNameMap[nodes[name].peerId] = name;
   //});
 
   // process all events
@@ -506,7 +506,7 @@ api.visualizationDataTimeline = ({
   // map from creator to node name
   const creatorNameMap = {};
   Object.keys(nodes).forEach(name => {
-    creatorNameMap[nodes[name].creatorId] = name;
+    creatorNameMap[nodes[name].peerId] = name;
   });
 
   // process all events

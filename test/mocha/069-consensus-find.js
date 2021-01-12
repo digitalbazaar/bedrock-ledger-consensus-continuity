@@ -45,7 +45,7 @@ describe('Consensus API find', () => {
       const {id: ledgerNodeId} = ledgerNode;
       const voter = await consensusApi._peers.get({ledgerNodeId});
       peers[key] = voter.id;
-      ledgerNode.creatorId = voter.id;
+      ledgerNode.peerId = voter.id;
       helpers.peersReverse[voter.id] = key;
     }
     // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps
@@ -61,7 +61,7 @@ describe('Consensus API find', () => {
   it('single node consensus', done => {
     // the genesisMerge already has consensus
     const ledgerNode = nodes.alpha;
-    const {creatorId} = ledgerNode;
+    const {peerId} = ledgerNode;
     ledgerNode.worker.consensusState.witnesses = [peers.alpha];
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -86,7 +86,7 @@ describe('Consensus API find', () => {
   });
   it('properly does not reach consensus with four witnesses', done => {
     const ledgerNode = nodes.alpha;
-    const {creatorId} = ledgerNode;
+    const {peerId} = ledgerNode;
     const witnesses = [peers.alpha, peers.beta, peers.gamma, peers.delta];
     ledgerNode.worker.consensusState.witnesses = witnesses;
     const eventTemplate = mockData.events.alpha;

@@ -28,7 +28,7 @@ api.alpha = (
         {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
           assertNoError(err);
           // alpha knows about the merge event added to alpha during this cycle
-          result.history.creatorHeads[peers.alpha.creatorId].eventHash
+          result.history.creatorHeads[peers.alpha.peerId].eventHash
             .should.equal(results.alphaAddEvent1.mergeHash);
           // one new merge event and one regular event available from alpha
           // the important detail here is that only the events added in this
@@ -74,7 +74,7 @@ api.beta = ({
         {ledgerNode: nodes.beta, peer: peers.alpha}, (err, result) => {
           assertNoError(err);
           // alpha knows about the merge event added to alpha during this cycle
-          result.peerHistory.creatorHeads[peers.alpha.creatorId]
+          result.peerHistory.creatorHeads[peers.alpha.peerId]
             .should.equal(results.alphaAddEvent1.mergeHash);
           // one new merge event event available from alpha
           result.peerHistory.history.should.have.length(1);
@@ -84,9 +84,9 @@ api.beta = ({
           if(previousResult) {
             // alpha only knowas about beta merge event added and gossiped
             // last cycle
-            result.peerHistory.creatorHeads[peers.beta.creatorId]
+            result.peerHistory.creatorHeads[peers.beta.peerId]
               .should.equal(previousResult.betaAddEvent1.mergeHash);
-            result.peerHistory.creatorHeads[peers.gamma.creatorId]
+            result.peerHistory.creatorHeads[peers.gamma.peerId]
               .should.equal(previousResult.gammaAddEvent1.mergeHash);
           }
 

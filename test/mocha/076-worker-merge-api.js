@@ -40,7 +40,7 @@ describe('events.mergeBranches API', () => {
       await ledgerNode.worker.init();
       const {id: ledgerNodeId} = ledgerNode;
       const voter = await consensusApi._peers.get({ledgerNodeId});
-      ledgerNode.creatorId = voter.id;
+      ledgerNode.peerId = voter.id;
       peers[key] = voter.id;
     }
     // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps

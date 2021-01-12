@@ -46,14 +46,14 @@ describe.skip('Continuity API _getTails', () => {
             nodes.alpha = result;
             callback(null, result);
           })],
-      creatorId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
+      peerId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
         callbackify(consensusApi._peers.get)(nodes.alpha.id, (err, result) => {
           callback(null, result.id);
         });
       }],
-      genesisMerge: ['creatorId', (results, callback) => {
+      genesisMerge: ['peerId', (results, callback) => {
         callbackify(consensusApi._history.getHead)({
-          creatorId: results.creatorId,
+          peerId: results.peerId,
           ledgerNode: nodes.alpha
         }, (err, result) => {
           if(err) {
