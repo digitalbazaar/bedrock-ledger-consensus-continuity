@@ -22,7 +22,7 @@
     "bedrock-ledger-consensus-continuity-storage": "github:digitalbazaar/bedrock-ledger-consensus-continuity-storage#merge-event-updates",
     "bedrock-ledger-context": "^16.0.0",
     "bedrock-ledger-node": "^11.0.0",
-    "bedrock-ledger-storage-mongodb": "github:digitalbazaar/bedrock-ledger-storage-mongodb#include-merge-height",
+    "bedrock-ledger-storage-mongodb": "github:digitalbazaar/bedrock-ledger-storage-mongodb#event-bulk-update",
     "bedrock-mongodb": "^8.1.0",
     "bedrock-passport": "^6.0.0",
     "bedrock-permission": "^3.1.0",
