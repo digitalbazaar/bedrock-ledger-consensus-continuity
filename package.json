@@ -33,6 +33,7 @@
     "multibase": "^0.6.0",
     "multicodec": "^0.5.0",
     "multihashes": "^0.4.15",
+    "p-all": "^3.0.0",
     "p-immediate": "^3.1.0",
     "p-limit": "^2.0.0",
     "rdf-canonize": "^1.0.3",
