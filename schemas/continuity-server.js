@@ -57,40 +57,11 @@ const gossip = {
     peerHeads: {
       title: 'Continuity Gossip Peer Heads',
       type: 'array',
-      // FIXME: what do we want to cap this at?
-      maxItems: 1000,
+      // this cap should be the same as the max gossip events
+      maxItems: 100,
       items: {
-        type: 'object',
-        required: ['creator', 'heads'],
-        properties: {
-          creator: {
-            type: 'string'
-          },
-          heads: {
-            type: 'array',
-            // FIXME: what do we want to cap this at?
-            maxItems: 2,
-            items: {
-              type: 'object',
-              required: ['eventHash', 'generation'],
-              properties: {
-                // FIXME: this is unnecessary, do not require it to be sent;
-                // it has to be looked up anyway
-                generation: {
-                  type: 'integer',
-                  minimum: 0
-                },
-                // FIXME: all that really needs to be sent is an `eventHash`
-                // ... we validate the rest
-                eventHash: {
-                  type: 'string'
-                }
-              },
-              additionalProperties: false
-            }
-          }
-        },
-        additionalProperties: false
+        // every item in the array must be an event hash
+        type: 'string',
       }
     }
   }
