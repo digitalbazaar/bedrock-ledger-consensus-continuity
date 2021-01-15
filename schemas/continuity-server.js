@@ -33,18 +33,25 @@ const peerId = {
 const gossip = {
   title: 'Continuity Gossip',
   type: 'object',
-  // `blockEventCount` is optional
+  // `blockEventCount`, `cursor` are optional
   required: ['basisBlockHeight', 'blockHeight', 'peerId', 'peerHeads'],
   additionalProperties: false,
   properties: {
     basisBlockHeight: {
-      type: 'number'
+      type: 'integer',
+      minimum: 0
     },
     blockHeight: {
-      type: 'number'
+      type: 'integer',
+      minimum: 0
     },
     blockEventCount: {
-      type: 'number'
+      type: 'integer',
+      minimum: 0
+    },
+    localEventNumber: {
+      type: 'integer',
+      minimum: 0
     },
     peerId,
     peerHeads: {
@@ -67,9 +74,14 @@ const gossip = {
               type: 'object',
               required: ['eventHash', 'generation'],
               properties: {
+                // FIXME: this is unnecessary, do not require it to be sent;
+                // it has to be looked up anyway
                 generation: {
-                  type: 'number'
+                  type: 'integer',
+                  minimum: 0
                 },
+                // FIXME: all that really needs to be sent is an `eventHash`
+                // ... we validate the rest
                 eventHash: {
                   type: 'string'
                 }
