@@ -6,6 +6,7 @@
     "test": "redis-cli flushall && node --preserve-symlinks test test",
     "test-event-worker": "CONTINUITY_EVENT_WORKER=false node --preserve-symlinks test test",
     "debug": "redis-cli flushall && node --preserve-symlinks test test --log-level debug",
+    "verbose": "redis-cli flushall && node --preserve-symlinks test test --log-level verbose",
     "watch": "grunt watch"
   },
   "dependencies": {
