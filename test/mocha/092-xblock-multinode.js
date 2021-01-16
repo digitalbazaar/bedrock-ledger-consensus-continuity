@@ -21,7 +21,6 @@ const nodeLabels = [
 ];
 const nodes = {};
 const peers = {};
-const heads = {};
 
 describe('X Block Test', () => {
   before(async function() {
@@ -83,7 +82,7 @@ describe('X Block Test', () => {
       }
     });
 
-    // populate peers and init heads
+    // populate peers
     before(async function() {
       this.timeout(TEST_TIMEOUT);
       for(const key in nodes) {
@@ -92,7 +91,6 @@ describe('X Block Test', () => {
           {ledgerNodeId: ledgerNode.id});
         peers[key] = id;
         ledgerNode._peerId = id;
-        heads[key] = [];
       }
     });
 
