@@ -72,9 +72,14 @@ describe('X Block Test', () => {
     // add N - 1 more nodes
     before(async function() {
       this.timeout(TEST_TIMEOUT);
+      const promises = [];
       for(let i = 0; i < nodeCount - 1; ++i) {
-        nodes[nodeLabels[i]] = await brLedgerNode.add(
-          null, {genesisBlock: genesisRecord.block});
+        promises.push(brLedgerNode.add(
+          null, {genesisBlock: genesisRecord.block}));
+      }
+      const ledgerNodes = await Promise.all(promises);
+      for(let i = 0; i < nodeCount - 1; ++i) {
+        nodes[nodeLabels[i]] = ledgerNodes[i];
       }
     });
 
