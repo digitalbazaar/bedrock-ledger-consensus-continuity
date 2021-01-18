@@ -12,7 +12,7 @@
   "dependencies": {
     "@digitalbazaar/http-client": "^1.0.0",
     "async": "^2.4.1",
-    "bedrock": "^3.1.1",
+    "bedrock": "^4.1.1",
     "bedrock-express": "^3.0.0",
     "bedrock-https-agent": "^2.0.0",
     "bedrock-injector": "^1.0.0",
