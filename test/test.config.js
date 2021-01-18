@@ -14,6 +14,7 @@ config.mongodb.dropCollections.collections = [];
 
 // decrease delay for gossiping with the same peer
 config['ledger-consensus-continuity'].gossip.coolDownPeriod = 250;
+config['ledger-consensus-continuity'].gossip.eventsValidation.workers = 1;
 
 config.mocha.options.bail = true;
 
