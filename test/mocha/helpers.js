@@ -333,12 +333,16 @@ api.prepareDatabase = async function() {
   ]);
 };
 
-api.runWorkerCycle = async (
-  {consensusApi, nodes, series = false, targetCyclesPerNode = 1}) => {
+api.runWorkerCycle = async ({
+  consensusApi, nodes, mergeOptions = {},
+  series = false, targetCyclesPerNode = 1
+}) => {
   const promises = [];
   for(const ledgerNode of nodes) {
-    const promise = _cycleNode(
-      {consensusApi, ledgerNode, targetCycles: targetCyclesPerNode});
+    const promise = _cycleNode({
+      consensusApi, ledgerNode, mergeOptions,
+      targetCycles: targetCyclesPerNode
+    });
     if(series) {
       await promise;
     } else {
@@ -348,13 +352,15 @@ api.runWorkerCycle = async (
   await Promise.all(promises);
 };
 
-async function _cycleNode({consensusApi, ledgerNode, targetCycles = 1} = {}) {
+async function _cycleNode({
+  consensusApi, ledgerNode, mergeOptions = {}, targetCycles = 1
+} = {}) {
   if(ledgerNode.stop) {
     return;
   }
 
   try {
-    await consensusApi._worker._run({ledgerNode, targetCycles});
+    await consensusApi._worker._run({ledgerNode, mergeOptions, targetCycles});
   } catch(err) {
     // if a config change is detected, do not run worker on that node again
     if(err && err.name === 'LedgerConfigurationChangeError') {
@@ -372,9 +378,11 @@ async function _cycleNode({consensusApi, ledgerNode, targetCycles = 1} = {}) {
  * there will be various numbers of non-consensus events of type
  * `ContinuityMergeEvent` on a settled network.
  */
-api.settleNetwork = async ({consensusApi, nodes, series = false} = {}) => {
+api.settleNetwork = async ({
+  consensusApi, nodes, mergeOptions = {}, series = false
+} = {}) => {
   while(true) {
-    await api.runWorkerCycle({consensusApi, nodes, series});
+    await api.runWorkerCycle({consensusApi, nodes, mergeOptions, series});
 
     // all nodes should have zero non-consensus regular events
     let promises = [];

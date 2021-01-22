@@ -302,12 +302,17 @@ describe('Multinode', () => {
         // once that is updated, remove `worker` and rely on settling
         // the network to create the event and apply the change
         const worker = new Worker({session: {ledgerNode: genesisLedgerNode}});
+        // FIXME: this is currently required to make this configuration change
+        // test pass (possible causes are the current lack of a configuration
+        // queue or early exiting in `helpers` when configuration changes on
+        // some witnesses and not others)
+        const mergeOptions = {nonEmptyThreshold: 1};
         await worker.init();
         genesisLedgerNode.worker = worker;
         await genesisLedgerNode.config.change(
           {ledgerConfiguration, worker});
         await helpers.settleNetwork(
-          {consensusApi, nodes: peers, series: false});
+          {consensusApi, nodes: peers, mergeOptions, series: false});
         for(const ledgerNode of peers) {
           const ledgerConfig = await ledgerNode.config.get();
           ledgerConfig.should.eql(ledgerConfiguration);
