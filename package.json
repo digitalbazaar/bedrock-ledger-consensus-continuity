@@ -37,7 +37,7 @@
     "p-all": "^3.0.0",
     "p-immediate": "^3.1.0",
     "p-limit": "^2.0.0",
-    "rdf-canonize": "^1.0.3",
+    "rdf-canonize": "^2.0.1",
     "split2": "^3.2.2",
     "workerpool": "^6.0.0"
   },
