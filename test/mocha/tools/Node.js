@@ -140,11 +140,6 @@ class Node {
     this.outstandingMergeEvents = Array.from(outstandingEventsMap.values());
   }
 
-  async getHead() {
-    const history = await this.getHistory();
-    return history.localBranchHead.eventHash;
-  }
-
   async getLocalPeerHead(peer) {
     const {nodeId: peerNodeId} = peer;
     if(!this.seenPeers.has(peerNodeId)) {

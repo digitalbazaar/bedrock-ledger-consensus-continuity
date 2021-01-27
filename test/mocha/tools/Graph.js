@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2020-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -132,11 +132,7 @@ class Graph {
     const tail = (node.branch.tail || {}).value;
     if(!tail) {
       return {
-        events: [],
-        localBranchHead: {
-          eventHash: '',
-          generation: -1
-        }
+        events: []
       };
     }
 
@@ -145,11 +141,7 @@ class Graph {
     const events = Array.from(results.values());
 
     const history = clone({
-      events: [...events, ...extraEvents],
-      localBranchHead: {
-        eventHash: tail,
-        generation: node.branch.length
-      }
+      events: [...events, ...extraEvents]
     });
 
     return history;

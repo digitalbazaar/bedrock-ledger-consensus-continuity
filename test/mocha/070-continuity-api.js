@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2020-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -947,8 +947,6 @@ function _validateExpectedState({input, expectedState, nodeId, incremental}) {
   if(events.length === 1) {
     const [eventHash] = events.map(({eventHash}) => eventHash);
     should.exist(eventHash);
-    input.history.localBranchHead.eventHash.should.equal(eventHash);
-    input.history.localBranchHead.generation.should.equal(1);
     return;
   }
   events.forEach(event => {
