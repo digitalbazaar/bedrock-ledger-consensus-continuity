@@ -169,7 +169,6 @@ describe('Continuity API findConsensus', () => {
       should.exist(result.eventHashes.mergeEventHashes);
       should.exist(result.eventHashes.parentHashes);
       should.exist(result.eventHashes.blockOrdering);
-      should.exist(result.eventHashes.gossipOrdering);
       result.consensusProofHashes.should.have.same.members(supportY2);
     }
 
