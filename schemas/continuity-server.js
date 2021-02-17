@@ -19,7 +19,8 @@ const getEvents = {
       maxItems: maxEvents,
       items: {
         type: 'string',
-        maxLength: 256,
+        // this cap should be the same as the max gossip events
+        maxLength: 64,
       }
     }
   }
@@ -49,8 +50,9 @@ const gossip = {
     peerHeads: {
       title: 'Continuity Gossip Peer Heads',
       type: 'array',
-      // this cap should be the same as the max gossip events
-      maxItems: 100,
+      // this cap should be no more than 2 * max gossip events to allow for
+      // 2 heads per creator
+      maxItems: 128,
       items: {
         // every item in the array must be an event hash
         type: 'string',
