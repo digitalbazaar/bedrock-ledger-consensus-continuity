@@ -22,7 +22,7 @@ const nodeLabels = [
 const nodes = {};
 const peers = {};
 
-describe('X Block Test with non-witness', () => {
+describe('X Block Test with non-witnesses', () => {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase();
@@ -33,7 +33,6 @@ describe('X Block Test with non-witness', () => {
 
     // override elector selection to force cycling and 3f+1
     before(() => {
-      const testFoo = new Set();
       const witnessSelectionApi = brLedgerNode.use('MostRecentParticipants');
       witnessSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
         const candidates = [];
@@ -53,13 +52,6 @@ describe('X Block Test with non-witness', () => {
         if(electors.length < count) {
           electors.push(...candidates.slice(0, count - electors.length));
         }
-        electors.forEach(({id}) => {
-          testFoo.add(id);
-          if(testFoo.size === 6) {
-            console.log('all witnesses');
-            process.exit(1);
-          }
-        });
         return {electors};
       };
     });
