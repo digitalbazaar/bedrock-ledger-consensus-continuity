@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -33,19 +33,11 @@ const peerId = {
 const gossip = {
   title: 'Continuity Gossip',
   type: 'object',
-  // `blockEventCount`, `cursor` are optional
-  required: ['basisBlockHeight', 'blockHeight', 'peerId', 'peerHeads'],
+  // `localEventNumber` is optional
+  required: ['basisBlockHeight', 'peerId', 'peerHeads'],
   additionalProperties: false,
   properties: {
     basisBlockHeight: {
-      type: 'integer',
-      minimum: 0
-    },
-    blockHeight: {
-      type: 'integer',
-      minimum: 0
-    },
-    blockEventCount: {
       type: 'integer',
       minimum: 0
     },
