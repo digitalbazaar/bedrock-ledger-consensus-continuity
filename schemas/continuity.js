@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2018 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -38,6 +38,7 @@ const continuityMergeEvent = {
   required: [
     '@context', 'basisBlockHeight', 'mergeHeight',
     'parentHash', 'proof', 'treeHash', 'type'
+    // `parentHashCommitment` is optional
   ],
   type: 'object',
   properties: {
@@ -57,6 +58,14 @@ const continuityMergeEvent = {
       },
       minItems: 2,
       maxItems: _continuityConstants.mergeEvents.maxEvents
+    },
+    parentHashCommitment: {
+      type: 'array',
+      items: {
+        type: 'string'
+      },
+      minItems: 1,
+      maxItems: 1
     },
     proof: mergeEventProof,
     treeHash: {
