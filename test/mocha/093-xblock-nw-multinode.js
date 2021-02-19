@@ -14,13 +14,13 @@ const TEST_TIMEOUT = 300000;
 
 const opTemplate = mockData.operations.alpha;
 
-// NOTE: alpha is assigned manually
 // NOTE: all these may not be used
 const nodeLabels = [
-  'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota'
+  'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota'
 ];
 const nodes = {};
 const peers = {};
+const nodeCount = 6;
 
 describe('X Block Test with non-witnesses', () => {
   before(async function() {
@@ -28,7 +28,6 @@ describe('X Block Test with non-witnesses', () => {
     await helpers.prepareDatabase();
   });
 
-  const nodeCount = 6;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // override elector selection to force cycling and 3f+1
@@ -83,7 +82,7 @@ describe('X Block Test with non-witnesses', () => {
       }
       const ledgerNodes = await Promise.all(promises);
       for(let i = 0; i < nodeCount - 1; ++i) {
-        nodes[nodeLabels[i]] = ledgerNodes[i];
+        nodes[nodeLabels[i + 1]] = ledgerNodes[i];
       }
     });
 
@@ -190,13 +189,17 @@ describe('X Block Test with non-witnesses', () => {
 });
 
 async function _nBlocks({consensusApi, targetBlockHeight}) {
-  const recordIds = {alpha: [], beta: [], gamma: [], delta: []};
+  const recordIds = {};
+  for(let i = 0; i < nodeCount; ++i) {
+    recordIds[nodeLabels[i]] = [];
+  }
   const targetBlockHashMap = {};
   while(Object.keys(targetBlockHashMap).length !== Object.keys(nodes).length) {
     const count = 1;
     const operations = await _addOperations({count});
     // record the IDs for the records that were just added
-    for(const n of ['alpha', 'beta', 'gamma', 'delta']) {
+    for(let i = 0; i < nodeCount; ++i) {
+      const n = nodeLabels[i];
       for(const opHash of Object.keys(operations[n])) {
         recordIds[n].push(operations[n][opHash].record.id);
       }
@@ -224,11 +227,15 @@ async function _nBlocks({consensusApi, targetBlockHeight}) {
 }
 
 async function _addOperations({count}) {
-  const [alpha, beta, gamma, delta] = await Promise.all([
-    helpers.addOperation({count, ledgerNode: nodes.alpha, opTemplate}),
-    helpers.addOperation({count, ledgerNode: nodes.beta, opTemplate}),
-    helpers.addOperation({count, ledgerNode: nodes.gamma, opTemplate}),
-    helpers.addOperation({count, ledgerNode: nodes.delta, opTemplate})
-  ]);
-  return {alpha, beta, gamma, delta};
+  const promises = [];
+  for(let i = 0; i < nodeCount; ++i) {
+    const ledgerNode = nodes[nodeLabels[i]];
+    promises.push(helpers.addOperation({count, ledgerNode, opTemplate}));
+  }
+  const results = await Promise.all(promises);
+  const resultMap = {};
+  for(let i = 0; i < results.length; ++i) {
+    resultMap[nodeLabels[i]] = results[i];
+  }
+  return resultMap;
 }
