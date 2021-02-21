@@ -22,7 +22,7 @@ const nodes = {};
 const peers = {};
 const nodeCount = 7;
 
-describe.only('X Block Test with non-witnesses', () => {
+describe('X Block Test with non-witnesses', () => {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase();
