@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -20,9 +20,9 @@ const nodeLabels = [
 ];
 const nodes = {};
 const peers = {};
-const nodeCount = 6;
+const nodeCount = 7;
 
-describe('X Block Test with non-witnesses', () => {
+describe.only('X Block Test with non-witnesses', () => {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase();
@@ -37,13 +37,13 @@ describe('X Block Test with non-witnesses', () => {
         const candidates = [];
         // if more than 5 nodes are participating, ensure at least 1 is always
         // a non-witness to test non-witness code paths
-        const maxWitnesses = nodeCount > 5 ? nodeCount - 1 : nodeCount;
+        const maxWitnessCandidates = nodeCount > 5 ? nodeCount - 1 : nodeCount;
         for(const p of Object.keys(peers)) {
-          if(candidates.length < maxWitnesses) {
+          if(candidates.length < maxWitnessCandidates) {
             candidates.push({id: peers[p]});
           }
         }
-        const f = Math.floor((nodeCount - 1) / 3);
+        const f = Math.floor((maxWitnessCandidates - 1) / 3);
         const count = 3 * f + 1;
         // cycle witnesses deterministically using `blockHeight`
         const start = blockHeight % candidates.length;
