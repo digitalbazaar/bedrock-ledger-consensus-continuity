@@ -22,7 +22,7 @@
     "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^2.0.0",
     "bedrock-ledger-consensus-continuity-storage": "github:digitalbazaar/bedrock-ledger-consensus-continuity-storage#merge-event-updates",
     "bedrock-ledger-context": "^17.0.0",
-    "bedrock-ledger-node": "github:digitalbazaar/bedrock-ledger-node#cache-config",
+    "bedrock-ledger-node": "github:digitalbazaar/bedrock-ledger-node#op-exists",
     "bedrock-ledger-storage-mongodb": "github:digitalbazaar/bedrock-ledger-storage-mongodb#event-bulk-update",
     "bedrock-mongodb": "^8.1.0",
     "bedrock-passport": "^6.0.0",
