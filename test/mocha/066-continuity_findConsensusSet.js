@@ -32,7 +32,7 @@ describe('Continuity API _findConsensusSet', () => {
     // add genesis node
     const ledgerConfiguration = mockData.ledgerConfiguration;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const {id: peerId} = await consensusApi._peers.get(
+    const peerId = await consensusApi._localPeers.getPeerId(
       {ledgerNodeId: nodes.alpha.id});
 
     // get genesis block
@@ -52,7 +52,7 @@ describe('Continuity API _findConsensusSet', () => {
       // attach worker to the node to emulate a work session used by `helpers`
       ledgerNode.worker = new Worker({session: {ledgerNode}});
       await ledgerNode.worker.init();
-      const {id} = await consensusApi._peers.get({ledgerNodeId});
+      const id = await consensusApi._localPeers.getPeerId({ledgerNodeId});
       peers[key] = id;
       ledgerNode.peerId = id;
       helpers.peersReverse[id] = key;
@@ -165,7 +165,7 @@ describe('Continuity API _findConsensusSet', () => {
       // attach worker to the node to emulate a work session used by `helpers`
       nodes.epsilon.worker = new Worker({session: {ledgerNode: nodes.epsilon}});
       await nodes.epsilon.worker.init();
-      const {id} = await consensusApi._peers.get(
+      const id = await consensusApi._localPeers.getPeerId(
         {ledgerNodeId: nodes.epsilon.id});
       peers.epsilon = id;
       nodes.epsilon.peerId = id;

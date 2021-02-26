@@ -87,10 +87,10 @@ describe('X Block Test', () => {
       this.timeout(TEST_TIMEOUT);
       for(const key in nodes) {
         const ledgerNode = nodes[key];
-        const {id} = await consensusApi._peers.get(
+        const peerId = await consensusApi._localPeers.getPeerId(
           {ledgerNodeId: ledgerNode.id});
-        peers[key] = id;
-        ledgerNode._peerId = id;
+        peers[key] = peerId;
+        ledgerNode._peerId = peerId;
       }
     });
 

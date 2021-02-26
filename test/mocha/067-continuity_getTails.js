@@ -47,9 +47,10 @@ describe.skip('Continuity API _getTails', () => {
             callback(null, result);
           })],
       peerId: ['consensusPlugin', 'ledgerNode', (results, callback) => {
-        callbackify(consensusApi._peers.get)(nodes.alpha.id, (err, result) => {
-          callback(null, result.id);
-        });
+        callbackify(consensusApi._localPeers.getPeerId)(
+          nodes.alpha.id, (err, result) => {
+            callback(null, result);
+          });
       }],
       genesisMerge: ['peerId', (results, callback) => {
         callbackify(consensusApi._history.getHead)({
@@ -108,13 +109,14 @@ describe.skip('Continuity API _getTails', () => {
       //   })],
       creator: ['nodeBeta', 'nodeGamma', 'nodeDelta', (results, callback) =>
         async.eachOf(nodes, (n, i, callback) =>
-          callbackify(consensusApi._peers.get)(n.id, (err, result) => {
-            if(err) {
-              return callback(err);
-            }
-            peers[i] = result.id;
-            callback();
-          }), callback)]
+          callbackify(consensusApi._localPeers.getPeerId)(
+            n.id, (err, result) => {
+              if(err) {
+                return callback(err);
+              }
+              peers[i] = result;
+              callback();
+            }), callback)]
     }, done);
   });
   it('Test 1', done => {
