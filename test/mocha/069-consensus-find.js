@@ -30,8 +30,6 @@ describe('Consensus API find', () => {
     consensusApi = plugin.api;
     Worker = consensusApi._worker.Worker;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const {id: ledgerNodeId} = nodes.alpha;
-    const _voter = await consensusApi._peers.get({ledgerNodeId});
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     genesisBlock = _genesisBlock.block;
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
@@ -43,10 +41,10 @@ describe('Consensus API find', () => {
       ledgerNode.worker = new Worker({session: {ledgerNode}});
       await ledgerNode.worker.init();
       const {id: ledgerNodeId} = ledgerNode;
-      const voter = await consensusApi._peers.get({ledgerNodeId});
-      peers[key] = voter.id;
-      ledgerNode.peerId = voter.id;
-      helpers.peersReverse[voter.id] = key;
+      const peerId = await consensusApi._localPeers.getPeerId({ledgerNodeId});
+      peers[key] = peerId;
+      ledgerNode.peerId = peerId;
+      helpers.peersReverse[peerId] = key;
     }
     // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps
     // nodeEpsilon: ['genesisBlock', (results, callback) => brLedgerNode.add(

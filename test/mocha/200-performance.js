@@ -21,7 +21,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
   const opNum = 500;
   let consensusApi;
   let ledgerNode;
-  let voterId;
+  let peerId;
   let testEventId;
   before(async function() {
     const ledgerConfiguration = mockData.ledgerConfiguration;
@@ -32,8 +32,8 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
     const consensusPlugin = await helpers.use('Continuity2017');
     consensusApi = consensusPlugin.api;
     ledgerNode = await brLedgerNode.add(null, {ledgerConfiguration});
-    const voter = await consensusApi._peers.get({ledgerNodeId: ledgerNode.id});
-    voterId = voter.id;
+    peerId = await consensusApi._localPeers.getPeerId(
+      {ledgerNodeId: ledgerNode.id});
   });
   describe('Preparation', () => {
     it(`adds ${eventNum} events`, function(done) {
@@ -57,7 +57,7 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
       runPasses({
         func: consensusApi._client.getBlockStatus,
         blockHeight: 1,
-        voterId,
+        peerId,
         opNum,
         passNum
       }, done);
@@ -66,14 +66,14 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
 });
 
 function runPasses({
-  func, blockHeight, passNum, opNum, voterId, concurrency = 100
+  func, blockHeight, passNum, opNum, peerId, concurrency = 100
 }, callback) {
   const passes = [];
   async.timesSeries(passNum, (i, callback) => {
     const start = Date.now();
     async.timesLimit(
       opNum, concurrency,
-      (i, callback) => func.call(null, blockHeight, voterId, callback), err => {
+      (i, callback) => func.call(null, blockHeight, peerId, callback), err => {
         const stop = Date.now();
         assertNoError(err);
         passes.push(Math.round(opNum / (stop - start) * 1000));

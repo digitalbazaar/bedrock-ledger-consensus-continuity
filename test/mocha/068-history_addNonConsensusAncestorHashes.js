@@ -30,9 +30,8 @@ describe('History API _addNonConsensusAncestorHashes', () => {
     consensusApi = plugin.api;
     Worker = consensusApi._worker.Worker;
     nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
-    const voter = await consensusApi._peers.get(
+    const peerId = await consensusApi._localPeers.getPeerId(
       {ledgerNodeId: nodes.alpha.id});
-    const peerId = voter.id;
     nodes.alpha.peerId = peerId;
     const {genesisBlock: _genesisBlock} = await nodes.alpha.blocks.getGenesis();
     const genesisBlock = _genesisBlock.block;
@@ -45,9 +44,9 @@ describe('History API _addNonConsensusAncestorHashes', () => {
       ledgerNode.worker = new Worker({session: {ledgerNode}});
       await ledgerNode.worker.init();
       const {id: ledgerNodeId} = ledgerNode;
-      const voter = await consensusApi._peers.get({ledgerNodeId});
-      ledgerNode.peerId = voter.id;
-      peers[key] = voter.id;
+      ledgerNode.peerId = await consensusApi._localPeers.getPeerId(
+        {ledgerNodeId});
+      peers[key] = ledgerNode.peerId;
     }
     genesisMerge = nodes.alpha.worker.head.eventHash;
   });
