@@ -65,8 +65,20 @@ const notification = {
   title: 'Continuity Server Gossip Notification',
   type: 'object',
   additionalProperties: false,
-  require: ['peerId'],
-  properties: {peerId}
+  require: ['peer'],
+  properties: {
+    peer: {
+      type: 'object',
+      additionalProperties: false,
+      require: ['id', 'url'],
+      properties: {
+        id: peerId,
+        url: {
+          type: 'string'
+        }
+      }
+    }
+  }
 };
 
 module.exports.getEvents = () => getEvents;
