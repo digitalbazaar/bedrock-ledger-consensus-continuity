@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -10,10 +10,13 @@ describe('Client API', () => {
   describe('notifyPeer', () => {
     it('throws a NetworkError on connection refused', async () => {
       const localPeerId = 'foo';
-      const remotePeerId = 'https://127.0.0.1';
+      const remotePeer = {
+        id: 'https://127.0.0.1',
+        url: 'https://127.0.0.1'
+      };
       let err;
       try {
-        await _client.notifyPeer({localPeerId, remotePeerId});
+        await _client.notifyPeer({localPeerId, remotePeer});
       } catch(e) {
         err = e;
       }
@@ -35,10 +38,11 @@ describe('Client API', () => {
     it('properly handles ECONNREFUSED', async () => {
       let error;
       try {
-        await _client.getEvents({
-          eventHashes: ['abc'],
-          peerId: 'https://127.0.0.1:3333'
-        });
+        const remotePeer = {
+          id: 'https://127.0.0.1:3333',
+          url: 'https://127.0.0.1:3333'
+        };
+        await _client.getEvents({eventHashes: ['abc'], remotePeer});
       } catch(e) {
         error = e;
       }
@@ -50,10 +54,11 @@ describe('Client API', () => {
     it('properly handles a 404 error', async () => {
       let error;
       try {
-        await _client.getEvents({
-          eventHashes: ['abc'],
-          peerId: config.server.baseUri,
-        });
+        const remotePeer = {
+          id: config.server.baseUri,
+          url: config.server.baseUri
+        };
+        await _client.getEvents({eventHashes: ['abc'], remotePeer});
       } catch(e) {
         error = e;
       }
