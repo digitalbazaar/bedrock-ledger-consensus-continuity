@@ -22,7 +22,7 @@ const nodeLabels = [
 const nodes = {};
 const peers = {};
 
-describe('X Block Test', () => {
+describe.only('X Block Test', () => {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase();
