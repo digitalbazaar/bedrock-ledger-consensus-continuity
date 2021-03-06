@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -84,6 +84,15 @@ describe.skip('Multinode Basics', () => {
           {ledgerNode: ledgerNode.id});
         peers[i] = peerId;
         heads[i] = [];
+        if(i === 0) {
+          // skip genesis peer
+          continue;
+        }
+        // add genesis peer to the peer's peers collection
+        // FIXME: use proper URL do not just repeat ID
+        const remotePeer = {id: peers[0], url: peers[0]};
+        await consensusApi._peers.optionallyAddPeer(
+          {ledgerNode, remotePeer});
         i++;
       }
     });

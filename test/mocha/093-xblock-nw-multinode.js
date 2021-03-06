@@ -95,6 +95,15 @@ describe('X Block Test with non-witnesses', () => {
           {ledgerNodeId: ledgerNode.id});
         peers[key] = peerId;
         ledgerNode._peerId = peerId;
+        if(key === 'alpha') {
+          // skip genesis peer
+          continue;
+        }
+        // add genesis peer to the peer's peers collection
+        // FIXME: use proper URL do not just repeat ID
+        const remotePeer = {id: peers.alpha, url: peers.alpha};
+        await consensusApi._peers.optionallyAddPeer(
+          {ledgerNode, remotePeer});
       }
     });
 

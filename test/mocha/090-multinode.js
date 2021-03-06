@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -62,6 +62,18 @@ describe('Multinode', () => {
         const peerId = await consensusApi._localPeers.getPeerId(
           {ledgerNodeId: ledgerNode.id});
         ledgerNode._peerId = peerId;
+        if(ledgerNode === genesisLedgerNode) {
+          // skip genesis peer
+          continue;
+        }
+        // add genesis peer to the peer's peers collection
+        // FIXME: use proper URL do not just repeat ID
+        const remotePeer = {
+          id: genesisLedgerNode._peerId,
+          url: genesisLedgerNode._peerId
+        };
+        await consensusApi._peers.optionallyAddPeer(
+          {ledgerNode, remotePeer});
       }
     });
 
@@ -326,6 +338,14 @@ describe('Multinode', () => {
           genesisBlock: genesisRecord.block
         });
         peers.push(ledgerNode);
+        // add genesis peer to the peer's peers collection
+        // FIXME: use proper URL do not just repeat ID
+        const remotePeer = {
+          id: genesisLedgerNode._peerId,
+          url: genesisLedgerNode._peerId
+        };
+        await consensusApi._peers.optionallyAddPeer(
+          {ledgerNode, remotePeer});
         await helpers.settleNetwork(
           {consensusApi, nodes: peers, series: false});
         const ledgerConfigs = [];
