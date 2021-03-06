@@ -74,6 +74,12 @@ describe('Multinode', () => {
         };
         await consensusApi._peers.optionallyAddPeer(
           {ledgerNode, remotePeer});
+        // add new peer to genesis node
+        await consensusApi._peers.optionallyAddPeer({
+          ledgerNode: genesisLedgerNode,
+          // FIXME: use proper URL do not just repeat ID
+          remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
+        });
       }
     });
 

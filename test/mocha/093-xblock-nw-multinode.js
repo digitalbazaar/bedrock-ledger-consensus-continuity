@@ -104,6 +104,12 @@ describe('X Block Test with non-witnesses', () => {
         const remotePeer = {id: peers.alpha, url: peers.alpha};
         await consensusApi._peers.optionallyAddPeer(
           {ledgerNode, remotePeer});
+        // add new peer to genesis node
+        await consensusApi._peers.optionallyAddPeer({
+          ledgerNode: nodes.alpha,
+          // FIXME: use proper URL do not just repeat ID
+          remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
+        });
       }
     });
 
