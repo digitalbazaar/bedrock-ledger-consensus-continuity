@@ -18,7 +18,7 @@ config['ledger-consensus-continuity'].gossip.coolDownPeriod = 250;
 config['ledger-consensus-continuity'].gossip.eventsValidation.workers = 1;
 // update peers very frequently for tests so that new peers are onboarded
 // and spread quickly for tests that typically only run for 30-60 seconds
-config['ledger-consensus-continuity'].gossip.peerSamplingCache.maxAge = 1000;
+config['ledger-consensus-continuity'].gossip.peerCache.maxAge = 1000;
 
 config.mocha.options.bail = true;
 
