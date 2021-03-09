@@ -98,10 +98,10 @@ describe('X Block Test', () => {
         // add genesis peer to the peer's peers collection
         // FIXME: use proper URL do not just repeat ID
         const remotePeer = {id: peers.alpha, url: peers.alpha};
-        await consensusApi._peers.optionallyAddPeer(
+        await consensusApi._peers.optionallyAdd(
           {ledgerNode, remotePeer});
         // add new peer to genesis node
-        await consensusApi._peers.optionallyAddPeer({
+        await consensusApi._peers.optionallyAdd({
           ledgerNode: nodes.alpha,
           // FIXME: use proper URL do not just repeat ID
           remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
