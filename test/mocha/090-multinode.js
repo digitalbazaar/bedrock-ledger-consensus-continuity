@@ -72,10 +72,10 @@ describe('Multinode', () => {
           id: genesisLedgerNode._peerId,
           url: genesisLedgerNode._peerId
         };
-        await consensusApi._peers.optionallyAddPeer(
+        await consensusApi._peers.optionallyAdd(
           {ledgerNode, remotePeer});
         // add new peer to genesis node
-        await consensusApi._peers.optionallyAddPeer({
+        await consensusApi._peers.optionallyAdd({
           ledgerNode: genesisLedgerNode,
           // FIXME: use proper URL do not just repeat ID
           remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
@@ -350,7 +350,7 @@ describe('Multinode', () => {
           id: genesisLedgerNode._peerId,
           url: genesisLedgerNode._peerId
         };
-        await consensusApi._peers.optionallyAddPeer(
+        await consensusApi._peers.optionallyAdd(
           {ledgerNode, remotePeer});
         await helpers.settleNetwork(
           {consensusApi, nodes: peers, series: false});
