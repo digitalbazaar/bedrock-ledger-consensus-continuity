@@ -22,13 +22,13 @@ const nodeLabels = [
 const nodes = {};
 const peers = {};
 
-describe('X Block Test', () => {
+describe.only('X Block Test', () => {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase();
   });
 
-  const nodeCount = 6;
+  const nodeCount = 4;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
     // override elector selection to force cycling and 3f+1

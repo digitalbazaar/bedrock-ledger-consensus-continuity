@@ -382,6 +382,7 @@ api.settleNetwork = async ({
 } = {}) => {
   while(true) {
     await api.runWorkerCycle({consensusApi, nodes, mergeOptions, series});
+    console.log('worker cycle done');
 
     // all nodes should have zero non-consensus regular events
     let promises = [];
@@ -391,6 +392,7 @@ api.settleNetwork = async ({
       }));
     }
     if((await Promise.all(promises)).some(c => c > 0)) {
+      console.log('op events have not reached consensus');
       continue;
     }
 
@@ -415,6 +417,7 @@ api.settleNetwork = async ({
     if(blockHeights.every(b => b === blockHeights[0])) {
       break;
     }
+    console.log('block heights do not match');
   }
 };
 
