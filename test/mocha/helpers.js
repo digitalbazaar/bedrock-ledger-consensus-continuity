@@ -98,10 +98,7 @@ api.addEventAndMerge = async ({
   events.regularHashes = Object.keys(events.regular);
 
   // Note: `worker` must be added in the tests to emulate a work session
-  const {record} = await ledgerNode.worker.merge({
-    // for simple tests, use this threshold
-    peerWitnessParentThreshold: 1
-  });
+  const {record} = await ledgerNode.worker.merge();
   events.merge = record;
   events.mergeHash = events.merge.meta.eventHash;
   events.allHashes = [events.mergeHash, ...events.regularHashes];
@@ -194,8 +191,8 @@ api.copyAndMerge = async ({from, nodes, to, useSnapshot = false} = {}) => {
   }
   // Note: `worker` must be added in the tests to emulate a work session
   const {record} = await nodes[to].worker.merge({
-    // this function is only used to unit test hard-coded histories for
-    // creating a single block so this threshold is used
+    // this function is only called in legacy unit test hard-coded histories
+    // that were not designed to comply with a threshold, so we clear it here
     peerWitnessParentThreshold: 0
   });
   return record;
