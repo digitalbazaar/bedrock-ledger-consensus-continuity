@@ -21,6 +21,7 @@ describe('History API _addNonConsensusAncestorHashes', () => {
   let Worker;
   const nodes = {};
   const peers = {};
+  const witnesses = [];
   beforeEach(async function() {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
@@ -47,6 +48,8 @@ describe('History API _addNonConsensusAncestorHashes', () => {
       ledgerNode.peerId = await consensusApi._localPeers.getPeerId(
         {ledgerNodeId});
       peers[key] = ledgerNode.peerId;
+      witnesses.push(ledgerNode.peerId);
+      ledgerNode.worker.consensusState.witnesses = witnesses;
     }
     genesisMerge = nodes.alpha.worker.head.eventHash;
   });
@@ -66,7 +69,7 @@ describe('History API _addNonConsensusAncestorHashes', () => {
     const opTemplate = mockData.operations.alpha;
     async.auto({
       event1: callback => callbackify(helpers.addEventAndMerge)(
-        {eventTemplate, ledgerNode, opTemplate}, callback),
+        {eventTemplate, ledgerNode, witnesses, opTemplate}, callback),
       test: ['event1', async results => {
         const hashes = {
           mergeEventHashes: [results.event1.mergeHash],

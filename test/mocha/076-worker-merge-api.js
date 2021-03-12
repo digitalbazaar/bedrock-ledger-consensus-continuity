@@ -33,6 +33,7 @@ describe('events.mergeBranches API', () => {
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
     nodes.gamma = await brLedgerNode.add(null, {genesisBlock});
     nodes.delta = await brLedgerNode.add(null, {genesisBlock});
+    const witnesses = [];
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       // attach worker to the node to emulate a work session used by `helpers`
@@ -42,6 +43,8 @@ describe('events.mergeBranches API', () => {
       const peerId = await consensusApi._localPeers.getPeerId({ledgerNodeId});
       ledgerNode.peerId = peerId;
       peers[key] = peerId;
+      witnesses.push(peerId);
+      ledgerNode.worker.consensusState.witnesses = witnesses;
     }
     // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps
     // nodeEpsilon: ['genesisBlock', (results, callback) => brLedgerNode.add(
@@ -62,7 +65,7 @@ describe('events.mergeBranches API', () => {
     const addedEvents = await helpers.addEvent(
       {ledgerNode, eventTemplate, opTemplate});
     const result = await ledgerNode.worker.merge(
-      {witnesses: [], nonEmptyThreshold: 0, emptyThreshold: 1});
+      {nonEmptyThreshold: 0, emptyThreshold: 1});
     const eventHash = Object.keys(addedEvents)[0];
     should.exist(result);
     should.exist(result.record);
@@ -98,9 +101,9 @@ describe('events.mergeBranches API', () => {
     const opTemplate = mockData.operations.alpha;
     await helpers.addEvent({ledgerNode, eventTemplate, opTemplate});
     await ledgerNode.worker.merge(
-      {witnesses: [], nonEmptyThreshold: 0, emptyThreshold: 1});
+      {nonEmptyThreshold: 0, emptyThreshold: 1});
     const result = await ledgerNode.worker.merge(
-      {witnesses: [], nonEmptyThreshold: 0, emptyThreshold: 1});
+      {nonEmptyThreshold: 0, emptyThreshold: 1});
     should.exist(result);
     should.equal(result.merged, false);
     should.equal(result.record, null);
@@ -112,7 +115,7 @@ describe('events.mergeBranches API', () => {
     const addedEvents = await helpers.addEvent(
       {eventTemplate, count: 5, ledgerNode, opTemplate});
     const result = await ledgerNode.worker.merge(
-      {witnesses: [], nonEmptyThreshold: 0, emptyThreshold: 1});
+      {nonEmptyThreshold: 0, emptyThreshold: 1});
     should.exist(result.record);
     const {record} = result;
     should.exist(record.event);
