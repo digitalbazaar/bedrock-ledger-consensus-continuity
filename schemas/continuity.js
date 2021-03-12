@@ -39,6 +39,7 @@ const continuityMergeEvent = {
     '@context', 'basisBlockHeight', 'mergeHeight',
     'parentHash', 'proof', 'treeHash', 'type'
     // `parentHashCommitment` is optional
+    // `peerCommitment` is optional
   ],
   type: 'object',
   properties: {
@@ -62,6 +63,16 @@ const continuityMergeEvent = {
     parentHashCommitment: {
       type: 'array',
       items: {
+        // FIXME: this should have a maximum length
+        type: 'string'
+      },
+      minItems: 1,
+      maxItems: 1
+    },
+    peerCommitment: {
+      type: 'array',
+      items: {
+        // FIXME: this should have a maximum length
         type: 'string'
       },
       minItems: 1,
