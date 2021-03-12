@@ -99,8 +99,7 @@ api.addEventAndMerge = async ({
 
   // Note: `worker` must be added in the tests to emulate a work session
   const {record} = await ledgerNode.worker.merge({
-    // for simple tests, use these thresholds and do not consider witnesses
-    witnesses: [],
+    // for simple tests, use these thresholds
     nonEmptyThreshold: 0, emptyThreshold: 1
   });
   events.merge = record;
@@ -111,7 +110,7 @@ api.addEventAndMerge = async ({
 };
 
 api.addEventMultiNode = async ({
-  eventTemplate, nodes, witnesses, opTemplate
+  eventTemplate, nodes, opTemplate
 } = {}) => {
   const rVal = {
     mergeHash: [],
@@ -120,7 +119,7 @@ api.addEventMultiNode = async ({
   for(const name of Object.keys(nodes)) {
     const ledgerNode = nodes[name];
     rVal[name] = await api.addEventAndMerge({
-      eventTemplate, ledgerNode, opTemplate, witnesses
+      eventTemplate, ledgerNode, opTemplate
     });
   }
   Object.keys(nodes).forEach(k => {
@@ -164,9 +163,14 @@ api.addOperations2 = async ({count, nodes, opTemplate}) => {
   return results;
 };
 
-api.buildHistory = async ({historyId, mockData, nodes} = {}) => {
+api.buildHistory = async ({historyId, mockData, nodes, witnesses} = {}) => {
   const eventTemplate = mockData.events.alpha;
   const opTemplate = mockData.operations.alpha;
+  // set workers to use passed witnesses when merging
+  for(const key in nodes) {
+    const ledgerNode = nodes[key];
+    ledgerNode.worker.consensusState.witnesses = witnesses;
+  }
   const results = await ledgerHistory[historyId]({
     api, eventTemplate, nodes, opTemplate
   });
@@ -191,9 +195,7 @@ api.copyAndMerge = async ({from, nodes, to, useSnapshot = false} = {}) => {
   // Note: `worker` must be added in the tests to emulate a work session
   const {record} = await nodes[to].worker.merge({
     // this function is only used to unit test hard-coded histories for
-    // creating a single block so these thresholds are set here and
-    // witnesses are not considered
-    witnesses: [],
+    // creating a single block so these thresholds are set here
     nonEmptyThreshold: 0, emptyThreshold: 0
   });
   return record;

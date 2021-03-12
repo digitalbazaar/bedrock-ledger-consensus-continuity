@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -171,8 +171,12 @@ describe('Continuity API _findConsensusSet', () => {
       nodes.epsilon.peerId = id;
       helpers.peersReverse[id] = 'epsilon';
 
+      // epsilon must be treated as a witness for merging purposes since this
+      // is legacy code and it would otherwise not be able to merge without
+      // commitments
+      const mergeWitnesses = [...witnesses, id];
       const build = await helpers.buildHistory(
-        {historyId: 'delta', mockData, nodes, witnesses});
+        {historyId: 'delta', mockData, nodes, witnesses: mergeWitnesses});
 
       for(const key in nodes) {
         const ledgerNode = nodes[key];

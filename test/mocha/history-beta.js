@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2017-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2017-2021 Digital Bazaar, Inc. All rights reserved.
  */
 module.exports = async function historyBeta(
   {api, eventTemplate, nodes, opTemplate} = {}) {
