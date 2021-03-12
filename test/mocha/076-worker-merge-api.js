@@ -65,7 +65,7 @@ describe('events.mergeBranches API', () => {
     const addedEvents = await helpers.addEvent(
       {ledgerNode, eventTemplate, opTemplate});
     const result = await ledgerNode.worker.merge(
-      {nonEmptyThreshold: 0, emptyThreshold: 1});
+      {peerWitnessParentThreshold: 1});
     const eventHash = Object.keys(addedEvents)[0];
     should.exist(result);
     should.exist(result.record);
@@ -101,9 +101,9 @@ describe('events.mergeBranches API', () => {
     const opTemplate = mockData.operations.alpha;
     await helpers.addEvent({ledgerNode, eventTemplate, opTemplate});
     await ledgerNode.worker.merge(
-      {nonEmptyThreshold: 0, emptyThreshold: 1});
+      {peerWitnessParentThreshold: 1});
     const result = await ledgerNode.worker.merge(
-      {nonEmptyThreshold: 0, emptyThreshold: 1});
+      {peerWitnessParentThreshold: 1});
     should.exist(result);
     should.equal(result.merged, false);
     should.equal(result.record, null);
@@ -115,7 +115,7 @@ describe('events.mergeBranches API', () => {
     const addedEvents = await helpers.addEvent(
       {eventTemplate, count: 5, ledgerNode, opTemplate});
     const result = await ledgerNode.worker.merge(
-      {nonEmptyThreshold: 0, emptyThreshold: 1});
+      {peerWitnessParentThreshold: 1});
     should.exist(result.record);
     const {record} = result;
     should.exist(record.event);
