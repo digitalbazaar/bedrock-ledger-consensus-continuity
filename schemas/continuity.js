@@ -58,7 +58,7 @@ const continuityMergeEvent = {
         type: 'string'
       },
       minItems: 2,
-      maxItems: _continuityConstants.mergeEvents.maxEvents
+      maxItems: _continuityConstants.mergeEvents.maxParents
     },
     parentHashCommitment: {
       type: 'array',
