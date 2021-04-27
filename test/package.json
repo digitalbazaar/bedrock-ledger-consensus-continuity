@@ -29,7 +29,7 @@
     "bedrock-permission": "^3.1.0",
     "bedrock-redis": "^3.4.0",
     "bedrock-rest": "^3.0.0",
-    "bedrock-security-context": "^3.0.0",
+    "bedrock-security-context": "^4.0.0",
     "bedrock-server": "^2.2.0",
     "bedrock-test": "^5.0.0",
     "bedrock-validation": "^4.5.0",
