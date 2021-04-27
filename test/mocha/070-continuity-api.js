@@ -909,7 +909,8 @@ function _validate({
   extendedTests = new Map()
 }) {
   return new Promise(resolve => {
-    let result, err;
+    let result;
+    let err;
     const input = {
       ledgerNodeId: nodeId,
       history: graph.getHistory({nodeId}),

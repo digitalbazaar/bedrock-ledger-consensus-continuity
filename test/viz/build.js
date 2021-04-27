@@ -29,7 +29,8 @@ async function main() {
 
   for(const [id, options] of Object.entries(consensusInput)) {
     //console.log(`INPUT[${id}]', {input, display});
-    let input, display;
+    let input;
+    let display;
     if(options.load) {
       ({input, display} = await options.load());
     } else {
