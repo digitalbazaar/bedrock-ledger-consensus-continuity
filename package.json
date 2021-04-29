@@ -1,6 +1,6 @@
 {
   "name": "bedrock-ledger-consensus-continuity",
-  "version": "7.0.2-0",
+  "version": "8.0.0",
   "description": "Implementation of Web Ledger Continuity Consensus Protocol.",
   "license": "SEE LICENSE IN LICENSE.md",
   "main": "lib",
