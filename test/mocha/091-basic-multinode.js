@@ -46,7 +46,7 @@ describe.skip('Multinode Basics', () => {
     const consensusApi = consensusPlugin.api;
     const {validateSession} = consensusApi._peerEvents;
     const newValidateSession = ({ledgerNodeId}) => {
-      return validateSession({ledgerNodeId, session: -1});
+      return validateSession({ledgerNodeId, sessionId: -1});
     };
     consensusApi._peerEvents.validateSession = newValidateSession;
   });
