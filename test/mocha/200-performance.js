@@ -35,6 +35,16 @@ describe.skip('Performance - Consensus Client - getBlockStatus API', () => {
     peerId = await consensusApi._localPeers.getPeerId(
       {ledgerNodeId: ledgerNode.id});
   });
+  // override event & operation session validation
+  before(async function() {
+    const consensusPlugin = await helpers.use('Continuity2017');
+    const consensusApi = consensusPlugin.api;
+    const {validateSession} = consensusApi._peerEvents;
+    const newValidateSession = ({ledgerNodeId}) => {
+      return validateSession({ledgerNodeId, session: -1});
+    };
+    consensusApi._peerEvents.validateSession = newValidateSession;
+  });
   describe('Preparation', () => {
     it(`adds ${eventNum} events`, function(done) {
       this.timeout(120000);

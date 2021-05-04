@@ -40,6 +40,17 @@ describe.skip('Multinode Basics', () => {
     await helpers.prepareDatabase();
   });
 
+  // override event & operation session validation
+  before(async function() {
+    const consensusPlugin = await helpers.use('Continuity2017');
+    const consensusApi = consensusPlugin.api;
+    const {validateSession} = consensusApi._peerEvents;
+    const newValidateSession = ({ledgerNodeId}) => {
+      return validateSession({ledgerNodeId, session: -1});
+    };
+    consensusApi._peerEvents.validateSession = newValidateSession;
+  });
+
   describe('Consensus with 2 Nodes', () => {
     const nodeCount = 6;
 

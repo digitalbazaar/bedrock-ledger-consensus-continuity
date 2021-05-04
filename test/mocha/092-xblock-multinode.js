@@ -31,6 +31,17 @@ describe('X Block Test', () => {
   const nodeCount = 6;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
 
+    // override event & operation session validation
+    before(async function() {
+      const consensusPlugin = await helpers.use('Continuity2017');
+      const consensusApi = consensusPlugin.api;
+      const {validateSession} = consensusApi._peerEvents;
+      const newValidateSession = ({ledgerNodeId}) => {
+        return validateSession({ledgerNodeId, session: -1});
+      };
+      consensusApi._peerEvents.validateSession = newValidateSession;
+    });
+
     // override elector selection to force cycling and 3f+1
     before(() => {
       const witnessSelectionApi = brLedgerNode.use('MostRecentParticipants');

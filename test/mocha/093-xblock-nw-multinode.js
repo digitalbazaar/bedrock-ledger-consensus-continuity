@@ -65,6 +65,17 @@ describe('X Block Test with non-witnesses', () => {
       nodes.alpha = await brLedgerNode.add(null, {ledgerConfiguration});
     });
 
+    // override event & operation session validation
+    before(async function() {
+      const consensusPlugin = await helpers.use('Continuity2017');
+      const consensusApi = consensusPlugin.api;
+      const {validateSession} = consensusApi._peerEvents;
+      const newValidateSession = ({ledgerNodeId}) => {
+        return validateSession({ledgerNodeId, session: -1});
+      };
+      consensusApi._peerEvents.validateSession = newValidateSession;
+    });
+
     // get genesis record (block + meta)
     let genesisRecord;
     before(async function() {
