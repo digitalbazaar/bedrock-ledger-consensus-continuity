@@ -1,5 +1,17 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 8.0.1 - TBD
+
+### Removed
+- `axios` was removed from `lib/client.js` in order to move away from axios.
+- `axios` was removed from `package.json`
+
+### Added
+- `@digitalbazaar/http-client` was added to the project.
+
+### Changed
+- `lib/client.js` now uses `@digitalbazaar/http-client`.
+
 ## 8.0.0 - 2021-04-29
 
 ### Changed
