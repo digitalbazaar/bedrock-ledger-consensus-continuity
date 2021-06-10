@@ -10,6 +10,7 @@
 - `@digitalbazaar/http-client` was added to the project.
 
 ### Changed
+- Replaced `axios` with `@digitalbazaar/http-client`
 - `lib/client.js` now uses `@digitalbazaar/http-client`.
 
 ## 8.0.0 - 2021-04-29
