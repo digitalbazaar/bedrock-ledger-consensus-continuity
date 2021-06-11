@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 8.0.2 - TBD
+
+### Changed
+- Changed `witnesses` from an `Array` to a `Set`.
+
 ## 8.0.1 - TBD
 
 ### Removed
