@@ -60,7 +60,7 @@ describe('Consensus API find', () => {
     // the genesisMerge already has consensus
     const ledgerNode = nodes.alpha;
     const {peerId} = ledgerNode;
-    ledgerNode.worker.consensusState.witnesses = [peers.alpha];
+    ledgerNode.worker.consensusState.witnesses = new Set([peers.alpha]);
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
@@ -85,7 +85,8 @@ describe('Consensus API find', () => {
   it('properly does not reach consensus with four witnesses', done => {
     const ledgerNode = nodes.alpha;
     const {peerId} = ledgerNode;
-    const witnesses = [peers.alpha, peers.beta, peers.gamma, peers.delta];
+    const witnesses = new Set(
+      [peers.alpha, peers.beta, peers.gamma, peers.delta]);
     ledgerNode.worker.consensusState.witnesses = witnesses;
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
@@ -104,7 +105,7 @@ describe('Consensus API find', () => {
   it.skip('add regular event with no merge before findConsensus', done => {
     const findConsensus = callbackify(consensusApi._worker._findConsensus);
     const ledgerNode = nodes.alpha;
-    const witnesses = Object.values(peers);
+    const witnesses = new Set(Object.values(peers));
     const eventTemplate = mockData.events.alpha;
     const opTemplate = mockData.operations.alpha;
     async.auto({
