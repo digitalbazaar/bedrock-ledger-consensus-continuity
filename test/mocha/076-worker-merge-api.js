@@ -33,7 +33,7 @@ describe('events.mergeBranches API', () => {
     nodes.beta = await brLedgerNode.add(null, {genesisBlock});
     nodes.gamma = await brLedgerNode.add(null, {genesisBlock});
     nodes.delta = await brLedgerNode.add(null, {genesisBlock});
-    const witnesses = [];
+    const witnesses = new Set();
     for(const key in nodes) {
       const ledgerNode = nodes[key];
       // attach worker to the node to emulate a work session used by `helpers`
@@ -43,7 +43,7 @@ describe('events.mergeBranches API', () => {
       const peerId = await consensusApi._localPeers.getPeerId({ledgerNodeId});
       ledgerNode.peerId = peerId;
       peers[key] = peerId;
-      witnesses.push(peerId);
+      witnesses.add(peerId);
       ledgerNode.worker.consensusState.witnesses = witnesses;
     }
     // NOTE: if nodeEpsilon is enabled, be sure to add to `creator` deps

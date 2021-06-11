@@ -166,7 +166,8 @@ api.buildHistory = async ({historyId, mockData, nodes, witnesses} = {}) => {
   // set workers to use passed witnesses when merging
   for(const key in nodes) {
     const ledgerNode = nodes[key];
-    ledgerNode.worker.consensusState.witnesses = witnesses;
+    // double check to ensure witnesses is a Set
+    ledgerNode.worker.consensusState.witnesses = new Set(witnesses);
   }
   const results = await ledgerHistory[historyId]({
     api, eventTemplate, nodes, opTemplate

@@ -21,7 +21,7 @@ describe('History API _addNonConsensusAncestorHashes', () => {
   let Worker;
   const nodes = {};
   const peers = {};
-  const witnesses = [];
+  const witnesses = new Set();
   beforeEach(async function() {
     this.timeout(120000);
     const ledgerConfiguration = mockData.ledgerConfiguration;
@@ -48,7 +48,7 @@ describe('History API _addNonConsensusAncestorHashes', () => {
       ledgerNode.peerId = await consensusApi._localPeers.getPeerId(
         {ledgerNodeId});
       peers[key] = ledgerNode.peerId;
-      witnesses.push(ledgerNode.peerId);
+      witnesses.add(ledgerNode.peerId);
       ledgerNode.worker.consensusState.witnesses = witnesses;
     }
     genesisMerge = nodes.alpha.worker.head.eventHash;
