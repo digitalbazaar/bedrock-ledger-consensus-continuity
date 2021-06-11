@@ -174,7 +174,7 @@ describe('Continuity API _findConsensusSet', () => {
       // epsilon must be treated as a witness for merging purposes since this
       // is legacy code and it would otherwise not be able to merge without
       // commitments
-      const mergeWitnesses = [...witnesses, id];
+      const mergeWitnesses = new Set([...witnesses, id]);
       const build = await helpers.buildHistory(
         {historyId: 'delta', mockData, nodes, witnesses: mergeWitnesses});
 
