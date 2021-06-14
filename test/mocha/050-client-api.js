@@ -9,6 +9,7 @@ const {config, util: {BedrockError}} = require('bedrock');
 describe('Client API', () => {
   describe('notifyPeer', () => {
     it('throws a NetworkError on connection refused', async () => {
+      // FIXME get a real localPeerId here
       const localPeerId = 'foo';
       const remotePeer = {
         id: 'https://127.0.0.1',
