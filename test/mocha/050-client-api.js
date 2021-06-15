@@ -11,8 +11,9 @@ describe('Client API', () => {
     // NOTE: this name is really bad. peerId is actually a database record
     // with tons of information including private key material
     let peerId = null;
+    const ledgerNodeId = 'foo';
     before(async () => {
-      ({peerId} = await _localPeers.generate({ledgerNodeId: 'foo'}));
+      ({peerId} = await _localPeers.generate({ledgerNodeId}));
     });
     it('throws a NetworkError if peerId is not found', async () => {
       const localPeerId = 'not-found';
@@ -22,7 +23,8 @@ describe('Client API', () => {
       };
       let err;
       try {
-        await _client.notifyPeer({localPeerId, remotePeer});
+        await _client.notifyPeer(
+          {localPeerId, remotePeer, ledgerNodeId: 'bar'});
       } catch(e) {
         err = e;
       }
@@ -46,7 +48,7 @@ describe('Client API', () => {
       };
       let err;
       try {
-        await _client.notifyPeer({localPeerId, remotePeer});
+        await _client.notifyPeer({localPeerId, remotePeer, ledgerNodeId});
       } catch(e) {
         err = e;
       }
@@ -72,7 +74,7 @@ describe('Client API', () => {
       let err;
       try {
         // notifyPeer does not return anything
-        await _client.notifyPeer({localPeerId, remotePeer});
+        await _client.notifyPeer({localPeerId, remotePeer, ledgerNodeId});
       } catch(e) {
         err = e;
       }
