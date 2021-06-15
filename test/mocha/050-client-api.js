@@ -31,7 +31,6 @@ describe('Client API', () => {
     });
 
     it('throws a NetworkError on connection refused', async () => {
-      const localPeerId = peerId.localPeer.peerId;
       const remotePeer = {
         id: 'https://127.0.0.1',
         url: 'https://127.0.0.1'
