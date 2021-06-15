@@ -15,29 +15,19 @@ describe('Client API', () => {
     before(async () => {
       ({peerId} = await _localPeers.generate({ledgerNodeId}));
     });
-    it('throws a NetworkError if peerId is not found', async () => {
-      const localPeerId = 'not-found';
+    it('throws a NotFoundError if peerId is not found', async () => {
       const remotePeer = {
         id: 'https://127.0.0.1',
         url: 'https://127.0.0.1'
       };
       let err;
       try {
-        await _client.notifyPeer(
-          {localPeerId, remotePeer, ledgerNodeId: 'bar'});
+        await _client.notifyPeer({remotePeer, ledgerNodeId: 'bar'});
       } catch(e) {
         err = e;
       }
       should.exist(err);
-      err.name.should.equal('NetworkError');
-      err.details.should.have.property('localPeerId');
-      err.details.should.have.property('remotePeerId');
-      err.should.have.property('cause');
-      err.cause.should.have.property('details');
-      err.cause.details.should.have.property('address');
-      err.cause.details.should.have.property('code');
-      err.cause.details.should.have.property('errno');
-      err.cause.details.should.have.property('port');
+      err.name.should.equal('NotFoundError');
     });
 
     it('throws a NetworkError on connection refused', async () => {
