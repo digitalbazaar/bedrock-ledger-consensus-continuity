@@ -9,7 +9,7 @@
 ### Added
 - `@digitalbazaar/http-client` was added to the project.
 - `lib/client.js` `notifyPeer` API sends an HTTP Signature in each request.
-- `lib/server.js` the notify route now verifies HTTP signatures before creating a notification.
+- `lib/server.js` the notify route now verifies HTTP signatures before accepting a notification.
 
 ### Changed
 - Replaced `axios` with `@digitalbazaar/http-client`
