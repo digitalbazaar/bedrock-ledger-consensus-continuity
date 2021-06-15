@@ -3,14 +3,43 @@
  */
 'use strict';
 
-const {_client} = require('bedrock-ledger-consensus-continuity');
+const {_client, _localPeers} = require('bedrock-ledger-consensus-continuity');
 const {config, util: {BedrockError}} = require('bedrock');
 
 describe('Client API', () => {
   describe('notifyPeer', () => {
+    // NOTE: this name is really bad. peerId is actually a database record
+    // with tons of information including private key material
+    let peerId = null;
+    before(async () => {
+      ({peerId} = await _localPeers.generate({ledgerNodeId: 'foo'}));
+    });
+    it('throws a NetworkError if peerId is not found', async () => {
+      const localPeerId = 'not-found';
+      const remotePeer = {
+        id: 'https://127.0.0.1',
+        url: 'https://127.0.0.1'
+      };
+      let err;
+      try {
+        await _client.notifyPeer({localPeerId, remotePeer});
+      } catch(e) {
+        err = e;
+      }
+      should.exist(err);
+      err.name.should.equal('NetworkError');
+      err.details.should.have.property('localPeerId');
+      err.details.should.have.property('remotePeerId');
+      err.should.have.property('cause');
+      err.cause.should.have.property('details');
+      err.cause.details.should.have.property('address');
+      err.cause.details.should.have.property('code');
+      err.cause.details.should.have.property('errno');
+      err.cause.details.should.have.property('port');
+    });
+
     it('throws a NetworkError on connection refused', async () => {
-      // FIXME get a real localPeerId here
-      const localPeerId = 'foo';
+      const localPeerId = peerId.localPeer.peerId;
       const remotePeer = {
         id: 'https://127.0.0.1',
         url: 'https://127.0.0.1'
