@@ -77,6 +77,7 @@ describe('Client API', () => {
         err = e;
       }
       should.not.exist(err);
+      // FIXME look for the actual notification here
     });
 
   });
