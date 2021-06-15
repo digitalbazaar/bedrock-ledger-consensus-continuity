@@ -38,7 +38,7 @@ describe('Client API', () => {
       };
       let err;
       try {
-        await _client.notifyPeer({localPeerId, remotePeer, ledgerNodeId});
+        await _client.notifyPeer({ledgerNodeId, remotePeer});
       } catch(e) {
         err = e;
       }
