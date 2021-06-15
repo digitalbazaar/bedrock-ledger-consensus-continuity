@@ -62,6 +62,23 @@ describe('Client API', () => {
       err.cause.details.should.have.property('port');
       err.cause.details.code.should.equal('ECONNREFUSED');
     });
+
+    it('should notify peer', async () => {
+      const localPeerId = peerId.localPeer.peerId;
+      const remotePeer = {
+        id: localPeerId,
+        url: localPeerId
+      };
+      let err;
+      try {
+        // notifyPeer does not return anything
+        await _client.notifyPeer({localPeerId, remotePeer});
+      } catch(e) {
+        err = e;
+      }
+      should.not.exist(err);
+    });
+
   });
 
   describe('getEvents', () => {
