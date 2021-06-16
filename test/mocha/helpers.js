@@ -135,7 +135,11 @@ api.addOperation = async ({count = 1, ledgerNode, opTemplate} = {}) => {
     operation.creator = ledgerNode._peerId;
     operation.record.id = `https://example.com/event/${uuid()}`;
     operation.record.creator = ledgerNode.id;
-    const result = await ledgerNode.operations.add({operation, ledgerNode});
+    // always force the cache to be flushed when adding the last operation in
+    // tests
+    const forceFlush = i === count - 1;
+    const result = await ledgerNode.operations.add(
+      {operation, ledgerNode, forceFlush});
     operations[result.meta.operationHash] = operation;
   }
   return operations;
@@ -399,7 +403,7 @@ async function _cycleNode({
  * `ContinuityMergeEvent` on a settled network.
  */
 api.settleNetwork = async ({
-  consensusApi, nodes, mergeOptions = {}, series = false
+  consensusApi, nodes, mergeOptions = {}, series = false, recordIds = []
 } = {}) => {
   while(true) {
     await api.runWorkerCycle({consensusApi, nodes, mergeOptions, series});
@@ -426,11 +430,28 @@ api.settleNetwork = async ({
       continue;
     }
 
+    // // all nodes should have the same operations
+    promises = [];
+    let recordLookupError = false;
+    for(const ledgerNode of nodes) {
+      promises = recordIds.map(id => ledgerNode.records.get({recordId: id}));
+      try {
+        await Promise.all(promises);
+      } catch(e) {
+        recordLookupError = true;
+        break;
+      }
+    }
+    if(recordLookupError) {
+      continue;
+    }
+
     // all nodes should have the same latest blockHeight
     promises = [];
     for(const ledgerNode of nodes) {
       promises.push(ledgerNode.storage.blocks.getLatestSummary());
     }
+
     const summaries = await Promise.all(promises);
     const blockHeights = summaries.map(s => s.eventBlock.block.blockHeight);
     if(blockHeights.every(b => b === blockHeights[0])) {
