@@ -160,8 +160,9 @@ describe('X Block Test', () => {
           .every(h => h === nBlocks.targetBlockHashMap.alpha).should.be.true;
 
         // wait for network to settle
+        const allRecordIds = [].concat(...Object.values(nBlocks.recordIds));
         await helpers.settleNetwork(
-          {consensusApi, nodes: Object.values(nodes)});
+          {consensusApi, nodes: Object.values(nodes), recordIds: allRecordIds});
 
         // get all block summaries
         const summaries = {};
@@ -184,7 +185,6 @@ describe('X Block Test', () => {
         });
 
         // check all records were created
-        const allRecordIds = [].concat(...Object.values(nBlocks.recordIds));
         console.log(`Total operation count: ${allRecordIds.length}`);
         for(const recordId of allRecordIds) {
           // just need to ensure that there is no NotFoundError
