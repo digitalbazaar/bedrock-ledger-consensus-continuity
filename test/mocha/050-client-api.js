@@ -55,10 +55,9 @@ describe('Client API', () => {
     });
 
     it('should notify peer', async () => {
-      const localPeerId = peerId.localPeer.peerId;
       const remotePeer = {
-        id: localPeerId,
-        url: localPeerId
+        id: peerId,
+        url: peerId
       };
       let err;
       try {
