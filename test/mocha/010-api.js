@@ -61,6 +61,7 @@ describe('Continuity2017', () => {
       }
       assertNoError(error);
     });
+    // duplicates are ignored when trying to add to the cache
     it('DuplicateError on a duplicate operation in cache', async () => {
       const operation = bedrock.util.clone(mockData.operations.alpha);
       operation.record.id = `https://example.com/event/${uuid()}`;
@@ -90,7 +91,7 @@ describe('Continuity2017', () => {
       operation.creator = ledgerNode.peerId;
       let error;
       try {
-        await ledgerNode.operations.add({operation});
+        await ledgerNode.operations.add({operation, forceFlush: true});
       } catch(e) {
         error = e;
       }
