@@ -8,8 +8,6 @@ const {config, util: {BedrockError}} = require('bedrock');
 
 describe('Client API', () => {
   describe('notifyPeer', () => {
-    // NOTE: this name is really bad. peerId is actually a database record
-    // with tons of information including private key material
     let peerId = null;
     const ledgerNodeId = 'foo';
     before(async () => {
