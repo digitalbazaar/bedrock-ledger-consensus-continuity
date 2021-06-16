@@ -15,7 +15,7 @@ describe('Client API', () => {
     before(async () => {
       ({peerId} = await _localPeers.generate({ledgerNodeId}));
     });
-    it('throws a NotFoundError if peerId is not found', async () => {
+    it('throws a NotFoundError if ledgerNodeId is not found', async () => {
       const remotePeer = {
         id: 'https://127.0.0.1',
         url: 'https://127.0.0.1'
@@ -55,6 +55,7 @@ describe('Client API', () => {
     });
 
     it('should notify peer', async () => {
+      const localPeerId = peerId.localPeer.peerId;
       const remotePeer = {
         id: localPeerId,
         url: localPeerId
