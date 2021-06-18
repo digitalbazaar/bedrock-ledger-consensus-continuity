@@ -43,7 +43,10 @@ const continuityMergeEvent = {
   ],
   type: 'object',
   properties: {
-    '@context': schemas.jsonldContext(constants.WEB_LEDGER_CONTEXT_V1_URL),
+    '@context': schemas.jsonldContext([
+      constants.WEB_LEDGER_CONTEXT_V1_URL,
+      constants.ED25519_2018_CONTEXT_V1_URL
+    ]),
     basisBlockHeight: {
       type: 'integer',
       minimum: 0,
