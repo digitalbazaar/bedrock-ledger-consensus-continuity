@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   test-node:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     services:
       mongodb:
