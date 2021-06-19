@@ -90,14 +90,14 @@ mock.authorizedSignerUrl = 'https://example.com/keys/authorized-key-1';
 // all mock keys for all groups
 mock.groups = {
   authorized: {
-    publicKey: 'GycSSui454dpYRKiFdsQ5uaE8Gy3ac6dSMPcAoQsk8yq',
-    privateKey: '3Mmk4UzTRJTEtxaKk61LxtgUxAa2Dg36jF6VogPtRiKvfpsQWKPCLesK' +
-      'SV182RMmvMJKk6QErH3wgdHp8itkSSiF'
+    publicKey: 'z6MkhjYywBWYTS5U2XfWdTzB8M4eaQhufiTLdrJz2uGL8FPZ',
+    privateKey: 'zrv4kd5YoRYTFTore36rtwmFCs2sWHsJFTF63fA44RcySGJBofUo78MPSDd' +
+      'LC9JHtELReaG1U3Smb25hnTsP38vmNrX'
   },
   unauthorized: { // unauthorized group
-    publicKey: 'AAD3mt6xZqbJBmMp643irCG7yqCQwVUk4UUK4XGm6ZpW',
-    privateKey: '5Y57oBSw5ykt21N3cbHPVDhRPL84xjgfQXN6wnqzWNQbGp5WHhy3XieA' +
-      'jzwY9J26Whg1DBv31ktgUnnYuDkWXMTQ'
+    publicKey: 'z6MkkykQv27u9XnqTD4gjpyKzxseiU41TLzZSJQeoms6Gnb4',
+    privateKey: 'zrv4GDfChcAd6fsdMkVJ3agthxa5GQgHA2B3bGgCiMfCeheXioPEbXihdxd' +
+      '3gTPP2kHQXnc3anc8Xeo8U6k2F926tgS'
   }
 };
 
@@ -109,19 +109,19 @@ mock.ldDocuments = {
     id: mock.exampleIdentity,
     publicKey: [{
       id: mock.authorizedSignerUrl,
-      type: 'Ed25519VerificationKey2018',
+      type: 'Ed25519VerificationKey2020',
       controller: mock.exampleIdentity,
-      publicKeyBase58: mock.groups.authorized.publicKey
+      publicKeyMultibase: mock.groups.authorized.publicKey
     }]
   }
 };
 mock.ldDocuments[mock.authorizedSignerUrl] = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
-  type: 'Ed25519VerificationKey2018',
+  type: 'Ed25519VerificationKey2020',
   controller: mock.exampleIdentity,
   label: 'Signing Key 2',
   id: mock.authorizedSignerUrl,
-  publicKeyBase58: mock.groups.authorized.publicKey
+  publicKeyMultibase: mock.groups.authorized.publicKey
 };
 
 mock.consensusInput = require('./continuity-test-vectors');
