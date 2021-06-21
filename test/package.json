@@ -38,7 +38,7 @@
     "ed25519-signature-2020-context": "^1.1.0",
     "grunt": "^1.0.1",
     "jsonld": "^5.2.0",
-    "jsonld-signatures": "^9.0.2",
+    "jsonld-signatures": "digitalbazaar/jsonld-signatures#v1-dingo-rc1",
     "lodash": "^4.17.4",
     "lru-cache": "^6.0.0",
     "request": "^2.81.0",
