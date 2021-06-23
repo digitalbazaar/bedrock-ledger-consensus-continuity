@@ -25,7 +25,7 @@
     "@digitalbazaar/ed25519-verification-key-2020": "^3.1.0",
     "@digitalbazaar/http-client": "^1.1.0",
     "@digitalbazaar/http-digest-header": "^1.0.1",
-    "@digitalbazaar/lru-memoize": "^1.1.0",
+    "@digitalbazaar/lru-memoize": "digitalbazaar/lru-memoize#dispose-on-get",
     "body-parser": "^1.18.2",
     "canonicalize": "^1.0.4",
     "delay": "^4.4.0",
