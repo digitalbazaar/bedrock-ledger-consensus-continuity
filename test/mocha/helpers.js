@@ -430,7 +430,7 @@ api.settleNetwork = async ({
       continue;
     }
 
-    // // all nodes should have the same operations
+    // all nodes should have the same operations
     promises = [];
     let recordLookupError = false;
     for(const ledgerNode of nodes) {
