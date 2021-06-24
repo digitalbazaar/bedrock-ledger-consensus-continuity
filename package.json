@@ -22,7 +22,7 @@
   "homepage": "https://github.com/digitalbazaar/bedrock-ledger-consensus-continuity",
   "dependencies": {
     "@digitalbazaar/ed25519-signature-2020": "^3.0.0",
-    "@digitalbazaar/ed25519-verification-key-2020": "digitalbazaar/ed25519-verification-key-2020#v1-dingo-rc1-optional-private-key",
+    "@digitalbazaar/ed25519-verification-key-2020": "^3.1.0",
     "@digitalbazaar/http-client": "^1.1.0",
     "@digitalbazaar/http-digest-header": "^1.0.1",
     "@digitalbazaar/lru-memoize": "^1.1.0",
@@ -31,7 +31,7 @@
     "delay": "^4.4.0",
     "ed25519-signature-2020-context": "^1.1.0",
     "http-signature-header": "^2.0.2",
-    "jsonld-signatures": "digitalbazaar/jsonld-signatures#v1-dingo-rc1",
+    "jsonld-signatures": "^9.0.0",
     "lodash": "^4.17.4",
     "lru-cache": "^6.0.0",
     "multibase": "^0.6.0",
