@@ -20,7 +20,7 @@ cursor = db['aa0d6eda-147d-469a-a4ef-075872701060-event'].aggregate([{
     restrictSearchWithMatch: {
       'event.type': 'ContinuityMergeEvent',
       eventHash: {$ne: 'ni:///sha-256;bYl1UH1BmuDBl-vTcxHjbborDXP--lV_IzyqDUOlKrM'},
-      'meta.continuity2017.creator': {$ne: 'https://bedrock.local:18443/consensus/continuity2017/voters/43886ca4-3b9c-40b1-82b1-89450cde8916'}
+      'meta.continuity2017.creator': {$ne: 'https://bedrock.local:18443/consensus/continuity2017/peers/43886ca4-3b9c-40b1-82b1-89450cde8916'}
     }
   }
 }])
@@ -39,7 +39,7 @@ cursor = db['aa0d6eda-147d-469a-a4ef-075872701060-event'].aggregate([{
     restrictSearchWithMatch: {
       'event.type': 'ContinuityMergeEvent',
       eventHash: {$ne: 'ni:///sha-256;bYl1UH1BmuDBl-vTcxHjbborDXP--lV_IzyqDUOlKrM'},
-      'meta.continuity2017.creator': {$ne: 'https://bedrock.local:18443/consensus/continuity2017/voters/43886ca4-3b9c-40b1-82b1-89450cde8916'}
+      'meta.continuity2017.creator': {$ne: 'https://bedrock.local:18443/consensus/continuity2017/peers/43886ca4-3b9c-40b1-82b1-89450cde8916'}
     }
   }
 }])
