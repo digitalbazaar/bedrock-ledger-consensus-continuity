@@ -22,7 +22,7 @@
     "bedrock-ledger-consensus-continuity-es-most-recent-participants": "^2.0.0",
     "bedrock-ledger-consensus-continuity-storage": "^4.0.0",
     "bedrock-ledger-context": "^18.0.0",
-    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#force-flush",
+    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#main",
     "bedrock-ledger-storage-mongodb": "^5.0.0",
     "bedrock-mongodb": "^8.1.0",
     "bedrock-passport": "^6.0.0",
