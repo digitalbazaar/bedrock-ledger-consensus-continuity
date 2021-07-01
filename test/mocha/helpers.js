@@ -138,8 +138,9 @@ api.addOperation = async ({count = 1, ledgerNode, opTemplate} = {}) => {
     // always force the cache to be flushed when adding the last operation in
     // tests
     const forceFlush = i === count - 1;
+    const options = {forceFlush};
     const result = await ledgerNode.operations.add(
-      {operation, ledgerNode, forceFlush});
+      {operation, ledgerNode, options});
     operations[result.meta.operationHash] = operation;
   }
   return operations;
