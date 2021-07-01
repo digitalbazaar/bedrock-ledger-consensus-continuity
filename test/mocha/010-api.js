@@ -91,7 +91,8 @@ describe('Continuity2017', () => {
       operation.creator = ledgerNode.peerId;
       let error;
       try {
-        await ledgerNode.operations.add({operation, forceFlush: true});
+        const options = {forceFlush: true};
+        await ledgerNode.operations.add({operation, options});
       } catch(e) {
         error = e;
       }
