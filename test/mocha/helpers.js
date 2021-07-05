@@ -242,7 +242,7 @@ api.copyEvents = async ({from, to, useSnapshot = false}) => {
 
 api.createGetBlockWitnesses = ({peers}) => {
   return async () => {
-    const witnesses = new Map();
+    const witnesses = [];
 
     // calculate the number of witnesses
     let numWitnesses = 1;
@@ -254,7 +254,7 @@ api.createGetBlockWitnesses = ({peers}) => {
     // build the map of witnesses
     const witnessPeers = peers.slice(0, numWitnesses);
     for(const peer of witnessPeers) {
-      witnesses.set(peer.id, {id: peer.id});
+      witnesses.push(peer.id);
     }
 
     return {witnesses};
