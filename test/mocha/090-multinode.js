@@ -86,13 +86,14 @@ describe('Multinode', () => {
     // override elector selection to force cycling and 3f+1
     before(() => {
       let candidates;
-      const witnessSelectionApi = brLedgerNode.use('Continuity2017');
-      witnessSelectionApi.api._witnesses.getBlockWitnesses =
+      const witnessSelectionApi =
+        brLedgerNode.use('WitnessPoolWitnessSelection');
+      witnessSelectionApi.api.getBlockWitnesses =
       async ({blockHeight}) => {
         if(!candidates) {
           candidates = [];
           for(const peer of peers) {
-            candidates.push({id: peer._peerId});
+            candidates.push(peer._peerId);
           }
         }
         const f = Math.floor((nodeCount - 1) / 3);
@@ -103,6 +104,7 @@ describe('Multinode', () => {
         if(witnesses.length < count) {
           witnesses.push(...candidates.slice(0, count - witnesses.length));
         }
+
         return {witnesses};
       };
     });
