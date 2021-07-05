@@ -33,21 +33,22 @@ describe('X Block Test', () => {
 
     // override elector selection to force cycling and 3f+1
     before(() => {
-      const witnessSelectionApi = brLedgerNode.use('MostRecentParticipants');
-      witnessSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
+      const witnessSelectionApi =
+        brLedgerNode.use('WitnessPoolWitnessSelection');
+      witnessSelectionApi.api.getBlockWitnesses = async ({blockHeight}) => {
         const candidates = [];
         for(const p of Object.keys(peers)) {
-          candidates.push({id: peers[p]});
+          candidates.push(peers[p]);
         }
         const f = Math.floor((nodeCount - 1) / 3);
         const count = 3 * f + 1;
         // cycle electors deterministically using `blockHeight`
         const start = blockHeight % candidates.length;
-        const electors = candidates.slice(start, start + count);
-        if(electors.length < count) {
-          electors.push(...candidates.slice(0, count - electors.length));
+        const witnesses = candidates.slice(start, start + count);
+        if(witnesses.length < count) {
+          witnesses.push(...candidates.slice(0, count - witnesses.length));
         }
-        return {electors};
+        return {witnesses};
       };
     });
 
