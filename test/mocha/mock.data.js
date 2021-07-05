@@ -16,7 +16,8 @@ const ledgerConfiguration = mock.ledgerConfiguration = {
   ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
   consensusMethod: 'Continuity2017',
   electorSelectionMethod: {
-    type: 'MostRecentParticipants',
+    type: 'WitnessPoolWitnessSelection',
+    witnessPoolWitnesses: []
   },
   sequence: 0,
 };
