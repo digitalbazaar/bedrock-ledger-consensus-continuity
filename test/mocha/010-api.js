@@ -42,7 +42,8 @@ describe('Continuity2017', () => {
     ledgerNode.worker = new Worker({session: {ledgerNode}});
     // set up the witness selection API
     const peers = [ledgerNode];
-    consensusPlugin.api._witnesses.getBlockWitnesses =
+    const witnessSelectionApi = brLedgerNode.use('WitnessPoolWitnessSelection');
+    witnessSelectionApi.api.getBlockWitnesses =
       helpers.createGetBlockWitnesses({peers});
 
     await ledgerNode.worker.init();
