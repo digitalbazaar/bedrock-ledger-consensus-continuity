@@ -86,8 +86,9 @@ describe('Multinode', () => {
     // override elector selection to force cycling and 3f+1
     before(() => {
       let candidates;
-      const witnessSelectionApi = brLedgerNode.use('MostRecentParticipants');
-      witnessSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
+      const witnessSelectionApi = brLedgerNode.use('Continuity2017');
+      witnessSelectionApi.api._witnesses.getBlockWitnesses =
+      async ({blockHeight}) => {
         if(!candidates) {
           candidates = [];
           for(const peer of peers) {
@@ -98,11 +99,11 @@ describe('Multinode', () => {
         const count = 3 * f + 1;
         // cycle electors deterministically using `blockHeight`
         const start = blockHeight % candidates.length;
-        const electors = candidates.slice(start, start + count);
-        if(electors.length < count) {
-          electors.push(...candidates.slice(0, count - electors.length));
+        const witnesses = candidates.slice(start, start + count);
+        if(witnesses.length < count) {
+          witnesses.push(...candidates.slice(0, count - witnesses.length));
         }
-        return {electors};
+        return {witnesses};
       };
     });
 
