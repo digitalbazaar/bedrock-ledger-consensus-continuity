@@ -120,7 +120,7 @@ const continuity2017ledgerConfiguration = {
   title: 'Continuity2017 Ledger Configuration',
   type: 'object',
   required: [
-    'consensusMethod', 'creator', 'electorSelectionMethod', 'ledger',
+    'consensusMethod', 'creator', 'witnessSelectionMethod', 'ledger',
     'sequence', 'type'
   ],
   // additional properties are validated at the ledgerNode layer
@@ -133,7 +133,7 @@ const continuity2017ledgerConfiguration = {
       type: 'string',
       enum: ['WebLedgerConfiguration']
     },
-    electorSelectionMethod: {
+    witnessSelectionMethod: {
       // NOTE: this schema should not be too prescriptive, various elector
       // selection methods may require additional properties here such as
       // `electorPool`. The ledger validator for a given ledger implementation
