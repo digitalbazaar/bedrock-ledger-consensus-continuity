@@ -40,11 +40,6 @@ describe('Continuity2017', () => {
     Worker = consensusApi._worker.Worker;
     // attach worker to the node to emulate a work session used by `helpers`
     ledgerNode.worker = new Worker({session: {ledgerNode}});
-    // set up the witness selection API
-    const peers = [ledgerNode];
-    const witnessSelectionApi = brLedgerNode.use('WitnessPoolWitnessSelection');
-    witnessSelectionApi.api.getBlockWitnesses =
-      helpers.createGetBlockWitnesses({peers});
 
     await ledgerNode.worker.init();
     ledgerNode.peerId = await consensusApi._localPeers.getPeerId(
