@@ -16,13 +16,27 @@ const ledgerConfiguration = mock.ledgerConfiguration = {
     constants.ED25519_2020_CONTEXT_V1_URL
   ],
   type: 'WebLedgerConfiguration',
-  ledger: 'did:v1:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
+  ledger: 'did:v1:uuid:eb8c22dc-bde6-4315-92e2-59bd3f3c7d59',
   consensusMethod: 'Continuity2017',
   witnessSelectionMethod: {
     type: 'WitnessPoolWitnessSelection',
     witnessPool: 'did:v1:uuid:2f3c9466-ddc9-11eb-92f2-f31707920b3b'
   },
   sequence: 0
+};
+
+mock.witnessPool = {
+  '@context': [
+    constants.WEB_LEDGER_CONTEXT_V1_URL,
+    constants.ED25519_2020_CONTEXT_V1_URL
+  ],
+  id: ledgerConfiguration.witnessSelectionMethod.witnessPool,
+  type: 'WitnessPool',
+  // the rest of these fields are test-run specific and set at runtime
+  controller: 'did:v1:nym:z6MkkykQv27u9XnqTD4gjpyKzxseiU41TLzZSJQeoms6Gnb4',
+  maximumWitnessCount: 0,
+  primaryWitnessCandidate: [],
+  secondaryWitnessCandidate: []
 };
 
 const operations = mock.operations = {};
