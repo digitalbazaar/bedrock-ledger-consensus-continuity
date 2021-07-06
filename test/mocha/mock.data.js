@@ -25,7 +25,7 @@ const ledgerConfiguration = mock.ledgerConfiguration = {
   sequence: 0
 };
 
-mock.witnessPool = {
+const witnessPool = mock.witnessPool = {
   '@context': [
     constants.WEB_LEDGER_CONTEXT_V1_URL,
     constants.ED25519_2020_CONTEXT_V1_URL
@@ -75,6 +75,11 @@ operations.beta = {
       url: 'https://www.ticketfly.com/purchase/309433'
     }
   }
+};
+operations.witnessPoolOperation = {
+  '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+  type: 'CreateWebLedgerRecord',
+  record: witnessPool
 };
 
 const events = mock.events = {};

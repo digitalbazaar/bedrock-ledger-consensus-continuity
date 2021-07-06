@@ -3,6 +3,7 @@
  */
 'use strict';
 
+const bedrock = require('bedrock');
 const brLedgerNode = require('bedrock-ledger-node');
 const helpers = require('./helpers');
 const mockData = require('./mock.data');
@@ -87,31 +88,34 @@ describe('X Block Test with witness pool and non-witnesses', () => {
       }
     });
 
-    describe('Check Genesis Block', () => {
-      it('should have the proper information', async function() {
-        const blockHashes = [];
-        const allLatest = await Promise.all(Object.values(nodes).map(
-          ledgerNode => ledgerNode.storage.blocks.getLatest()));
-        for(const {eventBlock} of allLatest) {
-          should.exist(eventBlock.block);
-          eventBlock.block.blockHeight.should.equal(0);
-          eventBlock.block.event.should.be.an('array');
-          eventBlock.block.event.should.have.length(2);
-          const event = eventBlock.block.event[0];
-          // TODO: signature is dynamic... needs a better check
-          delete event.signature;
-          delete event.proof;
-          event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
-          should.exist(eventBlock.meta);
-          should.exist(eventBlock.block.consensusProof);
-          const consensusProof = eventBlock.block.consensusProof;
-          consensusProof.should.be.an('array');
-          consensusProof.should.have.length(1);
-          // FIXME: make assertions about the contents of consensusProof
-          // console.log('8888888', JSON.stringify(eventBlock, null, 2));
-          blockHashes.push(eventBlock.meta.blockHash);
+    describe('Witness Pool', () => {
+      it('add a witness pool document with one witness', async function() {
+        const operation = bedrock.util.clone(
+          mockData.operations.witnessPoolOperation);
+        const ledgerNode = nodes.alpha;
+        const {record} = operation;
+        operation.creator = ledgerNode._peerId;
+        record.maximumWitnessCount = 1;
+        record.primaryWitnessCandidate = [ledgerNode._peerId];
+        record.secondaryWitnessCandidate = [];
+
+        // add the witness pool document and run consensus
+        await ledgerNode.operations.add({operation, ledgerNode});
+        await helpers.runWorkerCycle(
+          {consensusApi, nodes: Object.values(nodes), targetCyclesPerNode: 10});
+
+        // ensure that the latest witness pool is the information we wrote
+        let latestWitnessPool;
+        try {
+          latestWitnessPool = await ledgerNode.records.get({
+            recordId: record.id});
+        } catch(e) {
+          assertNoError(e);
         }
-        blockHashes.every(h => h === blockHashes[0]).should.be.true;
+        latestWitnessPool.record.id.should.equal(operation.record.id);
+        latestWitnessPool.record.maximumWitnessCount.should.equal(1);
+        latestWitnessPool.record.primaryWitnessCandidate[0].should.equal(
+          ledgerNode._peerId);
       });
     });
 
@@ -125,9 +129,9 @@ describe('X Block Test with witness pool and non-witnesses', () => {
      * 7. attempt to retrieve all records added in 1 from the `records` API
      */
 
-    const targetBlockHeight = 50;
+    const targetBlockHeight = 10;
 
-    describe(`${targetBlockHeight} Blocks`, () => {
+    describe.skip(`${targetBlockHeight} Blocks`, () => {
       it('makes many more blocks', async function() {
         this.timeout(0);
 
