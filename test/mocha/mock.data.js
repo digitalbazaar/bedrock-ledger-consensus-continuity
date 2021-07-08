@@ -76,10 +76,44 @@ operations.beta = {
     }
   }
 };
-operations.witnessPoolOperation = {
+operations.createWitnessPoolOperation = {
   '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
   type: 'CreateWebLedgerRecord',
   record: witnessPool
+};
+
+operations.updateWitnessPoolOperation = ({
+  sequence, maximumWitnessCount, primaryWitnessCandidate,
+  secondaryWitnessCandidate
+}) => {
+
+  return {
+    '@context': constants.WEB_LEDGER_CONTEXT_V1_URL,
+    type: 'UpdateWebLedgerRecord',
+    recordPatch: {
+      '@context': [constants.JSON_LD_PATCH_CONTEXT_V1_URL, {
+        value: {
+          '@id': 'jldp:value',
+          '@context': constants.TEST_CONTEXT_V1_URL
+        }
+      }],
+      target: witnessPool.id,
+      sequence,
+      patch: [{
+        op: 'replace',
+        path: '/maximumWitnessCount',
+        value: maximumWitnessCount
+      }, {
+        op: 'replace',
+        path: '/primaryWitnessCandidate',
+        value: primaryWitnessCandidate
+      }, {
+        op: 'replace',
+        path: '/secondaryWitnessCandidate',
+        value: secondaryWitnessCandidate
+      }]
+    }
+  };
 };
 
 const events = mock.events = {};
