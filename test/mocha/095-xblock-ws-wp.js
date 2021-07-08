@@ -17,11 +17,12 @@ const opTemplate = mockData.operations.alpha;
 
 // NOTE: all these may not be used
 const nodeLabels = [
-  'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota'
+  'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota',
+  'kappa', 'lambda', 'mu', 'nu'
 ];
 const nodes = {};
 const peers = {};
-const nodeCount = 7;
+const nodeCount = 4;
 
 describe.only('X Block Test with witness pool and non-witnesses', () => {
   before(async function() {
@@ -89,9 +90,9 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
     });
 
     describe('Witness Pool', () => {
-      it('add a witness pool document with one witness', async function() {
+      it('add a witness pool with one witness', async function() {
         const operation = bedrock.util.clone(
-          mockData.operations.witnessPoolOperation);
+          mockData.operations.createWitnessPoolOperation);
         const ledgerNode = nodes.alpha;
         const {record} = operation;
         operation.creator = ledgerNode._peerId;
@@ -101,21 +102,136 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
 
         // add the witness pool document and run consensus
         await ledgerNode.operations.add({operation, ledgerNode});
-        await helpers.runWorkerCycle(
-          {consensusApi, nodes: Object.values(nodes), targetCyclesPerNode: 10});
+        // wait for network to settle
+        await helpers.settleNetwork(
+          {consensusApi, nodes: Object.values(nodes)});
 
-        // ensure that the latest witness pool is the information we wrote
-        let latestWitnessPool;
-        try {
-          latestWitnessPool = await ledgerNode.records.get({
+        // ensure that the latest witness pool is available to all nodes
+        for(const node of Object.values(nodes)) {
+          const latestWitnessPool = await node.records.get({
             recordId: record.id});
-        } catch(e) {
-          assertNoError(e);
+
+          latestWitnessPool.record.id.should.equal(operation.record.id);
+          latestWitnessPool.record.maximumWitnessCount.should.equal(1);
+          latestWitnessPool.record.primaryWitnessCandidate.should.deep.equal(
+            record.primaryWitnessCandidate);
         }
-        latestWitnessPool.record.id.should.equal(operation.record.id);
-        latestWitnessPool.record.maximumWitnessCount.should.equal(1);
-        latestWitnessPool.record.primaryWitnessCandidate[0].should.equal(
-          ledgerNode._peerId);
+      });
+
+      it('create five blocks with one witness', async function() {
+        this.timeout(0);
+
+        // create N blocks
+        const targetBlockHeight = 5;
+        const nBlocks = await _nBlocks({consensusApi, targetBlockHeight});
+        // console.log('nBlocks output', JSON.stringify(nBlocks, null, 2));
+        Object.values(nBlocks.targetBlockHashMap)
+          .every(h => h === nBlocks.targetBlockHashMap.alpha).should.be.true;
+
+        // wait for network to settle
+        await helpers.settleNetwork(
+          {consensusApi, nodes: Object.values(nodes)});
+      });
+
+      it('update to witness pool to four witnesses', async function() {
+        const primaryWitnessCandidate = [
+          nodes.alpha._peerId,
+          nodes.beta._peerId,
+          nodes.gamma._peerId
+        ];
+        const secondaryWitnessCandidate = [nodes.delta._peerId];
+
+        // create update operation
+        const operation = mockData.operations.updateWitnessPoolOperation({
+          sequence: 0,
+          maximumWitnessCount: 4,
+          primaryWitnessCandidate,
+          secondaryWitnessCandidate
+        });
+        const ledgerNode = nodes.alpha;
+        operation.creator = ledgerNode._peerId;
+
+        // update the witness pool document and run consensus
+        await ledgerNode.operations.add({operation, ledgerNode});
+        // wait for network to settle
+        await helpers.settleNetwork(
+          {consensusApi, nodes: Object.values(nodes)});
+
+        // ensure that the latest witness pool is available to all nodes
+        for(const node of Object.values(nodes)) {
+          const maxBlockHeight = (await node.storage.blocks
+            .getLatestSummary(node)).eventBlock.block.blockHeight;
+          const recordId = operation.recordPatch.target;
+          const latestWitnessPool = await node.records.get({
+            maxBlockHeight, recordId});
+
+          latestWitnessPool.record.id.should.equal(recordId);
+          latestWitnessPool.record.maximumWitnessCount.should.equal(4);
+          latestWitnessPool.record.primaryWitnessCandidate.should.deep.equal(
+            primaryWitnessCandidate);
+          latestWitnessPool.record.secondaryWitnessCandidate.should.deep.equal(
+            secondaryWitnessCandidate);
+        }
+      });
+
+      it('create five blocks with four witness', async function() {
+        this.timeout(0);
+
+        // create N blocks
+        const targetBlockHeight = 5;
+        const nBlocks = await _nBlocks({consensusApi, targetBlockHeight});
+        Object.values(nBlocks.targetBlockHashMap)
+          .every(h => h === nBlocks.targetBlockHashMap.alpha).should.be.true;
+
+        // wait for network to settle
+        await helpers.settleNetwork(
+          {consensusApi, nodes: Object.values(nodes)});
+      });
+
+      it.skip('update to witness pool to seven witnesses', async function() {
+        const primaryWitnessCandidate = [
+          nodes.alpha._peerId,
+          nodes.beta._peerId,
+          nodes.gamma._peerId,
+          nodes.delta._peerId,
+        ];
+        const secondaryWitnessCandidate = [
+          nodes.epsilon._peerId,
+          nodes.zeta._peerId,
+          nodes.eta._peerId
+        ];
+
+        // create update operation
+        const operation = mockData.operations.updateWitnessPoolOperation({
+          sequence: 1,
+          maximumWitnessCount: 7,
+          primaryWitnessCandidate,
+          secondaryWitnessCandidate
+        });
+        const ledgerNode = nodes.alpha;
+        operation.creator = ledgerNode._peerId;
+
+        // update the witness pool document and run consensus
+        await ledgerNode.operations.add({operation, ledgerNode});
+        // wait for network to settle
+        await helpers.settleNetwork(
+          {consensusApi, nodes: Object.values(nodes)});
+
+        // ensure that the latest witness pool is available to all nodes
+        for(const node of Object.values(nodes)) {
+          const maxBlockHeight = (await node.storage.blocks
+            .getLatestSummary(node)).eventBlock.block.blockHeight;
+          const recordId = operation.recordPatch.target;
+          const latestWitnessPool = await node.records.get({
+            maxBlockHeight, recordId});
+
+          latestWitnessPool.record.id.should.equal(recordId);
+          latestWitnessPool.record.maximumWitnessCount.should.equal(4);
+          latestWitnessPool.record.primaryWitnessCandidate.should.deep.equal(
+            primaryWitnessCandidate);
+          latestWitnessPool.record.secondaryWitnessCandidate.should.deep.equal(
+            secondaryWitnessCandidate);
+        }
       });
     });
 
@@ -137,7 +253,7 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
 
         // create N blocks
         const nBlocks = await _nBlocks({consensusApi, targetBlockHeight});
-        console.log('nBlocks output', JSON.stringify(nBlocks, null, 2));
+        // console.log('nBlocks output', JSON.stringify(nBlocks, null, 2));
         Object.values(nBlocks.targetBlockHashMap)
           .every(h => h === nBlocks.targetBlockHashMap.alpha).should.be.true;
 
@@ -158,8 +274,8 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
             previousBlockHash: result.eventBlock.block.previousBlockHash
           };
         }
-        console.log(
-          'Finishing block summaries:', JSON.stringify(summaries, null, 2));
+        // console.log(
+        //   'Finishing block summaries:', JSON.stringify(summaries, null, 2));
         Object.values(summaries).forEach(b => {
           b.blockHeight.should.equal(summaries.alpha.blockHeight);
           b.blockHash.should.equal(summaries.alpha.blockHash);
@@ -167,11 +283,12 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
 
         // check all records were created
         const allRecordIds = [].concat(...Object.values(nBlocks.recordIds));
-        console.log(`Total operation count: ${allRecordIds.length}`);
+        // console.log(`Total operation count: ${allRecordIds.length}`);
         for(const recordId of allRecordIds) {
           // just need to ensure that there is no NotFoundError
           try {
-            await nodes.alpha.records.get({recordId});
+            await nodes.alpha.records.get({
+              maxBlockHeight: summaries.alpha.blockHeight, recordId});
           } catch(e) {
             assertNoError(e);
           }
