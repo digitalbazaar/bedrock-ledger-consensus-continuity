@@ -62,7 +62,10 @@ const continuityMergeEvent = {
       items: {
         type: 'string'
       },
-      minItems: 2,
+      // TODO: ensure a check to make sure node is pulling in new information
+      // parentHash is usually > 1, but can be 1 when there is a network with
+      // only 1 witness and operations are added on that witness
+      minItems: 1,
       maxItems: _continuityConstants.mergeEvents.maxParents
     },
     parentHashCommitment: {
