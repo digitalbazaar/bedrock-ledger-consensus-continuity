@@ -29,11 +29,13 @@ describe('X Block Test with non-witnesses', () => {
   });
 
   describe(`Consensus with ${nodeCount} Nodes`, () => {
+    // used to overload and replace the getBlockWitnesses algorithm
+    const witnessSelectionApi =
+      brLedgerNode.use('WitnessPoolWitnessSelection');
+    const originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
 
     // override elector selection to force cycling and 3f+1
     before(() => {
-      const witnessSelectionApi =
-        brLedgerNode.use('WitnessPoolWitnessSelection');
       witnessSelectionApi.api.getBlockWitnesses = async ({blockHeight}) => {
         const candidates = [];
         // if more than 5 nodes are participating, ensure at least 1 is always
@@ -113,6 +115,11 @@ describe('X Block Test with non-witnesses', () => {
           remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
         });
       }
+    });
+
+    // put the getBlockWitness API back to the original
+    after(async function() {
+      witnessSelectionApi.api.getBlockWitnesses = originalGetBlockWitnesses;
     });
 
     describe('Check Genesis Block', () => {

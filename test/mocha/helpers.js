@@ -163,6 +163,7 @@ api.addOperations2 = async ({count, nodes, opTemplate}) => {
 api.buildHistory = async ({historyId, mockData, nodes, witnesses} = {}) => {
   const eventTemplate = mockData.events.alpha;
   const opTemplate = mockData.operations.alpha;
+
   // set workers to use passed witnesses when merging
   for(const key in nodes) {
     const ledgerNode = nodes[key];
@@ -348,7 +349,7 @@ api.removeCollections = async function(collections) {
 
 api.prepareDatabase = async function() {
   await api.removeCollections([
-    'ledger', 'ledgerNode', 'continuity2017_local_peer'
+    'ledger', 'ledgerNode', 'ledgerNode_peer', 'continuity2017_local_peer'
   ]);
 };
 

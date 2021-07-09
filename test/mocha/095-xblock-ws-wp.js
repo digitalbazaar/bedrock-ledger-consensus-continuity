@@ -24,7 +24,7 @@ const nodes = {};
 const peers = {};
 const nodeCount = 4;
 
-describe.only('X Block Test with witness pool and non-witnesses', () => {
+describe('X Block Test with witness pool and non-witnesses', () => {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase();
@@ -34,6 +34,7 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
     // get consensus plugin and create genesis ledger node
     let consensusApi;
     const ledgerConfiguration = mockData.ledgerConfiguration;
+
     before(async function() {
       this.timeout(TEST_TIMEOUT);
       await helpers.flushCache();
@@ -108,8 +109,10 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
 
         // ensure that the latest witness pool is available to all nodes
         for(const node of Object.values(nodes)) {
+          const maxBlockHeight = (await node.storage.blocks
+            .getLatestSummary(node)).eventBlock.block.blockHeight;
           const latestWitnessPool = await node.records.get({
-            recordId: record.id});
+            maxBlockHeight, recordId: record.id});
 
           latestWitnessPool.record.id.should.equal(operation.record.id);
           latestWitnessPool.record.maximumWitnessCount.should.equal(1);
@@ -244,7 +247,6 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
      * 6. ensure that the final blockHeight and blockHash is identical on all
      * 7. attempt to retrieve all records added in 1 from the `records` API
      */
-
     const targetBlockHeight = 10;
 
     describe.skip(`${targetBlockHeight} Blocks`, () => {
@@ -252,7 +254,7 @@ describe.only('X Block Test with witness pool and non-witnesses', () => {
         this.timeout(0);
 
         // create N blocks
-        const nBlocks = await _nBlocks({consensusApi, targetBlockHeight});
+        const nBlocks = await _nBlocks({consensusApi, targetBlockHeight: 10});
         // console.log('nBlocks output', JSON.stringify(nBlocks, null, 2));
         Object.values(nBlocks.targetBlockHashMap)
           .every(h => h === nBlocks.targetBlockHashMap.alpha).should.be.true;

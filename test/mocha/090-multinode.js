@@ -26,6 +26,12 @@ describe('Multinode', () => {
     let genesisLedgerNode;
     let Worker;
     const {ledgerConfiguration} = mockData;
+
+    // used to overload and replace the getBlockWitnesses algorithm
+    const witnessSelectionApi =
+      brLedgerNode.use('WitnessPoolWitnessSelection');
+    const originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
+
     before(async function() {
       await helpers.flushCache();
       await helpers.removeCollections(['ledger', 'ledgerNode']);
@@ -86,8 +92,6 @@ describe('Multinode', () => {
     // override elector selection to force cycling and 3f+1
     before(() => {
       let candidates;
-      const witnessSelectionApi =
-        brLedgerNode.use('WitnessPoolWitnessSelection');
       witnessSelectionApi.api.getBlockWitnesses =
       async ({blockHeight}) => {
         if(!candidates) {
@@ -107,6 +111,11 @@ describe('Multinode', () => {
 
         return {witnesses};
       };
+    });
+
+    // put the getBlockWitness API back to the original
+    after(async function() {
+      witnessSelectionApi.api.getBlockWitnesses = originalGetBlockWitnesses;
     });
 
     describe('Check Genesis Block', () => {
