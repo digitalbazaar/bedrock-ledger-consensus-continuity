@@ -469,6 +469,11 @@ async function _addTestEvent({event, ledgerNode}) {
   const eventMap = new Map();
   const {event: processedEvent, meta} =
     await _peerEvents.createPeerEventRecord({event, eventMap, ledgerNode});
+
   // use `worker` that has been attached to `ledgerNode` in tests
-  await ledgerNode.worker.peerEventWriter.add({event: processedEvent, meta});
+  const {worker} = ledgerNode;
+
+  // add `localEventNumber` and add event to be written in the next batch
+  meta.continuity2017.localEventNumber = worker.nextLocalEventNumber++;
+  await worker.peerEventWriter.add({event: processedEvent, meta});
 }
