@@ -19,7 +19,7 @@
     "bedrock-jsonld-document-loader": "^1.0.0",
     "bedrock-ledger-agent": "^4.0.0",
     "bedrock-ledger-consensus-continuity": "file:..",
-    "bedrock-ledger-consensus-continuity-storage": "digitalbazaar/bedrock-ledger-consensus-continuity-storage#v1-dingo-rc1",
+    "bedrock-ledger-consensus-continuity-storage": "digitalbazaar/bedrock-ledger-consensus-continuity-storage#rebased-v1-dingo-rc1",
     "bedrock-ledger-consensus-continuity-ws-witness-pool": "digitalbazaar/bedrock-ledger-consensus-continuity-ws-witness-pool#v1-dingo-rc1",
     "bedrock-ledger-context": "^18.1.0",
     "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#v1-dingo-rc1",
