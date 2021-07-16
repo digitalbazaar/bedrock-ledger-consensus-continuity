@@ -30,12 +30,13 @@ describe('X Block Test with non-witnesses', () => {
 
   describe(`Consensus with ${nodeCount} Nodes`, () => {
     // used to overload and replace the getBlockWitnesses algorithm
-    const witnessSelectionApi =
-      brLedgerNode.use('WitnessPoolWitnessSelection');
-    const originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
+    let originalGetBlockWitnesses;
+    let witnessSelectionApi;
 
-    // override elector selection to force cycling and 3f+1
+    // override witness selection to force cycling and 3f+1
     before(() => {
+      witnessSelectionApi = brLedgerNode.use('WitnessPoolWitnessSelection');
+      originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
       witnessSelectionApi.api.getBlockWitnesses = async ({blockHeight}) => {
         const candidates = [];
         // if more than 5 nodes are participating, ensure at least 1 is always

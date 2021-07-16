@@ -31,12 +31,13 @@ describe('X Block Test', () => {
   const nodeCount = 6;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
     // used to overload and replace the getBlockWitnesses algorithm
-    const witnessSelectionApi =
-      brLedgerNode.use('WitnessPoolWitnessSelection');
-    const originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
+    let witnessSelectionApi;
+    let originalGetBlockWitnesses;
 
-    // override elector selection to force cycling and 3f+1
+    // override witness selection to force cycling and 3f+1
     before(() => {
+      witnessSelectionApi = brLedgerNode.use('WitnessPoolWitnessSelection');
+      originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
       witnessSelectionApi.api.getBlockWitnesses = async ({blockHeight}) => {
         const candidates = [];
         for(const p of Object.keys(peers)) {
@@ -44,7 +45,7 @@ describe('X Block Test', () => {
         }
         const f = Math.floor((nodeCount - 1) / 3);
         const count = 3 * f + 1;
-        // cycle electors deterministically using `blockHeight`
+        // cycle witnesses deterministically using `blockHeight`
         const start = blockHeight % candidates.length;
         const witnesses = candidates.slice(start, start + count);
         if(witnesses.length < count) {

@@ -199,7 +199,7 @@ describe.skip('Multinode Basics', () => {
             nodes.alpha.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
               console.log('testing for first block ---------------');
-              // first block has no proof because alpha is only elector
+              // first block has no proof because alpha is only witness
               result.eventBlock.block.consensusProof.should.have.length(0);
               result.eventBlock.block.blockHeight.should.equal(1);
               callback();
@@ -277,7 +277,7 @@ describe.skip('Multinode Basics', () => {
               }),
           }, callback)],
           // this will merge the events from beta, and alpha will consider
-          // beta an elector and attempt to gossip with it
+          // beta a witness and attempt to gossip with it
           // ... and alpha's merge event will be an endorsement of beta's
           // first merge event, so the next merge event on beta will be an X
           alphaWorker2: ['test5', (results, callback) =>

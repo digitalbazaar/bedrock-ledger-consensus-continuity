@@ -137,9 +137,9 @@ const continuity2017ledgerConfiguration = {
       enum: ['WebLedgerConfiguration']
     },
     witnessSelectionMethod: {
-      // NOTE: this schema should not be too prescriptive, various elector
+      // NOTE: this schema should not be too prescriptive, various witness
       // selection methods may require additional properties here such as
-      // `electorPool`. The ledger validator for a given ledger implementation
+      // `witnessPool`. The ledger validator for a given ledger implementation
       // will be responsible for ensuring that the remaining properties are
       // valid.
       type: 'object',
