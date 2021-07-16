@@ -5,6 +5,7 @@
 ### Changed
 - Changed `witnesses` from an `Array` to a `Set`.
 - **BREAKING**: Renamed `voters` to `peers` in various routes.
+- Move some internal functions to bedrock-ledger-consensus-continuity-storage.
 
 ### Removed
 - Removed `bedrock-rest` from the project.
