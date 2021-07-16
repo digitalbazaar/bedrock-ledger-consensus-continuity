@@ -92,8 +92,7 @@ describe('Multinode', () => {
     // override elector selection to force cycling and 3f+1
     before(() => {
       let candidates;
-      witnessSelectionApi.api.getBlockWitnesses =
-      async ({blockHeight}) => {
+      witnessSelectionApi.api.getBlockWitnesses = async ({blockHeight}) => {
         if(!candidates) {
           candidates = [];
           for(const peer of peers) {
