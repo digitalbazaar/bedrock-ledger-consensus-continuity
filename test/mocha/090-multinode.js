@@ -134,10 +134,6 @@ describe('Multinode', () => {
           const {ledgerConfiguration} = mockData;
           event.ledgerConfiguration.should.eql(ledgerConfiguration);
           should.exist(eventBlock.meta);
-          should.exist(eventBlock.block.consensusProof);
-          const consensusProof = eventBlock.block.consensusProof;
-          consensusProof.should.be.an('array');
-          consensusProof.should.have.length(1);
           blockHashes.push(eventBlock.meta.blockHash);
         }
         blockHashes.every(h => h === blockHashes[0]).should.be.true;

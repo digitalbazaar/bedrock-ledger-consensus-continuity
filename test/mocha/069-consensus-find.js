@@ -69,9 +69,6 @@ describe('Consensus API find', () => {
       consensus: ['event1', (results, callback) => {
         ledgerNode.worker._findConsensus().then(result => {
           should.exist(result);
-          result.consensusProofHash.should.have.length(1);
-          result.consensusProofHash[0].should.equal(
-            results.event1.mergeHash);
           result.eventHash.should.have.length(2);
           result.eventHash.should.have.same.members([
             Object.keys(results.event1.regular)[0],
@@ -120,42 +117,16 @@ describe('Consensus API find', () => {
         findConsensus({
           witnesses, ledgerNode, history: results.history
         }, (err, result) => {
-          const {copyMergeHashes, copyMergeHashesIndex, regularEvent} =
-            results.build;
+          const {regularEvent} = results.build;
           assertNoError(err);
           result.eventHash.should.have.length(8);
           result.eventHash.should.have.same.members([
             ...regularEvent.regularHash,
             ...regularEvent.mergeHash
           ]);
-          result.consensusProofHash.should.have.length(10);
-          result.consensusProofHash.should.have.same.members([
-            copyMergeHashes.cpa,
-            copyMergeHashes.cpb,
-            copyMergeHashes.cp1,
-            copyMergeHashes.cp2,
-            copyMergeHashes.cp3,
-            copyMergeHashes.cp4,
-            copyMergeHashes.cp5,
-            copyMergeHashes.cp6,
-            copyMergeHashes.cp7,
-            copyMergeHashes.cp8
-          ]);
-          // createReport({
-          //   copyMergeHashes,
-          //   copyMergeHashesIndex,
-          //   consensusProofHash: result.consensusProofHash,
-          // });
           callback();
         });
       }]
     }, done);
   });
 });
-
-function createReport(
-  {copyMergeHashes, copyMergeHashesIndex, consensusProofHash}) {
-  console.log(
-    'CONSENSUS REPORT',
-    consensusProofHash.map(c => copyMergeHashesIndex[c]));
-}

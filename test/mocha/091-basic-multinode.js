@@ -113,10 +113,6 @@ describe.skip('Multinode Basics', () => {
           const {ledgerConfiguration} = mockData;
           event.ledgerConfiguration.should.eql(ledgerConfiguration);
           should.exist(eventBlock.meta);
-          should.exist(eventBlock.block.consensusProof);
-          const consensusProof = eventBlock.block.consensusProof;
-          consensusProof.should.be.an('array');
-          consensusProof.should.have.length(1);
           blockHashes.push(eventBlock.meta.blockHash);
         }
         blockHashes.every(h => h === blockHashes[0]).should.be.true;
@@ -199,8 +195,6 @@ describe.skip('Multinode Basics', () => {
             nodes.alpha.storage.blocks.getLatest((err, result) => {
               assertNoError(err);
               console.log('testing for first block ---------------');
-              // first block has no proof because alpha is only witness
-              result.eventBlock.block.consensusProof.should.have.length(0);
               result.eventBlock.block.blockHeight.should.equal(1);
               callback();
             })],
@@ -231,7 +225,6 @@ describe.skip('Multinode Basics', () => {
                 assertNoError(err);
                 // should not be a new block on alpha yet
                 result.eventBlock.block.blockHeight.should.equal(1);
-                result.eventBlock.block.consensusProof.should.have.length(0);
                 callback(null, result);
               }),
             betaBlock: ['alphaBlock', (results, callback) =>
@@ -239,12 +232,6 @@ describe.skip('Multinode Basics', () => {
                 assertNoError(err);
                 // should be a new block on beta
                 result.eventBlock.block.blockHeight.should.equal(1);
-                result.eventBlock.block.consensusProof.should.have.length(0);
-                const betaSigs = result.eventBlock.block
-                  .consensusProof.map(p => p.signature.signatureValue);
-                const alphaSigs = results.alphaBlock.eventBlock.block
-                  .consensusProof.map(p => p.signature.signatureValue);
-                betaSigs.should.have.same.members(alphaSigs);
                 result.eventBlock.block.previousBlockHash.should.equal(
                   results.alphaBlock.eventBlock.block.previousBlockHash
                 );
@@ -409,7 +396,6 @@ describe.skip('Multinode Basics', () => {
                 assertNoError(err);
                 // should be a new block on beta
                 result.eventBlock.block.blockHeight.should.equal(2);
-                result.eventBlock.block.consensusProof.should.have.length(3);
                 callback();
               }),
           }, callback)],
@@ -438,7 +424,6 @@ describe.skip('Multinode Basics', () => {
                 assertNoError(err);
                 // should be a new block on alpha
                 result.eventBlock.block.blockHeight.should.equal(2);
-                result.eventBlock.block.consensusProof.should.have.length(3);
                 callback(null, result);
               }),
             betaBlock: ['alphaBlock', (results, callback) =>
@@ -446,12 +431,6 @@ describe.skip('Multinode Basics', () => {
                 assertNoError(err);
                 // should be a new block on beta
                 result.eventBlock.block.blockHeight.should.equal(2);
-                result.eventBlock.block.consensusProof.should.have.length(3);
-                const betaSigs = result.eventBlock.block
-                  .consensusProof.map(p => p.signature.signatureValue);
-                const alphaSigs = results.alphaBlock.eventBlock.block
-                  .consensusProof.map(p => p.signature.signatureValue);
-                betaSigs.should.have.same.members(alphaSigs);
                 result.eventBlock.block.previousBlockHash.should.equal(
                   results.alphaBlock.eventBlock.block.previousBlockHash
                 );
@@ -544,11 +523,6 @@ describe.skip('Multinode Basics', () => {
                 (err, result) => {
                   assertNoError(err);
                   result.eventBlock.block.blockHeight.should.equal(3);
-                  const betaSigs = result.eventBlock.block
-                    .consensusProof.map(p => p.signature.signatureValue);
-                  const alphaSigs = results.alphaBlock.eventBlock.block
-                    .consensusProof.map(p => p.signature.signatureValue);
-                  betaSigs.should.have.same.members(alphaSigs);
                   result.eventBlock.block.previousBlockHash.should.equal(
                     results.alphaBlock.eventBlock.block.previousBlockHash
                   );
@@ -658,7 +632,7 @@ describe.skip('Multinode Basics', () => {
           tableData = [
             ['label'], ['blockHeight'], ['block time'],
             ['block events'], ['block proof events'], ['events'],
-            ['consensus events'], ['iteration', i.toString()], ['head']
+            ['iteration', i.toString()], ['head']
           ];
           tableHeadData = [['label'], [''], ['localHead']];
           async.auto({
@@ -764,12 +738,6 @@ describe.skip('Multinode Basics', () => {
                           tableData[2].push(
                             (blockTime / 1000).toFixed(3).toString());
                           tableData[3].push(block.event.length.toString());
-                          if(!block.consensusProofHash) {
-                            tableData[4].push('0');
-                          } else {
-                            tableData[4].push(
-                              block.consensusProofHash.length.toString());
-                          }
                           callback();
                         }),
                     events: callback =>
