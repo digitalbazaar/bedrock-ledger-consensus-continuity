@@ -81,9 +81,6 @@ describe('Continuity API _findConsensusSet', () => {
       // } catch(e) {
       //   report[i] = 'NONE';
       // }
-      const allXs = result.consensus.map(p => p.x.eventHash);
-      allXs.should.have.length(4);
-      allXs.should.have.same.members(build.regularEvent.mergeHash);
       const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
@@ -112,9 +109,6 @@ describe('Continuity API _findConsensusSet', () => {
       // } catch(e) {
       //   report[i] = 'NONE';
       // }
-      const allXs = result.consensus.map(p => p.x.eventHash);
-      allXs.should.have.length(4);
-      allXs.should.have.same.members(build.regularEvent.mergeHash);
       const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
@@ -143,9 +137,6 @@ describe('Continuity API _findConsensusSet', () => {
       // } catch(e) {
       //   report[i] = 'NONE';
       // }
-      const allXs = result.consensus.map(p => p.x.eventHash);
-      allXs.should.have.length(4);
-      allXs.should.have.same.members(build.regularEvent.mergeHash);
       const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
@@ -193,8 +184,6 @@ describe('Continuity API _findConsensusSet', () => {
         // } catch(e) {
         //   report[i] = 'NONE';
         // }
-        const allXs = result.consensus.map(p => p.x.eventHash);
-        allXs.should.have.length(4);
         const mergeHashes = [
           build.regularEvent.alpha.mergeHash,
           build.regularEvent.beta.mergeHash,
@@ -202,7 +191,6 @@ describe('Continuity API _findConsensusSet', () => {
           build.regularEvent.delta.mergeHash
           // exclude epsilon (non-witness)
         ];
-        allXs.should.have.same.members(mergeHashes);
         const allYs = result.consensus.map(p => p.y.eventHash);
         allYs.should.have.length(4);
         allYs.should.have.same.members(mergeHashes);
@@ -239,9 +227,6 @@ describe('Continuity API _findConsensusSet', () => {
       // } catch(e) {
       //   report[i] = 'NONE';
       // }
-      const allXs = result.consensus.map(p => p.x.eventHash);
-      allXs.should.have.length(4);
-      allXs.should.have.same.members(build.regularEvent.mergeHash);
       const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
@@ -275,9 +260,6 @@ describe('Continuity API _findConsensusSet', () => {
       // } catch(e) {
       //   report[i] = 'NONE';
       // }
-      const allXs = result.consensus.map(p => p.x.eventHash);
-      allXs.should.have.length(4);
-      allXs.should.have.same.members(build.regularEvent.mergeHash);
       const allYs = result.consensus.map(p => p.y.eventHash);
       allYs.should.have.length(4);
       allYs.should.have.same.members(build.regularEvent.mergeHash);
@@ -287,18 +269,14 @@ describe('Continuity API _findConsensusSet', () => {
 });
 
 function createReport({result, copyMergeHashes, copyMergeHashesIndex}) {
-  const allXs = result.consensus.map(p => p.x.eventHash);
   const allYs = result.consensus.map(p => p.y.eventHash);
   const yCandidates = result.yCandidates.map(c => c.eventHash);
   // console.log('COPYHASHES', JSON.stringify(copyMergeHashes, null, 2));
-  console.log('XXXXXXXXX', allXs);
   console.log('YYYYYYYYY', allYs);
   console.log('YCANDIDATE', yCandidates);
-  const xIndex = allXs.map(x => copyMergeHashesIndex[x]);
   const yIndex = allYs.map(y => copyMergeHashesIndex[y]);
   const yCandidateIndex = yCandidates.map(c => copyMergeHashesIndex[c]);
-  console.log('REPORTED Xs', xIndex);
   console.log('REPORTED Ys', yIndex);
   console.log('REPORTED yCandidates', yCandidateIndex);
-  return {xIndex, yIndex, yCandidateIndex};
+  return {yIndex, yCandidateIndex};
 }

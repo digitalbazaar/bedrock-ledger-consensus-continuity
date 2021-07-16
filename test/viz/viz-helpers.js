@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2018-2020 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2018-2021 Digital Bazaar, Inc. All rights reserved.
  */
 'use strict';
 
@@ -25,7 +25,6 @@ api.visualizationData = ({
   /* eslint-disable-next-line no-unused-vars */
   nodeId, build, history, branches, proof, nodes
 }) => {
-  const allXs = proof.consensus.map(p => p.x.eventHash);
   const allYs = proof.consensus.map(p => p.y.eventHash);
   const yCandidates = proof.yCandidates.map(c => c.eventHash);
 
@@ -34,7 +33,6 @@ api.visualizationData = ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
@@ -84,7 +82,6 @@ api.visualizationData = ({
       width: 60,
       height: 50,
       eventHash: e.eventHash,
-      isX: allXs.includes(e.eventHash),
       isY: allYs.includes(e.eventHash),
       isYCandidate: yCandidates.includes(e.eventHash),
       creatorName: creatorNameMap[e.meta.continuity2017.creator]
@@ -128,7 +125,6 @@ api.saveVisualizationDataD3 = async ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
@@ -159,7 +155,6 @@ api.testInputData = ({
 }) => {
   console.log('[viz] generating viz data', {historyId, nodeId});
   //_dbg('HISTORY', history);
-  //const allXs = proof.consensus.map(p => p.x.eventHash);
   //const allYs = proof.consensus.map(p => p.y.eventHash);
   //const yCandidates = proof.yCandidates.map(c => c.eventHash);
 
@@ -168,7 +163,6 @@ api.testInputData = ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
@@ -249,8 +243,6 @@ api.testInputData = ({
       width: 60,
       height: 50,
       eventHash: e.eventHash,
-      //isX: allXs.includes(e.eventHash),
-      isX: false,
       //isY: allYs.includes(e.eventHash),
       isY: false,
       //isYCandidate: yCandidates.includes(e.eventHash),
@@ -322,7 +314,6 @@ api.saveTestInputDataForD3 = async ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
@@ -353,7 +344,6 @@ api.testOutputDataForTimeline = ({
   /* eslint-disable-next-line no-unused-vars */
   historyId, nodeId, history, consensus, display
 }) => {
-  //const allXs = proof.consensus.map(p => p.x.eventHash);
   //const allYs = proof.consensus.map(p => p.y.eventHash);
   //const yCandidates = proof.yCandidates.map(c => c.eventHash);
 
@@ -362,7 +352,6 @@ api.testOutputDataForTimeline = ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
@@ -398,7 +387,6 @@ api.testOutputDataForTimeline = ({
       //name: build.copyMergeHashesIndex[e.eventHash] || null,
       name: e.eventHash,
       //eventHash: e.eventHash,
-      //isX: allXs.includes(e.eventHash),
       //isY: allYs.includes(e.eventHash),
       //isYCandidate: yCandidates.includes(e.eventHash),
       //creatorName: creatorNameMap[e.meta.continuity2017.creator],
@@ -432,7 +420,6 @@ api.saveTestOutputDataForTimeline = async ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
@@ -486,7 +473,6 @@ api.visualizationDataTimeline = ({
   /* eslint-disable-next-line no-unused-vars */
   nodeId, build, history, branches, proof, nodes
 }) => {
-  const allXs = proof.consensus.map(p => p.x.eventHash);
   const allYs = proof.consensus.map(p => p.y.eventHash);
   const yCandidates = proof.yCandidates.map(c => c.eventHash);
 
@@ -495,7 +481,6 @@ api.visualizationDataTimeline = ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
@@ -516,7 +501,6 @@ api.visualizationDataTimeline = ({
       id: e.eventHash,
       name: build.copyMergeHashesIndex[e.eventHash] || null,
       //eventHash: e.eventHash,
-      isX: allXs.includes(e.eventHash),
       isY: allYs.includes(e.eventHash),
       isYCandidate: yCandidates.includes(e.eventHash),
       creatorName: creatorNameMap[e.meta.continuity2017.creator],
@@ -544,7 +528,6 @@ api.saveVisualizationDataTimeline = async ({
   console.log('HISTORY', history);
   console.log('BRANCHES', branches);
   console.log('PROOF', proof);
-  console.log('X', allXs);
   console.log('Y', allYs);
   console.log('YCandidates', yCandidates);
   */
