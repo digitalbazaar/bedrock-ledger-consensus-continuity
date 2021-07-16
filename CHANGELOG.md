@@ -4,10 +4,12 @@
 
 ### Changed
 - Changed `witnesses` from an `Array` to a `Set`.
-- **BREAKING:** Renamed `voters` to `peers` in various routes.
+- **BREAKING**: Renamed `voters` to `peers` in various routes.
 
 ### Removed
 - Removed `bedrock-rest` from the project.
+- **BREAKING**: Removed obsolete `blocks.getParticipants` and redis-based
+  block cache APIs.
 
 ## 8.0.1 - TBD
 
