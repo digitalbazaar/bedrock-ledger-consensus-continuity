@@ -139,12 +139,6 @@ describe('X Block Test with non-witnesses', () => {
           delete event.proof;
           event.ledgerConfiguration.should.deep.equal(ledgerConfiguration);
           should.exist(eventBlock.meta);
-          should.exist(eventBlock.block.consensusProof);
-          const consensusProof = eventBlock.block.consensusProof;
-          consensusProof.should.be.an('array');
-          consensusProof.should.have.length(1);
-          // FIXME: make assertions about the contents of consensusProof
-          // console.log('8888888', JSON.stringify(eventBlock, null, 2));
           blockHashes.push(eventBlock.meta.blockHash);
         }
         blockHashes.every(h => h === blockHashes[0]).should.be.true;

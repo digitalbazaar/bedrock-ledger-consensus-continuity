@@ -11,6 +11,7 @@
 - **BREAKING**: Removed obsolete `blocks.getParticipants` and redis-based
   block cache APIs.
 - **BREAKING**: Remove unused `localAncestorGeneration` from events.
+- **BREAKING**: Remove unused `consensusProofHash`.
 
 ## 8.0.1 - TBD
 
