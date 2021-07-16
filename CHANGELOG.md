@@ -10,6 +10,7 @@
 - Removed `bedrock-rest` from the project.
 - **BREAKING**: Removed obsolete `blocks.getParticipants` and redis-based
   block cache APIs.
+- **BREAKING**: Remove unused `localAncestorGeneration` from events.
 
 ## 8.0.1 - TBD
 
