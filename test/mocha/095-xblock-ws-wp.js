@@ -102,7 +102,9 @@ describe('X Block Test with witness pool and non-witnesses', () => {
         record.secondaryWitnessCandidate = [];
 
         // add the witness pool document and run consensus
-        await ledgerNode.operations.add({operation, ledgerNode});
+        await ledgerNode.operations.add({
+          operation, ledgerNode, options: {forceFlush: true}
+        });
         // wait for network to settle
         await helpers.settleNetwork(
           {consensusApi, nodes: Object.values(nodes)});
@@ -155,7 +157,9 @@ describe('X Block Test with witness pool and non-witnesses', () => {
         operation.creator = ledgerNode._peerId;
 
         // update the witness pool document and run consensus
-        await ledgerNode.operations.add({operation, ledgerNode});
+        await ledgerNode.operations.add({
+          operation, ledgerNode, options: {forceFlush: true}
+        });
         // wait for network to settle
         await helpers.settleNetwork(
           {consensusApi, nodes: Object.values(nodes)});
@@ -215,7 +219,9 @@ describe('X Block Test with witness pool and non-witnesses', () => {
         operation.creator = ledgerNode._peerId;
 
         // update the witness pool document and run consensus
-        await ledgerNode.operations.add({operation, ledgerNode});
+        await ledgerNode.operations.add({
+          operation, ledgerNode, options: {forceFlush: true}
+        });
         // wait for network to settle
         await helpers.settleNetwork(
           {consensusApi, nodes: Object.values(nodes)});
