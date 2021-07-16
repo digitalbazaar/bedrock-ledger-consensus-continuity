@@ -22,7 +22,7 @@ const nodeLabels = [
 const nodes = {};
 const peers = {};
 
-describe('X Block Test', () => {
+describe('X Block Test multiple operations', () => {
   before(async function() {
     this.timeout(TEST_TIMEOUT);
     await helpers.prepareDatabase();
@@ -30,24 +30,28 @@ describe('X Block Test', () => {
 
   const nodeCount = 6;
   describe(`Consensus with ${nodeCount} Nodes`, () => {
+    // used to overload and replace the getBlockWitnesses algorithm
+    let witnessSelectionApi;
+    let originalGetBlockWitnesses;
 
-    // override elector selection to force cycling and 3f+1
+    // override witness selection to force cycling and 3f+1
     before(() => {
-      const witnessSelectionApi = brLedgerNode.use('MostRecentParticipants');
-      witnessSelectionApi.api.getBlockElectors = async ({blockHeight}) => {
+      witnessSelectionApi = brLedgerNode.use('WitnessPoolWitnessSelection');
+      originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
+      witnessSelectionApi.api.getBlockWitnesses = async ({blockHeight}) => {
         const candidates = [];
         for(const p of Object.keys(peers)) {
-          candidates.push({id: peers[p]});
+          candidates.push(peers[p]);
         }
         const f = Math.floor((nodeCount - 1) / 3);
         const count = 3 * f + 1;
-        // cycle electors deterministically using `blockHeight`
+        // cycle witnesses deterministically using `blockHeight`
         const start = blockHeight % candidates.length;
-        const electors = candidates.slice(start, start + count);
-        if(electors.length < count) {
-          electors.push(...candidates.slice(0, count - electors.length));
+        const witnesses = candidates.slice(start, start + count);
+        if(witnesses.length < count) {
+          witnesses.push(...candidates.slice(0, count - witnesses.length));
         }
-        return {electors};
+        return {witnesses};
       };
     });
 
@@ -107,6 +111,11 @@ describe('X Block Test', () => {
           remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
         });
       }
+    });
+
+    // put the getBlockWitness API back to the original
+    after(async function() {
+      witnessSelectionApi.api.getBlockWitnesses = originalGetBlockWitnesses;
     });
 
     describe('Check Genesis Block', () => {

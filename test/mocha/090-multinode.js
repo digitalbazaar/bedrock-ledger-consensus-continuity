@@ -28,9 +28,8 @@ describe('Multinode', () => {
     const {ledgerConfiguration} = mockData;
 
     // used to overload and replace the getBlockWitnesses algorithm
-    const witnessSelectionApi =
-      brLedgerNode.use('WitnessPoolWitnessSelection');
-    const originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
+    let witnessSelectionApi;
+    let originalGetBlockWitnesses;
 
     before(async function() {
       await helpers.flushCache();
@@ -89,9 +88,11 @@ describe('Multinode', () => {
       }
     });
 
-    // override elector selection to force cycling and 3f+1
+    // override witness selection to force cycling and 3f+1
     before(() => {
       let candidates;
+      witnessSelectionApi = brLedgerNode.use('WitnessPoolWitnessSelection');
+      originalGetBlockWitnesses = witnessSelectionApi.api.getBlockWitnesses;
       witnessSelectionApi.api.getBlockWitnesses = async ({blockHeight}) => {
         if(!candidates) {
           candidates = [];
@@ -101,7 +102,7 @@ describe('Multinode', () => {
         }
         const f = Math.floor((nodeCount - 1) / 3);
         const count = 3 * f + 1;
-        // cycle electors deterministically using `blockHeight`
+        // cycle witnesses deterministically using `blockHeight`
         const start = blockHeight % candidates.length;
         const witnesses = candidates.slice(start, start + count);
         if(witnesses.length < count) {
@@ -144,7 +145,7 @@ describe('Multinode', () => {
     });
 
     describe('Block 1', () => {
-      // add a single op to genesis node, genesis node will be sole elector
+      // add a single op to genesis node, genesis node will be sole witness
       it('should add an operation and achieve consensus', async function() {
         this.timeout(60000);
         const opTemplate = mockData.operations.alpha;
