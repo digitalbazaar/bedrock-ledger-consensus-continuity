@@ -22,7 +22,7 @@
     "bedrock-ledger-consensus-continuity-storage": "^5.0.0",
     "bedrock-ledger-consensus-continuity-ws-witness-pool": "^2.0.0",
     "bedrock-ledger-context": "^18.1.0",
-    "bedrock-ledger-node": "digitalbazaar/bedrock-ledger-node#v1-dingo-rc1",
+    "bedrock-ledger-node": "^14.0.0",
     "bedrock-ledger-storage-mongodb": "^5.0.0",
     "bedrock-mongodb": "^8.1.0",
     "bedrock-passport": "^6.0.0",
