@@ -77,15 +77,21 @@ describe('X Block Test with witness pool and non-witnesses', () => {
           continue;
         }
         // add genesis peer to the peer's peers collection
-        // FIXME: use proper URL do not just repeat ID
-        const remotePeer = {id: peers.alpha, url: peers.alpha};
+        const remotePeer = {
+          id: peers.alpha,
+          url: consensusApi._localPeers.getLocalPeerUrl(
+            {peerId: peers.alpha})
+        };
         await consensusApi._peers.optionallyAdd(
           {ledgerNode, remotePeer});
         // add new peer to genesis node
         await consensusApi._peers.optionallyAdd({
           ledgerNode: nodes.alpha,
-          // FIXME: use proper URL do not just repeat ID
-          remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
+          remotePeer: {
+            id: ledgerNode._peerId,
+            url: consensusApi._localPeers.getLocalPeerUrl(
+              {peerId: ledgerNode._peerId})
+          }
         });
       }
     });

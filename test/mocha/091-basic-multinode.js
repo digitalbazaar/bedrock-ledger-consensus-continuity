@@ -89,8 +89,11 @@ describe.skip('Multinode Basics', () => {
           continue;
         }
         // add genesis peer to the peer's peers collection
-        // FIXME: use proper URL do not just repeat ID
-        const remotePeer = {id: peers[0], url: peers[0]};
+        const remotePeer = {
+          id: peers[0],
+          url: consensusApi._localPeers.getLocalPeerUrl(
+            {peerId: peers[0]})
+        };
         await consensusApi._peers.optionallyAdd(
           {ledgerNode, remotePeer});
         i++;
