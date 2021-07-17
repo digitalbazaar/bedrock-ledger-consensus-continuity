@@ -72,18 +72,21 @@ describe('Multinode', () => {
           continue;
         }
         // add genesis peer to the peer's peers collection
-        // FIXME: use proper URL do not just repeat ID
         const remotePeer = {
           id: genesisLedgerNode._peerId,
-          url: genesisLedgerNode._peerId
+          url: consensusApi._localPeers.getLocalPeerUrl(
+            {peerId: genesisLedgerNode._peerId})
         };
         await consensusApi._peers.optionallyAdd(
           {ledgerNode, remotePeer});
         // add new peer to genesis node
         await consensusApi._peers.optionallyAdd({
           ledgerNode: genesisLedgerNode,
-          // FIXME: use proper URL do not just repeat ID
-          remotePeer: {id: ledgerNode._peerId, url: ledgerNode._peerId}
+          remotePeer: {
+            id: ledgerNode._peerId,
+            url: consensusApi._localPeers.getLocalPeerUrl(
+              {peerId: ledgerNode._peerId})
+          }
         });
       }
     });
@@ -353,10 +356,10 @@ describe('Multinode', () => {
         });
         peers.push(ledgerNode);
         // add genesis peer to the peer's peers collection
-        // FIXME: use proper URL do not just repeat ID
         const remotePeer = {
           id: genesisLedgerNode._peerId,
-          url: genesisLedgerNode._peerId
+          url: consensusApi._localPeers.getLocalPeerUrl(
+            {peerId: genesisLedgerNode._peerId})
         };
         await consensusApi._peers.optionallyAdd(
           {ledgerNode, remotePeer});

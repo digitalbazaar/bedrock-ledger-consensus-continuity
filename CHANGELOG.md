@@ -3,8 +3,14 @@
 ## 9.0.0 - TBD
 
 ### Changed
-- Changed `witnesses` from an `Array` to a `Set`.
 - **BREAKING**: Renamed `voters` to `peers` in various routes.
+- **BREAKING**: Converted peer IDs into `did:key` DIDs. While peer IDs and
+  peer service URLs had already been functionally separated in a previous
+  release, this may impact bootstrapping code that inserted the same value
+  for both a remote peer's ID and its service URL to peer databases. Ensure
+  that peer IDs (now did:key DIDs) and their service URLs (HTTPS) use
+  separate values.
+- Changed `witnesses` from an `Array` to a `Set`.
 - Move some internal functions to bedrock-ledger-consensus-continuity-storage.
 
 ### Removed
