@@ -10,13 +10,16 @@ describe('Client API', () => {
   describe('notifyPeer', () => {
     let peerId = null;
     const ledgerNodeId = 'foo';
+    const remotePeerId =
+      'did:key:z6MkikAFvQGvzvunQcSma5jvUY41FkLJxrBomQPKPSWWX7kU';
     before(async () => {
       ({peerId} = await _localPeers.generate({ledgerNodeId}));
     });
     it('throws a NotFoundError if ledgerNodeId is not found', async () => {
       const remotePeer = {
-        id: 'https://127.0.0.1',
-        url: 'https://127.0.0.1'
+        id: remotePeerId,
+        url: 'https://127.0.0.1/consensus/continuity2017/peers/' +
+          encodeURIComponent(remotePeerId)
       };
       let err;
       try {
@@ -30,8 +33,9 @@ describe('Client API', () => {
 
     it('throws a NetworkError on connection refused', async () => {
       const remotePeer = {
-        id: 'https://127.0.0.1',
-        url: 'https://127.0.0.1'
+        id: remotePeerId,
+        url: 'https://127.0.0.1/consensus/continuity2017/peers/' +
+          encodeURIComponent(remotePeerId)
       };
       let err;
       try {
@@ -55,7 +59,7 @@ describe('Client API', () => {
     it('should notify peer', async () => {
       const remotePeer = {
         id: peerId,
-        url: peerId
+        url: _localPeers.getLocalPeerUrl(peerId)
       };
       let err;
       try {
@@ -71,12 +75,15 @@ describe('Client API', () => {
   });
 
   describe('getEvents', () => {
+    const remotePeerId =
+      'did:key:z6MkikAFvQGvzvunQcSma5jvUY41FkLJxrBomQPKPSWWX7kU';
     it('properly handles ECONNREFUSED', async () => {
       let error;
       try {
         const remotePeer = {
-          id: 'https://127.0.0.1:3333',
-          url: 'https://127.0.0.1:3333'
+          id: remotePeerId,
+          url: 'https://127.0.0.1:3333/consensus/continuity2017/peers/' +
+            encodeURIComponent(remotePeerId)
         };
         await _client.getEvents({eventHashes: ['abc'], remotePeer});
       } catch(e) {
@@ -91,8 +98,9 @@ describe('Client API', () => {
       let error;
       try {
         const remotePeer = {
-          id: config.server.baseUri,
-          url: config.server.baseUri
+          id: remotePeerId,
+          url: config.server.baseUri + '/consensus/continuity2017/peers/' +
+            encodeURIComponent(remotePeerId)
         };
         await _client.getEvents({eventHashes: ['abc'], remotePeer});
       } catch(e) {
