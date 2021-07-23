@@ -1,6 +1,12 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
-## 9.0.0 - TBD
+## 9.0.0 - 2021-07-23
+
+### Added
+- Implement minimal statistics API.
+- `@digitalbazaar/http-client` was added to the project.
+- `lib/client.js` `notifyPeer` API sends an HTTP Signature in each request.
+- `lib/server.js` the notify route now verifies HTTP signatures before accepting a notification.
 
 ### Changed
 - **BREAKING**: Renamed `voters` to `peers` in various routes.
@@ -10,8 +16,16 @@
   for both a remote peer's ID and its service URL to peer databases. Ensure
   that peer IDs (now did:key DIDs) and their service URLs (HTTPS) use
   separate values.
+- **BREAKING**: Upgrade to 2020 cryptosuites.
+- **BREAKING**: Upgrade localPeers to use multibase key formats. Remove bs58.
+- **BREAKING**: Upgrade to witness pool consensus plugin. Remove electors.
+- **BREAKING**: Allow parentHash to be single value for single witness networks.
+- Migrate Redis operation queue to MongoDB.
+- **BREAKING**:
 - Changed `witnesses` from an `Array` to a `Set`.
 - Move some internal functions to bedrock-ledger-consensus-continuity-storage.
+- Replaced `axios` with `@digitalbazaar/http-client`
+- `lib/client.js` now uses `@digitalbazaar/http-client`.
 
 ### Removed
 - Removed `bedrock-rest` from the project.
@@ -19,21 +33,8 @@
   block cache APIs.
 - **BREAKING**: Remove unused `localAncestorGeneration` from events.
 - **BREAKING**: Remove unused `consensusProofHash`.
-
-## 8.0.1 - TBD
-
-### Removed
 - `axios` was removed from `lib/client.js` in order to move away from axios.
 - `axios` was removed from `package.json`
-
-### Added
-- `@digitalbazaar/http-client` was added to the project.
-- `lib/client.js` `notifyPeer` API sends an HTTP Signature in each request.
-- `lib/server.js` the notify route now verifies HTTP signatures before accepting a notification.
-
-### Changed
-- Replaced `axios` with `@digitalbazaar/http-client`
-- `lib/client.js` now uses `@digitalbazaar/http-client`.
 
 ## 8.0.0 - 2021-04-29
 
