@@ -1,5 +1,10 @@
 # bedrock-ledger-consensus-continuity ChangeLog
 
+## 9.1.0 -
+
+### Changed
+- Added `strict: false` to `body-parser` allowing json bodies that are not Arrays or Objects.
+
 ## 9.0.0 - 2021-07-23
 
 ### Added
